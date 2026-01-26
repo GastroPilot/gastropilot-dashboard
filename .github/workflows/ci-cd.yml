@@ -237,10 +237,10 @@ jobs:
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u duhrkah --password-stdin
 
             # Pull latest image
-            docker-compose pull frontend
+            docker compose pull frontend
 
             # Restart with new image
-            docker-compose up -d frontend
+            docker compose up -d frontend
 
             # Wait for health check
             echo "Waiting for health check..."
@@ -257,7 +257,7 @@ jobs:
             done
 
             echo "Health check failed!"
-            docker-compose logs --tail=50 frontend
+            docker compose logs --tail=50 frontend
             exit 1
 
       - name: Notify success
@@ -289,10 +289,10 @@ jobs:
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
             # Pull latest image
-            docker-compose pull frontend
+            docker compose pull frontend
 
             # Restart with new image
-            docker-compose up -d frontend
+            docker compose up -d frontend
 
             # Wait for health check
             echo "Waiting for health check..."
@@ -309,7 +309,7 @@ jobs:
             done
 
             echo "Health check failed!"
-            docker-compose logs --tail=50 frontend
+            docker compose logs --tail=50 frontend
             exit 1
 
   deploy-production:
@@ -337,10 +337,10 @@ jobs:
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
             # Pull latest image
-            docker-compose pull frontend
+            docker compose pull frontend
 
             # Restart with new image
-            docker-compose up -d frontend
+            docker compose up -d frontend
 
             # Wait for health check
             echo "Waiting for health check..."
@@ -357,7 +357,7 @@ jobs:
             done
 
             echo "Health check failed!"
-            docker-compose logs --tail=50 frontend
+            docker compose logs --tail=50 frontend
             exit 1
 
   # ============================================
