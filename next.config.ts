@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Docker Support: Standalone output für optimierte Builds
+  output: 'standalone',
+
   // Erlaube Cross-Origin-Anfragen von der IP-Adresse für /_next/* Ressourcen
   // Die Warnung zeigt nur die IP ohne Port, daher verschiedene Formate testen
   allowedDevOrigins: [
