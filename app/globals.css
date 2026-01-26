@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+/* Verhindere Text-Selektion auf DnD-Elementen */
+[data-dnd-draggable],
+[data-dnd-droppable] {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  -webkit-touch-callout: none !important;
+  touch-action: none !important;
+}
+
+/* Tablet-Optimierungen */
+@media (min-width: 768px) and (max-width: 1024px) {
+  /* Kompakte Touch-Targets für Tablets */
+  button, a, input, select, textarea {
+    min-height: 40px !important;
+  }
+  
+  /* Kompakte Schriftgrößen für Tablets */
+  body {
+    font-size: 14px;
+    -webkit-text-size-adjust: 100%;
+  }
+  
+  /* Verbesserte Touch-Interaktion */
+  * {
+    -webkit-tap-highlight-color: rgba(59, 130, 246, 0.3);
+  }
+}
+
+/* Responsive Layout-Optimierungen */
+@media (max-width: 767px) {
+  /* Auf mobilen Geräten: Sidebar als Overlay */
+  .sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 60;
+  }
+}
+
+/* Verbesserte Scroll-Performance */
+.overflow-y-auto {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
