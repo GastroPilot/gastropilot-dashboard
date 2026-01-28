@@ -13,7 +13,7 @@ import { format, parseISO } from "date-fns";
 import { de } from "date-fns/locale";
 import { ShoppingCart, Table as TableIcon, Plus, Trash2, Euro, Users, FileText, X, CheckCircle, Clock, Search, Download, Check, ChevronDown, CreditCard, Banknote, Nfc, Loader2, AlertTriangle, XCircle, } from "lucide-react";
 import { confirmAction } from "@/lib/utils";
-import { buildApiUrl, API_BASE_URL, API_PREFIX } from "@/lib/api/config";
+import { buildApiUrl, getApiBaseUrl, API_PREFIX } from "@/lib/api/config";
 
 type StatusMeta = { Icon: typeof Clock; tone: string; label: string };
 
@@ -757,7 +757,7 @@ export function OrderDetailDialog({
       }
 
       // Verwende die zentrale API-Konfiguration
-      const pdfUrl = buildApiUrl(API_BASE_URL, API_PREFIX, `/restaurants/${restaurantId}/invoices/${order.id}/pdf`);
+      const pdfUrl = buildApiUrl(getApiBaseUrl(), API_PREFIX, `/restaurants/${restaurantId}/invoices/${order.id}/pdf`);
       const response = await fetch(
         pdfUrl,
         {
