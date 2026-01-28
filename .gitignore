@@ -138,3 +138,5 @@ dist
 .env.prod
 .env.staging
 .env.test
+
+package-lock.json
