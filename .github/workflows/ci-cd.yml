@@ -18,6 +18,7 @@ on:
           - staging
           - demo
           - production
+          - test
 
 env:
   NODE_VERSION: '22'
