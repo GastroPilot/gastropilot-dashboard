@@ -1,5 +1,5 @@
 import { api } from "./client";
-import { API_BASE_URL, API_PREFIX, buildApiUrl } from "./config";
+import { getApiBaseUrl, API_PREFIX, buildApiUrl } from "./config";
 
 export interface Restaurant {
   id: number;
@@ -71,7 +71,7 @@ export const restaurantsApi = {
    */
   getPublicName: async (): Promise<string> => {
     try {
-      const url = buildApiUrl(API_BASE_URL, API_PREFIX, "/restaurants/public/name");
+      const url = buildApiUrl(getApiBaseUrl(), API_PREFIX, "/restaurants/public/name");
       const response = await fetch(url, {
         method: "GET",
         headers: {
