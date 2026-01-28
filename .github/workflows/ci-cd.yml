@@ -202,7 +202,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL_STAGING || 'https://api-staging.gpilot.app' }}
+            NEXT_PUBLIC_API_URL=${{ secrets.API_URL || 'https://api-staging.gpilot.app' }}
             NEXT_PUBLIC_APP_VERSION=${{ github.sha }}
 
       - name: Image digest
@@ -224,7 +224,7 @@ jobs:
       - name: Deploy to Staging Server
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: 46.225.31.48
+          host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
