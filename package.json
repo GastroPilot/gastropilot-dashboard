@@ -51,7 +51,7 @@
     "@vitest/coverage-v8": "^4.0.18",
     "@vitest/ui": "4.0.18",
     "eslint": "^8",
-    "eslint-config-next": "15.4.0-canary.47",
+    "eslint-config-next": "15.5.10",
     "jsdom": "^25.0.1",
     "msw": "^2.7.0",
     "prettier": "^3.2.5",
