@@ -9,9 +9,9 @@
  * - demo.gpilot.app → api-demo.gpilot.app (Demo)
  *
  * Struktur:
- * - API_BASE_URL: Basis-URL ohne Pfad (dynamisch oder aus Environment)
+ * - getApiBaseUrl(): Funktion zur dynamischen URL-Generierung (zur Laufzeit)
  * - API_PREFIX: API-Versions-Präfix (z.B. 'v1')
- * - API_URL: Vollständige API-URL (API_BASE_URL + API_PREFIX)
+ * - buildApiUrl(): Helper zur korrekten URL-Konstruktion
  */
 
 /**
@@ -28,23 +28,28 @@ export function getApiBaseUrl(): string {
   // Environment-Variable hat Vorrang (für manuelle Konfiguration)
   const envBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.API_BASE_URL;
   if (envBaseUrl) {
+    console.log(`[API Config] Using env variable: ${envBaseUrl}`);
     return envBaseUrl;
   }
 
   // Server-Side Rendering: Fallback auf localhost
   if (typeof window === 'undefined') {
+    console.log('[API Config] SSR detected (window undefined), returning localhost');
     return 'http://localhost:8001';
   }
 
   const hostname = window.location.hostname;
+  console.log(`[API Config] Client-side hostname: ${hostname}`);
 
   // Localhost Entwicklung
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    console.log('[API Config] Localhost detected');
     return 'http://localhost:8001';
   }
 
   // Prod ohne Subdomain: gpilot.app → api.gpilot.app
   if (hostname === 'gpilot.app') {
+    console.log('[API Config] Production domain detected');
     return 'https://api.gpilot.app';
   }
 
@@ -53,7 +58,9 @@ export function getApiBaseUrl(): string {
   const gpilotMatch = hostname.match(/^([^.]+)\.gpilot\.app$/);
   if (gpilotMatch) {
     const subdomain = gpilotMatch[1];
-    return `https://api-${subdomain}.gpilot.app`;
+    const apiUrl = `https://api-${subdomain}.gpilot.app`;
+    console.log(`[API Config] Subdomain detected: ${subdomain} → ${apiUrl}`);
+    return apiUrl;
   }
 
   // Fallback für unbekannte Domains
@@ -61,23 +68,8 @@ export function getApiBaseUrl(): string {
   return 'http://localhost:8001';
 }
 
-// API_BASE_URL: Basis-URL (dynamisch generiert oder aus Environment)
-// Trailing slashes werden in buildApiUrl entfernt
-export const API_BASE_URL = getApiBaseUrl();
-
 // API_PREFIX: API-Versions-Präfix (z.B. 'v1')
 export const API_PREFIX = process.env.NEXT_PUBLIC_API_PREFIX || process.env.API_PREFIX || "v1";
-
-// API_URL: Vollständige API-URL (API_BASE_URL + API_PREFIX)
-// Wird intern durch buildApiUrl verwendet, hier nur für Rückwärtskompatibilität
-// Entferne trailing slash von API_BASE_URL falls vorhanden
-const cleanBaseUrl = API_BASE_URL.replace(/\/+$/, '');
-// Entferne leading/trailing slashes von API_PREFIX
-const cleanPrefix = API_PREFIX ? API_PREFIX.replace(/^\/+|\/+$/g, '') : '';
-// Konstruiere ohne trailing slash am Ende (vermeidet Backend-Redirects)
-export const API_URL = cleanPrefix
-  ? `${cleanBaseUrl}/${cleanPrefix}`
-  : cleanBaseUrl;
 
 /**
  * Helper-Funktion zur korrekten URL-Konstruktion ohne doppelte Slashes

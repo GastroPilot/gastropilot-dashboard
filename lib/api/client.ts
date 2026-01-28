@@ -82,8 +82,10 @@ async function request<T>(
   options: RequestInit = {},
   retryOnAuthError: boolean = true
 ): Promise<T> {
-  const url = buildApiUrl(getApiBaseUrl(), API_PREFIX, endpoint);
-  
+  const baseUrl = getApiBaseUrl();
+  const url = buildApiUrl(baseUrl, API_PREFIX, endpoint);
+  console.log(`[API Client] Request to: ${url} (baseUrl: ${baseUrl})`);
+
   // Prüfe ob Token abgelaufen ist und erneuere es proaktiv
   let token = typeof window !== "undefined" 
     ? localStorage.getItem("access_token") 
