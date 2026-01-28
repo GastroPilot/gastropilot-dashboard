@@ -1,55 +1,83 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { restaurantsApi, Restaurant, RestaurantCreate } from "@/lib/api/restaurants";
-import { ApiError } from "@/lib/api/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { LoadingOverlay } from "@/components/loading-overlay";
-import {  Building2, Edit, Save, X, MapPin, Phone, Mail, FileText, CheckCircle2, AlertCircle, Loader2, Globe, Clock, Euro, Settings, Calendar, Info, Link, Users, ExternalLink, Copy, Nfc, CreditCard } from "lucide-react";
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { restaurantsApi, Restaurant, RestaurantCreate } from '@/lib/api/restaurants';
+import { ApiError } from '@/lib/api/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { LoadingOverlay } from '@/components/loading-overlay';
+import {
+  Building2,
+  Edit,
+  Save,
+  X,
+  MapPin,
+  Phone,
+  Mail,
+  FileText,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+  Globe,
+  Clock,
+  Euro,
+  Settings,
+  Calendar,
+  Info,
+  Link,
+  Users,
+  ExternalLink,
+  Copy,
+  Nfc,
+  CreditCard,
+} from 'lucide-react';
 
 export default function RestaurantManagePage() {
   const router = useRouter();
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState<RestaurantCreate & {
-    website?: string | null;
-    openingHours?: string | null;
-    currency?: string | null;
-    timezone?: string | null;
-    minReservationDuration?: number | null;
-    cancellationPolicy?: string | null;
-    sumup_enabled?: boolean;
-    sumup_default_reader_id?: string | null;
-  }>({
-    name: "",
-    address: "",
-    phone: "",
-    email: "",
-    description: "",
-    website: "",
-    openingHours: "",
-    currency: "EUR",
-    timezone: "Europe/Berlin",
+  const [formData, setFormData] = useState<
+    RestaurantCreate & {
+      website?: string | null;
+      openingHours?: string | null;
+      currency?: string | null;
+      timezone?: string | null;
+      minReservationDuration?: number | null;
+      cancellationPolicy?: string | null;
+      sumup_enabled?: boolean;
+      sumup_default_reader_id?: string | null;
+    }
+  >({
+    name: '',
+    address: '',
+    phone: '',
+    email: '',
+    description: '',
+    website: '',
+    openingHours: '',
+    currency: 'EUR',
+    timezone: 'Europe/Berlin',
     minReservationDuration: 60,
-    cancellationPolicy: "",
-    slug: "",
+    cancellationPolicy: '',
+    slug: '',
     public_booking_enabled: false,
     booking_lead_time_hours: 2,
     booking_max_party_size: 12,
     booking_default_duration: 120,
     sumup_enabled: false,
-    sumup_default_reader_id: "",
+    sumup_default_reader_id: '',
   });
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [toasts, setToasts] = useState<{ id: string; message: string; variant?: "info" | "error" | "success" }[]>([]);
+  const [toasts, setToasts] = useState<
+    { id: string; message: string; variant?: 'info' | 'error' | 'success' }[]
+  >([]);
 
   const addToast = useCallback(
-    (message: string, variant: "info" | "error" | "success" = "info") => {
+    (message: string, variant: 'info' | 'error' | 'success' = 'info') => {
       const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
       setToasts((prev) => [...prev, { id, message, variant }]);
       setTimeout(() => {
@@ -85,28 +113,28 @@ export default function RestaurantManagePage() {
 
         setFormData({
           name: firstRestaurant.name,
-          address: firstRestaurant.address || "",
-          phone: firstRestaurant.phone || "",
-          email: firstRestaurant.email || "",
-          description: firstRestaurant.description?.split('__EXTENDED_DATA__')[0] || "",
-          website: extendedData.website || "",
-          openingHours: extendedData.openingHours || "",
-          currency: extendedData.currency || "EUR",
-          timezone: extendedData.timezone || "Europe/Berlin",
+          address: firstRestaurant.address || '',
+          phone: firstRestaurant.phone || '',
+          email: firstRestaurant.email || '',
+          description: firstRestaurant.description?.split('__EXTENDED_DATA__')[0] || '',
+          website: extendedData.website || '',
+          openingHours: extendedData.openingHours || '',
+          currency: extendedData.currency || 'EUR',
+          timezone: extendedData.timezone || 'Europe/Berlin',
           minReservationDuration: extendedData.minReservationDuration || 60,
-          cancellationPolicy: extendedData.cancellationPolicy || "",
-          slug: firstRestaurant.slug || "",
+          cancellationPolicy: extendedData.cancellationPolicy || '',
+          slug: firstRestaurant.slug || '',
           public_booking_enabled: firstRestaurant.public_booking_enabled ?? false,
           booking_lead_time_hours: firstRestaurant.booking_lead_time_hours ?? 2,
           booking_max_party_size: firstRestaurant.booking_max_party_size ?? 12,
           booking_default_duration: firstRestaurant.booking_default_duration ?? 120,
           sumup_enabled: firstRestaurant.sumup_enabled ?? false,
-          sumup_default_reader_id: firstRestaurant.sumup_default_reader_id || "",
+          sumup_default_reader_id: firstRestaurant.sumup_default_reader_id || '',
         });
       }
     } catch (err) {
-      console.error("Fehler beim Laden des Restaurants:", err);
-      addToast("Fehler beim Laden des Restaurants", "error");
+      console.error('Fehler beim Laden des Restaurants:', err);
+      addToast('Fehler beim Laden des Restaurants', 'error');
     } finally {
       setLoading(false);
     }
@@ -114,14 +142,14 @@ export default function RestaurantManagePage() {
 
   const validateForm = (): boolean => {
     if (!formData.name.trim()) {
-      setError("Restaurantname ist erforderlich");
+      setError('Restaurantname ist erforderlich');
       return false;
     }
 
     if (formData.email && formData.email.trim()) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRegex.test(formData.email.trim())) {
-        setError("Bitte geben Sie eine gültige E-Mail-Adresse ein");
+        setError('Bitte geben Sie eine gültige E-Mail-Adresse ein');
         return false;
       }
     }
@@ -129,7 +157,7 @@ export default function RestaurantManagePage() {
     if (formData.phone && formData.phone.trim()) {
       const phoneRegex = /^[\d\s\+\-\(\)]+$/;
       if (!phoneRegex.test(formData.phone.trim())) {
-        setError("Bitte geben Sie eine gültige Telefonnummer ein");
+        setError('Bitte geben Sie eine gültige Telefonnummer ein');
         return false;
       }
     }
@@ -138,7 +166,7 @@ export default function RestaurantManagePage() {
       const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
       const cleanUrl = formData.website.trim().replace(/^https?:\/\//, '');
       if (!urlPattern.test(`https://${cleanUrl}`)) {
-        setError("Bitte geben Sie eine gültige Website-URL ein");
+        setError('Bitte geben Sie eine gültige Website-URL ein');
         return false;
       }
     }
@@ -148,7 +176,7 @@ export default function RestaurantManagePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setError('');
 
     if (!validateForm()) {
       return;
@@ -161,14 +189,14 @@ export default function RestaurantManagePage() {
       const extendedData = {
         website: formData.website?.trim() || null,
         openingHours: formData.openingHours?.trim() || null,
-        currency: formData.currency || "EUR",
-        timezone: formData.timezone || "Europe/Berlin",
+        currency: formData.currency || 'EUR',
+        timezone: formData.timezone || 'Europe/Berlin',
         minReservationDuration: formData.minReservationDuration || 60,
         cancellationPolicy: formData.cancellationPolicy?.trim() || null,
       };
 
       // Always save extended data if form was submitted (even with default values)
-      const descriptionText = formData.description?.trim() || "";
+      const descriptionText = formData.description?.trim() || '';
       const fullDescription = `${descriptionText}__EXTENDED_DATA__${JSON.stringify(extendedData)}`;
 
       if (restaurant) {
@@ -187,7 +215,7 @@ export default function RestaurantManagePage() {
           sumup_enabled: formData.sumup_enabled ?? false,
           sumup_default_reader_id: formData.sumup_default_reader_id?.trim() || null,
         });
-        addToast("Restaurant erfolgreich aktualisiert", "success");
+        addToast('Restaurant erfolgreich aktualisiert', 'success');
       } else {
         // Create new restaurant
         const dataToSend: RestaurantCreate = {
@@ -203,20 +231,20 @@ export default function RestaurantManagePage() {
           booking_default_duration: formData.booking_default_duration ?? 120,
         };
         await restaurantsApi.create(dataToSend);
-        addToast("Restaurant erfolgreich angelegt", "success");
+        addToast('Restaurant erfolgreich angelegt', 'success');
       }
       setIsEditing(false);
       await loadRestaurant();
     } catch (err) {
-      console.error("Fehler beim Speichern des Restaurants:", err);
+      console.error('Fehler beim Speichern des Restaurants:', err);
       if (err instanceof ApiError) {
-        const errorMessage = err.message || "Fehler beim Speichern des Restaurants";
+        const errorMessage = err.message || 'Fehler beim Speichern des Restaurants';
         setError(errorMessage);
-        addToast(errorMessage, "error");
+        addToast(errorMessage, 'error');
       } else {
-        const errorMessage = "Ein unerwarteter Fehler ist aufgetreten";
+        const errorMessage = 'Ein unerwarteter Fehler ist aufgetreten';
         setError(errorMessage);
-        addToast(errorMessage, "error");
+        addToast(errorMessage, 'error');
       }
     } finally {
       setSubmitting(false);
@@ -240,17 +268,17 @@ export default function RestaurantManagePage() {
 
       setFormData({
         name: restaurant.name,
-        address: restaurant.address || "",
-        phone: restaurant.phone || "",
-        email: restaurant.email || "",
-        description: restaurant.description?.split('__EXTENDED_DATA__')[0] || "",
-        website: extendedData.website || "",
-        openingHours: extendedData.openingHours || "",
-        currency: extendedData.currency || "EUR",
-        timezone: extendedData.timezone || "Europe/Berlin",
+        address: restaurant.address || '',
+        phone: restaurant.phone || '',
+        email: restaurant.email || '',
+        description: restaurant.description?.split('__EXTENDED_DATA__')[0] || '',
+        website: extendedData.website || '',
+        openingHours: extendedData.openingHours || '',
+        currency: extendedData.currency || 'EUR',
+        timezone: extendedData.timezone || 'Europe/Berlin',
         minReservationDuration: extendedData.minReservationDuration || 60,
-        cancellationPolicy: extendedData.cancellationPolicy || "",
-        slug: restaurant.slug || "",
+        cancellationPolicy: extendedData.cancellationPolicy || '',
+        slug: restaurant.slug || '',
         public_booking_enabled: restaurant.public_booking_enabled ?? false,
         booking_lead_time_hours: restaurant.booking_lead_time_hours ?? 2,
         booking_max_party_size: restaurant.booking_max_party_size ?? 12,
@@ -258,18 +286,18 @@ export default function RestaurantManagePage() {
       });
     } else {
       setFormData({
-        name: "",
-        address: "",
-        phone: "",
-        email: "",
-        description: "",
-        website: "",
-        openingHours: "",
-        currency: "EUR",
-        timezone: "Europe/Berlin",
+        name: '',
+        address: '',
+        phone: '',
+        email: '',
+        description: '',
+        website: '',
+        openingHours: '',
+        currency: 'EUR',
+        timezone: 'Europe/Berlin',
         minReservationDuration: 60,
-        cancellationPolicy: "",
-        slug: "",
+        cancellationPolicy: '',
+        slug: '',
         public_booking_enabled: false,
         booking_lead_time_hours: 2,
         booking_max_party_size: 12,
@@ -277,7 +305,7 @@ export default function RestaurantManagePage() {
       });
     }
     setIsEditing(false);
-    setError("");
+    setError('');
   };
 
   if (loading) {
@@ -293,11 +321,11 @@ export default function RestaurantManagePage() {
             <div
               key={toast.id}
               className={`min-w-[260px] rounded-lg border px-4 py-3 shadow-[0_14px_32px_rgba(0,0,0,0.35)] text-sm ${
-                toast.variant === "error"
-                  ? "bg-red-900/80 border-red-500 text-red-50"
-                  : toast.variant === "success"
-                  ? "bg-green-900/80 border-green-500 text-green-50"
-                  : "bg-slate-800/90 border-slate-600 text-slate-100"
+                toast.variant === 'error'
+                  ? 'bg-red-900/80 border-red-500 text-red-50'
+                  : toast.variant === 'success'
+                    ? 'bg-green-900/80 border-green-500 text-green-50'
+                    : 'bg-slate-800/90 border-slate-600 text-slate-100'
               }`}
             >
               {toast.message}
@@ -315,15 +343,15 @@ export default function RestaurantManagePage() {
                 <Building2 className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h1 className="text-xl md:text-2xl font-bold text-white">
-                  Restaurant verwalten
-                </h1>
+                <h1 className="text-xl md:text-2xl font-bold text-white">Restaurant verwalten</h1>
                 <p className="text-xs md:text-sm text-gray-400 mt-0.5">
-                  {restaurant ? "Verwalten Sie Ihre Restaurantinformationen" : "Erstellen Sie ein neues Restaurant"}
+                  {restaurant
+                    ? 'Verwalten Sie Ihre Restaurantinformationen'
+                    : 'Erstellen Sie ein neues Restaurant'}
                 </p>
               </div>
             </div>
-        {restaurant && !isEditing && (
+            {restaurant && !isEditing && (
               <Button
                 onClick={() => setIsEditing(true)}
                 className="gap-2 touch-manipulation min-h-[36px] md:min-h-[40px]"
@@ -343,365 +371,396 @@ export default function RestaurantManagePage() {
             <CardHeader className="border-b border-gray-700">
               <CardTitle className="flex items-center gap-2 text-white">
                 <Building2 className="w-5 h-5 text-blue-400" />
-                {restaurant 
-                  ? (isEditing ? "Restaurant bearbeiten" : "Restaurant-Informationen")
-                  : "Neues Restaurant anlegen"}
-          </CardTitle>
-        </CardHeader>
+                {restaurant
+                  ? isEditing
+                    ? 'Restaurant bearbeiten'
+                    : 'Restaurant-Informationen'
+                  : 'Neues Restaurant anlegen'}
+              </CardTitle>
+            </CardHeader>
             <CardContent className="pt-6">
-              {!isEditing && restaurant ? (() => {
-                // Parse extended data from description if available
-                const extendedData: any = {};
-                let descriptionText = restaurant.description || "";
-                try {
-                  if (restaurant.description?.includes('__EXTENDED_DATA__')) {
-                    const parts = restaurant.description.split('__EXTENDED_DATA__');
-                    descriptionText = parts[0] || "";
-                    if (parts.length > 1) {
-                      Object.assign(extendedData, JSON.parse(parts[1]));
+              {!isEditing && restaurant ? (
+                (() => {
+                  // Parse extended data from description if available
+                  const extendedData: any = {};
+                  let descriptionText = restaurant.description || '';
+                  try {
+                    if (restaurant.description?.includes('__EXTENDED_DATA__')) {
+                      const parts = restaurant.description.split('__EXTENDED_DATA__');
+                      descriptionText = parts[0] || '';
+                      if (parts.length > 1) {
+                        Object.assign(extendedData, JSON.parse(parts[1]));
+                      }
                     }
+                  } catch (e) {
+                    // Ignore parse errors
                   }
-                } catch (e) {
-                  // Ignore parse errors
-                }
 
-                const hasExtendedData = extendedData && Object.keys(extendedData).length > 0 && 
-                  Object.values(extendedData).some((v: any) => v !== null && v !== "");
+                  const hasExtendedData =
+                    extendedData &&
+                    Object.keys(extendedData).length > 0 &&
+                    Object.values(extendedData).some((v: any) => v !== null && v !== '');
 
-                return (
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-1.5">
-                        <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
-                          <Building2 className="w-4 h-4" />
-                  Restaurantname
-                </label>
-                <p className="text-lg font-semibold text-white">{restaurant.name}</p>
-              </div>
-
-              {restaurant.address && (
+                  return (
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-1.5">
                           <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
-                            <MapPin className="w-4 h-4" />
-                    Adresse
-                  </label>
-                  <p className="text-gray-300">{restaurant.address}</p>
-                </div>
-              )}
-
-              {restaurant.phone && (
-                        <div className="space-y-1.5">
-                          <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
-                            <Phone className="w-4 h-4" />
-                    Telefonnummer
-                  </label>
-                          <p className="text-gray-300">
-                            <a 
-                              href={`tel:${restaurant.phone}`}
-                              className="hover:text-blue-400 transition-colors"
-                            >
-                              {restaurant.phone}
-                            </a>
-                          </p>
-                </div>
-              )}
-
-              {restaurant.email && (
-                        <div className="space-y-1.5">
-                          <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
-                            <Mail className="w-4 h-4" />
-                    E-Mail
-                  </label>
-                          <p className="text-gray-300">
-                            <a 
-                              href={`mailto:${restaurant.email}`}
-                              className="hover:text-blue-400 transition-colors"
-                            >
-                              {restaurant.email}
-                            </a>
-                          </p>
-                        </div>
-                      )}
-
-                      {extendedData.website && (
-                        <div className="space-y-1.5">
-                          <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
-                            <Globe className="w-4 h-4" />
-                            Website
+                            <Building2 className="w-4 h-4" />
+                            Restaurantname
                           </label>
-                          <p className="text-gray-300">
-                            <a 
-                              href={extendedData.website.startsWith('http') ? extendedData.website : `https://${extendedData.website}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="hover:text-blue-400 transition-colors"
-                            >
-                              {extendedData.website}
-                            </a>
-                          </p>
-                </div>
-              )}
-                    </div>
-
-                    {descriptionText && (
-                      <div className="space-y-1.5 pt-2 border-t border-gray-700">
-                        <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
-                          <FileText className="w-4 h-4" />
-                    Beschreibung
-                  </label>
-                        <p className="whitespace-pre-wrap text-gray-300 leading-relaxed">
-                          {descriptionText}
-                        </p>
-                      </div>
-                    )}
-
-                    {hasExtendedData && (
-                      <div className="pt-4 border-t border-gray-700 space-y-4">
-                        <div className="flex items-center gap-2 text-sm font-semibold text-gray-300">
-                          <Settings className="w-5 h-5 text-blue-400" />
-                          Erweiterte Einstellungen
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          {extendedData.openingHours && (
-                            <div className="space-y-1.5">
-                              <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
-                                <Clock className="w-4 h-4" />
-                                Öffnungszeiten
-                              </label>
-                              <p className="text-gray-300 whitespace-pre-wrap">{extendedData.openingHours}</p>
-                            </div>
-                          )}
-
-                          {extendedData.currency && (
-                            <div className="space-y-1.5">
-                              <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
-                                <Euro className="w-4 h-4" />
-                                Währung
-                              </label>
-                              <p className="text-gray-300">{extendedData.currency}</p>
-                            </div>
-                          )}
-
-                          {extendedData.timezone && (
-                            <div className="space-y-1.5">
-                              <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
-                                <Clock className="w-4 h-4" />
-                                Zeitzone
-                              </label>
-                              <p className="text-gray-300">{extendedData.timezone}</p>
-                            </div>
-                          )}
-
-                          {extendedData.minReservationDuration && (
-                            <div className="space-y-1.5">
-                              <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
-                                <Calendar className="w-4 h-4" />
-                                Mindestaufenthaltsdauer
-                              </label>
-                              <p className="text-gray-300">{extendedData.minReservationDuration} Minuten</p>
-                            </div>
-                          )}
+                          <p className="text-lg font-semibold text-white">{restaurant.name}</p>
                         </div>
 
-                        {extendedData.cancellationPolicy && (
-                          <div className="space-y-1.5 pt-2">
+                        {restaurant.address && (
+                          <div className="space-y-1.5">
                             <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
-                              <Info className="w-4 h-4" />
-                              Stornierungsrichtlinie
+                              <MapPin className="w-4 h-4" />
+                              Adresse
                             </label>
-                            <p className="text-gray-300 whitespace-pre-wrap">{extendedData.cancellationPolicy}</p>
+                            <p className="text-gray-300">{restaurant.address}</p>
+                          </div>
+                        )}
+
+                        {restaurant.phone && (
+                          <div className="space-y-1.5">
+                            <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
+                              <Phone className="w-4 h-4" />
+                              Telefonnummer
+                            </label>
+                            <p className="text-gray-300">
+                              <a
+                                href={`tel:${restaurant.phone}`}
+                                className="hover:text-blue-400 transition-colors"
+                              >
+                                {restaurant.phone}
+                              </a>
+                            </p>
+                          </div>
+                        )}
+
+                        {restaurant.email && (
+                          <div className="space-y-1.5">
+                            <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
+                              <Mail className="w-4 h-4" />
+                              E-Mail
+                            </label>
+                            <p className="text-gray-300">
+                              <a
+                                href={`mailto:${restaurant.email}`}
+                                className="hover:text-blue-400 transition-colors"
+                              >
+                                {restaurant.email}
+                              </a>
+                            </p>
+                          </div>
+                        )}
+
+                        {extendedData.website && (
+                          <div className="space-y-1.5">
+                            <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
+                              <Globe className="w-4 h-4" />
+                              Website
+                            </label>
+                            <p className="text-gray-300">
+                              <a
+                                href={
+                                  extendedData.website.startsWith('http')
+                                    ? extendedData.website
+                                    : `https://${extendedData.website}`
+                                }
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:text-blue-400 transition-colors"
+                              >
+                                {extendedData.website}
+                              </a>
+                            </p>
                           </div>
                         )}
                       </div>
-                    )}
 
-                    {/* Online-Reservierungen Anzeige */}
-                    <div className="pt-4 border-t border-gray-700 space-y-4">
-                      <div className="flex items-center gap-2 text-sm font-semibold text-gray-300">
-                        <Globe className="w-5 h-5 text-emerald-400" />
-                        Online-Reservierungen
-                      </div>
-                      
-                      <div className="flex items-center gap-3 p-3 bg-gray-800/50 rounded-lg">
-                        <div className={`w-3 h-3 rounded-full ${restaurant.public_booking_enabled ? 'bg-emerald-500' : 'bg-gray-500'}`} />
-                        <span className="text-gray-300">
-                          {restaurant.public_booking_enabled ? 'Aktiviert' : 'Deaktiviert'}
-                        </span>
-                      </div>
-
-                      {restaurant.public_booking_enabled && restaurant.slug && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-1.5">
-                            <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
-                              <Link className="w-4 h-4" />
-                              URL-Slug
-                            </label>
-                            <div className="flex items-center gap-2">
-                              <code className="bg-gray-800 px-2 py-1 rounded text-emerald-400">{restaurant.slug}</code>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  navigator.clipboard.writeText(`${window.location.origin}/reservierung/${restaurant.slug}`);
-                                }}
-                                className="p-1 hover:bg-gray-700 rounded transition-colors"
-                                title="URL kopieren"
-                              >
-                                <Copy className="w-4 h-4 text-gray-400" />
-                              </button>
-                            </div>
-                          </div>
-
-                          <div className="space-y-1.5">
-                            <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
-                              <Clock className="w-4 h-4" />
-                              Vorlaufzeit
-                            </label>
-                            <p className="text-gray-300">{restaurant.booking_lead_time_hours} Stunden</p>
-                          </div>
-
-                          <div className="space-y-1.5">
-                            <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
-                              <Users className="w-4 h-4" />
-                              Max. Personenzahl
-                            </label>
-                            <p className="text-gray-300">{restaurant.booking_max_party_size} Personen</p>
-                          </div>
-
-                          <div className="space-y-1.5">
-                            <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
-                              <Calendar className="w-4 h-4" />
-                              Standard-Dauer
-                            </label>
-                            <p className="text-gray-300">{restaurant.booking_default_duration} Minuten</p>
-                          </div>
+                      {descriptionText && (
+                        <div className="space-y-1.5 pt-2 border-t border-gray-700">
+                          <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
+                            <FileText className="w-4 h-4" />
+                            Beschreibung
+                          </label>
+                          <p className="whitespace-pre-wrap text-gray-300 leading-relaxed">
+                            {descriptionText}
+                          </p>
                         </div>
                       )}
-                    </div>
 
-                    {!restaurant.address && !restaurant.phone && !restaurant.email && !descriptionText && !hasExtendedData && !restaurant.public_booking_enabled && (
-                      <div className="text-center py-8 text-gray-400">
-                        <AlertCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                        <p>Noch keine zusätzlichen Informationen vorhanden.</p>
-                        <p className="text-sm mt-1">Klicken Sie auf "Bearbeiten", um Informationen hinzuzufügen.</p>
-                </div>
-              )}
-            </div>
-                );
-              })() : (
+                      {hasExtendedData && (
+                        <div className="pt-4 border-t border-gray-700 space-y-4">
+                          <div className="flex items-center gap-2 text-sm font-semibold text-gray-300">
+                            <Settings className="w-5 h-5 text-blue-400" />
+                            Erweiterte Einstellungen
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {extendedData.openingHours && (
+                              <div className="space-y-1.5">
+                                <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
+                                  <Clock className="w-4 h-4" />
+                                  Öffnungszeiten
+                                </label>
+                                <p className="text-gray-300 whitespace-pre-wrap">
+                                  {extendedData.openingHours}
+                                </p>
+                              </div>
+                            )}
+
+                            {extendedData.currency && (
+                              <div className="space-y-1.5">
+                                <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
+                                  <Euro className="w-4 h-4" />
+                                  Währung
+                                </label>
+                                <p className="text-gray-300">{extendedData.currency}</p>
+                              </div>
+                            )}
+
+                            {extendedData.timezone && (
+                              <div className="space-y-1.5">
+                                <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
+                                  <Clock className="w-4 h-4" />
+                                  Zeitzone
+                                </label>
+                                <p className="text-gray-300">{extendedData.timezone}</p>
+                              </div>
+                            )}
+
+                            {extendedData.minReservationDuration && (
+                              <div className="space-y-1.5">
+                                <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
+                                  <Calendar className="w-4 h-4" />
+                                  Mindestaufenthaltsdauer
+                                </label>
+                                <p className="text-gray-300">
+                                  {extendedData.minReservationDuration} Minuten
+                                </p>
+                              </div>
+                            )}
+                          </div>
+
+                          {extendedData.cancellationPolicy && (
+                            <div className="space-y-1.5 pt-2">
+                              <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
+                                <Info className="w-4 h-4" />
+                                Stornierungsrichtlinie
+                              </label>
+                              <p className="text-gray-300 whitespace-pre-wrap">
+                                {extendedData.cancellationPolicy}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Online-Reservierungen Anzeige */}
+                      <div className="pt-4 border-t border-gray-700 space-y-4">
+                        <div className="flex items-center gap-2 text-sm font-semibold text-gray-300">
+                          <Globe className="w-5 h-5 text-emerald-400" />
+                          Online-Reservierungen
+                        </div>
+
+                        <div className="flex items-center gap-3 p-3 bg-gray-800/50 rounded-lg">
+                          <div
+                            className={`w-3 h-3 rounded-full ${restaurant.public_booking_enabled ? 'bg-emerald-500' : 'bg-gray-500'}`}
+                          />
+                          <span className="text-gray-300">
+                            {restaurant.public_booking_enabled ? 'Aktiviert' : 'Deaktiviert'}
+                          </span>
+                        </div>
+
+                        {restaurant.public_booking_enabled && restaurant.slug && (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-1.5">
+                              <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
+                                <Link className="w-4 h-4" />
+                                URL-Slug
+                              </label>
+                              <div className="flex items-center gap-2">
+                                <code className="bg-gray-800 px-2 py-1 rounded text-emerald-400">
+                                  {restaurant.slug}
+                                </code>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(
+                                      `${window.location.origin}/reservierung/${restaurant.slug}`
+                                    );
+                                  }}
+                                  className="p-1 hover:bg-gray-700 rounded transition-colors"
+                                  title="URL kopieren"
+                                >
+                                  <Copy className="w-4 h-4 text-gray-400" />
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="space-y-1.5">
+                              <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
+                                <Clock className="w-4 h-4" />
+                                Vorlaufzeit
+                              </label>
+                              <p className="text-gray-300">
+                                {restaurant.booking_lead_time_hours} Stunden
+                              </p>
+                            </div>
+
+                            <div className="space-y-1.5">
+                              <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
+                                <Users className="w-4 h-4" />
+                                Max. Personenzahl
+                              </label>
+                              <p className="text-gray-300">
+                                {restaurant.booking_max_party_size} Personen
+                              </p>
+                            </div>
+
+                            <div className="space-y-1.5">
+                              <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
+                                <Calendar className="w-4 h-4" />
+                                Standard-Dauer
+                              </label>
+                              <p className="text-gray-300">
+                                {restaurant.booking_default_duration} Minuten
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {!restaurant.address &&
+                        !restaurant.phone &&
+                        !restaurant.email &&
+                        !descriptionText &&
+                        !hasExtendedData &&
+                        !restaurant.public_booking_enabled && (
+                          <div className="text-center py-8 text-gray-400">
+                            <AlertCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                            <p>Noch keine zusätzlichen Informationen vorhanden.</p>
+                            <p className="text-sm mt-1">
+                              Klicken Sie auf "Bearbeiten", um Informationen hinzuzufügen.
+                            </p>
+                          </div>
+                        )}
+                    </div>
+                  );
+                })()
+              ) : (
                 <form onSubmit={handleSubmit} className="space-y-6">
-              {error && (
+                  {error && (
                     <div className="p-4 bg-red-900/30 border border-red-600/50 text-red-300 rounded-lg flex items-start gap-3">
                       <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
                       <div>
                         <p className="font-medium">Fehler</p>
                         <p className="text-sm mt-1">{error}</p>
                       </div>
-                </div>
-              )}
+                    </div>
+                  )}
 
                   <div className="space-y-2">
-                    <label 
-                      htmlFor="name" 
+                    <label
+                      htmlFor="name"
                       className="flex items-center gap-2 text-sm font-medium text-gray-300"
                     >
                       <Building2 className="w-4 h-4 text-blue-400" />
-                  Restaurantname <span className="text-red-400">*</span>
-                </label>
-                <Input
-                  id="name"
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  placeholder="Mein Restaurant"
-                  required
-                  minLength={1}
-                  maxLength={200}
+                      Restaurantname <span className="text-red-400">*</span>
+                    </label>
+                    <Input
+                      id="name"
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      placeholder="Mein Restaurant"
+                      required
+                      minLength={1}
+                      maxLength={200}
                       className="bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-500 focus:border-blue-500"
-                />
-              </div>
+                    />
+                  </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label 
-                        htmlFor="address" 
+                      <label
+                        htmlFor="address"
                         className="flex items-center gap-2 text-sm font-medium text-gray-300"
                       >
                         <MapPin className="w-4 h-4 text-blue-400" />
-                  Adresse
-                </label>
-                <Input
-                  id="address"
-                  type="text"
-                  value={formData.address || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, address: e.target.value || null })
-                  }
-                  placeholder="Musterstraße 123, 12345 Musterstadt"
-                  maxLength={500}
+                        Adresse
+                      </label>
+                      <Input
+                        id="address"
+                        type="text"
+                        value={formData.address || ''}
+                        onChange={(e) =>
+                          setFormData({ ...formData, address: e.target.value || null })
+                        }
+                        placeholder="Musterstraße 123, 12345 Musterstadt"
+                        maxLength={500}
                         className="bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-500 focus:border-blue-500"
-                />
-              </div>
+                      />
+                    </div>
 
                     <div className="space-y-2">
-                      <label 
-                        htmlFor="phone" 
+                      <label
+                        htmlFor="phone"
                         className="flex items-center gap-2 text-sm font-medium text-gray-300"
                       >
                         <Phone className="w-4 h-4 text-blue-400" />
-                  Telefonnummer
-                </label>
-                <Input
-                  id="phone"
-                  type="tel"
-                  value={formData.phone || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, phone: e.target.value || null })
-                  }
-                  placeholder="+49 123 456789"
-                  maxLength={50}
+                        Telefonnummer
+                      </label>
+                      <Input
+                        id="phone"
+                        type="tel"
+                        value={formData.phone || ''}
+                        onChange={(e) =>
+                          setFormData({ ...formData, phone: e.target.value || null })
+                        }
+                        placeholder="+49 123 456789"
+                        maxLength={50}
                         className="bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-500 focus:border-blue-500"
-                />
+                      />
                     </div>
-              </div>
+                  </div>
 
                   <div className="space-y-2">
-                    <label 
-                      htmlFor="email" 
+                    <label
+                      htmlFor="email"
                       className="flex items-center gap-2 text-sm font-medium text-gray-300"
                     >
                       <Mail className="w-4 h-4 text-blue-400" />
-                  E-Mail
-                </label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, email: e.target.value || null })
-                  }
-                  placeholder="info@restaurant.de"
-                  maxLength={255}
+                      E-Mail
+                    </label>
+                    <Input
+                      id="email"
+                      type="email"
+                      value={formData.email || ''}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value || null })}
+                      placeholder="info@restaurant.de"
+                      maxLength={255}
                       className="bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-500 focus:border-blue-500"
-                />
-              </div>
+                    />
+                  </div>
 
                   <div className="space-y-2">
-                    <label 
-                      htmlFor="description" 
+                    <label
+                      htmlFor="description"
                       className="flex items-center gap-2 text-sm font-medium text-gray-300"
                     >
                       <FileText className="w-4 h-4 text-blue-400" />
-                  Beschreibung
-                </label>
-                <textarea
-                  id="description"
-                  value={formData.description || ""}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value || null })
-                  }
-                  placeholder="Beschreibung des Restaurants..."
+                      Beschreibung
+                    </label>
+                    <textarea
+                      id="description"
+                      value={formData.description || ''}
+                      onChange={(e) =>
+                        setFormData({ ...formData, description: e.target.value || null })
+                      }
+                      placeholder="Beschreibung des Restaurants..."
                       rows={5}
                       className="w-full px-3 py-2 border border-gray-600 bg-gray-800/50 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500 resize-y"
                     />
@@ -716,8 +775,8 @@ export default function RestaurantManagePage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label 
-                          htmlFor="website" 
+                        <label
+                          htmlFor="website"
                           className="flex items-center gap-2 text-sm font-medium text-gray-300"
                         >
                           <Globe className="w-4 h-4 text-blue-400" />
@@ -726,7 +785,7 @@ export default function RestaurantManagePage() {
                         <Input
                           id="website"
                           type="url"
-                          value={formData.website || ""}
+                          value={formData.website || ''}
                           onChange={(e) =>
                             setFormData({ ...formData, website: e.target.value || null })
                           }
@@ -737,8 +796,8 @@ export default function RestaurantManagePage() {
                       </div>
 
                       <div className="space-y-2">
-                        <label 
-                          htmlFor="currency" 
+                        <label
+                          htmlFor="currency"
                           className="flex items-center gap-2 text-sm font-medium text-gray-300"
                         >
                           <Euro className="w-4 h-4 text-blue-400" />
@@ -746,7 +805,7 @@ export default function RestaurantManagePage() {
                         </label>
                         <select
                           id="currency"
-                          value={formData.currency || "EUR"}
+                          value={formData.currency || 'EUR'}
                           onChange={(e) =>
                             setFormData({ ...formData, currency: e.target.value || null })
                           }
@@ -762,8 +821,8 @@ export default function RestaurantManagePage() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label 
-                          htmlFor="timezone" 
+                        <label
+                          htmlFor="timezone"
                           className="flex items-center gap-2 text-sm font-medium text-gray-300"
                         >
                           <Clock className="w-4 h-4 text-blue-400" />
@@ -771,7 +830,7 @@ export default function RestaurantManagePage() {
                         </label>
                         <select
                           id="timezone"
-                          value={formData.timezone || "Europe/Berlin"}
+                          value={formData.timezone || 'Europe/Berlin'}
                           onChange={(e) =>
                             setFormData({ ...formData, timezone: e.target.value || null })
                           }
@@ -788,8 +847,8 @@ export default function RestaurantManagePage() {
                       </div>
 
                       <div className="space-y-2">
-                        <label 
-                          htmlFor="minReservationDuration" 
+                        <label
+                          htmlFor="minReservationDuration"
                           className="flex items-center gap-2 text-sm font-medium text-gray-300"
                         >
                           <Calendar className="w-4 h-4 text-blue-400" />
@@ -803,7 +862,10 @@ export default function RestaurantManagePage() {
                           step={15}
                           value={formData.minReservationDuration || 60}
                           onChange={(e) =>
-                            setFormData({ ...formData, minReservationDuration: parseInt(e.target.value) || 60 })
+                            setFormData({
+                              ...formData,
+                              minReservationDuration: parseInt(e.target.value) || 60,
+                            })
                           }
                           className="bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-500 focus:border-blue-500"
                         />
@@ -812,8 +874,8 @@ export default function RestaurantManagePage() {
                     </div>
 
                     <div className="space-y-2">
-                      <label 
-                        htmlFor="openingHours" 
+                      <label
+                        htmlFor="openingHours"
                         className="flex items-center gap-2 text-sm font-medium text-gray-300"
                       >
                         <Clock className="w-4 h-4 text-blue-400" />
@@ -821,19 +883,19 @@ export default function RestaurantManagePage() {
                       </label>
                       <textarea
                         id="openingHours"
-                        value={formData.openingHours || ""}
+                        value={formData.openingHours || ''}
                         onChange={(e) =>
                           setFormData({ ...formData, openingHours: e.target.value || null })
                         }
                         placeholder="z.B. Mo-Fr: 11:00-22:00, Sa-So: 12:00-23:00"
                         rows={3}
                         className="w-full px-3 py-2 border border-gray-600 bg-gray-800/50 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500 resize-y"
-                />
-              </div>
+                      />
+                    </div>
 
                     <div className="space-y-2">
-                      <label 
-                        htmlFor="cancellationPolicy" 
+                      <label
+                        htmlFor="cancellationPolicy"
                         className="flex items-center gap-2 text-sm font-medium text-gray-300"
                       >
                         <Info className="w-4 h-4 text-blue-400" />
@@ -841,7 +903,7 @@ export default function RestaurantManagePage() {
                       </label>
                       <textarea
                         id="cancellationPolicy"
-                        value={formData.cancellationPolicy || ""}
+                        value={formData.cancellationPolicy || ''}
                         onChange={(e) =>
                           setFormData({ ...formData, cancellationPolicy: e.target.value || null })
                         }
@@ -862,11 +924,15 @@ export default function RestaurantManagePage() {
                     {/* Aktivieren/Deaktivieren */}
                     <div className="flex items-center justify-between p-4 bg-gray-800/80 rounded-lg border border-gray-700">
                       <div className="space-y-1">
-                        <label htmlFor="sumup_enabled" className="text-sm font-medium text-white cursor-pointer">
+                        <label
+                          htmlFor="sumup_enabled"
+                          className="text-sm font-medium text-white cursor-pointer"
+                        >
                           SumUp aktivieren
                         </label>
                         <p className="text-xs text-gray-400">
-                          Ermöglicht Zahlungen über SumUp Kartenterminals. Die SumUp-Konfiguration (API Key, Merchant Code) erfolgt serverseitig.
+                          Ermöglicht Zahlungen über SumUp Kartenterminals. Die SumUp-Konfiguration
+                          (API Key, Merchant Code) erfolgt serverseitig.
                         </p>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
@@ -902,8 +968,8 @@ export default function RestaurantManagePage() {
                     {/* Standard Terminal */}
                     {formData.sumup_enabled && (
                       <div className="space-y-2">
-                        <label 
-                          htmlFor="sumup_default_reader_id" 
+                        <label
+                          htmlFor="sumup_default_reader_id"
                           className="flex items-center gap-2 text-sm font-medium text-gray-300"
                         >
                           <Nfc className="w-4 h-4 text-blue-400" />
@@ -912,9 +978,12 @@ export default function RestaurantManagePage() {
                         <Input
                           id="sumup_default_reader_id"
                           type="text"
-                          value={formData.sumup_default_reader_id || ""}
+                          value={formData.sumup_default_reader_id || ''}
                           onChange={(e) =>
-                            setFormData({ ...formData, sumup_default_reader_id: e.target.value || null })
+                            setFormData({
+                              ...formData,
+                              sumup_default_reader_id: e.target.value || null,
+                            })
                           }
                           placeholder="z.B. rdr_3MSAFM23CK82VSTT4BN6RWSQ65"
                           maxLength={64}
@@ -937,7 +1006,10 @@ export default function RestaurantManagePage() {
                     {/* Aktivieren/Deaktivieren */}
                     <div className="flex items-center justify-between p-4 bg-gray-800/80 rounded-lg border border-gray-700">
                       <div className="space-y-1">
-                        <label htmlFor="public_booking_enabled" className="text-sm font-medium text-white cursor-pointer">
+                        <label
+                          htmlFor="public_booking_enabled"
+                          className="text-sm font-medium text-white cursor-pointer"
+                        >
                           Öffentliche Reservierungen aktivieren
                         </label>
                         <p className="text-xs text-gray-400">
@@ -960,8 +1032,8 @@ export default function RestaurantManagePage() {
 
                     {/* Slug */}
                     <div className="space-y-2">
-                      <label 
-                        htmlFor="slug" 
+                      <label
+                        htmlFor="slug"
                         className="flex items-center gap-2 text-sm font-medium text-gray-300"
                       >
                         <Link className="w-4 h-4 text-emerald-400" />
@@ -971,7 +1043,7 @@ export default function RestaurantManagePage() {
                         <Input
                           id="slug"
                           type="text"
-                          value={formData.slug || ""}
+                          value={formData.slug || ''}
                           onChange={(e) => {
                             // Nur Kleinbuchstaben, Zahlen und Bindestriche erlauben
                             const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
@@ -1004,7 +1076,10 @@ export default function RestaurantManagePage() {
                       {formData.slug && (
                         <p className="text-xs text-gray-400 flex items-center gap-1">
                           <ExternalLink className="w-3 h-3" />
-                          Widget-URL: <code className="bg-gray-800 px-1 rounded">/reservierung/{formData.slug}</code>
+                          Widget-URL:{' '}
+                          <code className="bg-gray-800 px-1 rounded">
+                            /reservierung/{formData.slug}
+                          </code>
                         </p>
                       )}
                     </div>
@@ -1012,8 +1087,8 @@ export default function RestaurantManagePage() {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       {/* Vorlaufzeit */}
                       <div className="space-y-2">
-                        <label 
-                          htmlFor="booking_lead_time_hours" 
+                        <label
+                          htmlFor="booking_lead_time_hours"
                           className="flex items-center gap-2 text-sm font-medium text-gray-300"
                         >
                           <Clock className="w-4 h-4 text-emerald-400" />
@@ -1026,7 +1101,10 @@ export default function RestaurantManagePage() {
                           max={168}
                           value={formData.booking_lead_time_hours ?? 2}
                           onChange={(e) =>
-                            setFormData({ ...formData, booking_lead_time_hours: parseInt(e.target.value) || 2 })
+                            setFormData({
+                              ...formData,
+                              booking_lead_time_hours: parseInt(e.target.value) || 2,
+                            })
                           }
                           className="bg-gray-800/50 border-gray-600 text-white focus:border-emerald-500"
                         />
@@ -1035,8 +1113,8 @@ export default function RestaurantManagePage() {
 
                       {/* Maximale Personenzahl */}
                       <div className="space-y-2">
-                        <label 
-                          htmlFor="booking_max_party_size" 
+                        <label
+                          htmlFor="booking_max_party_size"
                           className="flex items-center gap-2 text-sm font-medium text-gray-300"
                         >
                           <Users className="w-4 h-4 text-emerald-400" />
@@ -1049,7 +1127,10 @@ export default function RestaurantManagePage() {
                           max={100}
                           value={formData.booking_max_party_size ?? 12}
                           onChange={(e) =>
-                            setFormData({ ...formData, booking_max_party_size: parseInt(e.target.value) || 12 })
+                            setFormData({
+                              ...formData,
+                              booking_max_party_size: parseInt(e.target.value) || 12,
+                            })
                           }
                           className="bg-gray-800/50 border-gray-600 text-white focus:border-emerald-500"
                         />
@@ -1058,8 +1139,8 @@ export default function RestaurantManagePage() {
 
                       {/* Standard-Reservierungsdauer */}
                       <div className="space-y-2">
-                        <label 
-                          htmlFor="booking_default_duration" 
+                        <label
+                          htmlFor="booking_default_duration"
                           className="flex items-center gap-2 text-sm font-medium text-gray-300"
                         >
                           <Calendar className="w-4 h-4 text-emerald-400" />
@@ -1073,7 +1154,10 @@ export default function RestaurantManagePage() {
                           step={15}
                           value={formData.booking_default_duration ?? 120}
                           onChange={(e) =>
-                            setFormData({ ...formData, booking_default_duration: parseInt(e.target.value) || 120 })
+                            setFormData({
+                              ...formData,
+                              booking_default_duration: parseInt(e.target.value) || 120,
+                            })
                           }
                           className="bg-gray-800/50 border-gray-600 text-white focus:border-emerald-500"
                         />
@@ -1083,9 +1167,9 @@ export default function RestaurantManagePage() {
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-700">
-                    <Button 
-                      type="submit" 
-                      className="flex-1 gap-2 touch-manipulation min-h-[44px]" 
+                    <Button
+                      type="submit"
+                      className="flex-1 gap-2 touch-manipulation min-h-[44px]"
                       disabled={submitting}
                     >
                       {submitting ? (
@@ -1096,29 +1180,27 @@ export default function RestaurantManagePage() {
                       ) : (
                         <>
                           <Save className="w-4 h-4" />
-                          <span>
-                            {restaurant ? "Änderungen speichern" : "Restaurant anlegen"}
-                          </span>
+                          <span>{restaurant ? 'Änderungen speichern' : 'Restaurant anlegen'}</span>
                         </>
                       )}
-                </Button>
-                {restaurant && (
-                  <Button
-                    type="button"
-                    variant="outline"
+                    </Button>
+                    {restaurant && (
+                      <Button
+                        type="button"
+                        variant="outline"
                         onClick={handleCancel}
                         disabled={submitting}
                         className="gap-2 touch-manipulation min-h-[44px]"
                       >
                         <X className="w-4 h-4" />
                         <span>Abbrechen</span>
-                  </Button>
-                )}
-              </div>
-            </form>
-          )}
-        </CardContent>
-      </Card>
+                      </Button>
+                    )}
+                  </div>
+                </form>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

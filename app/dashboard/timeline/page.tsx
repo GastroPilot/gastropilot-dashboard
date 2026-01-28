@@ -1,63 +1,83 @@
-﻿"use client";
+﻿'use client';
 
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import Link from "next/link";
-import { restaurantsApi, Restaurant } from "@/lib/api/restaurants";
-import { areasApi, Area } from "@/lib/api/areas";
-import { tablesApi, Table } from "@/lib/api/tables";
-import { reservationsApi, Reservation } from "@/lib/api/reservations";
-import { blocksApi, Block } from "@/lib/api/blocks";
-import { blockAssignmentsApi, BlockAssignment } from "@/lib/api/block-assignments";
-import { Button } from "@/components/ui/button";
-import { LoadingOverlay } from "@/components/loading-overlay";
-import { format, parseISO, startOfDay, endOfDay, addMinutes } from "date-fns";
-import { de } from "date-fns/locale";
-import { Ban, Calendar, Check, ChevronDown, ChevronLeft, ChevronRight, Clock, LayoutGrid, Plus, Filter } from "lucide-react";
-import { ReservationDialog } from "@/components/reservation-dialog";
-import { useUserSettings } from "@/lib/hooks/use-user-settings";
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import Link from 'next/link';
+import { restaurantsApi, Restaurant } from '@/lib/api/restaurants';
+import { areasApi, Area } from '@/lib/api/areas';
+import { tablesApi, Table } from '@/lib/api/tables';
+import { reservationsApi, Reservation } from '@/lib/api/reservations';
+import { blocksApi, Block } from '@/lib/api/blocks';
+import { blockAssignmentsApi, BlockAssignment } from '@/lib/api/block-assignments';
+import { Button } from '@/components/ui/button';
+import { LoadingOverlay } from '@/components/loading-overlay';
+import { format, parseISO, startOfDay, endOfDay, addMinutes } from 'date-fns';
+import { de } from 'date-fns/locale';
+import {
+  Ban,
+  Calendar,
+  Check,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  LayoutGrid,
+  Plus,
+  Filter,
+} from 'lucide-react';
+import { ReservationDialog } from '@/components/reservation-dialog';
+import { useUserSettings } from '@/lib/hooks/use-user-settings';
 
 const BASE_SLOT_MINUTES = 30;
 const BASE_SLOT_WIDTH = 56; // px per 30-min slot for horizontal spacing
 const LANE_HEIGHT = 44; // px height per lane for overlapping reservations
-type TimelineFilter = Reservation["status"] | "block";
-const STATUS_STYLE: Record<Reservation["status"], { className: string; label: string }> = {
-  pending: { className: "bg-rose-600/85 border border-rose-400/70 text-white", label: "Offen" },
-  confirmed: { className: "bg-emerald-600/85 border border-emerald-400/70 text-white", label: "Bestätigt" },
-  seated: { className: "bg-amber-600/90 border border-amber-300/70 text-white", label: "Platziert" },
-  completed: { className: "bg-slate-600/85 border border-slate-400/70 text-white", label: "Abgeschlossen" },
-  canceled: { className: "bg-gray-600/80 border border-gray-400/70 text-white", label: "Storniert" },
-  no_show: { className: "bg-gray-700/80 border border-gray-500/70 text-white", label: "No Show" },
+type TimelineFilter = Reservation['status'] | 'block';
+const STATUS_STYLE: Record<Reservation['status'], { className: string; label: string }> = {
+  pending: { className: 'bg-rose-600/85 border border-rose-400/70 text-white', label: 'Offen' },
+  confirmed: {
+    className: 'bg-emerald-600/85 border border-emerald-400/70 text-white',
+    label: 'Bestätigt',
+  },
+  seated: {
+    className: 'bg-amber-600/90 border border-amber-300/70 text-white',
+    label: 'Platziert',
+  },
+  completed: {
+    className: 'bg-slate-600/85 border border-slate-400/70 text-white',
+    label: 'Abgeschlossen',
+  },
+  canceled: {
+    className: 'bg-gray-600/80 border border-gray-400/70 text-white',
+    label: 'Storniert',
+  },
+  no_show: { className: 'bg-gray-700/80 border border-gray-500/70 text-white', label: 'No Show' },
 };
-const STATUS_ICON_MAP: Record<
-  TimelineFilter,
-  { Icon: typeof Clock; tone: string }
-> = {
-  pending: { Icon: Clock, tone: "bg-blue-900/40 border-blue-600 text-blue-100" },
-  confirmed: { Icon: Clock, tone: "bg-emerald-900/40 border-emerald-600 text-emerald-100" },
-  seated: { Icon: Clock, tone: "bg-amber-900/40 border-amber-600 text-amber-100" },
-  completed: { Icon: Clock, tone: "bg-slate-900/40 border-slate-600 text-slate-100" },
-  canceled: { Icon: Clock, tone: "bg-red-900/40 border-red-600 text-red-100" },
-  no_show: { Icon: Clock, tone: "bg-orange-900/30 border-orange-600 text-orange-100" },
-  block: { Icon: Ban, tone: "bg-rose-900/40 border-rose-600 text-rose-100" },
+const STATUS_ICON_MAP: Record<TimelineFilter, { Icon: typeof Clock; tone: string }> = {
+  pending: { Icon: Clock, tone: 'bg-blue-900/40 border-blue-600 text-blue-100' },
+  confirmed: { Icon: Clock, tone: 'bg-emerald-900/40 border-emerald-600 text-emerald-100' },
+  seated: { Icon: Clock, tone: 'bg-amber-900/40 border-amber-600 text-amber-100' },
+  completed: { Icon: Clock, tone: 'bg-slate-900/40 border-slate-600 text-slate-100' },
+  canceled: { Icon: Clock, tone: 'bg-red-900/40 border-red-600 text-red-100' },
+  no_show: { Icon: Clock, tone: 'bg-orange-900/30 border-orange-600 text-orange-100' },
+  block: { Icon: Ban, tone: 'bg-rose-900/40 border-rose-600 text-rose-100' },
 };
-const ACTIVE_STATUSES: Reservation["status"][] = ["pending", "confirmed", "seated"];
-const ALL_STATUSES: Reservation["status"][] = [
-  "pending",
-  "confirmed",
-  "seated",
-  "completed",
-  "canceled",
-  "no_show",
+const ACTIVE_STATUSES: Reservation['status'][] = ['pending', 'confirmed', 'seated'];
+const ALL_STATUSES: Reservation['status'][] = [
+  'pending',
+  'confirmed',
+  'seated',
+  'completed',
+  'canceled',
+  'no_show',
 ];
-const ACTIVE_FILTERS: TimelineFilter[] = [...ACTIVE_STATUSES, "block"];
-const ALL_FILTERS: TimelineFilter[] = [...ALL_STATUSES, "block"];
-const STATUS_SETTINGS_KEY = "dashboard_status_filters";
-const SLOT_SETTINGS_KEY = "dashboard_timeline_slot_minutes";
+const ACTIVE_FILTERS: TimelineFilter[] = [...ACTIVE_STATUSES, 'block'];
+const ALL_FILTERS: TimelineFilter[] = [...ALL_STATUSES, 'block'];
+const STATUS_SETTINGS_KEY = 'dashboard_status_filters';
+const SLOT_SETTINGS_KEY = 'dashboard_timeline_slot_minutes';
 const normalizeStatus = (value: string): TimelineFilter | null => {
-  const normalized = value === "noShow" ? "no_show" : value;
-  if (normalized === "block") return "block";
-  return ALL_STATUSES.includes(normalized as Reservation["status"])
-    ? (normalized as Reservation["status"])
+  const normalized = value === 'noShow' ? 'no_show' : value;
+  if (normalized === 'block') return 'block';
+  return ALL_STATUSES.includes(normalized as Reservation['status'])
+    ? (normalized as Reservation['status'])
     : null;
 };
 const normalizeStatusList = (values: any): TimelineFilter[] => {
@@ -86,20 +106,22 @@ export default function TimelinePage() {
   const [reservationDialogOpen, setReservationDialogOpen] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
-  const [toasts, setToasts] = useState<{ id: string; message: string; variant?: "info" | "error" | "success" }[]>([]);
+  const [toasts, setToasts] = useState<
+    { id: string; message: string; variant?: 'info' | 'error' | 'success' }[]
+  >([]);
   const [slotMinutes, setSlotMinutes] = useState<number>(60);
   const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
   const [selectedStatuses, setSelectedStatuses] = useState<TimelineFilter[]>(ACTIVE_FILTERS);
   const [statusMenuOpen, setStatusMenuOpen] = useState(false);
   const statusMenuRef = useRef<HTMLDivElement | null>(null);
   const settingsInitializedRef = useRef(false);
-  const lastPersistedStatusesRef = useRef<string>("");
+  const lastPersistedStatusesRef = useRef<string>('');
   const slotInitializedRef = useRef(false);
   const lastPersistedSlotRef = useRef<number | null>(null);
   const { settings, updateSettings, error: settingsError } = useUserSettings();
 
   const addToast = useCallback(
-    (message: string, variant: "info" | "error" | "success" = "info") => {
+    (message: string, variant: 'info' | 'error' | 'success' = 'info') => {
       const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
       setToasts((prev) => [...prev, { id, message, variant }]);
       setTimeout(() => {
@@ -120,7 +142,7 @@ export default function TimelinePage() {
           setIsInitialLoading(false);
         }
       } catch (error) {
-        console.error("Fehler beim Laden des Restaurants:", error);
+        console.error('Fehler beim Laden des Restaurants:', error);
         setIsInitialLoading(false);
       }
     };
@@ -136,11 +158,11 @@ export default function TimelinePage() {
         setStatusMenuOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
 
     return () => {
       clearInterval(interval);
-      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
 
@@ -169,7 +191,7 @@ export default function TimelinePage() {
         });
         setReservations(reservationsData);
       } catch (error) {
-        console.error("Fehler beim Laden der Daten:", error);
+        console.error('Fehler beim Laden der Daten:', error);
       } finally {
         showInitial ? setIsInitialLoading(false) : setIsRefreshing(false);
         setHasLoadedOnce(true);
@@ -180,7 +202,7 @@ export default function TimelinePage() {
 
   useEffect(() => {
     if (settingsError) {
-      addToast(settingsError, "error");
+      addToast(settingsError, 'error');
     }
   }, [settingsError, addToast]);
 
@@ -193,7 +215,10 @@ export default function TimelinePage() {
       lastPersistedStatusesRef.current = JSON.stringify(normalized);
     }
     const storedSlot = (settings.settings || {})[SLOT_SETTINGS_KEY];
-    if (typeof storedSlot === "number" && (storedSlot === 15 || storedSlot === 30 || storedSlot === 60)) {
+    if (
+      typeof storedSlot === 'number' &&
+      (storedSlot === 15 || storedSlot === 30 || storedSlot === 60)
+    ) {
       setSlotMinutes(storedSlot);
       lastPersistedSlotRef.current = storedSlot;
     }
@@ -209,9 +234,9 @@ export default function TimelinePage() {
       try {
         await updateSettings({ [STATUS_SETTINGS_KEY]: normalized });
       } catch (err) {
-        console.error("Fehler beim Speichern der Timeline-Filtereinstellungen:", err);
-        addToast("Status-Filter konnten nicht gespeichert werden.", "error");
-        lastPersistedStatusesRef.current = "";
+        console.error('Fehler beim Speichern der Timeline-Filtereinstellungen:', err);
+        addToast('Status-Filter konnten nicht gespeichert werden.', 'error');
+        lastPersistedStatusesRef.current = '';
       }
     },
     [updateSettings, addToast]
@@ -224,8 +249,8 @@ export default function TimelinePage() {
       try {
         await updateSettings({ [SLOT_SETTINGS_KEY]: value });
       } catch (err) {
-        console.error("Fehler beim Speichern des Zeitrasters:", err);
-        addToast("Zeitraster konnte nicht gespeichert werden.", "error");
+        console.error('Fehler beim Speichern des Zeitrasters:', err);
+        addToast('Zeitraster konnte nicht gespeichert werden.', 'error');
         lastPersistedSlotRef.current = null;
       }
     },
@@ -236,7 +261,10 @@ export default function TimelinePage() {
     loadData();
   }, [loadData]);
 
-  const slotWidth = useMemo(() => Math.max(36, Math.round((BASE_SLOT_WIDTH / BASE_SLOT_MINUTES) * slotMinutes)), [slotMinutes]);
+  const slotWidth = useMemo(
+    () => Math.max(36, Math.round((BASE_SLOT_WIDTH / BASE_SLOT_MINUTES) * slotMinutes)),
+    [slotMinutes]
+  );
   const reservationsForDayAll = useMemo(() => {
     const dayStartDate = startOfDay(selectedDate);
     const dayEndDate = endOfDay(selectedDate);
@@ -249,14 +277,14 @@ export default function TimelinePage() {
 
   const reservationsForDay = useMemo(() => {
     const reservationStatuses = selectedStatuses.filter(
-      (status): status is Reservation["status"] => status !== "block"
+      (status): status is Reservation['status'] => status !== 'block'
     );
     const statusesToUse =
       reservationStatuses.length > 0
         ? reservationStatuses
         : selectedStatuses.length === 0
-        ? ALL_STATUSES
-        : [];
+          ? ALL_STATUSES
+          : [];
     return reservationsForDayAll.filter((r) => statusesToUse.includes(r.status));
   }, [reservationsForDayAll, selectedStatuses]);
   const unassignedReservations = useMemo(
@@ -285,7 +313,7 @@ export default function TimelinePage() {
   }, [unassignedReservations]);
 
   const totalReservations = reservationsForDay.length;
-  const showBlocks = selectedStatuses.length === 0 || selectedStatuses.includes("block");
+  const showBlocks = selectedStatuses.length === 0 || selectedStatuses.includes('block');
   const blocksForDay = useMemo(() => {
     const dayStartDate = startOfDay(selectedDate);
     const dayEndDate = endOfDay(selectedDate);
@@ -306,7 +334,9 @@ export default function TimelinePage() {
       list.push(block);
       map.set(assignment.table_id, list);
     });
-    map.forEach((list) => list.sort((a, b) => parseISO(a.start_at).getTime() - parseISO(b.start_at).getTime()));
+    map.forEach((list) =>
+      list.sort((a, b) => parseISO(a.start_at).getTime() - parseISO(b.start_at).getTime())
+    );
     return map;
   }, [blockAssignments, blocksForDay]);
 
@@ -316,7 +346,7 @@ export default function TimelinePage() {
     for (let minutes = 0; minutes < 24 * 60; minutes += slotMinutes) {
       const time = addMinutes(start, minutes);
       slots.push({
-        label: format(time, "HH:mm"),
+        label: format(time, 'HH:mm'),
         isHour: time.getMinutes() === 0,
       });
     }
@@ -330,7 +360,9 @@ export default function TimelinePage() {
 
   const handleReservationClick = (reservation: Reservation) => {
     setSelectedReservation(reservation);
-    const table = reservation.table_id ? tables.find((t) => t.id === reservation.table_id) ?? null : null;
+    const table = reservation.table_id
+      ? (tables.find((t) => t.id === reservation.table_id) ?? null)
+      : null;
     setSelectedTable(table);
     setReservationDialogOpen(true);
   };
@@ -350,7 +382,7 @@ export default function TimelinePage() {
   };
 
   const getStatusLabel = (status: TimelineFilter) => {
-    if (status === "block") return "Block";
+    if (status === 'block') return 'Block';
     return STATUS_STYLE[status]?.label ?? status;
   };
 
@@ -362,30 +394,30 @@ export default function TimelinePage() {
       list.push(reservation);
       map.set(reservation.table_id, list);
     });
-    map.forEach((list) => list.sort((a, b) => parseISO(a.start_at).getTime() - parseISO(b.start_at).getTime()));
+    map.forEach((list) =>
+      list.sort((a, b) => parseISO(a.start_at).getTime() - parseISO(b.start_at).getTime())
+    );
     return map;
   }, [reservationsForDay]);
 
   const tablesByArea = useMemo(() => {
-    const grouped = new Map<number | "unassigned", Table[]>();
+    const grouped = new Map<number | 'unassigned', Table[]>();
     tables.forEach((table) => {
-      const key: number | "unassigned" =
+      const key: number | 'unassigned' =
         table.area_id !== null && table.area_id !== undefined
           ? Number(table.area_id)
-          : "unassigned";
+          : 'unassigned';
       const list = grouped.get(key) ?? [];
       list.push(table);
       grouped.set(key, list);
     });
-    grouped.forEach((list) =>
-      list.sort((a, b) => Number(a.number ?? 0) - Number(b.number ?? 0))
-    );
+    grouped.forEach((list) => list.sort((a, b) => Number(a.number ?? 0) - Number(b.number ?? 0)));
     return grouped;
   }, [tables]);
 
-  const areaOrder: (number | "unassigned")[] = useMemo(() => {
-    const ids: (number | "unassigned")[] = areas.map((area) => Number(area.id));
-    if (tablesByArea.has("unassigned")) ids.push("unassigned");
+  const areaOrder: (number | 'unassigned')[] = useMemo(() => {
+    const ids: (number | 'unassigned')[] = areas.map((area) => Number(area.id));
+    if (tablesByArea.has('unassigned')) ids.push('unassigned');
     return ids;
   }, [areas, tablesByArea]);
 
@@ -408,10 +440,10 @@ export default function TimelinePage() {
         className={`absolute h-10 rounded-md px-2 flex items-center gap-2 text-sm shadow-lg cursor-pointer hover:brightness-110 transition ${style.className}`}
         style={{ left: `${left}%`, width: `${width}%`, top: 2 + laneIndex * LANE_HEIGHT }}
         onClick={() => handleReservationClick(reservation)}
-        title={`${reservation.guest_name ?? "Gast"} · ${format(parseISO(reservation.start_at), "HH:mm")} - ${format(parseISO(reservation.end_at), "HH:mm")}`}
+        title={`${reservation.guest_name ?? 'Gast'} · ${format(parseISO(reservation.start_at), 'HH:mm')} - ${format(parseISO(reservation.end_at), 'HH:mm')}`}
       >
         <span className="truncate">
-          {reservation.guest_name ?? "Gast"} · {reservation.party_size} Pers.
+          {reservation.guest_name ?? 'Gast'} · {reservation.party_size} Pers.
         </span>
         <span className="text-[11px] opacity-80">{style.label}</span>
       </div>
@@ -424,14 +456,14 @@ export default function TimelinePage() {
 
     const left = ((start - dayStart) / dayDuration) * 100;
     const width = ((end - start) / dayDuration) * 100;
-    const label = block.reason || "Blockiert";
+    const label = block.reason || 'Blockiert';
 
     return (
       <div
         key={`block-${block.id}`}
         className="absolute h-10 rounded-md px-2 flex items-center gap-2 text-sm shadow-lg cursor-pointer hover:brightness-110 transition bg-rose-700/85 border border-rose-400/70 text-white"
         style={{ left: `${left}%`, width: `${width}%`, top: 2 + laneIndex * LANE_HEIGHT }}
-        title={`${label} · ${format(parseISO(block.start_at), "HH:mm")} - ${format(parseISO(block.end_at), "HH:mm")}`}
+        title={`${label} · ${format(parseISO(block.start_at), 'HH:mm')} - ${format(parseISO(block.end_at), 'HH:mm')}`}
       >
         <span className="truncate">{label}</span>
       </div>
@@ -458,11 +490,11 @@ export default function TimelinePage() {
             <div
               key={toast.id}
               className={`min-w-[260px] rounded-lg border px-4 py-3 shadow-[0_14px_32px_rgba(0,0,0,0.35)] text-sm ${
-                toast.variant === "error"
-                  ? "bg-red-900/80 border-red-500 text-red-50"
-                  : toast.variant === "success"
-                  ? "bg-green-900/80 border-green-500 text-green-50"
-                  : "bg-slate-800/90 border-slate-600 text-slate-100"
+                toast.variant === 'error'
+                  ? 'bg-red-900/80 border-red-500 text-red-50'
+                  : toast.variant === 'success'
+                    ? 'bg-green-900/80 border-green-500 text-green-50'
+                    : 'bg-slate-800/90 border-slate-600 text-slate-100'
               }`}
             >
               {toast.message}
@@ -501,18 +533,20 @@ export default function TimelinePage() {
             </div>
             <div className="text-left ml-2 md:ml-4 border-l border-gray-600 pl-2 md:pl-4">
               <div className="text-xs md:text-sm font-semibold text-white whitespace-nowrap">
-                {format(now, "EEEE, d. MMMM yyyy", { locale: de })}
+                {format(now, 'EEEE, d. MMMM yyyy', { locale: de })}
               </div>
               <div className="text-base md:text-lg lg:text-xl font-bold text-blue-300 tracking-tight whitespace-nowrap">
-                {format(now, "HH:mm:ss")}
+                {format(now, 'HH:mm:ss')}
               </div>
             </div>
           </div>
           <div className="flex items-center gap-2 min-w-0 shrink-0 justify-end">
             <div className="text-right leading-tight">
-              <div className="text-[10px] uppercase tracking-wide text-gray-400">Ausgewählter Tag</div>
+              <div className="text-[10px] uppercase tracking-wide text-gray-400">
+                Ausgewählter Tag
+              </div>
               <div className="text-xs font-semibold text-white whitespace-nowrap">
-                {format(selectedDate, "EEE, d.M.yyyy", { locale: de })}
+                {format(selectedDate, 'EEE, d.M.yyyy', { locale: de })}
               </div>
             </div>
             <div className="flex items-center gap-1 shrink-0">
@@ -534,24 +568,31 @@ export default function TimelinePage() {
                   <span className="flex items-center gap-2 truncate">
                     <Filter className="w-4 h-4 text-gray-300" />
                     {selectedStatuses.length === ALL_FILTERS.length || selectedStatuses.length === 0
-                      ? "Alle Status"
-                      : selectedStatuses.map((s) => getStatusLabel(s)).join(", ")}
+                      ? 'Alle Status'
+                      : selectedStatuses.map((s) => getStatusLabel(s)).join(', ')}
                   </span>
-                  <ChevronDown className={`w-4 h-4 transition-transform ${statusMenuOpen ? "rotate-180" : ""}`} />
+                  <ChevronDown
+                    className={`w-4 h-4 transition-transform ${statusMenuOpen ? 'rotate-180' : ''}`}
+                  />
                 </button>
                 {statusMenuOpen && (
                   <div className="absolute right-0 mt-1 w-64 rounded-lg border border-gray-700 bg-gray-900 shadow-xl z-[60] max-h-[70vh] overflow-auto">
                     <button
                       type="button"
                       onClick={() => {
-                        const next = selectedStatuses.length === ALL_FILTERS.length || selectedStatuses.length === 0 ? [] : ALL_FILTERS;
+                        const next =
+                          selectedStatuses.length === ALL_FILTERS.length ||
+                          selectedStatuses.length === 0
+                            ? []
+                            : ALL_FILTERS;
                         setSelectedStatuses(next);
                         void persistStatusFilter(next);
                       }}
                       className={`w-full px-3 py-3 text-sm flex items-center justify-between transition-colors ${
-                        selectedStatuses.length === ALL_FILTERS.length || selectedStatuses.length === 0
-                          ? "font-semibold text-white border-l-2 border-blue-500 bg-gray-800/80"
-                          : "text-gray-200 hover:bg-gray-800"
+                        selectedStatuses.length === ALL_FILTERS.length ||
+                        selectedStatuses.length === 0
+                          ? 'font-semibold text-white border-l-2 border-blue-500 bg-gray-800/80'
+                          : 'text-gray-200 hover:bg-gray-800'
                       }`}
                     >
                       <span className="flex items-center gap-2">
@@ -562,12 +603,14 @@ export default function TimelinePage() {
                       </span>
                       <span
                         className={`inline-flex items-center justify-center w-6 h-6 rounded-full border ${
-                          selectedStatuses.length === ALL_FILTERS.length || selectedStatuses.length === 0
-                            ? "border-white/60 bg-white/10"
-                            : "border-gray-700 bg-gray-800"
+                          selectedStatuses.length === ALL_FILTERS.length ||
+                          selectedStatuses.length === 0
+                            ? 'border-white/60 bg-white/10'
+                            : 'border-gray-700 bg-gray-800'
                         }`}
                       >
-                        {(selectedStatuses.length === ALL_FILTERS.length || selectedStatuses.length === 0) && (
+                        {(selectedStatuses.length === ALL_FILTERS.length ||
+                          selectedStatuses.length === 0) && (
                           <Check className="w-4 h-4 text-blue-300" />
                         )}
                       </span>
@@ -576,7 +619,7 @@ export default function TimelinePage() {
                       const active = selectedStatuses.includes(status);
                       const label = getStatusLabel(status);
                       const count =
-                        status === "block"
+                        status === 'block'
                           ? blocksForDay.length
                           : reservationsForDayAll.filter((r) => r.status === status).length;
                       const { Icon, tone } = STATUS_ICON_MAP[status];
@@ -596,14 +639,14 @@ export default function TimelinePage() {
                           }
                           className={`w-full px-3 py-3 text-sm flex items-center justify-between transition-colors ${
                             active
-                              ? "font-semibold text-white border-l-2 border-blue-500 bg-gray-800/80 hover:bg-gray-700/80"
-                              : "text-gray-200 hover:bg-gray-800"
+                              ? 'font-semibold text-white border-l-2 border-blue-500 bg-gray-800/80 hover:bg-gray-700/80'
+                              : 'text-gray-200 hover:bg-gray-800'
                           }`}
                         >
                           <span className="flex items-center gap-2">
                             <span
                               className={`inline-flex items-center justify-center w-8 h-8 rounded-md border shrink-0 ${
-                                active ? tone : "border-white/10 bg-black/10 text-gray-200"
+                                active ? tone : 'border-white/10 bg-black/10 text-gray-200'
                               }`}
                             >
                               <Icon className="w-4 h-4" />
@@ -611,10 +654,14 @@ export default function TimelinePage() {
                             <span className="capitalize">{label}</span>
                           </span>
                           <div className="flex items-center gap-2">
-                            <span className="px-2 py-1 rounded-full text-xs bg-gray-800">{count}</span>
+                            <span className="px-2 py-1 rounded-full text-xs bg-gray-800">
+                              {count}
+                            </span>
                             <span
                               className={`inline-flex items-center justify-center w-6 h-6 rounded-full border ${
-                                active ? "border-white/60 bg-white/10" : "border-gray-700 bg-gray-800"
+                                active
+                                  ? 'border-white/60 bg-white/10'
+                                  : 'border-gray-700 bg-gray-800'
                               }`}
                             >
                               {active && <Check className="w-4 h-4 text-blue-300" />}
@@ -636,7 +683,9 @@ export default function TimelinePage() {
                     <Clock className="w-4 h-4 text-gray-300" />
                     {slotMinutes} Min
                   </span>
-                  <ChevronDown className={`w-4 h-4 transition-transform ${slotMenuOpen ? "rotate-180" : ""}`} />
+                  <ChevronDown
+                    className={`w-4 h-4 transition-transform ${slotMenuOpen ? 'rotate-180' : ''}`}
+                  />
                 </button>
                 {slotMenuOpen && (
                   <div className="absolute right-0 mt-1 w-44 rounded-lg border border-gray-700 bg-gray-900 shadow-xl z-[60] overflow-hidden">
@@ -651,8 +700,8 @@ export default function TimelinePage() {
                         }}
                         className={`w-full px-3 py-3 text-sm flex items-center justify-between transition-colors ${
                           slotMinutes === value
-                            ? "font-semibold text-white border-l-2 border-blue-500 bg-gray-800/80"
-                            : "text-gray-200 hover:bg-gray-800"
+                            ? 'font-semibold text-white border-l-2 border-blue-500 bg-gray-800/80'
+                            : 'text-gray-200 hover:bg-gray-800'
                         }`}
                       >
                         <span className="flex items-center gap-2">
@@ -699,21 +748,28 @@ export default function TimelinePage() {
 
       <div className="flex-1 overflow-auto px-4 pb-6 pt-4 min-h-0">
         {areaOrder.length === 0 ? (
-          <div className="text-center text-gray-400 mt-12">Keine Bereiche oder Tische gefunden.</div>
+          <div className="text-center text-gray-400 mt-12">
+            Keine Bereiche oder Tische gefunden.
+          </div>
         ) : (
           <div className="space-y-6">
             {areaOrder.map((areaId) => {
               const areaTables = tablesByArea.get(areaId) ?? [];
               if (areaTables.length === 0) return null;
               const tableIdSet = new Set(areaTables.map((t) => t.id));
-              const areaReservationCount = reservationsForDay.filter((r) => r.table_id && tableIdSet.has(r.table_id)).length;
+              const areaReservationCount = reservationsForDay.filter(
+                (r) => r.table_id && tableIdSet.has(r.table_id)
+              ).length;
               const areaName =
-                areaId === "unassigned"
-                  ? "Ohne Bereich"
-                  : areas.find((a) => a.id === areaId)?.name ?? "Bereich";
+                areaId === 'unassigned'
+                  ? 'Ohne Bereich'
+                  : (areas.find((a) => a.id === areaId)?.name ?? 'Bereich');
 
               return (
-                <div key={String(areaId)} className="border border-gray-700 rounded-xl bg-gray-800/70 shadow-lg shadow-black/30">
+                <div
+                  key={String(areaId)}
+                  className="border border-gray-700 rounded-xl bg-gray-800/70 shadow-lg shadow-black/30"
+                >
                   <div className="px-4 py-3 border-b border-gray-700 flex items-center justify-between">
                     <div>
                       <div className="text-sm font-semibold text-white">{areaName}</div>
@@ -736,7 +792,9 @@ export default function TimelinePage() {
                           className="h-16 px-3 border-b border-gray-800 last:border-b-0 flex items-center"
                         >
                           <div className="text-sm font-semibold text-white">{table.number}</div>
-                          <div className="text-xs text-gray-400 ml-2">{table.capacity ?? "-"} Pers.</div>
+                          <div className="text-xs text-gray-400 ml-2">
+                            {table.capacity ?? '-'} Pers.
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -756,7 +814,7 @@ export default function TimelinePage() {
                                 className="flex items-center justify-center"
                                 style={{ minWidth: slotWidth, width: slotWidth }}
                               >
-                                {slot.isHour ? slot.label : ""}
+                                {slot.isHour ? slot.label : ''}
                               </div>
                             ))}
                           </div>
@@ -772,7 +830,9 @@ export default function TimelinePage() {
                                 backgroundImage: `repeating-linear-gradient(to right, rgba(75,85,99,0.2) 0, rgba(75,85,99,0.2) 1px, transparent 1px, transparent ${slotWidth}px)`,
                               }}
                             >
-                              {tableReservations.map((reservation) => renderReservationBar(reservation))}
+                              {tableReservations.map((reservation) =>
+                                renderReservationBar(reservation)
+                              )}
                               {showBlocks && tableBlocks.map((block) => renderBlockBar(block))}
                             </div>
                           );
@@ -820,7 +880,7 @@ export default function TimelinePage() {
                               className="flex items-center justify-center"
                               style={{ minWidth: slotWidth, width: slotWidth }}
                             >
-                              {slot.isHour ? slot.label : ""}
+                              {slot.isHour ? slot.label : ''}
                             </div>
                           ))}
                         </div>
@@ -833,7 +893,10 @@ export default function TimelinePage() {
                         }}
                       >
                         {unassignedReservations.map((reservation) =>
-                          renderReservationBar(reservation, unassignedLanes.map.get(reservation.id) ?? 0)
+                          renderReservationBar(
+                            reservation,
+                            unassignedLanes.map.get(reservation.id) ?? 0
+                          )
                         )}
                       </div>
                     </div>

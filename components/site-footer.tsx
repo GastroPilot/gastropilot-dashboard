@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { useMemo } from "react";
-import { usePathname } from "next/navigation";
+import { useMemo } from 'react';
+import { usePathname } from 'next/navigation';
 
-const APP_VERSION_RAW = (process.env.NEXT_PUBLIC_APP_VERSION ?? "0.0.0-dev").trim();
-const APP_VERSION = APP_VERSION_RAW.startsWith("v") ? APP_VERSION_RAW : `v${APP_VERSION_RAW}`;
+const APP_VERSION_RAW = (process.env.NEXT_PUBLIC_APP_VERSION ?? '0.0.0-dev').trim();
+const APP_VERSION = APP_VERSION_RAW.startsWith('v') ? APP_VERSION_RAW : `v${APP_VERSION_RAW}`;
 
-const AUTH_PATHS = ["/login", "/login-nfc"];
+const AUTH_PATHS = ['/login', '/login-nfc'];
 
 export function SiteFooter() {
   const pathname = usePathname();

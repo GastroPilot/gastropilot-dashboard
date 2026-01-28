@@ -1,17 +1,24 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { format, addMinutes } from "date-fns";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ApiError } from "@/lib/api/client";
-import { blocksApi, Block } from "@/lib/api/blocks";
-import { reservationsApi } from "@/lib/api/reservations";
-import { confirmAction } from "@/lib/utils";
-import { blockAssignmentsApi, BlockAssignment } from "@/lib/api/block-assignments";
-import { Save, Trash2, X } from "lucide-react";
-import type { Table } from "@/lib/api/tables";
+import { useEffect, useState } from 'react';
+import { format, addMinutes } from 'date-fns';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { ApiError } from '@/lib/api/client';
+import { blocksApi, Block } from '@/lib/api/blocks';
+import { reservationsApi } from '@/lib/api/reservations';
+import { confirmAction } from '@/lib/utils';
+import { blockAssignmentsApi, BlockAssignment } from '@/lib/api/block-assignments';
+import { Save, Trash2, X } from 'lucide-react';
+import type { Table } from '@/lib/api/tables';
 
 interface BlockTableDialogProps {
   open: boolean;
@@ -23,7 +30,7 @@ interface BlockTableDialogProps {
   blockAssignments?: BlockAssignment[];
   selectedDate: Date;
   onBlockCreated: () => void;
-  onNotify?: (message: string, variant?: "info" | "success" | "error") => void;
+  onNotify?: (message: string, variant?: 'info' | 'success' | 'error') => void;
 }
 
 export function BlockTableDialog({
@@ -38,13 +45,13 @@ export function BlockTableDialog({
   onBlockCreated,
   onNotify,
 }: BlockTableDialogProps) {
-  const [blockDate, setBlockDate] = useState("");
-  const [startTime, setStartTime] = useState("");
-  const [endTime, setEndTime] = useState("");
-  const [reason, setReason] = useState("");
+  const [blockDate, setBlockDate] = useState('');
+  const [startTime, setStartTime] = useState('');
+  const [endTime, setEndTime] = useState('');
+  const [reason, setReason] = useState('');
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const assignedTables = block
     ? tables.filter((item) =>
         blockAssignments.some(
@@ -58,32 +65,32 @@ export function BlockTableDialog({
     if (block) {
       const start = new Date(block.start_at);
       const end = new Date(block.end_at);
-      setBlockDate(format(start, "yyyy-MM-dd"));
-      setStartTime(format(start, "HH:mm"));
-      setEndTime(format(end, "HH:mm"));
-      setReason(block.reason || "");
+      setBlockDate(format(start, 'yyyy-MM-dd'));
+      setStartTime(format(start, 'HH:mm'));
+      setEndTime(format(end, 'HH:mm'));
+      setReason(block.reason || '');
       return;
     }
     const now = new Date();
-    setBlockDate(format(selectedDate, "yyyy-MM-dd"));
-    setStartTime(format(now, "HH:mm"));
-    setEndTime(format(addMinutes(now, 120), "HH:mm"));
-    setReason("");
-    setError("");
+    setBlockDate(format(selectedDate, 'yyyy-MM-dd'));
+    setStartTime(format(now, 'HH:mm'));
+    setEndTime(format(addMinutes(now, 120), 'HH:mm'));
+    setReason('');
+    setError('');
   }, [open, selectedDate, block]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    setError("");
+    setError('');
     setLoading(true);
 
     try {
       const startDate = new Date(blockDate);
-      const [startHours, startMinutes] = startTime.split(":").map(Number);
+      const [startHours, startMinutes] = startTime.split(':').map(Number);
       startDate.setHours(startHours, startMinutes, 0, 0);
 
       const endDate = new Date(blockDate);
-      const [endHours, endMinutes] = endTime.split(":").map(Number);
+      const [endHours, endMinutes] = endTime.split(':').map(Number);
       endDate.setHours(endHours, endMinutes, 0, 0);
 
       if (endDate <= startDate) {
@@ -112,9 +119,9 @@ export function BlockTableDialog({
         const hasOverlap = reservations.some((reservation) => {
           if (reservation.table_id !== tableId) return false;
           const isActive =
-            reservation.status !== "canceled" &&
-            reservation.status !== "completed" &&
-            reservation.status !== "no_show";
+            reservation.status !== 'canceled' &&
+            reservation.status !== 'completed' &&
+            reservation.status !== 'no_show';
           if (!isActive) return false;
           const resStart = new Date(reservation.start_at);
           const resEnd = new Date(reservation.end_at);
@@ -127,9 +134,9 @@ export function BlockTableDialog({
       }
 
       if (conflictingTables.length > 0) {
-        const message = `Blockierung nicht möglich. Reservierung überschneidet sich bei: ${conflictingTables.join(", ")}.`;
+        const message = `Blockierung nicht möglich. Reservierung überschneidet sich bei: ${conflictingTables.join(', ')}.`;
         setError(message);
-        onNotify?.(message, "error");
+        onNotify?.(message, 'error');
         return;
       }
 
@@ -146,13 +153,13 @@ export function BlockTableDialog({
           )
         );
         onNotify?.(
-          targetBlocks.length > 1 ? "Blockierungen aktualisiert." : "Blockierung aktualisiert.",
-          "success"
+          targetBlocks.length > 1 ? 'Blockierungen aktualisiert.' : 'Blockierung aktualisiert.',
+          'success'
         );
       } else {
         const validTables = tables.filter((item) => item.id > 0);
         if (validTables.length === 0) {
-          setError("Bitte wähle mindestens einen Standard-Tisch aus.");
+          setError('Bitte wähle mindestens einen Standard-Tisch aus.');
           return;
         }
         const createdBlock = await blocksApi.create(restaurantId, {
@@ -174,17 +181,17 @@ export function BlockTableDialog({
           validTables.length === 1
             ? `Tisch ${validTables[0].number} wurde blockiert.`
             : `${validTables.length} Tische wurden blockiert.`;
-        onNotify?.(label, "success");
+        onNotify?.(label, 'success');
       }
       onBlockCreated();
       onOpenChange(false);
     } catch (err) {
       if (err instanceof ApiError) {
-        setError(err.message || "Fehler beim Blockieren des Tisches");
+        setError(err.message || 'Fehler beim Blockieren des Tisches');
       } else {
-        setError("Fehler beim Blockieren des Tisches");
+        setError('Fehler beim Blockieren des Tisches');
       }
-      onNotify?.("Fehler beim Blockieren des Tisches", "error");
+      onNotify?.('Fehler beim Blockieren des Tisches', 'error');
     } finally {
       setLoading(false);
     }
@@ -192,23 +199,23 @@ export function BlockTableDialog({
 
   const handleDelete = async () => {
     if (!block) return;
-    if (!confirmAction("Blockierung wirklich entfernen?")) {
+    if (!confirmAction('Blockierung wirklich entfernen?')) {
       return;
     }
-    setError("");
+    setError('');
     setDeleting(true);
     try {
       await blocksApi.delete(restaurantId, block.id);
-      onNotify?.("Blockierung entfernt.", "success");
+      onNotify?.('Blockierung entfernt.', 'success');
       onBlockCreated();
       onOpenChange(false);
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message);
       } else {
-        setError("Fehler beim Entfernen der Blockierung");
+        setError('Fehler beim Entfernen der Blockierung');
       }
-      onNotify?.("Fehler beim Entfernen der Blockierung", "error");
+      onNotify?.('Fehler beim Entfernen der Blockierung', 'error');
     } finally {
       setDeleting(false);
     }
@@ -218,7 +225,7 @@ export function BlockTableDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>{block ? "Blockierung bearbeiten" : "Tisch blockieren"}</DialogTitle>
+          <DialogTitle>{block ? 'Blockierung bearbeiten' : 'Tisch blockieren'}</DialogTitle>
           <DialogDescription>
             {block
               ? assignedTables.length > 0
@@ -227,7 +234,7 @@ export function BlockTableDialog({
                       ? assignedTables[0].number
                       : `${assignedTables.length} Tische`
                   } an.`
-                : "Passe den Zeitraum für diese Block-Vorlage an."
+                : 'Passe den Zeitraum für diese Block-Vorlage an.'
               : `Blockiere ${tables.length === 1 ? tables[0].number : `${tables.length} Tische`} für einen Zeitraum, damit dort keine Reservierungen möglich sind.`}
           </DialogDescription>
         </DialogHeader>
@@ -241,12 +248,15 @@ export function BlockTableDialog({
             {(block ? assignedTables.length > 0 : tables.length > 0) && (
               <div className="text-xs text-gray-400">
                 {block
-                  ? `Zugewiesene Tische: ${assignedTables.map((item) => item.number).join(", ")}`
-                  : `Ausgewählte Tische: ${tables.map((item) => item.number).join(", ")}`}
+                  ? `Zugewiesene Tische: ${assignedTables.map((item) => item.number).join(', ')}`
+                  : `Ausgewählte Tische: ${tables.map((item) => item.number).join(', ')}`}
               </div>
             )}
             <div>
-              <label htmlFor="block-reason" className="block text-sm font-medium mb-1.5 md:mb-2 text-gray-300">
+              <label
+                htmlFor="block-reason"
+                className="block text-sm font-medium mb-1.5 md:mb-2 text-gray-300"
+              >
                 Name (optional)
               </label>
               <Input
@@ -259,7 +269,10 @@ export function BlockTableDialog({
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="sm:col-span-3">
-                <label htmlFor="block-date" className="block text-sm font-medium mb-1.5 md:mb-2 text-gray-300">
+                <label
+                  htmlFor="block-date"
+                  className="block text-sm font-medium mb-1.5 md:mb-2 text-gray-300"
+                >
                   Datum *
                 </label>
                 <Input
@@ -272,7 +285,10 @@ export function BlockTableDialog({
                 />
               </div>
               <div>
-                <label htmlFor="block-start" className="block text-sm font-medium mb-1.5 md:mb-2 text-gray-300">
+                <label
+                  htmlFor="block-start"
+                  className="block text-sm font-medium mb-1.5 md:mb-2 text-gray-300"
+                >
                   Startzeit *
                 </label>
                 <Input
@@ -285,7 +301,10 @@ export function BlockTableDialog({
                 />
               </div>
               <div>
-                <label htmlFor="block-end" className="block text-sm font-medium mb-1.5 md:mb-2 text-gray-300">
+                <label
+                  htmlFor="block-end"
+                  className="block text-sm font-medium mb-1.5 md:mb-2 text-gray-300"
+                >
                   Endzeit *
                 </label>
                 <Input
@@ -308,7 +327,7 @@ export function BlockTableDialog({
                 disabled={loading || deleting}
                 className="mr-auto shadow-none hover:shadow-[0_12px_32px_rgba(239,68,68,0.45)]"
               >
-                <Trash2 className={`w-4 h-4 mr-2 ${deleting ? "animate-spin" : ""}`} />
+                <Trash2 className={`w-4 h-4 mr-2 ${deleting ? 'animate-spin' : ''}`} />
                 Block entfernen
               </Button>
             )}
@@ -321,9 +340,18 @@ export function BlockTableDialog({
               <X className="w-4 h-4 mr-2" />
               Abbrechen
             </Button>
-            <Button type="submit" disabled={loading || deleting || !blockDate || !startTime || !endTime}>
-              <Save className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-              {loading ? (block ? "Wird gespeichert..." : "Wird blockiert...") : block ? "Speichern" : "Blockieren"}
+            <Button
+              type="submit"
+              disabled={loading || deleting || !blockDate || !startTime || !endTime}
+            >
+              <Save className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              {loading
+                ? block
+                  ? 'Wird gespeichert...'
+                  : 'Wird blockiert...'
+                : block
+                  ? 'Speichern'
+                  : 'Blockieren'}
             </Button>
           </DialogFooter>
         </form>

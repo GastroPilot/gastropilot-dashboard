@@ -7,8 +7,7 @@ export const tableKeys = {
   lists: () => [...tableKeys.all, 'list'] as const,
   list: (restaurantId: number) => [...tableKeys.lists(), restaurantId] as const,
   details: () => [...tableKeys.all, 'detail'] as const,
-  detail: (restaurantId: number, id: number) =>
-    [...tableKeys.details(), restaurantId, id] as const,
+  detail: (restaurantId: number, id: number) => [...tableKeys.details(), restaurantId, id] as const,
 };
 
 /**
@@ -38,7 +37,7 @@ export function useTable(restaurantId: number | undefined, id: number | undefine
  */
 export function useCreateTable() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: ({ restaurantId, data }: { restaurantId: number; data: TableCreate }) =>
       tablesApi.create(restaurantId, data),
@@ -54,7 +53,7 @@ export function useCreateTable() {
 export function useUpdateTable() {
   const queryClient = useQueryClient();
   const updateTable = useDashboardDataStore((s) => s.updateTable);
-  
+
   return useMutation({
     mutationFn: ({
       restaurantId,
@@ -80,7 +79,7 @@ export function useUpdateTable() {
  */
 export function useDeleteTable() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: ({ restaurantId, id }: { restaurantId: number; id: number }) =>
       tablesApi.delete(restaurantId, id),

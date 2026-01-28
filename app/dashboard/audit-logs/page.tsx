@@ -1,21 +1,21 @@
-﻿"use client";
+﻿'use client';
 
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import Link from "next/link";
-import { restaurantsApi, Restaurant } from "@/lib/api/restaurants";
-import { auditLogsApi, AuditLog } from "@/lib/api/audit-logs";
-import { authApi, User } from "@/lib/api/auth";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { LoadingOverlay } from "@/components/loading-overlay";
-import { 
-  RefreshCw, 
-  ArrowLeft, 
-  ChevronLeft, 
-  ChevronRight, 
-  Filter, 
-  ChevronDown, 
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
+import Link from 'next/link';
+import { restaurantsApi, Restaurant } from '@/lib/api/restaurants';
+import { auditLogsApi, AuditLog } from '@/lib/api/audit-logs';
+import { authApi, User } from '@/lib/api/auth';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { LoadingOverlay } from '@/components/loading-overlay';
+import {
+  RefreshCw,
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  Filter,
+  ChevronDown,
   Check,
   FileText,
   Search,
@@ -31,8 +31,8 @@ import {
   Edit,
   Loader2,
   AlertCircle,
-  Clock
-} from "lucide-react";
+  Clock,
+} from 'lucide-react';
 
 const PAGE_SIZE = 25;
 
@@ -43,22 +43,24 @@ export default function AuditLogsPage() {
   const [hasTotal, setHasTotal] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [action, setAction] = useState("");
-  const [userId, setUserId] = useState("");
-  const [dateFrom, setDateFrom] = useState("");
-  const [dateTo, setDateTo] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
+  const [action, setAction] = useState('');
+  const [userId, setUserId] = useState('');
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [offset, setOffset] = useState(0);
   const [operators, setOperators] = useState<User[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [actionMenuOpen, setActionMenuOpen] = useState(false);
-  const [toasts, setToasts] = useState<{ id: string; message: string; variant?: "info" | "error" | "success" }[]>([]);
+  const [toasts, setToasts] = useState<
+    { id: string; message: string; variant?: 'info' | 'error' | 'success' }[]
+  >([]);
   const actionMenuRef = useRef<HTMLDivElement | null>(null);
   const userMenuRef = useRef<HTMLDivElement | null>(null);
 
   const addToast = useCallback(
-    (message: string, variant: "info" | "error" | "success" = "info") => {
+    (message: string, variant: 'info' | 'error' | 'success' = 'info') => {
       const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
       setToasts((prev) => [...prev, { id, message, variant }]);
       setTimeout(() => {
@@ -87,14 +89,17 @@ export default function AuditLogsPage() {
         setUserMenuOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const loadInitial = async () => {
     try {
       setLoading(true);
-      const [restaurants, ops] = await Promise.all([restaurantsApi.list(), authApi.listOperators()]);
+      const [restaurants, ops] = await Promise.all([
+        restaurantsApi.list(),
+        authApi.listOperators(),
+      ]);
       setOperators(ops);
       if (restaurants.length === 0) {
         setRestaurant(null);
@@ -107,44 +112,44 @@ export default function AuditLogsPage() {
       setRestaurant(selected);
       await loadLogs(selected.id, 0);
     } catch (err) {
-      console.error("Fehler beim Laden der Audit-Logs:", err);
-      setError("Audit-Logs konnten nicht geladen werden.");
-      addToast("Fehler beim Laden der Audit-Logs", "error");
+      console.error('Fehler beim Laden der Audit-Logs:', err);
+      setError('Audit-Logs konnten nicht geladen werden.');
+      addToast('Fehler beim Laden der Audit-Logs', 'error');
     } finally {
       setLoading(false);
     }
   };
 
   const friendlyAction = (value?: string) => {
-    const normalized = (value || "").toLowerCase();
+    const normalized = (value || '').toLowerCase();
     switch (normalized) {
-      case "create":
-        return "Erstellt";
-      case "update":
-        return "Aktualisiert";
-      case "delete":
-        return "Gelöscht";
-      case "move":
-        return "Verschoben";
-      case "patch":
-        return "Geändert";
-      case "post":
-        return "Erstellt";
+      case 'create':
+        return 'Erstellt';
+      case 'update':
+        return 'Aktualisiert';
+      case 'delete':
+        return 'Gelöscht';
+      case 'move':
+        return 'Verschoben';
+      case 'patch':
+        return 'Geändert';
+      case 'post':
+        return 'Erstellt';
       default:
         return value;
     }
   };
 
   const getActionIcon = (action?: string) => {
-    const normalized = (action || "").toLowerCase();
+    const normalized = (action || '').toLowerCase();
     switch (normalized) {
-      case "create":
-      case "post":
+      case 'create':
+      case 'post':
         return Plus;
-      case "delete":
+      case 'delete':
         return Trash2;
-      case "update":
-      case "patch":
+      case 'update':
+      case 'patch':
         return Edit;
       default:
         return Activity;
@@ -152,44 +157,44 @@ export default function AuditLogsPage() {
   };
 
   const getActionColor = (action?: string) => {
-    const normalized = (action || "").toLowerCase();
+    const normalized = (action || '').toLowerCase();
     switch (normalized) {
-      case "create":
-      case "post":
-        return "bg-emerald-900/40 text-emerald-200 border-emerald-700";
-      case "delete":
-        return "bg-red-900/40 text-red-200 border-red-700";
-      case "update":
-      case "patch":
-        return "bg-orange-900/40 text-orange-200 border-orange-700";
+      case 'create':
+      case 'post':
+        return 'bg-emerald-900/40 text-emerald-200 border-emerald-700';
+      case 'delete':
+        return 'bg-red-900/40 text-red-200 border-red-700';
+      case 'update':
+      case 'patch':
+        return 'bg-orange-900/40 text-orange-200 border-orange-700';
       default:
-        return "bg-gray-800 text-gray-200 border-gray-700";
+        return 'bg-gray-800 text-gray-200 border-gray-700';
     }
   };
 
   const getActionTone = (action?: string) => {
-    const normalized = (action || "").toLowerCase();
+    const normalized = (action || '').toLowerCase();
     switch (normalized) {
-      case "create":
-      case "post":
-        return "text-emerald-300 border-emerald-600 bg-emerald-900/30";
-      case "delete":
-        return "text-red-300 border-red-600 bg-red-900/30";
-      case "update":
-      case "patch":
-        return "text-orange-300 border-orange-600 bg-orange-900/30";
+      case 'create':
+      case 'post':
+        return 'text-emerald-300 border-emerald-600 bg-emerald-900/30';
+      case 'delete':
+        return 'text-red-300 border-red-600 bg-red-900/30';
+      case 'update':
+      case 'patch':
+        return 'text-orange-300 border-orange-600 bg-orange-900/30';
       default:
-        return "text-gray-300 border-gray-600 bg-gray-900/50";
+        return 'text-gray-300 border-gray-600 bg-gray-900/50';
     }
   };
 
   const getRoleIcon = (role?: string) => {
     switch (role) {
-      case "servecta":
+      case 'servecta':
         return Shield;
-      case "restaurantinhaber":
+      case 'restaurantinhaber':
         return UserCheck;
-      case "schichtleiter":
+      case 'schichtleiter':
         return UserIcon;
       default:
         return UserIcon;
@@ -198,14 +203,14 @@ export default function AuditLogsPage() {
 
   const getRoleTone = (role?: string) => {
     switch (role) {
-      case "servecta":
-        return "text-purple-300 border-purple-500/60 bg-purple-900/40";
-      case "restaurantinhaber":
-        return "text-blue-300 border-blue-500/60 bg-blue-900/40";
-      case "schichtleiter":
-        return "text-amber-300 border-amber-500/60 bg-amber-900/40";
+      case 'servecta':
+        return 'text-purple-300 border-purple-500/60 bg-purple-900/40';
+      case 'restaurantinhaber':
+        return 'text-blue-300 border-blue-500/60 bg-blue-900/40';
+      case 'schichtleiter':
+        return 'text-amber-300 border-amber-500/60 bg-amber-900/40';
       default:
-        return "text-gray-300 border-gray-500/60 bg-gray-900/50";
+        return 'text-gray-300 border-gray-500/60 bg-gray-900/50';
     }
   };
 
@@ -213,7 +218,7 @@ export default function AuditLogsPage() {
     try {
       setIsRefreshing(true);
       const userIdNumber = userId ? parseInt(userId, 10) : undefined;
-      const actionParam = action === "create" ? "post" : action || undefined;
+      const actionParam = action === 'create' ? 'post' : action || undefined;
       const hasLocalFilters = Boolean(dateFrom || dateTo || searchTerm.trim());
       const response = await auditLogsApi.list(restaurantId, {
         action: actionParam,
@@ -231,26 +236,27 @@ export default function AuditLogsPage() {
 
         if (!term) return true;
         const parts: string[] = [];
-        parts.push(log.entity_type || "");
-        if (log.entity_id !== null && log.entity_id !== undefined) parts.push(String(log.entity_id));
-        parts.push(log.action || "");
+        parts.push(log.entity_type || '');
+        if (log.entity_id !== null && log.entity_id !== undefined)
+          parts.push(String(log.entity_id));
+        parts.push(log.action || '');
         if (log.description) parts.push(log.description);
         if (log.ip_address) parts.push(log.ip_address);
         if (log.created_at_utc) parts.push(log.created_at_utc);
         if (log.details) {
           try {
-            parts.push(typeof log.details === "string" ? log.details : JSON.stringify(log.details));
+            parts.push(typeof log.details === 'string' ? log.details : JSON.stringify(log.details));
           } catch {
             // ignore
           }
         }
         const user = log.user_id ? userMap.get(log.user_id) : null;
         if (user) {
-          parts.push(user.first_name || "");
-          parts.push(user.last_name || "");
-          parts.push(user.operator_number || "");
+          parts.push(user.first_name || '');
+          parts.push(user.last_name || '');
+          parts.push(user.operator_number || '');
         }
-        const haystack = parts.join(" ").toLowerCase();
+        const haystack = parts.join(' ').toLowerCase();
         return haystack.includes(term);
       });
       if (hasLocalFilters && filtered.length === 0 && nextOffset > 0) {
@@ -264,14 +270,14 @@ export default function AuditLogsPage() {
       const derivedTotal = hasLocalFilters
         ? filtered.length + response.offset
         : response.hasTotal
-        ? Math.max(response.total, filtered.length + response.offset)
-        : filtered.length + response.offset;
+          ? Math.max(response.total, filtered.length + response.offset)
+          : filtered.length + response.offset;
       setTotalCount(derivedTotal);
       setHasTotal(!hasLocalFilters && response.hasTotal);
     } catch (err) {
-      console.error("Fehler beim Laden der Audit-Logs:", err);
-      setError("Audit-Logs konnten nicht geladen werden.");
-      addToast("Fehler beim Laden der Audit-Logs", "error");
+      console.error('Fehler beim Laden der Audit-Logs:', err);
+      setError('Audit-Logs konnten nicht geladen werden.');
+      addToast('Fehler beim Laden der Audit-Logs', 'error');
     } finally {
       setIsRefreshing(false);
     }
@@ -318,7 +324,7 @@ export default function AuditLogsPage() {
     const end = Math.min(totalPages - 1, currentPage + 1);
 
     if (start > 2) {
-      pages.push("start-ellipsis");
+      pages.push('start-ellipsis');
     }
 
     for (let i = start; i <= end; i++) {
@@ -326,7 +332,7 @@ export default function AuditLogsPage() {
     }
 
     if (end < totalPages - 1) {
-      pages.push("end-ellipsis");
+      pages.push('end-ellipsis');
     }
 
     pages.push(totalPages);
@@ -354,9 +360,9 @@ export default function AuditLogsPage() {
   const formatDate = (value: string) => {
     try {
       const date = new Date(value);
-      return new Intl.DateTimeFormat("de-DE", {
-        dateStyle: "short",
-        timeStyle: "medium",
+      return new Intl.DateTimeFormat('de-DE', {
+        dateStyle: 'short',
+        timeStyle: 'medium',
       }).format(date);
     } catch (err) {
       return value;
@@ -366,7 +372,7 @@ export default function AuditLogsPage() {
   const normalizeDetails = (details?: Record<string, any> | string | null) => {
     if (!details) return null;
     try {
-      if (typeof details === "string") {
+      if (typeof details === 'string') {
         return JSON.parse(details);
       }
       return details;
@@ -380,13 +386,13 @@ export default function AuditLogsPage() {
       return <span className="text-gray-500 text-sm">—</span>;
     }
 
-    const isString = typeof details === "string";
+    const isString = typeof details === 'string';
     const hasContent = isString ? details.trim().length > 0 : Object.keys(details).length > 0;
     if (!hasContent) {
       return <span className="text-gray-500 text-sm">—</span>;
     }
 
-    let pretty = "";
+    let pretty = '';
     if (isString) {
       try {
         pretty = JSON.stringify(JSON.parse(details), null, 2);
@@ -413,8 +419,8 @@ export default function AuditLogsPage() {
       <div className="h-full flex flex-col bg-gray-900 overflow-hidden">
         <div className="flex-1 overflow-y-auto min-h-0">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <Link 
-              href="/dashboard" 
+            <Link
+              href="/dashboard"
               className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 mb-6"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -446,11 +452,11 @@ export default function AuditLogsPage() {
             <div
               key={toast.id}
               className={`min-w-[260px] rounded-lg border px-4 py-3 shadow-[0_14px_32px_rgba(0,0,0,0.35)] text-sm ${
-                toast.variant === "error"
-                  ? "bg-red-900/80 border-red-500 text-red-50"
-                  : toast.variant === "success"
-                  ? "bg-green-900/80 border-green-500 text-green-50"
-                  : "bg-slate-800/90 border-slate-600 text-slate-100"
+                toast.variant === 'error'
+                  ? 'bg-red-900/80 border-red-500 text-red-50'
+                  : toast.variant === 'success'
+                    ? 'bg-green-900/80 border-green-500 text-green-50'
+                    : 'bg-slate-800/90 border-slate-600 text-slate-100'
               }`}
             >
               {toast.message}
@@ -468,9 +474,7 @@ export default function AuditLogsPage() {
                 <FileText className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h1 className="text-xl md:text-2xl font-bold text-white">
-                  Audit-Logs
-                </h1>
+                <h1 className="text-xl md:text-2xl font-bold text-white">Audit-Logs</h1>
                 <p className="text-xs md:text-sm text-gray-400 mt-0.5">
                   {restaurant.name} • {displayTotal} Einträge
                 </p>
@@ -484,8 +488,10 @@ export default function AuditLogsPage() {
                 onClick={() => loadLogs(restaurant.id, offset)}
                 disabled={isRefreshing}
               >
-                <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`} />
-                <span className="hidden sm:inline">{isRefreshing ? "Aktualisiere..." : "Aktualisieren"}</span>
+                <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                <span className="hidden sm:inline">
+                  {isRefreshing ? 'Aktualisiere...' : 'Aktualisieren'}
+                </span>
               </Button>
             </div>
           </div>
@@ -531,28 +537,34 @@ export default function AuditLogsPage() {
                           const Icon = action ? getActionIcon(action) : Activity;
                           return (
                             <span className="flex items-center gap-2 truncate">
-                              <span className={`inline-flex items-center justify-center w-6 h-6 rounded-md border ${getActionTone(action)}`}>
+                              <span
+                                className={`inline-flex items-center justify-center w-6 h-6 rounded-md border ${getActionTone(action)}`}
+                              >
                                 <Icon className="w-3.5 h-3.5" />
                               </span>
-                              <span className="truncate">{friendlyAction(action) || "Alle Aktionen"}</span>
+                              <span className="truncate">
+                                {friendlyAction(action) || 'Alle Aktionen'}
+                              </span>
                             </span>
                           );
                         })()}
-                        <ChevronDown className={`w-4 h-4 transition-transform ${actionMenuOpen ? "rotate-180" : ""}`} />
+                        <ChevronDown
+                          className={`w-4 h-4 transition-transform ${actionMenuOpen ? 'rotate-180' : ''}`}
+                        />
                       </button>
                       {actionMenuOpen && (
                         <div className="absolute mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 shadow-xl z-[80] overflow-hidden">
                           {[
-                            { value: "", label: "Alle Aktionen" },
-                            { value: "create", label: "Erstellt" },
-                            { value: "delete", label: "Gelöscht" },
-                            { value: "patch", label: "Geändert" },
+                            { value: '', label: 'Alle Aktionen' },
+                            { value: 'create', label: 'Erstellt' },
+                            { value: 'delete', label: 'Gelöscht' },
+                            { value: 'patch', label: 'Geändert' },
                           ].map((item) => {
                             const active = action === item.value;
                             const Icon = item.value ? getActionIcon(item.value) : Activity;
                             return (
                               <button
-                                key={item.value || "all"}
+                                key={item.value || 'all'}
                                 type="button"
                                 onClick={() => {
                                   setAction(item.value);
@@ -560,12 +572,14 @@ export default function AuditLogsPage() {
                                 }}
                                 className={`w-full px-3 py-2 text-left flex items-center justify-between gap-2 text-sm transition-colors ${
                                   active
-                                    ? "bg-gray-800 text-white font-semibold"
-                                    : "text-gray-200 hover:bg-gray-800/70"
+                                    ? 'bg-gray-800 text-white font-semibold'
+                                    : 'text-gray-200 hover:bg-gray-800/70'
                                 }`}
                               >
                                 <span className="flex items-center gap-2 truncate">
-                                  <span className={`inline-flex items-center justify-center w-6 h-6 rounded-md border ${getActionTone(item.value)}`}>
+                                  <span
+                                    className={`inline-flex items-center justify-center w-6 h-6 rounded-md border ${getActionTone(item.value)}`}
+                                  >
                                     <Icon className="w-3.5 h-3.5" />
                                   </span>
                                   <span className="truncate">{item.label}</span>
@@ -591,38 +605,45 @@ export default function AuditLogsPage() {
                         className="w-full inline-flex items-center justify-between gap-2 px-3 py-2 rounded-md border border-gray-600 bg-gray-800/50 text-sm text-white shadow-inner hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[40px]"
                       >
                         <span className="truncate">
-                          {userId ? (() => {
+                          {userId
+                            ? (() => {
                                 const user = operators.find((u) => u.id === parseInt(userId, 10));
-                                return user ? `${user.first_name} ${user.last_name} (#${user.operator_number})` : "Benutzer wählen";
+                                return user
+                                  ? `${user.first_name} ${user.last_name} (#${user.operator_number})`
+                                  : 'Benutzer wählen';
                               })()
-                            : "Alle Benutzer"}
+                            : 'Alle Benutzer'}
                         </span>
-                        <ChevronDown className={`w-4 h-4 transition-transform ${userMenuOpen ? "rotate-180" : ""}`} />
+                        <ChevronDown
+                          className={`w-4 h-4 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`}
+                        />
                       </button>
                       {userMenuOpen && (
                         <div className="absolute mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 shadow-xl z-[80]">
-                          <div 
+                          <div
                             className="max-h-64 overflow-y-scroll overflow-x-hidden"
-                            style={{ 
+                            style={{
                               WebkitOverflowScrolling: 'touch',
                               scrollbarWidth: 'thin',
-                              scrollbarColor: 'rgba(156, 163, 175, 0.5) transparent'
+                              scrollbarColor: 'rgba(156, 163, 175, 0.5) transparent',
                             }}
                           >
                             <button
                               type="button"
                               onClick={() => {
-                                setUserId("");
+                                setUserId('');
                                 setUserMenuOpen(false);
                               }}
                               className={`w-full px-3 py-2 text-left flex items-center justify-between gap-2 text-sm transition-colors whitespace-nowrap ${
-                                userId === ""
-                                  ? "bg-gray-800 text-white font-semibold"
-                                  : "text-gray-200 hover:bg-gray-800/70"
+                                userId === ''
+                                  ? 'bg-gray-800 text-white font-semibold'
+                                  : 'text-gray-200 hover:bg-gray-800/70'
                               }`}
                             >
                               <span className="truncate">Alle Benutzer</span>
-                              {userId === "" && <Check className="w-4 h-4 text-blue-300 flex-shrink-0" />}
+                              {userId === '' && (
+                                <Check className="w-4 h-4 text-blue-300 flex-shrink-0" />
+                              )}
                             </button>
                             {operators.map((op) => {
                               const active = userId === String(op.id);
@@ -634,24 +655,28 @@ export default function AuditLogsPage() {
                                     setUserId(String(op.id));
                                     setUserMenuOpen(false);
                                   }}
-                                className={`w-full px-3 py-2 text-left flex items-center justify-between gap-2 text-sm transition-colors whitespace-nowrap ${
-                                  active
-                                    ? "bg-gray-800 text-white font-semibold"
-                                    : "text-gray-200 hover:bg-gray-800/70"
-                                }`}
-                              >
+                                  className={`w-full px-3 py-2 text-left flex items-center justify-between gap-2 text-sm transition-colors whitespace-nowrap ${
+                                    active
+                                      ? 'bg-gray-800 text-white font-semibold'
+                                      : 'text-gray-200 hover:bg-gray-800/70'
+                                  }`}
+                                >
                                   <span className="flex items-center gap-2 truncate">
-                                  <span className={`inline-flex items-center justify-center w-6 h-6 rounded-md border bg-gray-900/70 ${getRoleTone(op.role)}`}>
-                                    {(() => {
-                                      const RoleIcon = getRoleIcon(op.role);
-                                      return <RoleIcon className="w-3.5 h-3.5" />;
-                                    })()}
-                                  </span>
+                                    <span
+                                      className={`inline-flex items-center justify-center w-6 h-6 rounded-md border bg-gray-900/70 ${getRoleTone(op.role)}`}
+                                    >
+                                      {(() => {
+                                        const RoleIcon = getRoleIcon(op.role);
+                                        return <RoleIcon className="w-3.5 h-3.5" />;
+                                      })()}
+                                    </span>
                                     <span className="truncate">
                                       {op.first_name} {op.last_name} (#{op.operator_number})
                                     </span>
                                   </span>
-                                  {active && <Check className="w-4 h-4 text-blue-300 flex-shrink-0" />}
+                                  {active && (
+                                    <Check className="w-4 h-4 text-blue-300 flex-shrink-0" />
+                                  )}
                                 </button>
                               );
                             })}
@@ -702,9 +727,9 @@ export default function AuditLogsPage() {
                 </div>
 
                 <div className="flex justify-end pt-2">
-                  <Button 
-                    type="submit" 
-                    className="gap-2 touch-manipulation min-h-[40px]" 
+                  <Button
+                    type="submit"
+                    className="gap-2 touch-manipulation min-h-[40px]"
                     disabled={isRefreshing}
                   >
                     {isRefreshing ? (
@@ -737,36 +762,48 @@ export default function AuditLogsPage() {
                 {logs.length === 0 ? (
                   <div className="text-center py-12 text-gray-400">
                     <FileText className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                    <p className="text-lg font-medium">
-                      Keine Audit-Logs gefunden
-                    </p>
+                    <p className="text-lg font-medium">Keine Audit-Logs gefunden</p>
                     <p className="text-sm mt-2">
-                      {hasLocalFilters 
-                        ? "Versuchen Sie, die Filter anzupassen."
-                        : "Es sind noch keine Log-Einträge vorhanden."}
+                      {hasLocalFilters
+                        ? 'Versuchen Sie, die Filter anzupassen.'
+                        : 'Es sind noch keine Log-Einträge vorhanden.'}
                     </p>
                   </div>
                 ) : (
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-gray-700 bg-gray-900/50">
-                        <th className="text-left text-xs uppercase tracking-wide text-gray-400 px-4 py-3">Zeitpunkt</th>
-                        <th className="text-left text-xs uppercase tracking-wide text-gray-400 px-4 py-3">User</th>
-                        <th className="text-left text-xs uppercase tracking-wide text-gray-400 px-4 py-3">Entity</th>
-                        <th className="text-left text-xs uppercase tracking-wide text-gray-400 px-4 py-3">Aktion</th>
-                        <th className="text-left text-xs uppercase tracking-wide text-gray-400 px-4 py-3">Beschreibung</th>
-                        <th className="text-left text-xs uppercase tracking-wide text-gray-400 px-4 py-3">Details</th>
-                        <th className="text-left text-xs uppercase tracking-wide text-gray-400 px-4 py-3">IP</th>
+                        <th className="text-left text-xs uppercase tracking-wide text-gray-400 px-4 py-3">
+                          Zeitpunkt
+                        </th>
+                        <th className="text-left text-xs uppercase tracking-wide text-gray-400 px-4 py-3">
+                          User
+                        </th>
+                        <th className="text-left text-xs uppercase tracking-wide text-gray-400 px-4 py-3">
+                          Entity
+                        </th>
+                        <th className="text-left text-xs uppercase tracking-wide text-gray-400 px-4 py-3">
+                          Aktion
+                        </th>
+                        <th className="text-left text-xs uppercase tracking-wide text-gray-400 px-4 py-3">
+                          Beschreibung
+                        </th>
+                        <th className="text-left text-xs uppercase tracking-wide text-gray-400 px-4 py-3">
+                          Details
+                        </th>
+                        <th className="text-left text-xs uppercase tracking-wide text-gray-400 px-4 py-3">
+                          IP
+                        </th>
                       </tr>
                     </thead>
                     <tbody>
                       {logs.map((log) => {
                         const user = log.user_id ? userMap.get(log.user_id) : null;
-                        const normalizedAction = (log.action || "").toLowerCase();
+                        const normalizedAction = (log.action || '').toLowerCase();
                         const ActionIcon = getActionIcon(log.action);
                         return (
-                          <tr 
-                            key={log.id} 
+                          <tr
+                            key={log.id}
                             className="border-b border-gray-700/50 hover:bg-gray-800/30 transition-colors"
                           >
                             <td className="px-4 py-3 text-gray-200 whitespace-nowrap text-sm">
@@ -781,14 +818,20 @@ export default function AuditLogsPage() {
                                   {(() => {
                                     const RoleIcon = getRoleIcon(user.role);
                                     return (
-                                      <span className={`inline-flex items-center justify-center w-6 h-6 rounded-md border ${getRoleTone(user.role)}`}>
+                                      <span
+                                        className={`inline-flex items-center justify-center w-6 h-6 rounded-md border ${getRoleTone(user.role)}`}
+                                      >
                                         <RoleIcon className="w-3.5 h-3.5" />
                                       </span>
                                     );
                                   })()}
                                   <div className="flex flex-col leading-tight">
-                                    <span className="text-sm">{user.first_name} {user.last_name}</span>
-                                    <span className="text-xs text-gray-400 font-mono">#{user.operator_number}</span>
+                                    <span className="text-sm">
+                                      {user.first_name} {user.last_name}
+                                    </span>
+                                    <span className="text-xs text-gray-400 font-mono">
+                                      #{user.operator_number}
+                                    </span>
                                   </div>
                                 </div>
                               ) : log.user_id ? (
@@ -799,7 +842,9 @@ export default function AuditLogsPage() {
                             </td>
                             <td className="px-4 py-3 text-gray-200">
                               <div className="flex flex-col leading-tight">
-                                <span className="font-semibold text-sm">{log.entity_type || "—"}</span>
+                                <span className="font-semibold text-sm">
+                                  {log.entity_type || '—'}
+                                </span>
                                 {log.entity_id !== null && log.entity_id !== undefined && (
                                   <span className="text-xs text-gray-400">ID: {log.entity_id}</span>
                                 )}
@@ -815,7 +860,9 @@ export default function AuditLogsPage() {
                             </td>
                             <td className="px-4 py-3 text-gray-200 max-w-md">
                               {log.description ? (
-                                <span className="block text-sm leading-snug text-gray-100">{log.description}</span>
+                                <span className="block text-sm leading-snug text-gray-100">
+                                  {log.description}
+                                </span>
                               ) : (
                                 <span className="text-gray-500 text-sm">—</span>
                               )}
@@ -824,7 +871,7 @@ export default function AuditLogsPage() {
                               {(() => {
                                 const normalized = normalizeDetails(log.details as any);
                                 const hasContent =
-                                  typeof normalized === "string"
+                                  typeof normalized === 'string'
                                     ? normalized.trim().length > 0
                                     : normalized && Object.keys(normalized).length > 0;
                                 if (!hasContent) {
@@ -835,11 +882,11 @@ export default function AuditLogsPage() {
                                     <summary className="cursor-pointer text-sm text-blue-300 hover:text-blue-200 flex items-center gap-2 list-none">
                                       <Info className="w-3.5 h-3.5" />
                                       <span className="group-open:hidden">Mehr anzeigen</span>
-                                      <span className="hidden group-open:inline">Weniger anzeigen</span>
+                                      <span className="hidden group-open:inline">
+                                        Weniger anzeigen
+                                      </span>
                                     </summary>
-                                    <div className="mt-2">
-                                      {renderDetails(normalized as any)}
-                                    </div>
+                                    <div className="mt-2">{renderDetails(normalized as any)}</div>
                                   </details>
                                 );
                               })()}
@@ -881,10 +928,10 @@ export default function AuditLogsPage() {
                     </Button>
                     <div className="flex items-center gap-1">
                       {pageNumbers.map((page) =>
-                        typeof page === "number" ? (
+                        typeof page === 'number' ? (
                           <Button
                             key={`page-${page}`}
-                            variant={page === currentPage ? "default" : "outline"}
+                            variant={page === currentPage ? 'default' : 'outline'}
                             size="sm"
                             onClick={() => goToPage(page)}
                             disabled={isRefreshing || page === currentPage}

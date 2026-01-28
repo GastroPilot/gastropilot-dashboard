@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useEffect, useState, useCallback, useRef } from "react";
-import Link from "next/link";
+import { useEffect, useState, useCallback, useRef } from 'react';
+import Link from 'next/link';
 import {
   DndContext,
   DragEndEvent,
@@ -12,22 +12,22 @@ import {
   useSensor,
   useSensors,
   closestCenter,
-} from "@dnd-kit/core";
-import { restaurantsApi, Restaurant } from "@/lib/api/restaurants";
-import { tablesApi, Table } from "@/lib/api/tables";
-import { obstaclesApi, Obstacle } from "@/lib/api/obstacles";
-import { areasApi, Area } from "@/lib/api/areas";
-import { authApi } from "@/lib/api/auth";
-import { TableCard } from "@/components/table-card";
-import { ObstacleCard } from "@/components/obstacle-card";
-import { CreateTableDialog } from "@/components/create-table-dialog";
-import { CreateObstacleDialog } from "@/components/create-obstacle-dialog";
-import { TableDetailsDialog } from "@/components/table-details-dialog";
-import { LoadingOverlay } from "@/components/loading-overlay";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useUserSettings } from "@/lib/hooks/use-user-settings";
-import { confirmAction } from "@/lib/utils";
+} from '@dnd-kit/core';
+import { restaurantsApi, Restaurant } from '@/lib/api/restaurants';
+import { tablesApi, Table } from '@/lib/api/tables';
+import { obstaclesApi, Obstacle } from '@/lib/api/obstacles';
+import { areasApi, Area } from '@/lib/api/areas';
+import { authApi } from '@/lib/api/auth';
+import { TableCard } from '@/components/table-card';
+import { ObstacleCard } from '@/components/obstacle-card';
+import { CreateTableDialog } from '@/components/create-table-dialog';
+import { CreateObstacleDialog } from '@/components/create-obstacle-dialog';
+import { TableDetailsDialog } from '@/components/table-details-dialog';
+import { LoadingOverlay } from '@/components/loading-overlay';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useUserSettings } from '@/lib/hooks/use-user-settings';
+import { confirmAction } from '@/lib/utils';
 import {
   Dialog,
   DialogContent,
@@ -35,11 +35,24 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Plus, RefreshCw, MoveLeft, Pencil, Trash2, ChevronDown, Check, ZoomIn, ZoomOut, Maximize2, LayoutGrid, AlertTriangle } from "lucide-react";
+} from '@/components/ui/dialog';
+import {
+  Plus,
+  RefreshCw,
+  MoveLeft,
+  Pencil,
+  Trash2,
+  ChevronDown,
+  Check,
+  ZoomIn,
+  ZoomOut,
+  Maximize2,
+  LayoutGrid,
+  AlertTriangle,
+} from 'lucide-react';
 
 // Reuse the same settings key as the dashboard view so zoom persists across both pages
-const TABLES_ZOOM_SETTINGS_KEY = "dashboard_zoom_level";
+const TABLES_ZOOM_SETTINGS_KEY = 'dashboard_zoom_level';
 
 export default function TableManagementPage() {
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
@@ -59,14 +72,16 @@ export default function TableManagementPage() {
   const [activeId, setActiveId] = useState<number | null>(null);
   const [activeObstacleId, setActiveObstacleId] = useState<number | null>(null);
   const [currentUser, setCurrentUser] = useState<{ role: string } | null>(null);
-  const [toasts, setToasts] = useState<{ id: string; message: string; variant?: "info" | "error" | "success" }[]>([]);
+  const [toasts, setToasts] = useState<
+    { id: string; message: string; variant?: 'info' | 'error' | 'success' }[]
+  >([]);
   const { settings, updateSettings, error: settingsError } = useUserSettings();
   const settingsInitializedRef = useRef(false);
-  const lastPersistedZoomRef = useRef<string>("");
+  const lastPersistedZoomRef = useRef<string>('');
   const zoomSaveTimeoutRef = useRef<number | null>(null);
   const [areaDialogOpen, setAreaDialogOpen] = useState(false);
-  const [areaName, setAreaName] = useState("");
-  const [areaError, setAreaError] = useState("");
+  const [areaName, setAreaName] = useState('');
+  const [areaError, setAreaError] = useState('');
   const [editingArea, setEditingArea] = useState<Area | null>(null);
   const [isSavingArea, setIsSavingArea] = useState(false);
   const [areaMenuOpen, setAreaMenuOpen] = useState(false);
@@ -109,13 +124,16 @@ export default function TableManagementPage() {
     })
   );
 
-  const filterByArea = useCallback(<T extends { area_id?: number | null }>(items: T[], areaId: number | null) => {
-    if (!areaId) return items;
-    return items.filter((item) => (item.area_id ?? null) === areaId);
-  }, []);
+  const filterByArea = useCallback(
+    <T extends { area_id?: number | null }>(items: T[], areaId: number | null) => {
+      if (!areaId) return items;
+      return items.filter((item) => (item.area_id ?? null) === areaId);
+    },
+    []
+  );
 
   const addToast = useCallback(
-    (message: string, variant: "info" | "error" | "success" = "info") => {
+    (message: string, variant: 'info' | 'error' | 'success' = 'info') => {
       const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
       setToasts((prev) => [...prev, { id, message, variant }]);
       setTimeout(() => {
@@ -127,13 +145,13 @@ export default function TableManagementPage() {
 
   useEffect(() => {
     if (!settingsError) return;
-    addToast(settingsError, "error");
+    addToast(settingsError, 'error');
   }, [settingsError, addToast]);
 
   useEffect(() => {
     if (settingsInitializedRef.current || !settings) return;
     const stored = (settings.settings || {})[TABLES_ZOOM_SETTINGS_KEY];
-    const storedNumber = typeof stored === "number" ? stored : Number(stored);
+    const storedNumber = typeof stored === 'number' ? stored : Number(stored);
     if (Number.isFinite(storedNumber)) {
       const clamped = Math.min(3, Math.max(0.5, storedNumber));
       setZoomLevel(clamped);
@@ -155,9 +173,9 @@ export default function TableManagementPage() {
     }
     zoomSaveTimeoutRef.current = window.setTimeout(() => {
       updateSettings({ [TABLES_ZOOM_SETTINGS_KEY]: rounded }).catch((err) => {
-        console.error("Fehler beim Speichern des Zoom-Levels (Tische):", err);
-        addToast("Zoom-Einstellung konnte nicht gespeichert werden.", "error");
-        lastPersistedZoomRef.current = "";
+        console.error('Fehler beim Speichern des Zoom-Levels (Tische):', err);
+        addToast('Zoom-Einstellung konnte nicht gespeichert werden.', 'error');
+        lastPersistedZoomRef.current = '';
       });
     }, 300);
     return () => {
@@ -207,8 +225,8 @@ export default function TableManagementPage() {
         setAreaMenuOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const loadCurrentUser = async () => {
@@ -216,7 +234,7 @@ export default function TableManagementPage() {
       const user = await authApi.getCurrentUser();
       setCurrentUser(user);
     } catch (err) {
-      console.error("Fehler beim Laden des aktuellen Users:", err);
+      console.error('Fehler beim Laden des aktuellen Users:', err);
     }
   };
 
@@ -255,7 +273,7 @@ export default function TableManagementPage() {
         setObstacles(filterByArea(obstaclesData, nextAreaId));
       }
     } catch (error) {
-      console.error("Fehler beim Laden der Tische oder Hindernisse:", error);
+      console.error('Fehler beim Laden der Tische oder Hindernisse:', error);
     } finally {
       if (background) {
         setIsRefreshing(false);
@@ -267,8 +285,8 @@ export default function TableManagementPage() {
 
   const openCreateAreaDialog = () => {
     setEditingArea(null);
-    setAreaName("");
-    setAreaError("");
+    setAreaName('');
+    setAreaError('');
     setAreaDialogOpen(true);
   };
 
@@ -278,14 +296,14 @@ export default function TableManagementPage() {
     if (!area) return;
     setEditingArea(area);
     setAreaName(area.name);
-    setAreaError("");
+    setAreaError('');
     setAreaDialogOpen(true);
   };
 
   const handleSaveArea = async () => {
     if (!restaurant) return;
     if (!areaName.trim()) {
-      setAreaError("Name darf nicht leer sein.");
+      setAreaError('Name darf nicht leer sein.');
       return;
     }
     setIsSavingArea(true);
@@ -293,22 +311,22 @@ export default function TableManagementPage() {
       let areaIdToKeep = selectedAreaId;
       if (editingArea) {
         await areasApi.update(restaurant.id, editingArea.id, { name: areaName.trim() });
-        addToast("Area wurde aktualisiert.", "success");
+        addToast('Area wurde aktualisiert.', 'success');
         areaIdToKeep = editingArea.id;
       } else {
         const newArea = await areasApi.create(restaurant.id, { name: areaName.trim() });
         areaIdToKeep = newArea.id;
         setSelectedAreaId(newArea.id);
-        addToast("Area wurde erstellt.", "success");
+        addToast('Area wurde erstellt.', 'success');
       }
       setAreaDialogOpen(false);
-      setAreaName("");
+      setAreaName('');
       setEditingArea(null);
       await loadData(true, areaIdToKeep);
       setSelectedAreaId(areaIdToKeep);
     } catch (error) {
-      console.error("Fehler beim Speichern der Area:", error);
-      setAreaError("Fehler beim Speichern der Area");
+      console.error('Fehler beim Speichern der Area:', error);
+      setAreaError('Fehler beim Speichern der Area');
     } finally {
       setIsSavingArea(false);
     }
@@ -324,18 +342,18 @@ export default function TableManagementPage() {
       const remaining = areas.filter((a) => a.id !== selectedAreaId);
       const nextId = remaining[0]?.id ?? null;
       setSelectedAreaId(nextId);
-      addToast("Area wurde gelöscht.", "success");
+      addToast('Area wurde gelöscht.', 'success');
       await loadData(true, nextId);
     } catch (error) {
-      console.error("Fehler beim Löschen der Area:", error);
-      addToast("Fehler beim Löschen der Area", "error");
+      console.error('Fehler beim Löschen der Area:', error);
+      addToast('Fehler beim Löschen der Area', 'error');
     }
   };
 
   const handleDragStart = (event: DragStartEvent) => {
     const id = event.active.id;
-    if (typeof id === "string" && id.startsWith("obstacle-")) {
-      setActiveObstacleId(parseInt(id.replace("obstacle-", ""), 10));
+    if (typeof id === 'string' && id.startsWith('obstacle-')) {
+      setActiveObstacleId(parseInt(id.replace('obstacle-', ''), 10));
       return;
     }
     const numericId = id as number;
@@ -353,8 +371,8 @@ export default function TableManagementPage() {
     }
 
     // Obstacles drag
-    if (typeof activeRaw === "string" && activeRaw.startsWith("obstacle-")) {
-      const obstacleId = parseInt(activeRaw.replace("obstacle-", ""), 10);
+    if (typeof activeRaw === 'string' && activeRaw.startsWith('obstacle-')) {
+      const obstacleId = parseInt(activeRaw.replace('obstacle-', ''), 10);
       const obstacle = obstacles.find((o) => o.id === obstacleId);
       if (!obstacle) {
         setActiveObstacleId(null);
@@ -374,8 +392,8 @@ export default function TableManagementPage() {
           prev.map((o) => (o.id === obstacleId ? { ...o, x: newX, y: newY } : o))
         );
       } catch (error) {
-        console.error("Fehler beim Aktualisieren des Hindernisses:", error);
-        addToast("Fehler beim Verschieben des Hindernisses", "error");
+        console.error('Fehler beim Aktualisieren des Hindernisses:', error);
+        addToast('Fehler beim Verschieben des Hindernisses', 'error');
       }
       setActiveObstacleId(null);
       return;
@@ -402,18 +420,14 @@ export default function TableManagementPage() {
       });
 
       setTables((prev) =>
-        prev.map((t) =>
-          t.id === tableId ? { ...t, position_x: newX, position_y: newY } : t
-        )
+        prev.map((t) => (t.id === tableId ? { ...t, position_x: newX, position_y: newY } : t))
       );
       setAllTables((prev) =>
-        prev.map((t) =>
-          t.id === tableId ? { ...t, position_x: newX, position_y: newY } : t
-        )
+        prev.map((t) => (t.id === tableId ? { ...t, position_x: newX, position_y: newY } : t))
       );
     } catch (error) {
-      console.error("Fehler beim Aktualisieren der Tischposition:", error);
-      addToast("Fehler beim Verschieben des Tisches", "error");
+      console.error('Fehler beim Aktualisieren der Tischposition:', error);
+      addToast('Fehler beim Verschieben des Tisches', 'error');
     }
 
     setActiveId(null);
@@ -423,10 +437,10 @@ export default function TableManagementPage() {
     if (!restaurant) return;
     try {
       await loadData(true);
-      addToast("Tisch wurde gespeichert.", "success");
+      addToast('Tisch wurde gespeichert.', 'success');
     } catch (error) {
-      console.error("Fehler beim Anlegen des Tisches:", error);
-      addToast("Fehler beim Anlegen des Tisches", "error");
+      console.error('Fehler beim Anlegen des Tisches:', error);
+      addToast('Fehler beim Anlegen des Tisches', 'error');
     }
   };
 
@@ -434,20 +448,20 @@ export default function TableManagementPage() {
     if (!restaurant) return;
     try {
       await loadData(true);
-      addToast("Hindernis wurde gespeichert.", "success");
+      addToast('Hindernis wurde gespeichert.', 'success');
     } catch (error) {
-      console.error("Fehler beim Speichern des Hindernisses:", error);
-      addToast("Fehler beim Speichern des Hindernisses", "error");
+      console.error('Fehler beim Speichern des Hindernisses:', error);
+      addToast('Fehler beim Speichern des Hindernisses', 'error');
     }
   };
 
   const handleTableUpdated = async () => {
     try {
       await loadData(true);
-      addToast("Tisch wurde aktualisiert.", "success");
+      addToast('Tisch wurde aktualisiert.', 'success');
     } catch (error) {
-      console.error("Fehler beim Aktualisieren des Tisches:", error);
-      addToast("Fehler beim Aktualisieren des Tisches", "error");
+      console.error('Fehler beim Aktualisieren des Tisches:', error);
+      addToast('Fehler beim Aktualisieren des Tisches', 'error');
     }
   };
 
@@ -463,7 +477,9 @@ export default function TableManagementPage() {
   if (!restaurant) {
     return (
       <div className="p-6 bg-gray-900 min-h-screen">
-        <p className="text-gray-400">Kein Restaurant gefunden. Bitte erstelle zuerst ein Restaurant.</p>
+        <p className="text-gray-400">
+          Kein Restaurant gefunden. Bitte erstelle zuerst ein Restaurant.
+        </p>
         <Link
           href="/dashboard/restaurants"
           className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
@@ -483,11 +499,11 @@ export default function TableManagementPage() {
             <div
               key={toast.id}
               className={`min-w-[260px] rounded-lg border px-4 py-3 shadow-[0_14px_32px_rgba(0,0,0,0.35)] text-sm ${
-                toast.variant === "error"
-                  ? "bg-red-900/80 border-red-500 text-red-50"
-                  : toast.variant === "success"
-                  ? "bg-green-900/80 border-green-500 text-green-50"
-                  : "bg-slate-800/90 border-slate-600 text-slate-100"
+                toast.variant === 'error'
+                  ? 'bg-red-900/80 border-red-500 text-red-50'
+                  : toast.variant === 'success'
+                    ? 'bg-green-900/80 border-green-500 text-green-50'
+                    : 'bg-slate-800/90 border-slate-600 text-slate-100'
               }`}
             >
               {toast.message}
@@ -505,13 +521,18 @@ export default function TableManagementPage() {
               <div>
                 <h1 className="text-2xl font-bold text-white">Tische verwalten</h1>
                 <p className="text-xs md:text-sm text-gray-400 mt-0.5">
-                  Ziehe Tische oder Hindernisse, um ihre Position zu verändern. Änderungen werden automatisch gespeichert.
+                  Ziehe Tische oder Hindernisse, um ihre Position zu verändern. Änderungen werden
+                  automatisch gespeichert.
                 </p>
-                {isRefreshing && <div className="text-xs text-blue-400 mt-0.5">Aktualisiere...</div>}
+                {isRefreshing && (
+                  <div className="text-xs text-blue-400 mt-0.5">Aktualisiere...</div>
+                )}
               </div>
             </div>
             <div className="flex items-center gap-2 pt-1.5 md:pt-2">
-              {(currentUser?.role === "servecta" || currentUser?.role === "restaurantinhaber" || currentUser?.role === "schichtleiter") && (
+              {(currentUser?.role === 'servecta' ||
+                currentUser?.role === 'restaurantinhaber' ||
+                currentUser?.role === 'schichtleiter') && (
                 <>
                   <Button
                     onClick={() => setCreateTableOpen(true)}
@@ -549,10 +570,12 @@ export default function TableManagementPage() {
               >
                 <span className="truncate">
                   {selectedAreaId
-                    ? areas.find((a) => a.id === selectedAreaId)?.name || "Area auswählen"
-                    : "Area auswählen"}
+                    ? areas.find((a) => a.id === selectedAreaId)?.name || 'Area auswählen'
+                    : 'Area auswählen'}
                 </span>
-                <ChevronDown className={`w-4 h-4 transition-transform ${areaMenuOpen ? "rotate-180" : ""}`} />
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform ${areaMenuOpen ? 'rotate-180' : ''}`}
+                />
               </button>
               {areaMenuOpen && (
                 <div className="absolute mt-1 w-64 rounded-lg border border-gray-700 bg-gray-900 shadow-xl z-40 overflow-hidden">
@@ -570,8 +593,8 @@ export default function TableManagementPage() {
                           }}
                           className={`w-full px-3 py-2 text-left flex items-center justify-between gap-2 text-sm transition-colors ${
                             active
-                              ? "bg-gray-800 text-white font-semibold cursor-default"
-                              : "text-gray-200 hover:bg-gray-800/70"
+                              ? 'bg-gray-800 text-white font-semibold cursor-default'
+                              : 'text-gray-200 hover:bg-gray-800/70'
                           }`}
                           disabled={active}
                         >
@@ -580,17 +603,22 @@ export default function TableManagementPage() {
                       );
                     })}
                     {areas.length === 0 && (
-                      <div className="px-3 py-3 text-sm text-gray-400">
-                        Keine Area vorhanden.
-                      </div>
+                      <div className="px-3 py-3 text-sm text-gray-400">Keine Area vorhanden.</div>
                     )}
                   </div>
                 </div>
               )}
             </div>
-            {(currentUser?.role === "servecta" || currentUser?.role === "restaurantinhaber" || currentUser?.role === "schichtleiter") && (
+            {(currentUser?.role === 'servecta' ||
+              currentUser?.role === 'restaurantinhaber' ||
+              currentUser?.role === 'schichtleiter') && (
               <div className="flex items-center gap-2">
-                <Button size="sm" variant="outline" onClick={openCreateAreaDialog} className="min-h-[36px]">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={openCreateAreaDialog}
+                  className="min-h-[36px]"
+                >
                   <Plus className="w-4 h-4 mr-2" />
                   Area erstellen
                 </Button>
@@ -627,7 +655,6 @@ export default function TableManagementPage() {
               </span>
             )}
           </div>
-
         </div>
       </div>
       <div
@@ -646,15 +673,15 @@ export default function TableManagementPage() {
           if (e.detail > 1) e.preventDefault();
         }}
       >
-        <DndContext 
-          sensors={sensors} 
+        <DndContext
+          sensors={sensors}
           collisionDetection={closestCenter}
-          onDragStart={handleDragStart} 
+          onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          <div 
+          <div
             className="absolute inset-0 z-0 pointer-events-auto"
-            style={{ 
+            style={{
               touchAction: 'none',
               cursor: isPanning ? 'grabbing' : 'grab',
             }}
@@ -664,10 +691,12 @@ export default function TableManagementPage() {
                 setIsPanning(false);
                 return;
               }
-              
+
               const target = e.target as HTMLElement;
-              const isInteractive = target.closest('[data-dnd-draggable], [data-dnd-droppable], button, a, input, select, textarea');
-              
+              const isInteractive = target.closest(
+                '[data-dnd-draggable], [data-dnd-droppable], button, a, input, select, textarea'
+              );
+
               if (e.touches.length === 1 && !activeId && !activeObstacleId && !isInteractive) {
                 const touch = e.touches[0];
                 panRef.current.isPanning = true;
@@ -696,35 +725,45 @@ export default function TableManagementPage() {
                   touch2.clientX - touch1.clientX,
                   touch2.clientY - touch1.clientY
                 );
-                
+
                 if (zoomRef.current.initialDistance > 0) {
                   const scale = distance / zoomRef.current.initialDistance;
                   const newZoom = Math.max(0.5, Math.min(3, zoomRef.current.initialZoom * scale));
-                  
+
                   const centerX = (touch1.clientX + touch2.clientX) / 2;
                   const centerY = (touch1.clientY + touch2.clientY) / 2;
                   const rect = tablePlanRef.current?.getBoundingClientRect();
-                  
+
                   if (rect) {
                     const relativeX = centerX - rect.left;
                     const relativeY = centerY - rect.top;
                     const zoomFactor = newZoom / zoomLevel;
-                    
-                    setPanOffset(prev => ({
+
+                    setPanOffset((prev) => ({
                       x: relativeX - (relativeX - prev.x) * zoomFactor,
                       y: relativeY - (relativeY - prev.y) * zoomFactor,
                     }));
                   }
-                  
+
                   setZoomLevel(newZoom);
                 }
                 e.preventDefault();
                 e.stopPropagation();
-              } else if (panRef.current.isPanning && e.touches.length === 1 && !activeId && !activeObstacleId) {
+              } else if (
+                panRef.current.isPanning &&
+                e.touches.length === 1 &&
+                !activeId &&
+                !activeObstacleId
+              ) {
                 const touch = e.touches[0];
-                const target = document.elementFromPoint(touch.clientX, touch.clientY) as HTMLElement;
-                const isInteractive = target?.closest('[data-dnd-draggable], [data-dnd-droppable], button, a, input, select, textarea');
-                
+                const target = document.elementFromPoint(
+                  touch.clientX,
+                  touch.clientY
+                ) as HTMLElement;
+                const isInteractive = target?.closest(
+                  '[data-dnd-draggable], [data-dnd-droppable], button, a, input, select, textarea'
+                );
+
                 if (!isInteractive) {
                   setPanOffset({
                     x: touch.clientX - panRef.current.startX,
@@ -761,12 +800,12 @@ export default function TableManagementPage() {
                 if (rect) {
                   const mouseX = e.clientX - rect.left;
                   const mouseY = e.clientY - rect.top;
-                  
+
                   const zoomDelta = e.deltaY > 0 ? 0.9 : 1.1;
                   const newZoom = Math.max(0.5, Math.min(3, zoomLevel * zoomDelta));
-                  
+
                   const zoomFactor = newZoom / zoomLevel;
-                  setPanOffset(prev => ({
+                  setPanOffset((prev) => ({
                     x: mouseX - (mouseX - prev.x) * zoomFactor,
                     y: mouseY - (mouseY - prev.y) * zoomFactor,
                   }));
@@ -818,12 +857,13 @@ export default function TableManagementPage() {
             }}
           />
 
-          <div 
+          <div
             className="absolute inset-0 w-full h-full z-10 select-none pointer-events-none"
             style={{
               transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomLevel})`,
               transformOrigin: '0 0',
-              transition: (!isPanning && !isZooming) ? 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)' : 'none',
+              transition:
+                !isPanning && !isZooming ? 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)' : 'none',
               userSelect: 'none',
               WebkitUserSelect: 'none',
               MozUserSelect: 'none',
@@ -867,8 +907,12 @@ export default function TableManagementPage() {
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center space-y-3">
                 <p className="text-gray-400 text-lg">Noch keine Tische vorhanden</p>
-                <p className="text-gray-500 text-sm">Lege hier neue Tische an oder verschiebe bestehende.</p>
-                {(currentUser?.role === "servecta" || currentUser?.role === "restaurantinhaber" || currentUser?.role === "schichtleiter") && (
+                <p className="text-gray-500 text-sm">
+                  Lege hier neue Tische an oder verschiebe bestehende.
+                </p>
+                {(currentUser?.role === 'servecta' ||
+                  currentUser?.role === 'restaurantinhaber' ||
+                  currentUser?.role === 'schichtleiter') && (
                   <Button
                     onClick={() => setCreateTableOpen(true)}
                     className="touch-manipulation min-h-[44px]"
@@ -944,13 +988,7 @@ export default function TableManagementPage() {
                 {(() => {
                   const obstacle = obstacles.find((o) => o.id === activeObstacleId);
                   if (!obstacle) return null;
-                  return (
-                    <ObstacleCard
-                      obstacle={obstacle}
-                      isDragging
-                      onClick={() => {}}
-                    />
-                  );
+                  return <ObstacleCard obstacle={obstacle} isDragging onClick={() => {}} />;
                 })()}
               </div>
             ) : null}
@@ -1006,9 +1044,10 @@ export default function TableManagementPage() {
       <Dialog open={areaDialogOpen} onOpenChange={setAreaDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{editingArea ? "Area umbenennen" : "Neue Area erstellen"}</DialogTitle>
+            <DialogTitle>{editingArea ? 'Area umbenennen' : 'Neue Area erstellen'}</DialogTitle>
             <DialogDescription>
-              Areas helfen dir, Etagen oder Räume zu trennen. Tische und Hindernisse gehören immer zu einer Area.
+              Areas helfen dir, Etagen oder Räume zu trennen. Tische und Hindernisse gehören immer
+              zu einer Area.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 px-6 pb-2">
@@ -1023,18 +1062,22 @@ export default function TableManagementPage() {
                 value={areaName}
                 onChange={(e) => {
                   setAreaName(e.target.value);
-                  setAreaError("");
+                  setAreaError('');
                 }}
                 placeholder="z. B. Erdgeschoss, Terrasse, 1. OG"
               />
             </div>
           </div>
           <DialogFooter className="gap-2 px-6 pb-4">
-            <Button variant="outline" onClick={() => setAreaDialogOpen(false)} disabled={isSavingArea}>
+            <Button
+              variant="outline"
+              onClick={() => setAreaDialogOpen(false)}
+              disabled={isSavingArea}
+            >
               Abbrechen
             </Button>
             <Button onClick={handleSaveArea} disabled={isSavingArea || !areaName.trim()}>
-              {isSavingArea ? "Speichern..." : editingArea ? "Speichern" : "Erstellen"}
+              {isSavingArea ? 'Speichern...' : editingArea ? 'Speichern' : 'Erstellen'}
             </Button>
           </DialogFooter>
         </DialogContent>

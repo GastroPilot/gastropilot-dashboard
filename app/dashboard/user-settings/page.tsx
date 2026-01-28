@@ -1,16 +1,17 @@
-"use client";
+'use client';
 
-import React, { useMemo, useEffect } from "react";
-import { LoadingOverlay } from "@/components/loading-overlay";
-import { Button } from "@/components/ui/button";
-import { useUserSettings } from "@/lib/hooks/use-user-settings";
-import { Settings2, Trash2 } from "lucide-react";
+import React, { useMemo, useEffect } from 'react';
+import { LoadingOverlay } from '@/components/loading-overlay';
+import { Button } from '@/components/ui/button';
+import { useUserSettings } from '@/lib/hooks/use-user-settings';
+import { Settings2, Trash2 } from 'lucide-react';
 
-const SNOW_KEY = "snow_enabled";
-const CONFIRM_KEY = "confirmations_enabled";
+const SNOW_KEY = 'snow_enabled';
+const CONFIRM_KEY = 'confirmations_enabled';
 
 export default function UserSettingsPage() {
-  const { settings, isLoading, error, toasts, deleteSettingKey, addToast, updateSettings } = useUserSettings();
+  const { settings, isLoading, error, toasts, deleteSettingKey, addToast, updateSettings } =
+    useUserSettings();
 
   const entries = useMemo(() => {
     const raw = settings?.settings ?? {};
@@ -33,9 +34,12 @@ export default function UserSettingsPage() {
     if (!settings) return;
     const snow = settings.settings?.[SNOW_KEY];
     const confirmVal = settings.settings?.[CONFIRM_KEY];
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       window.localStorage.setItem(SNOW_KEY, (snow === undefined ? true : Boolean(snow)).toString());
-      window.localStorage.setItem(CONFIRM_KEY, (confirmVal === undefined ? true : Boolean(confirmVal)).toString());
+      window.localStorage.setItem(
+        CONFIRM_KEY,
+        (confirmVal === undefined ? true : Boolean(confirmVal)).toString()
+      );
     }
   }, [settings]);
 
@@ -51,11 +55,11 @@ export default function UserSettingsPage() {
             <div
               key={toast.id}
               className={`min-w[260px] rounded-lg border px-4 py-3 shadow-[0_14px_32px_rgba(0,0,0,0.35)] text-sm ${
-                toast.variant === "error"
-                  ? "bg-red-900/80 border-red-500 text-red-50"
-                  : toast.variant === "success"
-                  ? "bg-green-900/80 border-green-500 text-green-50"
-                  : "bg-slate-800/90 border-slate-600 text-slate-100"
+                toast.variant === 'error'
+                  ? 'bg-red-900/80 border-red-500 text-red-50'
+                  : toast.variant === 'success'
+                    ? 'bg-green-900/80 border-green-500 text-green-50'
+                    : 'bg-slate-800/90 border-slate-600 text-slate-100'
               }`}
             >
               {toast.message}
@@ -72,7 +76,9 @@ export default function UserSettingsPage() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-white">Benutzereinstellungen</h1>
-              <p className="text-sm text-gray-400">Persönliche Einstellungen für Darstellung und Sicherheit.</p>
+              <p className="text-sm text-gray-400">
+                Persönliche Einstellungen für Darstellung und Sicherheit.
+              </p>
               {error && <p className="text-xs text-red-300 mt-1">{error}</p>}
             </div>
           </div>
@@ -90,7 +96,9 @@ export default function UserSettingsPage() {
               <div className="flex items-center justify-between">
                 <div className="text-sm text-gray-200">
                   <div className="font-semibold">Schnee-Effekt</div>
-                  <div className="text-xs text-gray-400">Schaltet die animierten Schneeflocken ein oder aus.</div>
+                  <div className="text-xs text-gray-400">
+                    Schaltet die animierten Schneeflocken ein oder aus.
+                  </div>
                 </div>
                 <button
                   type="button"
@@ -100,20 +108,23 @@ export default function UserSettingsPage() {
                     try {
                       await updateSettings({ [SNOW_KEY]: !snowEnabled });
                       window.localStorage.setItem(SNOW_KEY, (!snowEnabled).toString());
-                      addToast(`Schnee-Effekt ${!snowEnabled ? "aktiviert" : "deaktiviert"}.`, "success");
+                      addToast(
+                        `Schnee-Effekt ${!snowEnabled ? 'aktiviert' : 'deaktiviert'}.`,
+                        'success'
+                      );
                     } catch (err) {
                       // Fehler wird bereits getoastet
                     }
                   }}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-blue-400/60 focus:ring-offset-2 focus:ring-offset-gray-900 ${
                     snowEnabled
-                      ? "bg-blue-500/80 shadow-[0_10px_24px_rgba(59,130,246,0.35)] hover:shadow-[0_12px_28px_rgba(59,130,246,0.35)] hover:-translate-y-[1px]"
-                      : "bg-gray-600 hover:bg-gray-500 hover:-translate-y-[1px]"
+                      ? 'bg-blue-500/80 shadow-[0_10px_24px_rgba(59,130,246,0.35)] hover:shadow-[0_12px_28px_rgba(59,130,246,0.35)] hover:-translate-y-[1px]'
+                      : 'bg-gray-600 hover:bg-gray-500 hover:-translate-y-[1px]'
                   }`}
                 >
                   <span
                     className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-all ${
-                      snowEnabled ? "translate-x-5" : "translate-x-1"
+                      snowEnabled ? 'translate-x-5' : 'translate-x-1'
                     }`}
                   />
                 </button>
@@ -121,7 +132,9 @@ export default function UserSettingsPage() {
               <div className="flex items-center justify-between">
                 <div className="text-sm text-gray-200">
                   <div className="font-semibold">Bestätigungsfenster</div>
-                  <div className="text-xs text-gray-400">Schaltet Sicherheitsabfragen (Löschen/Abschließen) ein oder aus.</div>
+                  <div className="text-xs text-gray-400">
+                    Schaltet Sicherheitsabfragen (Löschen/Abschließen) ein oder aus.
+                  </div>
                 </div>
                 <button
                   type="button"
@@ -131,20 +144,23 @@ export default function UserSettingsPage() {
                     try {
                       await updateSettings({ [CONFIRM_KEY]: !confirmationsEnabled });
                       window.localStorage.setItem(CONFIRM_KEY, (!confirmationsEnabled).toString());
-                      addToast(`Bestätigungsfenster ${!confirmationsEnabled ? "aktiviert" : "deaktiviert"}.`, "success");
+                      addToast(
+                        `Bestätigungsfenster ${!confirmationsEnabled ? 'aktiviert' : 'deaktiviert'}.`,
+                        'success'
+                      );
                     } catch (err) {
                       // Fehler wird bereits getoastet
                     }
                   }}
                   className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-blue-400/60 focus:ring-offset-2 focus:ring-offset-gray-900 ${
                     confirmationsEnabled
-                      ? "bg-blue-500/80 shadow-[0_10px_24px_rgba(59,130,246,0.35)] hover:shadow-[0_12px_28px_rgba(59,130,246,0.35)] hover:-translate-y-[1px]"
-                      : "bg-gray-600 hover:bg-gray-500 hover:-translate-y-[1px]"
+                      ? 'bg-blue-500/80 shadow-[0_10px_24px_rgba(59,130,246,0.35)] hover:shadow-[0_12px_28px_rgba(59,130,246,0.35)] hover:-translate-y-[1px]'
+                      : 'bg-gray-600 hover:bg-gray-500 hover:-translate-y-[1px]'
                   }`}
                 >
                   <span
                     className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-all ${
-                      confirmationsEnabled ? "translate-x-5" : "translate-x-1"
+                      confirmationsEnabled ? 'translate-x-5' : 'translate-x-1'
                     }`}
                   />
                 </button>
@@ -170,7 +186,9 @@ export default function UserSettingsPage() {
                   <tbody className="divide-y divide-gray-800/80">
                     {entries.map(([key, value]) => (
                       <tr key={key} className="hover:bg-gray-800/40">
-                        <td className="px-4 py-3 align-top break-all font-semibold text-sm">{key}</td>
+                        <td className="px-4 py-3 align-top break-all font-semibold text-sm">
+                          {key}
+                        </td>
                         <td className="px-4 py-3 align-top">
                           <pre className="bg-gray-900/70 border border-gray-800 rounded-md p-3 text-gray-100 whitespace-pre-wrap break-words text-xs leading-relaxed">
                             {JSON.stringify(value, null, 2)}
@@ -184,7 +202,7 @@ export default function UserSettingsPage() {
                             onClick={async () => {
                               try {
                                 await deleteSettingKey(key);
-                                addToast("Einstellung gelöscht.", "success");
+                                addToast('Einstellung gelöscht.', 'success');
                               } catch (err) {
                                 // Fehlermeldung wird bereits im Hook getoastet
                               }

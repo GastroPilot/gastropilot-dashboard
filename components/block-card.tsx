@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useDraggable } from "@dnd-kit/core";
-import { format } from "date-fns";
-import { Ban, Clock } from "lucide-react";
-import type { Block } from "@/lib/api/blocks";
+import { useDraggable } from '@dnd-kit/core';
+import { format } from 'date-fns';
+import { Ban, Clock } from 'lucide-react';
+import type { Block } from '@/lib/api/blocks';
 
 interface BlockCardProps {
   block: Block;
@@ -15,7 +15,7 @@ interface BlockCardProps {
 export function BlockCard({ block, isDragging, tableLabels, onClick }: BlockCardProps) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: `block-${block.id}`,
-    data: { type: "block", blockId: block.id },
+    data: { type: 'block', blockId: block.id },
   });
 
   const style = transform
@@ -26,11 +26,11 @@ export function BlockCard({ block, isDragging, tableLabels, onClick }: BlockCard
 
   const startDate = new Date(block.start_at);
   const endDate = new Date(block.end_at);
-  const label = block.reason || "Blockiert";
+  const label = block.reason || 'Blockiert';
   const uniqueTables = tableLabels?.filter(Boolean) ?? [];
   const tableLabelText = (() => {
     if (uniqueTables.length === 0) return null;
-    const head = uniqueTables.slice(0, 2).join(", ");
+    const head = uniqueTables.slice(0, 2).join(', ');
     const rest = uniqueTables.length - 2;
     return rest > 0 ? `${head} +${rest}` : head;
   })();
@@ -41,12 +41,12 @@ export function BlockCard({ block, isDragging, tableLabels, onClick }: BlockCard
       data-dnd-draggable="true"
       style={{
         ...style,
-        userSelect: "none",
-        WebkitUserSelect: "none",
-        MozUserSelect: "none",
-        msUserSelect: "none",
-        touchAction: "none",
-        WebkitTouchCallout: "none",
+        userSelect: 'none',
+        WebkitUserSelect: 'none',
+        MozUserSelect: 'none',
+        msUserSelect: 'none',
+        touchAction: 'none',
+        WebkitTouchCallout: 'none',
       }}
       onClick={() => onClick?.(block)}
       {...listeners}
@@ -55,7 +55,7 @@ export function BlockCard({ block, isDragging, tableLabels, onClick }: BlockCard
         bg-gray-800 rounded-lg shadow-md border border-gray-700 p-2 md:p-3
         cursor-grab active:cursor-grabbing
         hover:shadow-lg hover:bg-gray-750 transition-all
-        ${isDragging ? "opacity-50" : ""}
+        ${isDragging ? 'opacity-50' : ''}
         touch-manipulation
         select-none
         min-h-[70px]
@@ -65,7 +65,7 @@ export function BlockCard({ block, isDragging, tableLabels, onClick }: BlockCard
         <div className="flex flex-wrap items-center gap-2 text-sm text-gray-200">
           <Clock className="w-3 h-3 md:w-4 md:h-4 text-gray-400" />
           <span className="font-semibold text-white">
-            {format(startDate, "HH:mm")} – {format(endDate, "HH:mm")} Uhr
+            {format(startDate, 'HH:mm')} – {format(endDate, 'HH:mm')} Uhr
           </span>
         </div>
         <span
@@ -80,9 +80,7 @@ export function BlockCard({ block, isDragging, tableLabels, onClick }: BlockCard
       <div className="mt-2 flex items-center justify-between text-sm text-gray-300">
         <span className="font-medium text-white">{label}</span>
         {tableLabelText && (
-          <span className="text-xs text-rose-200 font-medium">
-            {tableLabelText}
-          </span>
+          <span className="text-xs text-rose-200 font-medium">{tableLabelText}</span>
         )}
       </div>
     </div>

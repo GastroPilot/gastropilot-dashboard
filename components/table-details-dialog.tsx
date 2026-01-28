@@ -1,56 +1,80 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useRef, ReactNode } from "react";
-import { useDraggable, useDroppable } from "@dnd-kit/core";
-import { tablesApi, Table, TableUpdate } from "@/lib/api/tables";
-import { reservationsApi, Reservation } from "@/lib/api/reservations";
-import { blocksApi, Block } from "@/lib/api/blocks";
-import { blockAssignmentsApi, BlockAssignment } from "@/lib/api/block-assignments";
-import { tableDayConfigsApi } from "@/lib/api/table-day-configs";
-import { reservationTableDayConfigsApi } from "@/lib/api/reservation-table-day-configs";
-import { Area } from "@/lib/api/areas";
-import { authApi } from "@/lib/api/auth";
-import { Order, OrderStatus } from "@/lib/api/orders";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ApiError } from "@/lib/api/client";
-import { format } from "date-fns";
-import { Trash2, Plus, Clock, CheckCircle, EyeOff, ChevronDown, XCircle, X, Save, Star, AlertTriangle, Gift, Accessibility } from "lucide-react";
-import { confirmAction } from "@/lib/utils";
-import { BlockTableDialog } from "@/components/block-table-dialog";
+import { useState, useEffect, useRef, ReactNode } from 'react';
+import { useDraggable, useDroppable } from '@dnd-kit/core';
+import { tablesApi, Table, TableUpdate } from '@/lib/api/tables';
+import { reservationsApi, Reservation } from '@/lib/api/reservations';
+import { blocksApi, Block } from '@/lib/api/blocks';
+import { blockAssignmentsApi, BlockAssignment } from '@/lib/api/block-assignments';
+import { tableDayConfigsApi } from '@/lib/api/table-day-configs';
+import { reservationTableDayConfigsApi } from '@/lib/api/reservation-table-day-configs';
+import { Area } from '@/lib/api/areas';
+import { authApi } from '@/lib/api/auth';
+import { Order, OrderStatus } from '@/lib/api/orders';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { ApiError } from '@/lib/api/client';
+import { format } from 'date-fns';
+import {
+  Trash2,
+  Plus,
+  Clock,
+  CheckCircle,
+  EyeOff,
+  ChevronDown,
+  XCircle,
+  X,
+  Save,
+  Star,
+  AlertTriangle,
+  Gift,
+  Accessibility,
+} from 'lucide-react';
+import { confirmAction } from '@/lib/utils';
+import { BlockTableDialog } from '@/components/block-table-dialog';
 
 const ORDER_STATUS_META: Record<OrderStatus, { label: string; tone: string; border: string }> = {
-  open: { label: "Offen", tone: "bg-blue-900/40 border-blue-600 text-blue-100", border: "border-blue-600/70" },
+  open: {
+    label: 'Offen',
+    tone: 'bg-blue-900/40 border-blue-600 text-blue-100',
+    border: 'border-blue-600/70',
+  },
   sent_to_kitchen: {
-    label: "An Küche gesendet",
-    tone: "bg-indigo-900/40 border-indigo-600 text-indigo-100",
-    border: "border-indigo-600/70",
+    label: 'An Küche gesendet',
+    tone: 'bg-indigo-900/40 border-indigo-600 text-indigo-100',
+    border: 'border-indigo-600/70',
   },
   in_preparation: {
-    label: "In Zubereitung",
-    tone: "bg-yellow-900/40 border-yellow-600 text-yellow-100",
-    border: "border-yellow-600/70",
+    label: 'In Zubereitung',
+    tone: 'bg-yellow-900/40 border-yellow-600 text-yellow-100',
+    border: 'border-yellow-600/70',
   },
   ready: {
-    label: "Fertig",
-    tone: "bg-emerald-900/40 border-emerald-600 text-emerald-100",
-    border: "border-emerald-600/70",
+    label: 'Fertig',
+    tone: 'bg-emerald-900/40 border-emerald-600 text-emerald-100',
+    border: 'border-emerald-600/70',
   },
   served: {
-    label: "Serviert",
-    tone: "bg-green-900/40 border-green-600 text-green-100",
-    border: "border-green-600/70",
+    label: 'Serviert',
+    tone: 'bg-green-900/40 border-green-600 text-green-100',
+    border: 'border-green-600/70',
   },
   paid: {
-    label: "Bezahlt",
-    tone: "bg-amber-900/30 border-amber-600 text-amber-100",
-    border: "border-amber-600/70",
+    label: 'Bezahlt',
+    tone: 'bg-amber-900/30 border-amber-600 text-amber-100',
+    border: 'border-amber-600/70',
   },
   canceled: {
-    label: "Storniert",
-    tone: "bg-red-900/30 border-red-600 text-red-100",
-    border: "border-red-600/70",
+    label: 'Storniert',
+    tone: 'bg-red-900/30 border-red-600 text-red-100',
+    border: 'border-red-600/70',
   },
 };
 
@@ -63,7 +87,7 @@ function DraggableReservationItem({
 }) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: -reservation.id,
-    data: { type: "reservation", reservationId: reservation.id },
+    data: { type: 'reservation', reservationId: reservation.id },
   });
 
   const style = transform
@@ -100,7 +124,7 @@ interface TableDetailsDialogProps {
   allowTableManagement?: boolean;
   forceEditMode?: boolean;
   showReservations?: boolean;
-  onNotify?: (message: string, variant?: "info" | "success" | "error") => void;
+  onNotify?: (message: string, variant?: 'info' | 'success' | 'error') => void;
   onHideTable?: (table: Table) => void;
   allowDaySpecificActions?: boolean;
   blocks?: Block[];
@@ -139,15 +163,15 @@ export function TableDetailsDialog({
   onCreateOrder,
 }: TableDetailsDialogProps) {
   const editFormRef = useRef<HTMLFormElement | null>(null);
-  const [number, setNumber] = useState("");
+  const [number, setNumber] = useState('');
   const [capacity, setCapacity] = useState(4);
-  const [notes, setNotes] = useState("");
-  const [color, setColor] = useState("");
+  const [notes, setNotes] = useState('');
+  const [color, setColor] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [rotation, setRotation] = useState(0);
   const [areaId, setAreaId] = useState<number | null>(selectedAreaId ?? null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [isEditing, setIsEditing] = useState(allowTableManagement && forceEditMode);
   const [markingSeated, setMarkingSeated] = useState<number | null>(null);
   const [completingReservation, setCompletingReservation] = useState<number | null>(null);
@@ -164,8 +188,8 @@ export function TableDetailsDialog({
     if (table) {
       setNumber(table.number);
       setCapacity(table.capacity);
-      setNotes(table.notes || "");
-      setColor(table.color || "");
+      setNotes(table.notes || '');
+      setColor(table.color || '');
       setIsActive(table.is_active);
       setRotation(table.rotation || 0);
       setAreaId(table.area_id ?? selectedAreaId ?? null);
@@ -173,7 +197,7 @@ export function TableDetailsDialog({
     } else {
       setAreaId(selectedAreaId ?? null);
     }
-    setError("");
+    setError('');
   }, [table, allowTableManagement, forceEditMode, open, selectedAreaId]);
 
   useEffect(() => {
@@ -182,7 +206,7 @@ export function TableDetailsDialog({
         const user = await authApi.getCurrentUser();
         setCurrentUser(user);
       } catch (error) {
-        console.error("Fehler beim Laden des aktuellen Users:", error);
+        console.error('Fehler beim Laden des aktuellen Users:', error);
       }
     };
     loadCurrentUser();
@@ -194,15 +218,15 @@ export function TableDetailsDialog({
         setAreaMenuOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!table) return;
 
-    setError("");
+    setError('');
     setLoading(true);
     let success = false;
 
@@ -221,14 +245,14 @@ export function TableDetailsDialog({
       onTableUpdated();
       setIsEditing(allowTableManagement && forceEditMode);
       success = true;
-      onNotify?.("Tisch aktualisiert.", "success");
+      onNotify?.('Tisch aktualisiert.', 'success');
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message);
       } else {
-        setError("Fehler beim Aktualisieren des Tisches");
+        setError('Fehler beim Aktualisieren des Tisches');
       }
-      onNotify?.("Fehler beim Aktualisieren des Tisches", "error");
+      onNotify?.('Fehler beim Aktualisieren des Tisches', 'error');
     } finally {
       setLoading(false);
       if (success) {
@@ -244,21 +268,21 @@ export function TableDetailsDialog({
       return;
     }
 
-    setError("");
+    setError('');
     setLoading(true);
 
     try {
       await tablesApi.delete(restaurantId, table.id);
       onTableUpdated();
       onOpenChange(false);
-      onNotify?.("Tisch gelöscht.", "success");
+      onNotify?.('Tisch gelöscht.', 'success');
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message);
       } else {
-        setError("Fehler beim Löschen des Tisches");
+        setError('Fehler beim Löschen des Tisches');
       }
-      onNotify?.("Fehler beim Löschen des Tisches", "error");
+      onNotify?.('Fehler beim Löschen des Tisches', 'error');
     } finally {
       setLoading(false);
     }
@@ -269,16 +293,18 @@ export function TableDetailsDialog({
 
     if (reservations.length > 0) {
       const ok = confirmAction(
-        `Der temporäre Tisch ${table.number} hat ${reservations.length} Reservierung${reservations.length === 1 ? "" : "en"}. Diese werden als "Ausstehend" zurückgesetzt und der Tisch wird gelöscht. Fortfahren?`
+        `Der temporäre Tisch ${table.number} hat ${reservations.length} Reservierung${reservations.length === 1 ? '' : 'en'}. Diese werden als "Ausstehend" zurückgesetzt und der Tisch wird gelöscht. Fortfahren?`
       );
       if (!ok) {
         return;
       }
-    } else if (!confirmAction(`Möchtest du den temporären Tisch ${table.number} wirklich löschen?`)) {
+    } else if (
+      !confirmAction(`Möchtest du den temporären Tisch ${table.number} wirklich löschen?`)
+    ) {
       return;
     }
 
-    setError("");
+    setError('');
     setLoading(true);
 
     try {
@@ -287,50 +313,49 @@ export function TableDetailsDialog({
         for (const reservation of reservations) {
           await reservationsApi.update(restaurantId, reservation.id, {
             table_id: null,
-            status: "pending",
+            status: 'pending',
           });
-          await reservationTableDayConfigsApi.delete(
-            restaurantId,
-            reservation.id,
-            configId
-          );
+          await reservationTableDayConfigsApi.delete(restaurantId, reservation.id, configId);
         }
-        onNotify?.("Reservierungen wurden zurück in die Reservierungsübersicht verschoben.", "success");
+        onNotify?.(
+          'Reservierungen wurden zurück in die Reservierungsübersicht verschoben.',
+          'success'
+        );
       }
       await tableDayConfigsApi.deleteById(restaurantId, configId);
       onTableUpdated();
       onOpenChange(false);
-      onNotify?.("Temporärer Tisch gelöscht.", "success");
+      onNotify?.('Temporärer Tisch gelöscht.', 'success');
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message);
       } else {
-        setError("Fehler beim Löschen des temporären Tisches");
+        setError('Fehler beim Löschen des temporären Tisches');
       }
-      onNotify?.("Fehler beim Löschen des temporären Tisches", "error");
+      onNotify?.('Fehler beim Löschen des temporären Tisches', 'error');
     } finally {
       setLoading(false);
     }
   };
 
   const handleDeleteBlock = async (assignmentId: number) => {
-    if (!confirmAction("Blockierung wirklich entfernen?")) {
+    if (!confirmAction('Blockierung wirklich entfernen?')) {
       return;
     }
 
-    setError("");
+    setError('');
     setDeletingBlockId(assignmentId);
     try {
       await blockAssignmentsApi.delete(restaurantId, assignmentId);
       onTableUpdated();
-      onNotify?.("Blockierung entfernt.", "success");
+      onNotify?.('Blockierung entfernt.', 'success');
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message);
       } else {
-        setError("Fehler beim Entfernen der Blockierung");
+        setError('Fehler beim Entfernen der Blockierung');
       }
-      onNotify?.("Fehler beim Entfernen der Blockierung", "error");
+      onNotify?.('Fehler beim Entfernen der Blockierung', 'error');
     } finally {
       setDeletingBlockId(null);
     }
@@ -344,20 +369,17 @@ export function TableDetailsDialog({
     setMarkingSeated(reservation.id);
     try {
       await reservationsApi.update(restaurantId, reservation.id, {
-        status: "seated",
+        status: 'seated',
       });
-      onNotify?.(
-        `${reservation.guest_name || "Gast"} als Gäste da markiert.`,
-        "success"
-      );
+      onNotify?.(`${reservation.guest_name || 'Gast'} als Gäste da markiert.`, 'success');
       onReservationUpdated?.();
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message);
       } else {
-        setError("Fehler beim Markieren als platziert");
+        setError('Fehler beim Markieren als platziert');
       }
-      onNotify?.("Fehler beim Markieren als platziert", "error");
+      onNotify?.('Fehler beim Markieren als platziert', 'error');
     } finally {
       setMarkingSeated(null);
     }
@@ -367,21 +389,18 @@ export function TableDetailsDialog({
     setCompletingReservation(reservation.id);
     try {
       await reservationsApi.update(restaurantId, reservation.id, {
-        status: "completed",
+        status: 'completed',
         table_id: null,
       });
-      onNotify?.(
-        `${reservation.guest_name || "Gast"} abgeschlossen.`,
-        "success"
-      );
+      onNotify?.(`${reservation.guest_name || 'Gast'} abgeschlossen.`, 'success');
       onReservationUpdated?.();
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message);
       } else {
-        setError("Fehler beim Abschließen der Reservierung");
+        setError('Fehler beim Abschließen der Reservierung');
       }
-      onNotify?.("Fehler beim Abschließen der Reservierung", "error");
+      onNotify?.('Fehler beim Abschließen der Reservierung', 'error');
     } finally {
       setCompletingReservation(null);
     }
@@ -391,31 +410,31 @@ export function TableDetailsDialog({
     setCancelingReservation(reservation.id);
     try {
       await reservationsApi.update(restaurantId, reservation.id, {
-        status: "canceled",
+        status: 'canceled',
         table_id: null,
       });
-      onNotify?.(`${reservation.guest_name || "Gast"} storniert.`, "success");
+      onNotify?.(`${reservation.guest_name || 'Gast'} storniert.`, 'success');
       onReservationUpdated?.();
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message);
       } else {
-        setError("Fehler beim Stornieren der Reservierung");
+        setError('Fehler beim Stornieren der Reservierung');
       }
-      onNotify?.("Fehler beim Stornieren der Reservierung", "error");
+      onNotify?.('Fehler beim Stornieren der Reservierung', 'error');
     } finally {
       setCancelingReservation(null);
     }
   };
 
   const { setNodeRef: setWaitlistDropRef, isOver: isOverWaitlist } = useDroppable({
-    id: "waitlist-dropzone",
+    id: 'waitlist-dropzone',
   });
 
   if (!table) return null;
 
   const activeReservations = reservations.filter(
-    (r) => r.status === "confirmed" || r.status === "pending" || r.status === "seated"
+    (r) => r.status === 'confirmed' || r.status === 'pending' || r.status === 'seated'
   );
   const orderedActiveReservations = activeReservations
     .slice()
@@ -424,11 +443,11 @@ export function TableDetailsDialog({
   const primaryReservationId = primaryReservation?.id ?? null;
   const otherReservations = orderedActiveReservations.filter((r) => r.id !== primaryReservationId);
   const heroRemainingMinutes =
-    primaryReservation?.status === "seated"
+    primaryReservation?.status === 'seated'
       ? Math.ceil((new Date(primaryReservation.end_at).getTime() - Date.now()) / 60000)
       : null;
   const heroRemainingLabel =
-    typeof heroRemainingMinutes === "number"
+    typeof heroRemainingMinutes === 'number'
       ? (() => {
           const abs = Math.abs(heroRemainingMinutes);
           const hours = Math.floor(abs / 60);
@@ -443,16 +462,16 @@ export function TableDetailsDialog({
       : [];
   const renderHeroTag = (tag: string) => {
     const normalized = tag.toLowerCase();
-    const baseIconClasses = "w-3.5 h-3.5";
+    const baseIconClasses = 'w-3.5 h-3.5';
     const icon = (() => {
       switch (normalized) {
-        case "vip":
+        case 'vip':
           return <Star className={baseIconClasses} />;
-        case "allergie":
+        case 'allergie':
           return <AlertTriangle className={baseIconClasses} />;
-        case "geburtstag":
+        case 'geburtstag':
           return <Gift className={baseIconClasses} />;
-        case "barrierefrei":
+        case 'barrierefrei':
           return <Accessibility className={baseIconClasses} />;
         default:
           return null;
@@ -468,21 +487,21 @@ export function TableDetailsDialog({
       </span>
     );
   };
-  const heroNotes = primaryReservation?.notes || table.notes || "";
+  const heroNotes = primaryReservation?.notes || table.notes || '';
   const hasMultipleReservations = orderedActiveReservations.length > 1;
 
   const seatedReservation = activeReservations
-    .filter((r) => r.status === "seated")
+    .filter((r) => r.status === 'seated')
     .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime())[0];
 
   const confirmedReservation = !seatedReservation
     ? activeReservations
-        .filter((r) => r.status === "confirmed")
+        .filter((r) => r.status === 'confirmed')
         .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime())[0]
     : null;
 
   const activeOrders = orders
-    ? orders.filter((order) => order.status !== "paid" && order.status !== "canceled")
+    ? orders.filter((order) => order.status !== 'paid' && order.status !== 'canceled')
     : null;
   const primaryOrder =
     activeOrders && activeOrders.length > 0
@@ -502,7 +521,9 @@ export function TableDetailsDialog({
           <div className="space-y-2">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-2">
-                <DialogTitle>{table.number} · {table.capacity} Pers.</DialogTitle>
+                <DialogTitle>
+                  {table.number} · {table.capacity} Pers.
+                </DialogTitle>
               </div>
             </div>
           </div>
@@ -514,7 +535,7 @@ export function TableDetailsDialog({
               <span>{error}</span>
               <button
                 type="button"
-                onClick={() => setError("")}
+                onClick={() => setError('')}
                 className="text-red-200 hover:text-white"
                 aria-label="Fehlermeldung schließen"
               >
@@ -523,29 +544,31 @@ export function TableDetailsDialog({
             </div>
           )}
 
-          {typeof orders !== "undefined" && (
+          {typeof orders !== 'undefined' && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-semibold text-white">Bestellung</h3>
                 <span className="text-xs text-gray-400">
-                  {activeOrders && activeOrders.length > 0 ? `${activeOrders.length} aktiv` : "Keine aktiv"}
+                  {activeOrders && activeOrders.length > 0
+                    ? `${activeOrders.length} aktiv`
+                    : 'Keine aktiv'}
                 </span>
               </div>
               {primaryOrder ? (
                 <div
-                  role={onViewOrder ? "button" : undefined}
+                  role={onViewOrder ? 'button' : undefined}
                   tabIndex={onViewOrder ? 0 : undefined}
                   onClick={() => onViewOrder?.(primaryOrder.id)}
                   onKeyDown={(event) => {
                     if (!onViewOrder) return;
-                    if (event.key === "Enter" || event.key === " ") {
+                    if (event.key === 'Enter' || event.key === ' ') {
                       event.preventDefault();
                       onViewOrder(primaryOrder.id);
                     }
                   }}
                   className={`rounded-xl border bg-gray-900/60 px-4 py-3 text-white shadow-[0_12px_28px_rgba(0,0,0,0.18)] transition-colors ${
-                    ORDER_STATUS_META[primaryOrder.status]?.border ?? "border-gray-700"
-                  } ${onViewOrder ? "cursor-pointer hover:bg-gray-900/70 focus:outline-none focus:ring-2 focus:ring-blue-500/50" : ""}`}
+                    ORDER_STATUS_META[primaryOrder.status]?.border ?? 'border-gray-700'
+                  } ${onViewOrder ? 'cursor-pointer hover:bg-gray-900/70 focus:outline-none focus:ring-2 focus:ring-blue-500/50' : ''}`}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
                     <span className="font-semibold">
@@ -553,7 +576,8 @@ export function TableDetailsDialog({
                     </span>
                     <span
                       className={`inline-flex items-center gap-2 rounded-md border px-2.5 py-1 text-xs font-semibold ${
-                        ORDER_STATUS_META[primaryOrder.status]?.tone ?? "border-white/10 bg-black/10 text-gray-200"
+                        ORDER_STATUS_META[primaryOrder.status]?.tone ??
+                        'border-white/10 bg-black/10 text-gray-200'
                       }`}
                     >
                       {ORDER_STATUS_META[primaryOrder.status]?.label ?? primaryOrder.status}
@@ -578,12 +602,14 @@ export function TableDetailsDialog({
           )}
 
           {allowTableManagement && (isEditing || forceEditMode) && (
-            <form ref={editFormRef} onSubmit={handleSubmit} className="space-y-3 rounded-xl border border-gray-700 bg-gray-800/80 p-4 shadow-[0_10px_30px_rgba(0,0,0,0.3)]">
+            <form
+              ref={editFormRef}
+              onSubmit={handleSubmit}
+              className="space-y-3 rounded-xl border border-gray-700 bg-gray-800/80 p-4 shadow-[0_10px_30px_rgba(0,0,0,0.3)]"
+            >
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  {allowTableManagement && (
-                    <p className="text-xs text-gray-400">Tischnummer</p>
-                  )}
+                  {allowTableManagement && <p className="text-xs text-gray-400">Tischnummer</p>}
                   <Input
                     placeholder="Tischnummer"
                     value={number}
@@ -592,9 +618,7 @@ export function TableDetailsDialog({
                   />
                 </div>
                 <div className="space-y-1">
-                  {allowTableManagement && (
-                    <p className="text-xs text-gray-400">Max. Plätze</p>
-                  )}
+                  {allowTableManagement && <p className="text-xs text-gray-400">Max. Plätze</p>}
                   <Input
                     type="number"
                     min="1"
@@ -616,9 +640,13 @@ export function TableDetailsDialog({
                       className="flex h-10 w-full items-center justify-between rounded-md border border-gray-600 bg-gray-800 text-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-inner"
                     >
                       <span className="truncate">
-                        {areaId ? areas.find((a) => a.id === areaId)?.name || "Area auswählen" : "Area auswählen"}
+                        {areaId
+                          ? areas.find((a) => a.id === areaId)?.name || 'Area auswählen'
+                          : 'Area auswählen'}
                       </span>
-                      <ChevronDown className={`h-4 w-4 transition-transform ${areaMenuOpen ? "rotate-180" : ""}`} />
+                      <ChevronDown
+                        className={`h-4 w-4 transition-transform ${areaMenuOpen ? 'rotate-180' : ''}`}
+                      />
                     </button>
                     {areaMenuOpen && (
                       <div className="absolute z-10 mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 shadow-xl max-h-60 overflow-auto">
@@ -632,8 +660,8 @@ export function TableDetailsDialog({
                             }}
                             className={`w-full px-3 py-2 text-left text-sm ${
                               areaId === area.id
-                                ? "font-semibold text-white"
-                                : "text-gray-200 hover:bg-gray-800/70"
+                                ? 'font-semibold text-white'
+                                : 'text-gray-200 hover:bg-gray-800/70'
                             }`}
                           >
                             {area.name}
@@ -645,9 +673,7 @@ export function TableDetailsDialog({
                 </div>
               )}
               <div className="space-y-1">
-                {allowTableManagement && (
-                  <p className="text-xs text-gray-400">Notizen</p>
-                )}
+                {allowTableManagement && <p className="text-xs text-gray-400">Notizen</p>}
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
@@ -656,8 +682,7 @@ export function TableDetailsDialog({
                   placeholder="Notizen"
                 />
               </div>
-            <div className="space-y-2">
-              </div>
+              <div className="space-y-2"></div>
               <div>
                 <p className="text-xs text-gray-400 mb-1">Rotation ({rotation}°)</p>
                 <div className="flex items-center gap-3">
@@ -670,18 +695,20 @@ export function TableDetailsDialog({
                     className="w-full accent-blue-500"
                   />
                   <div className="w-20">
-                    <label className="sr-only" htmlFor="rotation-input">Rotation</label>
-                  <Input
-                    id="rotation-input"
-                    type="number"
-                    min={0}
-                    max={359}
-                    step={1}
-                    value={rotation}
-                    onChange={(e) =>
-                      setRotation(Math.min(359, Math.max(0, parseInt(e.target.value) || 0)))
-                    }
-                  />
+                    <label className="sr-only" htmlFor="rotation-input">
+                      Rotation
+                    </label>
+                    <Input
+                      id="rotation-input"
+                      type="number"
+                      min={0}
+                      max={359}
+                      step={1}
+                      value={rotation}
+                      onChange={(e) =>
+                        setRotation(Math.min(359, Math.max(0, parseInt(e.target.value) || 0)))
+                      }
+                    />
                   </div>
                 </div>
               </div>
@@ -699,10 +726,10 @@ export function TableDetailsDialog({
                 <span className="flex items-center gap-2">
                   <span
                     className={`w-2.5 h-2.5 rounded-full ${
-                      isActive ? "bg-green-400" : "bg-gray-500"
+                      isActive ? 'bg-green-400' : 'bg-gray-500'
                     }`}
                   />
-                  {isActive ? "Tisch aktiv" : "Tisch inaktiv"}
+                  {isActive ? 'Tisch aktiv' : 'Tisch inaktiv'}
                 </span>
               </label>
             </form>
@@ -721,7 +748,7 @@ export function TableDetailsDialog({
                   tabIndex={0}
                   onClick={() => onReservationClick(primaryReservation)}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
+                    if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
                       onReservationClick(primaryReservation);
                     }
@@ -732,14 +759,15 @@ export function TableDetailsDialog({
                     <div className="flex items-center gap-2">
                       <Clock className="w-5 h-5 text-gray-200" />
                       <span className="text-lg font-semibold text-white">
-                        {format(new Date(primaryReservation.start_at), "HH:mm")} - {format(new Date(primaryReservation.end_at), "HH:mm")}
+                        {format(new Date(primaryReservation.start_at), 'HH:mm')} -{' '}
+                        {format(new Date(primaryReservation.end_at), 'HH:mm')}
                       </span>
-                      <span className="text-white font-semibold">• {primaryReservation.party_size} Pers.</span>
+                      <span className="text-white font-semibold">
+                        • {primaryReservation.party_size} Pers.
+                      </span>
                     </div>
                     {heroRemainingLabel && (
-                      <span className="text-xs text-white font-semibold">
-                        {heroRemainingLabel}
-                      </span>
+                      <span className="text-xs text-white font-semibold">{heroRemainingLabel}</span>
                     )}
                     <span className="px-3 py-1 rounded-md border border-emerald-400/60 bg-emerald-500/20 text-emerald-50 text-xs font-bold uppercase tracking-wide">
                       Aktive Reservierung
@@ -747,11 +775,14 @@ export function TableDetailsDialog({
                   </div>
                   <div className="mt-3 flex flex-col gap-3 text-sm text-white">
                     <div className="text-lg font-semibold text-white">
-                      {primaryReservation.guest_name || `Gast #${primaryReservation.guest_id || "unbekannt"}`}
+                      {primaryReservation.guest_name ||
+                        `Gast #${primaryReservation.guest_id || 'unbekannt'}`}
                     </div>
                     <div className="flex flex-col gap-2">
                       <div className="flex flex-col gap-1">
-                        <span className="text-xs uppercase tracking-wide text-white/70 font-semibold">Tags</span>
+                        <span className="text-xs uppercase tracking-wide text-white/70 font-semibold">
+                          Tags
+                        </span>
                         {heroTags.length > 0 ? (
                           <div className="flex flex-wrap gap-2">
                             {heroTags.map((tag) => renderHeroTag(tag))}
@@ -761,12 +792,12 @@ export function TableDetailsDialog({
                         )}
                       </div>
                       <div className="flex flex-col gap-1">
-                        <span className="text-xs uppercase tracking-wide text-white/70 font-semibold">Notizen</span>
+                        <span className="text-xs uppercase tracking-wide text-white/70 font-semibold">
+                          Notizen
+                        </span>
                         {heroNotes ? (
                           <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
-                            <p className="text-sm text-white leading-relaxed">
-                              {heroNotes}
-                            </p>
+                            <p className="text-sm text-white leading-relaxed">{heroNotes}</p>
                           </div>
                         ) : (
                           <span className="text-sm text-white/70">Keine Notizen</span>
@@ -774,7 +805,7 @@ export function TableDetailsDialog({
                       </div>
                     </div>
                     <div className="flex w-full flex-row items-stretch gap-2 self-stretch pt-1">
-                      {primaryReservation.status === "confirmed" && (
+                      {primaryReservation.status === 'confirmed' && (
                         <Button
                           type="button"
                           onClick={(e) => {
@@ -788,13 +819,14 @@ export function TableDetailsDialog({
                           Gäste da
                         </Button>
                       )}
-                      {(primaryReservation.status === "confirmed" || primaryReservation.status === "pending") && (
+                      {(primaryReservation.status === 'confirmed' ||
+                        primaryReservation.status === 'pending') && (
                         <Button
                           type="button"
                           variant="destructive"
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (!confirmAction("Reservierung wirklich stornieren?")) {
+                            if (!confirmAction('Reservierung wirklich stornieren?')) {
                               return;
                             }
                             handleCancelReservation(primaryReservation);
@@ -806,12 +838,16 @@ export function TableDetailsDialog({
                           Stornieren
                         </Button>
                       )}
-                      {primaryReservation.status === "seated" && (
+                      {primaryReservation.status === 'seated' && (
                         <Button
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            if (!confirmAction("Möchtest du den Tisch freigeben und die Reservierung abschließen?")) {
+                            if (
+                              !confirmAction(
+                                'Möchtest du den Tisch freigeben und die Reservierung abschließen?'
+                              )
+                            ) {
                               return;
                             }
                             handleCompleteReservation(primaryReservation);
@@ -833,105 +869,120 @@ export function TableDetailsDialog({
               ) : (
                 <div className="space-y-2">
                   {otherReservations.map((reservation) => {
-                    const actionsDisabled = hasMultipleReservations && reservation.id !== primaryReservationId;
+                    const actionsDisabled =
+                      hasMultipleReservations && reservation.id !== primaryReservationId;
                     const remainingMinutes =
-                      reservation.status === "seated"
+                      reservation.status === 'seated'
                         ? Math.ceil((new Date(reservation.end_at).getTime() - Date.now()) / 60000)
                         : null;
                     const remainingLabel =
-                      typeof remainingMinutes === "number"
+                      typeof remainingMinutes === 'number'
                         ? (() => {
                             const abs = Math.abs(remainingMinutes);
                             const hours = Math.floor(abs / 60);
                             const mins = abs % 60;
                             const timeLabel = hours > 0 ? `${hours}h ${mins}min` : `${mins}min`;
-                            return remainingMinutes >= 0 ? `Noch ${timeLabel}` : `Überzogen ${timeLabel}`;
+                            return remainingMinutes >= 0
+                              ? `Noch ${timeLabel}`
+                              : `Überzogen ${timeLabel}`;
                           })()
                         : null;
                     return (
-                    <DraggableReservationItem key={reservation.id} reservation={reservation}>
-                      <div
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => onReservationClick(reservation)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            onReservationClick(reservation);
-                          }
-                        }}
-                        className={`w-full text-left p-3 border rounded-lg hover:bg-gray-750 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-700`}
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2 text-sm text-gray-200">
-                            <Clock className="w-4 h-4 text-gray-400" />
-                            <span className="font-semibold text-white">
-                              {format(new Date(reservation.start_at), "HH:mm")} - {format(new Date(reservation.end_at), "HH:mm")}
+                      <DraggableReservationItem key={reservation.id} reservation={reservation}>
+                        <div
+                          role="button"
+                          tabIndex={0}
+                          onClick={() => onReservationClick(reservation)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              onReservationClick(reservation);
+                            }
+                          }}
+                          className={`w-full text-left p-3 border rounded-lg hover:bg-gray-750 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-700`}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 text-sm text-gray-200">
+                              <Clock className="w-4 h-4 text-gray-400" />
+                              <span className="font-semibold text-white">
+                                {format(new Date(reservation.start_at), 'HH:mm')} -{' '}
+                                {format(new Date(reservation.end_at), 'HH:mm')}
+                              </span>
+                              <span className="text-gray-300">
+                                • {reservation.party_size} Pers.
+                              </span>
+                            </div>
+                            {reservation.status === 'seated' && remainingLabel && (
+                              <span className="text-xs text-gray-300">{remainingLabel}</span>
+                            )}
+                          </div>
+                          <div className="mt-2 flex flex-col gap-2 text-sm text-gray-300">
+                            <span className="font-medium text-white">
+                              {reservation.guest_name ||
+                                `Gast #${reservation.guest_id || 'unbekannt'}`}
                             </span>
-                            <span className="text-gray-300">• {reservation.party_size} Pers.</span>
-                          </div>
-                          {reservation.status === "seated" && remainingLabel && (
-                            <span className="text-xs text-gray-300">{remainingLabel}</span>
-                          )}
-                        </div>
-                        <div className="mt-2 flex flex-col gap-2 text-sm text-gray-300">
-                          <span className="font-medium text-white">
-                            {reservation.guest_name || `Gast #${reservation.guest_id || "unbekannt"}`}
-                          </span>
-                          <div className="flex w-full flex-row items-stretch gap-2 self-stretch">
-                            {reservation.status === "confirmed" && (
-                              <Button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleMarkSeated(reservation);
-                                }}
-                                disabled={markingSeated === reservation.id || actionsDisabled}
-                                className="h-full min-h-[44px] px-3 bg-blue-600 hover:bg-blue-700 text-white border border-blue-500 shadow-none hover:shadow-[0_12px_32px_rgba(59,130,246,0.45)] transition-[shadow,background-color] flex-1 order-last disabled:opacity-50 disabled:cursor-not-allowed"
-                              >
-                                <CheckCircle className="w-4 h-4 mr-2" />
-                                Gäste da
-                              </Button>
-                            )}
-                            {reservation.status === "confirmed" && (
-                              <Button
-                                type="button"
-                                variant="destructive"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (!confirmAction("Reservierung wirklich stornieren?")) {
-                                    return;
+                            <div className="flex w-full flex-row items-stretch gap-2 self-stretch">
+                              {reservation.status === 'confirmed' && (
+                                <Button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleMarkSeated(reservation);
+                                  }}
+                                  disabled={markingSeated === reservation.id || actionsDisabled}
+                                  className="h-full min-h-[44px] px-3 bg-blue-600 hover:bg-blue-700 text-white border border-blue-500 shadow-none hover:shadow-[0_12px_32px_rgba(59,130,246,0.45)] transition-[shadow,background-color] flex-1 order-last disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  <CheckCircle className="w-4 h-4 mr-2" />
+                                  Gäste da
+                                </Button>
+                              )}
+                              {reservation.status === 'confirmed' && (
+                                <Button
+                                  type="button"
+                                  variant="destructive"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (!confirmAction('Reservierung wirklich stornieren?')) {
+                                      return;
+                                    }
+                                    handleCancelReservation(reservation);
+                                  }}
+                                  disabled={
+                                    cancelingReservation === reservation.id || actionsDisabled
                                   }
-                                  handleCancelReservation(reservation);
-                                }}
-                                disabled={cancelingReservation === reservation.id || actionsDisabled}
-                                className="h-full min-h-[44px] px-3 bg-transparent text-white border border-red-500 hover:bg-red-500/10 hover:text-white shadow-none transition-[shadow,background-color,color] flex-1 order-first disabled:opacity-50 disabled:cursor-not-allowed"
-                              >
-                                <XCircle className="w-4 h-4 mr-2" />
-                                Stornieren
-                              </Button>
-                            )}
-                            {reservation.status === "seated" && (
-                              <Button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (!confirmAction("Möchtest du den Tisch freigeben und die Reservierung abschließen?")) {
-                                    return;
+                                  className="h-full min-h-[44px] px-3 bg-transparent text-white border border-red-500 hover:bg-red-500/10 hover:text-white shadow-none transition-[shadow,background-color,color] flex-1 order-first disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  <XCircle className="w-4 h-4 mr-2" />
+                                  Stornieren
+                                </Button>
+                              )}
+                              {reservation.status === 'seated' && (
+                                <Button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (
+                                      !confirmAction(
+                                        'Möchtest du den Tisch freigeben und die Reservierung abschließen?'
+                                      )
+                                    ) {
+                                      return;
+                                    }
+                                    handleCompleteReservation(reservation);
+                                  }}
+                                  disabled={
+                                    completingReservation === reservation.id || actionsDisabled
                                   }
-                                  handleCompleteReservation(reservation);
-                                }}
-                                disabled={completingReservation === reservation.id || actionsDisabled}
-                                className="h-full min-h-[44px] px-3 bg-green-600 hover:bg-green-500 text-white border border-green-500 shadow-none hover:shadow-[0_12px_32px_rgba(34,197,94,0.45)] transition-[shadow,background-color] flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                              >
-                                <CheckCircle className="w-4 h-4 mr-2" />
-                                Tisch freigeben
-                              </Button>
-                            )}
+                                  className="h-full min-h-[44px] px-3 bg-green-600 hover:bg-green-500 text-white border border-green-500 shadow-none hover:shadow-[0_12px_32px_rgba(34,197,94,0.45)] transition-[shadow,background-color] flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                  <CheckCircle className="w-4 h-4 mr-2" />
+                                  Tisch freigeben
+                                </Button>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </DraggableReservationItem>
+                      </DraggableReservationItem>
                     );
                   })}
                 </div>
@@ -946,11 +997,15 @@ export function TableDetailsDialog({
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-semibold text-white">Blockierungen</h3>
                 <span className="text-xs text-gray-400">
-                  {blockAssignments.filter((assignment) => assignment.table_id === table.id).length} aktiv
+                  {blockAssignments.filter((assignment) => assignment.table_id === table.id).length}{' '}
+                  aktiv
                 </span>
               </div>
-              {blockAssignments.filter((assignment) => assignment.table_id === table.id).length === 0 ? (
-                <div className="mt-2 text-sm text-gray-400">Keine Blockierungen für diesen Tisch.</div>
+              {blockAssignments.filter((assignment) => assignment.table_id === table.id).length ===
+              0 ? (
+                <div className="mt-2 text-sm text-gray-400">
+                  Keine Blockierungen für diesen Tisch.
+                </div>
               ) : (
                 <div className="mt-3 space-y-2">
                   {blockAssignments
@@ -960,8 +1015,13 @@ export function TableDetailsDialog({
                       if (!block) return null;
                       return { assignment, block };
                     })
-                    .filter((entry): entry is { assignment: BlockAssignment; block: Block } => !!entry)
-                    .sort((a, b) => new Date(a.block.start_at).getTime() - new Date(b.block.start_at).getTime())
+                    .filter(
+                      (entry): entry is { assignment: BlockAssignment; block: Block } => !!entry
+                    )
+                    .sort(
+                      (a, b) =>
+                        new Date(a.block.start_at).getTime() - new Date(b.block.start_at).getTime()
+                    )
                     .map(({ assignment, block }) => (
                       <div
                         key={assignment.id}
@@ -973,7 +1033,7 @@ export function TableDetailsDialog({
                           setEditBlockDialogOpen(true);
                         }}
                         onKeyDown={(event) => {
-                          if (event.key === "Enter" || event.key === " ") {
+                          if (event.key === 'Enter' || event.key === ' ') {
                             event.preventDefault();
                             setEditingBlock(block);
                             setEditingBlocks(getGroupedBlocks(block));
@@ -989,8 +1049,8 @@ export function TableDetailsDialog({
                             </div>
                           )}
                           <div className="text-sm font-medium text-white">
-                            {format(new Date(block.start_at), "dd.MM.yyyy HH:mm")} –{" "}
-                            {format(new Date(block.end_at), "HH:mm")}
+                            {format(new Date(block.start_at), 'dd.MM.yyyy HH:mm')} –{' '}
+                            {format(new Date(block.end_at), 'HH:mm')}
                           </div>
                         </div>
                         <Button
@@ -1015,18 +1075,21 @@ export function TableDetailsDialog({
 
         <DialogFooter>
           <div className="flex flex-wrap items-center gap-2 mr-auto">
-            {allowTableManagement && (currentUser?.role === "servecta" || currentUser?.role === "restaurantinhaber" || currentUser?.role === "schichtleiter") && (
-              <Button
-                type="button"
-                variant="destructive"
-                onClick={handleDelete}
-                disabled={loading}
-                className="shadow-none hover:shadow-[0_12px_32px_rgba(239,68,68,0.45)]"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Tisch löschen
-              </Button>
-            )}
+            {allowTableManagement &&
+              (currentUser?.role === 'servecta' ||
+                currentUser?.role === 'restaurantinhaber' ||
+                currentUser?.role === 'schichtleiter') && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={handleDelete}
+                  disabled={loading}
+                  className="shadow-none hover:shadow-[0_12px_32px_rgba(239,68,68,0.45)]"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Tisch löschen
+                </Button>
+              )}
           </div>
           {allowTableManagement && (isEditing || forceEditMode) && (
             <Button
@@ -1048,8 +1111,12 @@ export function TableDetailsDialog({
               )}
             </Button>
           )}
-          {allowDaySpecificActions && table && (currentUser?.role === "servecta" || currentUser?.role === "restaurantinhaber" || currentUser?.role === "schichtleiter") && (
-            table.id < 0 ? (
+          {allowDaySpecificActions &&
+            table &&
+            (currentUser?.role === 'servecta' ||
+              currentUser?.role === 'restaurantinhaber' ||
+              currentUser?.role === 'schichtleiter') &&
+            (table.id < 0 ? (
               <Button
                 type="button"
                 variant="destructive"
@@ -1060,23 +1127,28 @@ export function TableDetailsDialog({
                 <Trash2 className="w-4 h-4 mr-2" />
                 Temporären Tisch löschen
               </Button>
-            ) : null
-          )}
+            ) : null)}
           <div className="w-full flex flex-wrap items-center gap-2">
-            {allowDaySpecificActions && table && table.id > 0 && onHideTable && (currentUser?.role === "servecta" || currentUser?.role === "restaurantinhaber" || currentUser?.role === "schichtleiter") && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  onHideTable(table);
-                  onOpenChange(false);
-                }}
-                disabled={loading}
-              >
-                <EyeOff className="w-4 h-4 mr-2" />
-                Für diesen Tag ausblenden
-              </Button>
-            )}
+            {allowDaySpecificActions &&
+              table &&
+              table.id > 0 &&
+              onHideTable &&
+              (currentUser?.role === 'servecta' ||
+                currentUser?.role === 'restaurantinhaber' ||
+                currentUser?.role === 'schichtleiter') && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    onHideTable(table);
+                    onOpenChange(false);
+                  }}
+                  disabled={loading}
+                >
+                  <EyeOff className="w-4 h-4 mr-2" />
+                  Für diesen Tag ausblenden
+                </Button>
+              )}
             <div className="ml-auto flex flex-wrap items-center gap-2">
               <Button
                 type="button"
@@ -1111,7 +1183,8 @@ export function TableDetailsDialog({
               editingBlock
                 ? tables.filter((t) =>
                     blockAssignments.some(
-                      (assignment) => assignment.block_id === editingBlock.id && assignment.table_id === t.id
+                      (assignment) =>
+                        assignment.block_id === editingBlock.id && assignment.table_id === t.id
                     )
                   )
                 : [table]

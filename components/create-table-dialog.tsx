@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useEffect, useState, useRef } from "react";
-import { tablesApi, TableCreate } from "@/lib/api/tables";
-import { Area } from "@/lib/api/areas";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ChevronDown, Check, X, Save } from "lucide-react";
+import { useEffect, useState, useRef } from 'react';
+import { tablesApi, TableCreate } from '@/lib/api/tables';
+import { Area } from '@/lib/api/areas';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { ChevronDown, Check, X, Save } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -13,8 +13,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { ApiError } from "@/lib/api/client";
+} from '@/components/ui/dialog';
+import { ApiError } from '@/lib/api/client';
 
 interface CreateTableDialogProps {
   open: boolean;
@@ -33,20 +33,20 @@ export function CreateTableDialog({
   areas,
   selectedAreaId,
 }: CreateTableDialogProps) {
-  const [number, setNumber] = useState("");
+  const [number, setNumber] = useState('');
   const [capacity, setCapacity] = useState(4);
-  const [notes, setNotes] = useState("");
+  const [notes, setNotes] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [rotation, setRotation] = useState(0);
   const [areaId, setAreaId] = useState<number | null>(selectedAreaId ?? null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [areaMenuOpen, setAreaMenuOpen] = useState(false);
   const areaMenuRef = useRef<HTMLDivElement | null>(null);
 
   // Fehlermeldung zurücksetzen, sobald der Dialog geöffnet/geschlossen wird
   useEffect(() => {
-    setError("");
+    setError('');
     setAreaId(selectedAreaId ?? null);
     setAreaMenuOpen(false);
   }, [open, selectedAreaId]);
@@ -57,27 +57,27 @@ export function CreateTableDialog({
         setAreaMenuOpen(false);
       }
     };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
   }, []);
 
   const resetForm = () => {
-    setNumber("");
+    setNumber('');
     setCapacity(4);
-    setNotes("");
+    setNotes('');
     setIsActive(true);
     setRotation(0);
     setAreaId(selectedAreaId ?? null);
-    setError("");
+    setError('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setError('');
     setLoading(true);
 
     if (!areaId) {
-      setError("Bitte zuerst eine Area auswählen.");
+      setError('Bitte zuerst eine Area auswählen.');
       setLoading(false);
       return;
     }
@@ -104,7 +104,7 @@ export function CreateTableDialog({
       if (err instanceof ApiError) {
         setError(err.message);
       } else {
-        setError("Fehler beim Erstellen des Tisches");
+        setError('Fehler beim Erstellen des Tisches');
       }
     } finally {
       setLoading(false);
@@ -126,9 +126,7 @@ export function CreateTableDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Neuen Tisch erstellen</DialogTitle>
-          <DialogDescription>
-            Erstelle einen neuen Tisch für dein Restaurant.
-          </DialogDescription>
+          <DialogDescription>Erstelle einen neuen Tisch für dein Restaurant.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           {error && (
@@ -136,7 +134,7 @@ export function CreateTableDialog({
               <span>{error}</span>
               <button
                 type="button"
-                onClick={() => setError("")}
+                onClick={() => setError('')}
                 className="text-red-200 hover:text-white ml-2"
                 aria-label="Fehlermeldung schließen"
               >
@@ -184,9 +182,13 @@ export function CreateTableDialog({
                   disabled={!hasAreas}
                 >
                   <span className="truncate">
-                    {areaId ? areas.find((a) => a.id === areaId)?.name || "Area auswählen" : "Area auswählen"}
+                    {areaId
+                      ? areas.find((a) => a.id === areaId)?.name || 'Area auswählen'
+                      : 'Area auswählen'}
                   </span>
-                  <ChevronDown className={`h-4 w-4 transition-transform ${areaMenuOpen ? "rotate-180" : ""}`} />
+                  <ChevronDown
+                    className={`h-4 w-4 transition-transform ${areaMenuOpen ? 'rotate-180' : ''}`}
+                  />
                 </button>
                 {areaMenuOpen && (
                   <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 shadow-xl max-h-60 overflow-auto">
@@ -200,8 +202,8 @@ export function CreateTableDialog({
                         }}
                         className={`w-full px-3 py-2 text-left text-sm ${
                           areaId === area.id
-                            ? "font-semibold text-white"
-                            : "text-gray-200 hover:bg-gray-800/70"
+                            ? 'font-semibold text-white'
+                            : 'text-gray-200 hover:bg-gray-800/70'
                         }`}
                       >
                         {area.name}
@@ -228,7 +230,6 @@ export function CreateTableDialog({
               />
             </div>
 
-
             <div>
               <div className="flex items-center gap-3">
                 <div className="flex-1">
@@ -243,7 +244,9 @@ export function CreateTableDialog({
                   />
                 </div>
                 <div className="w-20">
-                  <label className="sr-only" htmlFor="rotation-input">Rotation</label>
+                  <label className="sr-only" htmlFor="rotation-input">
+                    Rotation
+                  </label>
                   <Input
                     id="rotation-input"
                     type="number"
@@ -251,7 +254,9 @@ export function CreateTableDialog({
                     max={359}
                     step={1}
                     value={rotation}
-                    onChange={(e) => setRotation(Math.min(359, Math.max(0, parseInt(e.target.value) || 0)))}
+                    onChange={(e) =>
+                      setRotation(Math.min(359, Math.max(0, parseInt(e.target.value) || 0)))
+                    }
                   />
                 </div>
               </div>
@@ -270,9 +275,9 @@ export function CreateTableDialog({
               />
               <span className="flex items-center gap-2">
                 <span
-                  className={`w-2.5 h-2.5 rounded-full ${isActive ? "bg-green-400" : "bg-gray-500"}`}
+                  className={`w-2.5 h-2.5 rounded-full ${isActive ? 'bg-green-400' : 'bg-gray-500'}`}
                 />
-                {isActive ? "Tisch aktiv" : "Tisch inaktiv"}
+                {isActive ? 'Tisch aktiv' : 'Tisch inaktiv'}
               </span>
             </label>
           </div>

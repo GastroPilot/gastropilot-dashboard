@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import { useEffect, useState, useCallback, useRef } from "react";
-import { restaurantsApi, Restaurant } from "@/lib/api/restaurants";
-import { ordersApi, OrderWithItems, OrderStatus } from "@/lib/api/orders";
-import { tablesApi, Table } from "@/lib/api/tables";
-import { Button } from "@/components/ui/button";
-import { LoadingOverlay } from "@/components/loading-overlay";
-import { format, parseISO } from "date-fns";
-import { de } from "date-fns/locale";
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { restaurantsApi, Restaurant } from '@/lib/api/restaurants';
+import { ordersApi, OrderWithItems, OrderStatus } from '@/lib/api/orders';
+import { tablesApi, Table } from '@/lib/api/tables';
+import { Button } from '@/components/ui/button';
+import { LoadingOverlay } from '@/components/loading-overlay';
+import { format, parseISO } from 'date-fns';
+import { de } from 'date-fns/locale';
 import {
   Clock,
   ChefHat,
@@ -17,9 +17,9 @@ import {
   Play,
   Pause,
   Table as TableIcon,
-} from "lucide-react";
+} from 'lucide-react';
 
-type KitchenStatus = "sent_to_kitchen" | "in_preparation" | "ready";
+type KitchenStatus = 'sent_to_kitchen' | 'in_preparation' | 'ready';
 
 interface KitchenOrder extends OrderWithItems {
   table?: Table;
@@ -36,13 +36,13 @@ export default function KitchenPage() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [lastOrderCount, setLastOrderCount] = useState(0);
   const [toasts, setToasts] = useState<
-    { id: string; message: string; variant?: "info" | "error" | "success" }[]
+    { id: string; message: string; variant?: 'info' | 'error' | 'success' }[]
   >([]);
   const autoRefreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const addToast = useCallback(
-    (message: string, variant: "info" | "error" | "success" = "info") => {
+    (message: string, variant: 'info' | 'error' | 'success' = 'info') => {
       const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
       setToasts((prev) => [...prev, { id, message, variant }]);
       setTimeout(() => {
@@ -52,103 +52,103 @@ export default function KitchenPage() {
     []
   );
 
-  const loadData = useCallback(async (background = false) => {
-    try {
-      if (background) {
-        setIsRefreshing(true);
-      } else {
-        setIsLoading(true);
-      }
+  const loadData = useCallback(
+    async (background = false) => {
+      try {
+        if (background) {
+          setIsRefreshing(true);
+        } else {
+          setIsLoading(true);
+        }
 
-      const restaurantsData = await restaurantsApi.list();
-      if (restaurantsData.length === 0) {
-        addToast("Kein Restaurant gefunden", "error");
-        return;
-      }
+        const restaurantsData = await restaurantsApi.list();
+        if (restaurantsData.length === 0) {
+          addToast('Kein Restaurant gefunden', 'error');
+          return;
+        }
 
-      const selectedRestaurant = restaurantsData[0];
-      setRestaurant(selectedRestaurant);
+        const selectedRestaurant = restaurantsData[0];
+        setRestaurant(selectedRestaurant);
 
-      // Lade nur Bestellungen mit relevanten Küchen-Status
-      const kitchenStatuses: OrderStatus[] = ["sent_to_kitchen", "in_preparation", "ready"];
-      const [tablesData, ordersData] = await Promise.all([
-        tablesApi.list(selectedRestaurant.id),
-        Promise.all(
-          kitchenStatuses.map((status) =>
-            ordersApi.list(selectedRestaurant.id, { status }).catch(() => [])
-          )
-        ).then((results) => results.flat()),
-      ]);
+        // Lade nur Bestellungen mit relevanten Küchen-Status
+        const kitchenStatuses: OrderStatus[] = ['sent_to_kitchen', 'in_preparation', 'ready'];
+        const [tablesData, ordersData] = await Promise.all([
+          tablesApi.list(selectedRestaurant.id),
+          Promise.all(
+            kitchenStatuses.map((status) =>
+              ordersApi.list(selectedRestaurant.id, { status }).catch(() => [])
+            )
+          ).then((results) => results.flat()),
+        ]);
 
-      setTables(tablesData);
+        setTables(tablesData);
 
-      // Lade Items für jede Bestellung
-      const ordersWithItems = await Promise.all(
-        ordersData.map(async (order) => {
-          try {
-            const fullOrder = await ordersApi.get(selectedRestaurant.id, order.id);
-            return fullOrder;
-          } catch (error) {
-            console.error(`Fehler beim Laden der Bestellung ${order.id}:`, error);
-            return { ...order, items: [] };
-          }
-        })
-      );
+        // Lade Items für jede Bestellung
+        const ordersWithItems = await Promise.all(
+          ordersData.map(async (order) => {
+            try {
+              const fullOrder = await ordersApi.get(selectedRestaurant.id, order.id);
+              return fullOrder;
+            } catch (error) {
+              console.error(`Fehler beim Laden der Bestellung ${order.id}:`, error);
+              return { ...order, items: [] };
+            }
+          })
+        );
 
-      // Enrich orders with table information
-      const enrichedOrders: KitchenOrder[] = ordersWithItems.map((order) => ({
-        ...order,
-        items: order.items || [],
-        table: order.table_id
-          ? tablesData.find((t) => t.id === order.table_id)
-          : undefined,
-      }));
+        // Enrich orders with table information
+        const enrichedOrders: KitchenOrder[] = ordersWithItems.map((order) => ({
+          ...order,
+          items: order.items || [],
+          table: order.table_id ? tablesData.find((t) => t.id === order.table_id) : undefined,
+        }));
 
-      // Sortiere nach opened_at (älteste zuerst)
-      enrichedOrders.sort(
-        (a, b) =>
-          new Date(a.opened_at).getTime() - new Date(b.opened_at).getTime()
-      );
+        // Sortiere nach opened_at (älteste zuerst)
+        enrichedOrders.sort(
+          (a, b) => new Date(a.opened_at).getTime() - new Date(b.opened_at).getTime()
+        );
 
-      // Benachrichtigungen für neue Bestellungen
-      if (background && lastOrderCount > 0) {
-        const newOrderCount = enrichedOrders.filter(
-          (o) => o.status === "sent_to_kitchen"
-        ).length;
-        if (newOrderCount > lastOrderCount) {
-          // Neue Bestellung erhalten
-          if (soundEnabled) {
-            playNotificationSound();
-          }
-          if (notificationsEnabled && "Notification" in window && Notification.permission === "granted") {
-            new Notification("Neue Bestellung", {
-              body: `${newOrderCount - lastOrderCount} neue Bestellung(en) erhalten`,
-              icon: "/favicon.ico",
-            });
+        // Benachrichtigungen für neue Bestellungen
+        if (background && lastOrderCount > 0) {
+          const newOrderCount = enrichedOrders.filter((o) => o.status === 'sent_to_kitchen').length;
+          if (newOrderCount > lastOrderCount) {
+            // Neue Bestellung erhalten
+            if (soundEnabled) {
+              playNotificationSound();
+            }
+            if (
+              notificationsEnabled &&
+              'Notification' in window &&
+              Notification.permission === 'granted'
+            ) {
+              new Notification('Neue Bestellung', {
+                body: `${newOrderCount - lastOrderCount} neue Bestellung(en) erhalten`,
+                icon: '/favicon.ico',
+              });
+            }
           }
         }
-      }
-      setLastOrderCount(
-        enrichedOrders.filter((o) => o.status === "sent_to_kitchen").length
-      );
+        setLastOrderCount(enrichedOrders.filter((o) => o.status === 'sent_to_kitchen').length);
 
-      setOrders(enrichedOrders);
-    } catch (error) {
-      console.error("Fehler beim Laden der Daten:", error);
-      if (!background) {
-        addToast("Fehler beim Laden der Daten", "error");
+        setOrders(enrichedOrders);
+      } catch (error) {
+        console.error('Fehler beim Laden der Daten:', error);
+        if (!background) {
+          addToast('Fehler beim Laden der Daten', 'error');
+        }
+      } finally {
+        if (background) {
+          setIsRefreshing(false);
+        } else {
+          setIsLoading(false);
+        }
       }
-    } finally {
-      if (background) {
-        setIsRefreshing(false);
-      } else {
-        setIsLoading(false);
-      }
-    }
-  }, [addToast]);
+    },
+    [addToast]
+  );
 
   const playNotificationSound = () => {
-    if (typeof window !== "undefined" && !audioRef.current) {
+    if (typeof window !== 'undefined' && !audioRef.current) {
       // Erstelle Audio-Element für Notification-Sound
       audioRef.current = new Audio();
       // Verwende einen einfachen Beep-Ton (kann durch eine echte Sound-Datei ersetzt werden)
@@ -160,7 +160,7 @@ export default function KitchenPage() {
       gainNode.connect(audioContext.destination);
 
       oscillator.frequency.value = 800;
-      oscillator.type = "sine";
+      oscillator.type = 'sine';
 
       gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
       gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
@@ -172,7 +172,7 @@ export default function KitchenPage() {
 
   useEffect(() => {
     // Browser-Benachrichtigungen anfragen
-    if ("Notification" in window && Notification.permission === "default") {
+    if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
     }
   }, []);
@@ -204,46 +204,46 @@ export default function KitchenPage() {
 
     try {
       await ordersApi.update(restaurant.id, orderId, { status: newStatus });
-      
+
       const statusLabels: Record<KitchenStatus, string> = {
-        sent_to_kitchen: "An Küche gesendet",
-        in_preparation: "In Zubereitung",
-        ready: "Fertig",
+        sent_to_kitchen: 'An Küche gesendet',
+        in_preparation: 'In Zubereitung',
+        ready: 'Fertig',
       };
-      
-      addToast(`Status geändert: ${statusLabels[newStatus]}`, "success");
+
+      addToast(`Status geändert: ${statusLabels[newStatus]}`, 'success');
       await loadData(true);
     } catch (error) {
-      console.error("Fehler beim Ändern des Status:", error);
-      addToast("Fehler beim Ändern des Status", "error");
+      console.error('Fehler beim Ändern des Status:', error);
+      addToast('Fehler beim Ändern des Status', 'error');
     }
   };
 
   const groupedOrders = {
-    sent_to_kitchen: orders.filter((o) => o.status === "sent_to_kitchen"),
-    in_preparation: orders.filter((o) => o.status === "in_preparation"),
-    ready: orders.filter((o) => o.status === "ready"),
+    sent_to_kitchen: orders.filter((o) => o.status === 'sent_to_kitchen'),
+    in_preparation: orders.filter((o) => o.status === 'in_preparation'),
+    ready: orders.filter((o) => o.status === 'ready'),
   };
 
   const getStatusColor = (status: KitchenStatus) => {
     switch (status) {
-      case "sent_to_kitchen":
-        return "bg-blue-900/40 border-blue-600 text-blue-100";
-      case "in_preparation":
-        return "bg-yellow-900/40 border-yellow-600 text-yellow-100";
-      case "ready":
-        return "bg-green-900/40 border-green-600 text-green-100";
+      case 'sent_to_kitchen':
+        return 'bg-blue-900/40 border-blue-600 text-blue-100';
+      case 'in_preparation':
+        return 'bg-yellow-900/40 border-yellow-600 text-yellow-100';
+      case 'ready':
+        return 'bg-green-900/40 border-green-600 text-green-100';
     }
   };
 
   const getStatusLabel = (status: KitchenStatus) => {
     switch (status) {
-      case "sent_to_kitchen":
-        return "Neu";
-      case "in_preparation":
-        return "In Zubereitung";
-      case "ready":
-        return "Fertig";
+      case 'sent_to_kitchen':
+        return 'Neu';
+      case 'in_preparation':
+        return 'In Zubereitung';
+      case 'ready':
+        return 'Fertig';
     }
   };
 
@@ -276,9 +276,7 @@ export default function KitchenPage() {
                 disabled={isRefreshing}
                 className="bg-gray-700 border-gray-600 text-gray-200 shadow-none hover:text-blue-100 hover:border-blue-500 hover:shadow-[0_12px_32px_rgba(37,99,235,0.25)]"
               >
-                <RefreshCw
-                  className={`w-4 h-4 mr-2 ${isRefreshing ? "animate-spin" : ""}`}
-                />
+                <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
                 Aktualisieren
               </Button>
               <Button
@@ -287,8 +285,8 @@ export default function KitchenPage() {
                 onClick={() => setAutoRefresh(!autoRefresh)}
                 className={
                   autoRefresh
-                    ? "bg-green-900/30 border-green-600 text-green-200 shadow-none hover:bg-green-900/50 hover:text-green-100 hover:border-green-500 hover:shadow-[0_12px_32px_rgba(34,197,94,0.25)]"
-                    : "bg-gray-700 border-gray-600 text-gray-200 shadow-none hover:text-blue-100 hover:border-blue-500 hover:shadow-[0_12px_32px_rgba(37,99,235,0.25)]"
+                    ? 'bg-green-900/30 border-green-600 text-green-200 shadow-none hover:bg-green-900/50 hover:text-green-100 hover:border-green-500 hover:shadow-[0_12px_32px_rgba(34,197,94,0.25)]'
+                    : 'bg-gray-700 border-gray-600 text-gray-200 shadow-none hover:text-blue-100 hover:border-blue-500 hover:shadow-[0_12px_32px_rgba(37,99,235,0.25)]'
                 }
               >
                 {autoRefresh ? (
@@ -307,27 +305,31 @@ export default function KitchenPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  if (!soundEnabled && "Notification" in window && Notification.permission !== "granted") {
+                  if (
+                    !soundEnabled &&
+                    'Notification' in window &&
+                    Notification.permission !== 'granted'
+                  ) {
                     Notification.requestPermission();
                   }
                   setSoundEnabled(!soundEnabled);
                 }}
                 className={
                   soundEnabled
-                    ? "bg-blue-900/30 border-blue-600 text-blue-200 shadow-none hover:bg-blue-900/50 hover:text-blue-100 hover:border-blue-500 hover:shadow-[0_12px_32px_rgba(37,99,235,0.25)]"
-                    : "bg-gray-700 border-gray-600 text-gray-200 shadow-none hover:text-blue-100 hover:border-blue-500 hover:shadow-[0_12px_32px_rgba(37,99,235,0.25)]"
+                    ? 'bg-blue-900/30 border-blue-600 text-blue-200 shadow-none hover:bg-blue-900/50 hover:text-blue-100 hover:border-blue-500 hover:shadow-[0_12px_32px_rgba(37,99,235,0.25)]'
+                    : 'bg-gray-700 border-gray-600 text-gray-200 shadow-none hover:text-blue-100 hover:border-blue-500 hover:shadow-[0_12px_32px_rgba(37,99,235,0.25)]'
                 }
               >
-                🔊 {soundEnabled ? "Sound: An" : "Sound: Aus"}
+                🔊 {soundEnabled ? 'Sound: An' : 'Sound: Aus'}
               </Button>
-              {typeof window !== "undefined" && "Notification" in window && (
+              {typeof window !== 'undefined' && 'Notification' in window && (
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={async () => {
-                    if (!notificationsEnabled && Notification.permission !== "granted") {
+                    if (!notificationsEnabled && Notification.permission !== 'granted') {
                       const permission = await Notification.requestPermission();
-                      if (permission === "granted") {
+                      if (permission === 'granted') {
                         setNotificationsEnabled(true);
                       }
                     } else {
@@ -336,16 +338,16 @@ export default function KitchenPage() {
                   }}
                   className={
                     notificationsEnabled
-                      ? "bg-purple-900/30 border-purple-600 text-purple-200 shadow-none hover:bg-purple-900/50 hover:text-purple-100 hover:border-purple-500 hover:shadow-[0_12px_32px_rgba(168,85,247,0.25)]"
-                      : "bg-gray-700 border-gray-600 text-gray-200 shadow-none hover:text-blue-100 hover:border-blue-500 hover:shadow-[0_12px_32px_rgba(37,99,235,0.25)]"
+                      ? 'bg-purple-900/30 border-purple-600 text-purple-200 shadow-none hover:bg-purple-900/50 hover:text-purple-100 hover:border-purple-500 hover:shadow-[0_12px_32px_rgba(168,85,247,0.25)]'
+                      : 'bg-gray-700 border-gray-600 text-gray-200 shadow-none hover:text-blue-100 hover:border-blue-500 hover:shadow-[0_12px_32px_rgba(37,99,235,0.25)]'
                   }
                 >
-                  🔔{" "}
+                  🔔{' '}
                   {notificationsEnabled
-                    ? "Benachrichtigungen: An"
-                    : Notification.permission === "granted"
-                    ? "Benachrichtigungen: Aus"
-                    : "Benachrichtigungen aktivieren"}
+                    ? 'Benachrichtigungen: An'
+                    : Notification.permission === 'granted'
+                      ? 'Benachrichtigungen: Aus'
+                      : 'Benachrichtigungen aktivieren'}
                 </Button>
               )}
             </div>
@@ -358,9 +360,7 @@ export default function KitchenPage() {
         {orders.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <ChefHat className="w-16 h-16 text-gray-600 mb-4" />
-            <h2 className="text-xl font-semibold text-gray-300 mb-2">
-              Keine offenen Bestellungen
-            </h2>
+            <h2 className="text-xl font-semibold text-gray-300 mb-2">Keine offenen Bestellungen</h2>
             <p className="text-gray-500">Alle Bestellungen sind abgearbeitet</p>
           </div>
         ) : (
@@ -374,7 +374,7 @@ export default function KitchenPage() {
                 </h2>
                 <div className="text-sm text-gray-400">
                   {groupedOrders.sent_to_kitchen.length} Bestellung
-                  {groupedOrders.sent_to_kitchen.length !== 1 ? "en" : ""}
+                  {groupedOrders.sent_to_kitchen.length !== 1 ? 'en' : ''}
                 </div>
               </div>
               <div className="space-y-3">
@@ -383,7 +383,7 @@ export default function KitchenPage() {
                     key={order.id}
                     order={order}
                     onStatusChange={handleStatusChange}
-                    canChangeTo={["in_preparation"]}
+                    canChangeTo={['in_preparation']}
                   />
                 ))}
                 {groupedOrders.sent_to_kitchen.length === 0 && (
@@ -403,7 +403,7 @@ export default function KitchenPage() {
                 </h2>
                 <div className="text-sm text-gray-400">
                   {groupedOrders.in_preparation.length} Bestellung
-                  {groupedOrders.in_preparation.length !== 1 ? "en" : ""}
+                  {groupedOrders.in_preparation.length !== 1 ? 'en' : ''}
                 </div>
               </div>
               <div className="space-y-3">
@@ -412,7 +412,7 @@ export default function KitchenPage() {
                     key={order.id}
                     order={order}
                     onStatusChange={handleStatusChange}
-                    canChangeTo={["ready"]}
+                    canChangeTo={['ready']}
                   />
                 ))}
                 {groupedOrders.in_preparation.length === 0 && (
@@ -432,7 +432,7 @@ export default function KitchenPage() {
                 </h2>
                 <div className="text-sm text-gray-400">
                   {groupedOrders.ready.length} Bestellung
-                  {groupedOrders.ready.length !== 1 ? "en" : ""}
+                  {groupedOrders.ready.length !== 1 ? 'en' : ''}
                 </div>
               </div>
               <div className="space-y-3">
@@ -462,11 +462,11 @@ export default function KitchenPage() {
             <div
               key={toast.id}
               className={`px-4 py-3 rounded-lg shadow-lg border ${
-                toast.variant === "error"
-                  ? "bg-red-900/90 border-red-600 text-red-100"
-                  : toast.variant === "success"
-                  ? "bg-green-900/90 border-green-600 text-green-100"
-                  : "bg-blue-900/90 border-blue-600 text-blue-100"
+                toast.variant === 'error'
+                  ? 'bg-red-900/90 border-red-600 text-red-100'
+                  : toast.variant === 'success'
+                    ? 'bg-green-900/90 border-green-600 text-green-100'
+                    : 'bg-blue-900/90 border-blue-600 text-blue-100'
               }`}
             >
               {toast.message}
@@ -486,9 +486,9 @@ interface OrderCardProps {
 
 function OrderCard({ order, onStatusChange, canChangeTo }: OrderCardProps) {
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("de-DE", {
-      style: "currency",
-      currency: "EUR",
+    return new Intl.NumberFormat('de-DE', {
+      style: 'currency',
+      currency: 'EUR',
     }).format(amount);
   };
 
@@ -498,11 +498,11 @@ function OrderCard({ order, onStatusChange, canChangeTo }: OrderCardProps) {
     const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
 
-    if (diffMins < 1) return "gerade eben";
-    if (diffMins === 1) return "vor 1 Minute";
+    if (diffMins < 1) return 'gerade eben';
+    if (diffMins === 1) return 'vor 1 Minute';
     if (diffMins < 60) return `vor ${diffMins} Minuten`;
     const diffHours = Math.floor(diffMins / 60);
-    if (diffHours === 1) return "vor 1 Stunde";
+    if (diffHours === 1) return 'vor 1 Stunde';
     return `vor ${diffHours} Stunden`;
   };
 
@@ -522,14 +522,10 @@ function OrderCard({ order, onStatusChange, canChangeTo }: OrderCardProps) {
               <span className="font-semibold text-white">#{order.order_number || order.id}</span>
             )}
           </div>
-          <div className="text-xs text-gray-400">
-            {getTimeAgo(order.opened_at)}
-          </div>
+          <div className="text-xs text-gray-400">{getTimeAgo(order.opened_at)}</div>
         </div>
         <div className="text-right">
-          <div className="text-sm font-medium text-white">
-            {formatCurrency(order.total)}
-          </div>
+          <div className="text-sm font-medium text-white">{formatCurrency(order.total)}</div>
           {order.party_size && (
             <div className="text-xs text-gray-400">{order.party_size} Pers.</div>
           )}
@@ -546,14 +542,10 @@ function OrderCard({ order, onStatusChange, canChangeTo }: OrderCardProps) {
                 <span className="text-gray-200">{item.item_name}</span>
               </div>
               {item.notes && (
-                <div className="text-xs text-yellow-400 mt-1 ml-6">
-                  💬 {item.notes}
-                </div>
+                <div className="text-xs text-yellow-400 mt-1 ml-6">💬 {item.notes}</div>
               )}
             </div>
-            <span className="text-gray-400">
-              {formatCurrency(item.total_price)}
-            </span>
+            <span className="text-gray-400">{formatCurrency(item.total_price)}</span>
           </div>
         ))}
       </div>
@@ -574,22 +566,22 @@ function OrderCard({ order, onStatusChange, canChangeTo }: OrderCardProps) {
               size="sm"
               onClick={() => onStatusChange(order.id, status)}
               className={
-                status === "in_preparation"
-                  ? "bg-yellow-600 text-white border border-yellow-600 shadow-none hover:bg-yellow-600 hover:border-yellow-600 hover:shadow-[0_12px_32px_rgba(234,179,8,0.35)] flex-1"
-                  : status === "ready"
-                  ? "bg-green-600 text-white border border-green-600 shadow-none hover:bg-green-600 hover:border-green-600 hover:shadow-[0_12px_32px_rgba(34,197,94,0.35)] flex-1"
-                  : "bg-gray-700 text-gray-200 border border-gray-600 shadow-none hover:bg-gray-700 hover:border-gray-500 hover:text-gray-100 flex-1"
+                status === 'in_preparation'
+                  ? 'bg-yellow-600 text-white border border-yellow-600 shadow-none hover:bg-yellow-600 hover:border-yellow-600 hover:shadow-[0_12px_32px_rgba(234,179,8,0.35)] flex-1'
+                  : status === 'ready'
+                    ? 'bg-green-600 text-white border border-green-600 shadow-none hover:bg-green-600 hover:border-green-600 hover:shadow-[0_12px_32px_rgba(34,197,94,0.35)] flex-1'
+                    : 'bg-gray-700 text-gray-200 border border-gray-600 shadow-none hover:bg-gray-700 hover:border-gray-500 hover:text-gray-100 flex-1'
               }
             >
-              {status === "in_preparation" && "In Zubereitung"}
-              {status === "ready" && "Fertig"}
+              {status === 'in_preparation' && 'In Zubereitung'}
+              {status === 'ready' && 'Fertig'}
             </Button>
           ))}
         </div>
       )}
 
       {/* Ready Badge */}
-      {order.status === "ready" && (
+      {order.status === 'ready' && (
         <div className="pt-3 border-t border-gray-700">
           <div className="text-center text-sm font-medium text-green-400">
             ✓ Bereit zur Abholung
@@ -599,4 +591,3 @@ function OrderCard({ order, onStatusChange, canChangeTo }: OrderCardProps) {
     </div>
   );
 }
-

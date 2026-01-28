@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useCallback } from "react";
-import { aiApi, TableSuggestion } from "@/lib/api/ai";
-import { Button } from "@/components/ui/button";
-import { Sparkles, Check, AlertCircle, Loader2, ChevronDown } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { useState, useEffect, useCallback } from 'react';
+import { aiApi, TableSuggestion } from '@/lib/api/ai';
+import { Button } from '@/components/ui/button';
+import { Sparkles, Check, AlertCircle, Loader2, ChevronDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface AITableSuggestionProps {
   restaurantId: number;
@@ -17,7 +17,7 @@ interface AITableSuggestionProps {
 
 /**
  * Komponente für KI-gestützte Tischvorschläge.
- * 
+ *
  * Zeigt Top-3 Vorschläge mit Confidence-Balken an.
  * Bei hoher Confidence (>threshold) wird automatisch ausgewählt.
  */
@@ -44,11 +44,11 @@ export function AITableSuggestion({
 
     try {
       const response = await aiApi.suggestTable(restaurantId);
-      
+
       setAiEnabled(response.ai_enabled);
-      
+
       if (!response.ai_enabled) {
-        setError(response.message || "KI-Service nicht verfügbar");
+        setError(response.message || 'KI-Service nicht verfügbar');
         setSuggestions([]);
         return;
       }
@@ -65,8 +65,8 @@ export function AITableSuggestion({
         setAutoSelected(true);
       }
     } catch (err) {
-      console.error("Fehler beim Laden der KI-Vorschläge:", err);
-      setError("Fehler beim Laden der Vorschläge");
+      console.error('Fehler beim Laden der KI-Vorschläge:', err);
+      setError('Fehler beim Laden der Vorschläge');
       setSuggestions([]);
     } finally {
       setLoading(false);
@@ -84,9 +84,9 @@ export function AITableSuggestion({
 
   // Confidence-Farbe basierend auf Wert
   const getConfidenceColor = (confidence: number) => {
-    if (confidence >= 0.8) return "bg-green-500";
-    if (confidence >= 0.5) return "bg-yellow-500";
-    return "bg-red-500";
+    if (confidence >= 0.8) return 'bg-green-500';
+    if (confidence >= 0.5) return 'bg-yellow-500';
+    return 'bg-red-500';
   };
 
   // Wenn AI nicht aktiviert ist, nichts anzeigen
@@ -115,10 +115,7 @@ export function AITableSuggestion({
           )}
         </div>
         <ChevronDown
-          className={cn(
-            "w-4 h-4 text-gray-400 transition-transform",
-            collapsed && "-rotate-90"
-          )}
+          className={cn('w-4 h-4 text-gray-400 transition-transform', collapsed && '-rotate-90')}
         />
       </button>
 
@@ -158,30 +155,24 @@ export function AITableSuggestion({
                     }}
                     disabled={disabled}
                     className={cn(
-                      "w-full text-left p-3 rounded-lg border transition-all",
+                      'w-full text-left p-3 rounded-lg border transition-all',
                       isSelected
-                        ? "border-blue-500 bg-blue-900/30"
-                        : "border-gray-600 bg-gray-700/50 hover:border-gray-500 hover:bg-gray-700/80",
-                      isTopSuggestion && !isSelected && "border-blue-500/50"
+                        ? 'border-blue-500 bg-blue-900/30'
+                        : 'border-gray-600 bg-gray-700/50 hover:border-gray-500 hover:bg-gray-700/80',
+                      isTopSuggestion && !isSelected && 'border-blue-500/50'
                     )}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
-                          {isTopSuggestion && (
-                            <span className="text-blue-400 text-xs">TOP</span>
-                          )}
+                          {isTopSuggestion && <span className="text-blue-400 text-xs">TOP</span>}
                           <span className="font-medium text-white">
                             Tisch {suggestion.table_number}
                           </span>
                           {suggestion.guest_name && (
-                            <span className="text-gray-400">
-                              - {suggestion.guest_name}
-                            </span>
+                            <span className="text-gray-400">- {suggestion.guest_name}</span>
                           )}
-                          {isSelected && (
-                            <Check className="w-4 h-4 text-blue-400 flex-shrink-0" />
-                          )}
+                          {isSelected && <Check className="w-4 h-4 text-blue-400 flex-shrink-0" />}
                         </div>
                         <p className="text-sm text-gray-400 mt-1 line-clamp-2">
                           {suggestion.reason}
@@ -196,7 +187,7 @@ export function AITableSuggestion({
                         <div className="h-2 bg-gray-600 rounded-full overflow-hidden">
                           <div
                             className={cn(
-                              "h-full rounded-full transition-all",
+                              'h-full rounded-full transition-all',
                               getConfidenceColor(suggestion.confidence)
                             )}
                             style={{ width: `${suggestion.confidence * 100}%` }}

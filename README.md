@@ -19,14 +19,14 @@
 
 ## Tech Stack
 
-| Technologie | Version | Verwendung |
-|-------------|---------|------------|
-| Next.js | 16 | Framework (App Router) |
-| React | 19 | UI Library |
-| TypeScript | 5 | Type Safety |
-| Tailwind CSS | 4 | Styling |
-| shadcn/ui | - | UI Components |
-| @dnd-kit | 6 | Drag & Drop |
+| Technologie  | Version | Verwendung             |
+| ------------ | ------- | ---------------------- |
+| Next.js      | 16      | Framework (App Router) |
+| React        | 19      | UI Library             |
+| TypeScript   | 5       | Type Safety            |
+| Tailwind CSS | 4       | Styling                |
+| shadcn/ui    | -       | UI Components          |
+| @dnd-kit     | 6       | Drag & Drop            |
 
 ## Schnellstart
 
@@ -80,12 +80,12 @@ frontend/
 
 ## Scripts
 
-| Befehl | Beschreibung |
-|--------|--------------|
-| `npm run dev` | Development Server |
-| `npm run build` | Production Build |
-| `npm start` | Production Server |
-| `npm run lint` | ESLint |
+| Befehl          | Beschreibung       |
+| --------------- | ------------------ |
+| `npm run dev`   | Development Server |
+| `npm run build` | Production Build   |
+| `npm start`     | Production Server  |
+| `npm run lint`  | ESLint             |
 
 ## Build & Deployment
 

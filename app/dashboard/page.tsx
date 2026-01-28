@@ -1,41 +1,77 @@
-"use client";
+'use client';
 
-import { useEffect, useState, useMemo, useCallback, useRef, memo } from "react";
-import Link from "next/link";
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, TouchSensor, useSensor, useSensors, closestCenter } from "@dnd-kit/core";
-import { useQueryClient } from "@tanstack/react-query";
-import { restaurantsApi, Restaurant } from "@/lib/api/restaurants";
-import { tablesApi, Table } from "@/lib/api/tables";
-import { reservationsApi, Reservation } from "@/lib/api/reservations";
-import { ordersApi, Order } from "@/lib/api/orders";
-import { Obstacle } from "@/lib/api/obstacles";
-import { Area } from "@/lib/api/areas";
-import { authApi } from "@/lib/api/auth";
-import { tableDayConfigsApi, TableDayConfig } from "@/lib/api/table-day-configs";
-import { reservationTableDayConfigsApi, ReservationTableDayConfig } from "@/lib/api/reservation-table-day-configs";
-import { blocksApi, Block } from "@/lib/api/blocks";
-import { blockAssignmentsApi, BlockAssignment } from "@/lib/api/block-assignments";
-import { dashboardApi } from "@/lib/api/dashboard";
-import { TableCard } from "@/components/table-card";
-import { ReservationCard } from "@/components/reservation-card";
-import { BlockCard } from "@/components/block-card";
-import { WaitlistSidebar } from "@/components/waitlist-sidebar";
-import { ReservationDialog } from "@/components/reservation-dialog";
-import { TableDetailsDialog } from "@/components/table-details-dialog";
-import { OrderDetailDialog } from "@/components/order-detail-dialog";
-import { OrderDialog } from "@/components/order-dialog";
-import { CreateTempTableDialog } from "@/components/create-temp-table-dialog";
-import { BlockTableDialog } from "@/components/block-table-dialog";
-import { LoadingOverlay } from "@/components/loading-overlay";
-import { Button } from "@/components/ui/button";
-import { useUserSettings } from "@/lib/hooks/use-user-settings";
-import { useDashboardComputations } from "@/lib/hooks/use-dashboard-computations";
-import { confirmAction } from "@/lib/utils";
-import { Plus, ChevronLeft, ChevronRight, LayoutGrid, MoveRight, ShieldAlert, ChevronDown, Check, ZoomIn, ZoomOut, Maximize2, Link as LinkIcon, Unlink, XSquare, RotateCcw, Clock, ShieldCheck, Users, CheckCircle, XCircle, Calendar, EllipsisVertical } from "lucide-react";
-import { format, parseISO, startOfDay, endOfDay, isSameDay } from "date-fns";
-import { de } from "date-fns/locale";
+import { useEffect, useState, useMemo, useCallback, useRef, memo } from 'react';
+import Link from 'next/link';
+import {
+  DndContext,
+  DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  closestCenter,
+} from '@dnd-kit/core';
+import { useQueryClient } from '@tanstack/react-query';
+import { restaurantsApi, Restaurant } from '@/lib/api/restaurants';
+import { tablesApi, Table } from '@/lib/api/tables';
+import { reservationsApi, Reservation } from '@/lib/api/reservations';
+import { ordersApi, Order } from '@/lib/api/orders';
+import { Obstacle } from '@/lib/api/obstacles';
+import { Area } from '@/lib/api/areas';
+import { authApi } from '@/lib/api/auth';
+import { tableDayConfigsApi, TableDayConfig } from '@/lib/api/table-day-configs';
+import {
+  reservationTableDayConfigsApi,
+  ReservationTableDayConfig,
+} from '@/lib/api/reservation-table-day-configs';
+import { blocksApi, Block } from '@/lib/api/blocks';
+import { blockAssignmentsApi, BlockAssignment } from '@/lib/api/block-assignments';
+import { dashboardApi } from '@/lib/api/dashboard';
+import { TableCard } from '@/components/table-card';
+import { ReservationCard } from '@/components/reservation-card';
+import { BlockCard } from '@/components/block-card';
+import { WaitlistSidebar } from '@/components/waitlist-sidebar';
+import { ReservationDialog } from '@/components/reservation-dialog';
+import { TableDetailsDialog } from '@/components/table-details-dialog';
+import { OrderDetailDialog } from '@/components/order-detail-dialog';
+import { OrderDialog } from '@/components/order-dialog';
+import { CreateTempTableDialog } from '@/components/create-temp-table-dialog';
+import { BlockTableDialog } from '@/components/block-table-dialog';
+import { LoadingOverlay } from '@/components/loading-overlay';
+import { Button } from '@/components/ui/button';
+import { useUserSettings } from '@/lib/hooks/use-user-settings';
+import { useDashboardComputations } from '@/lib/hooks/use-dashboard-computations';
+import { confirmAction } from '@/lib/utils';
+import {
+  Plus,
+  ChevronLeft,
+  ChevronRight,
+  LayoutGrid,
+  MoveRight,
+  ShieldAlert,
+  ChevronDown,
+  Check,
+  ZoomIn,
+  ZoomOut,
+  Maximize2,
+  Link as LinkIcon,
+  Unlink,
+  XSquare,
+  RotateCcw,
+  Clock,
+  ShieldCheck,
+  Users,
+  CheckCircle,
+  XCircle,
+  Calendar,
+  EllipsisVertical,
+} from 'lucide-react';
+import { format, parseISO, startOfDay, endOfDay, isSameDay } from 'date-fns';
+import { de } from 'date-fns/locale';
 
-const DASHBOARD_ZOOM_SETTINGS_KEY = "dashboard_zoom_level";
+const DASHBOARD_ZOOM_SETTINGS_KEY = 'dashboard_zoom_level';
 
 // ============================================
 // OPTIMIERTE HOOKS
@@ -46,18 +82,18 @@ const DASHBOARD_ZOOM_SETTINGS_KEY = "dashboard_zoom_level";
  */
 function useOptimizedClock(updateInterval = 10000) {
   const [now, setNow] = useState(() => new Date());
-  
+
   useEffect(() => {
     // Initiale Aktualisierung
     setNow(new Date());
-    
+
     const interval = setInterval(() => {
       setNow(new Date());
     }, updateInterval);
-    
+
     return () => clearInterval(interval);
   }, [updateInterval]);
-  
+
   return now;
 }
 
@@ -88,42 +124,42 @@ function useDashboardData(restaurantId: number | null, selectedDate: Date) {
     tableDayConfigs: [],
     reservationTableDayConfigs: [],
   });
-  
+
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
-  
+
   // Cache-Key für Deduplizierung
-  const lastFetchKeyRef = useRef<string>("");
+  const lastFetchKeyRef = useRef<string>('');
   const abortControllerRef = useRef<AbortController | null>(null);
-  
+
   const fetchData = useCallback(async (restId: number, date: Date, background = false) => {
     const cacheKey = `${restId}-${format(date, 'yyyy-MM-dd')}`;
-    
+
     // Skip duplicate requests
     if (background && lastFetchKeyRef.current === cacheKey) {
       return;
     }
-    
+
     // Cancel previous request
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
     abortControllerRef.current = new AbortController();
-    
+
     if (!background) {
       setIsLoading(true);
     }
-    
+
     try {
       // Single batch request instead of 10+ individual requests
       const batchData = await dashboardApi.getDashboardData(restId, date);
-      
+
       lastFetchKeyRef.current = cacheKey;
-      
+
       // Process table day configs to apply to tables
       const configMap = new Map<number, TableDayConfig>();
       const tempConfigMap = new Map<string, TableDayConfig>();
-      
+
       (batchData.table_day_configs || []).forEach((config: any) => {
         if (config.table_id !== null && config.table_id !== undefined) {
           configMap.set(config.table_id, config);
@@ -131,27 +167,33 @@ function useDashboardData(restaurantId: number | null, selectedDate: Date) {
           tempConfigMap.set(config.number, config);
         }
       });
-      
+
       // Apply day configs to tables
       const visibleTables: Table[] = [];
       const tablesData = batchData.tables || [];
-      
+
       tablesData.forEach((table: any) => {
         const config = configMap.get(table.id);
-        
+
         if (config?.is_hidden) {
           return;
         }
-        
+
         if (!config) {
           visibleTables.push(table as Table);
           return;
         }
-        
+
         visibleTables.push({
           ...table,
-          position_x: (config.position_x !== null && config.position_x !== undefined) ? config.position_x : table.position_x,
-          position_y: (config.position_y !== null && config.position_y !== undefined) ? config.position_y : table.position_y,
+          position_x:
+            config.position_x !== null && config.position_x !== undefined
+              ? config.position_x
+              : table.position_x,
+          position_y:
+            config.position_y !== null && config.position_y !== undefined
+              ? config.position_y
+              : table.position_y,
           width: config.width ?? table.width,
           height: config.height ?? table.height,
           is_active: config.is_active ?? table.is_active,
@@ -161,16 +203,16 @@ function useDashboardData(restaurantId: number | null, selectedDate: Date) {
           rotation: config.rotation ?? table.rotation,
         } as Table);
       });
-      
+
       // Add temporary tables
-      tempConfigMap.forEach(config => {
+      tempConfigMap.forEach((config) => {
         if (!config.is_hidden && config.number && config.capacity) {
           const tempTable: Table = {
             id: -config.id,
             restaurant_id: config.restaurant_id,
             number: config.number,
             capacity: config.capacity,
-            shape: config.shape ?? "rectangle",
+            shape: config.shape ?? 'rectangle',
             position_x: config.position_x ?? 50,
             position_y: config.position_y ?? 50,
             width: config.width ?? 120,
@@ -189,12 +231,12 @@ function useDashboardData(restaurantId: number | null, selectedDate: Date) {
           visibleTables.push(tempTable);
         }
       });
-      
+
       // Filter active orders
       const activeOrders = (batchData.orders || []).filter(
-        (o: any) => o.status !== "paid" && o.status !== "canceled"
+        (o: any) => o.status !== 'paid' && o.status !== 'canceled'
       );
-      
+
       setData({
         restaurant: batchData.restaurant as Restaurant,
         areas: batchData.areas as Area[],
@@ -205,15 +247,16 @@ function useDashboardData(restaurantId: number | null, selectedDate: Date) {
         blockAssignments: batchData.block_assignments as BlockAssignment[],
         orders: activeOrders as Order[],
         tableDayConfigs: batchData.table_day_configs as TableDayConfig[],
-        reservationTableDayConfigs: batchData.reservation_table_day_configs as ReservationTableDayConfig[],
+        reservationTableDayConfigs:
+          batchData.reservation_table_day_configs as ReservationTableDayConfig[],
       });
-      
+
       setError(null);
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') {
         return;
       }
-      console.error("Fehler beim Laden der Dashboard-Daten:", err);
+      console.error('Fehler beim Laden der Dashboard-Daten:', err);
       setError(err instanceof Error ? err : new Error('Unknown error'));
     } finally {
       if (!background) {
@@ -221,35 +264,38 @@ function useDashboardData(restaurantId: number | null, selectedDate: Date) {
       }
     }
   }, []);
-  
+
   // Initial load
   useEffect(() => {
     if (restaurantId) {
       fetchData(restaurantId, selectedDate);
     }
-    
+
     return () => {
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
     };
   }, [restaurantId]); // Only on restaurantId change
-  
+
   // Date change - background refresh
   useEffect(() => {
     if (restaurantId && !isLoading) {
-      lastFetchKeyRef.current = ""; // Force refresh
+      lastFetchKeyRef.current = ''; // Force refresh
       fetchData(restaurantId, selectedDate, true);
     }
   }, [selectedDate]); // eslint-disable-line react-hooks/exhaustive-deps
-  
-  const refresh = useCallback((background = false) => {
-    if (restaurantId) {
-      lastFetchKeyRef.current = ""; // Force refresh
-      fetchData(restaurantId, selectedDate, background);
-    }
-  }, [restaurantId, selectedDate, fetchData]);
-  
+
+  const refresh = useCallback(
+    (background = false) => {
+      if (restaurantId) {
+        lastFetchKeyRef.current = ''; // Force refresh
+        fetchData(restaurantId, selectedDate, background);
+      }
+    },
+    [restaurantId, selectedDate, fetchData]
+  );
+
   return { ...data, isLoading, error, refresh };
 }
 
@@ -261,17 +307,17 @@ export default function DashboardPage() {
   // ============================================
   // STATE - Reduziert auf das Wesentliche
   // ============================================
-  
+
   const [restaurantId, setRestaurantId] = useState<number | null>(null);
   const [selectedAreaId, setSelectedAreaId] = useState<number | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  
+
   // UI State
   const [areaMenuOpen, setAreaMenuOpen] = useState(false);
   const areaMenuRef = useRef<HTMLDivElement | null>(null);
   const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
   const actionsMenuRef = useRef<HTMLDivElement | null>(null);
-  
+
   // Dialog State
   const [reservationDialogOpen, setReservationDialogOpen] = useState(false);
   const [tableDetailsOpen, setTableDetailsOpen] = useState(false);
@@ -279,22 +325,22 @@ export default function DashboardPage() {
   const [blockEditOpen, setBlockEditOpen] = useState(false);
   const [orderDetailDialogOpen, setOrderDetailDialogOpen] = useState(false);
   const [orderDialogOpen, setOrderDialogOpen] = useState(false);
-  
+
   // Selection State
   const [editingBlock, setEditingBlock] = useState<Block | null>(null);
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
   const [selectedTableForOrder, setSelectedTableForOrder] = useState<Table | null>(null);
-  
+
   // Drag State
   const [activeId, setActiveId] = useState<number | null>(null);
   const [activeReservationId, setActiveReservationId] = useState<number | null>(null);
   const [activeBlockId, setActiveBlockId] = useState<number | null>(null);
-  
+
   // UI Controls
   const [updatingStatus, setUpdatingStatus] = useState<number | null>(null);
-  const [waitlistSearchQuery, setWaitlistSearchQuery] = useState<string>("");
+  const [waitlistSearchQuery, setWaitlistSearchQuery] = useState<string>('');
   const [currentUser, setCurrentUser] = useState<{ role: string } | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
@@ -304,16 +350,18 @@ export default function DashboardPage() {
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedTableIds, setSelectedTableIds] = useState<Set<number>>(new Set());
   const tablePlanRef = useRef<HTMLDivElement | null>(null);
-  
+
   // Toast State
-  const [toasts, setToasts] = useState<{ id: string; message: string; variant?: "info" | "error" | "success" }[]>([]);
-  
+  const [toasts, setToasts] = useState<
+    { id: string; message: string; variant?: 'info' | 'error' | 'success' }[]
+  >([]);
+
   // Settings
   const { settings, updateSettings, error: settingsError } = useUserSettings();
   const settingsInitializedRef = useRef(false);
-  const lastPersistedZoomRef = useRef<string>("");
+  const lastPersistedZoomRef = useRef<string>('');
   const zoomSaveTimeoutRef = useRef<number | null>(null);
-  
+
   // Refs für Pan/Zoom
   const panRef = useRef({ isPanning: false, startX: 0, startY: 0 });
   const zoomRef = useRef({ initialDistance: 0, initialZoom: 1 });
@@ -323,10 +371,10 @@ export default function DashboardPage() {
   // ============================================
   // OPTIMIERTE HOOKS
   // ============================================
-  
+
   // Optimierte Uhr (alle 10s statt jede Sekunde)
   const now = useOptimizedClock(10000);
-  
+
   // Batch-Daten laden
   const {
     restaurant,
@@ -342,29 +390,38 @@ export default function DashboardPage() {
     isLoading: isInitialLoading,
     refresh: refreshData,
   } = useDashboardData(restaurantId, selectedDate);
-  
+
   // Reservation to temp table mapping
   const reservationToTempTableMap = useMemo(() => {
     const mapping = new Map<number, number>();
-    reservationTableDayConfigs.forEach(rtdc => {
-      const tempTable = allTables.find(t => t.id === -rtdc.table_day_config_id);
+    reservationTableDayConfigs.forEach((rtdc) => {
+      const tempTable = allTables.find((t) => t.id === -rtdc.table_day_config_id);
       if (tempTable) {
         mapping.set(rtdc.reservation_id, tempTable.id);
       }
     });
     return mapping;
   }, [reservationTableDayConfigs, allTables]);
-  
+
   // Filter by area
-  const filterByArea = useCallback(<T extends { area_id?: number | null }>(items: T[], areaId: number | null) => {
-    if (!areaId) return items;
-    return items.filter((item) => (item.area_id ?? null) === areaId);
-  }, []);
-  
+  const filterByArea = useCallback(
+    <T extends { area_id?: number | null }>(items: T[], areaId: number | null) => {
+      if (!areaId) return items;
+      return items.filter((item) => (item.area_id ?? null) === areaId);
+    },
+    []
+  );
+
   // Gefilterte Daten nach Area
-  const tables = useMemo(() => filterByArea(allTables, selectedAreaId), [allTables, selectedAreaId, filterByArea]);
-  const obstacles = useMemo(() => filterByArea(allObstacles, selectedAreaId), [allObstacles, selectedAreaId, filterByArea]);
-  
+  const tables = useMemo(
+    () => filterByArea(allTables, selectedAreaId),
+    [allTables, selectedAreaId, filterByArea]
+  );
+  const obstacles = useMemo(
+    () => filterByArea(allObstacles, selectedAreaId),
+    [allObstacles, selectedAreaId, filterByArea]
+  );
+
   // Alle Berechnungen gecached
   const computations = useDashboardComputations({
     reservations,
@@ -375,7 +432,7 @@ export default function DashboardPage() {
     selectedDate,
     reservationToTempTableMap,
   });
-  
+
   const {
     waitlistReservations,
     blockTemplates,
@@ -392,7 +449,7 @@ export default function DashboardPage() {
   // ============================================
   // DND SENSORS
   // ============================================
-  
+
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -413,9 +470,9 @@ export default function DashboardPage() {
   // ============================================
   // CALLBACKS
   // ============================================
-  
+
   const addToast = useCallback(
-    (message: string, variant: "info" | "error" | "success" = "info") => {
+    (message: string, variant: 'info' | 'error' | 'success' = 'info') => {
       const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
       setToasts((prev) => [...prev, { id, message, variant }]);
       setTimeout(() => {
@@ -424,7 +481,7 @@ export default function DashboardPage() {
     },
     []
   );
-  
+
   // Initial Restaurant Load
   useEffect(() => {
     async function loadRestaurant() {
@@ -434,12 +491,12 @@ export default function DashboardPage() {
           setRestaurantId(restaurants[0].id);
         }
       } catch (error) {
-        console.error("Fehler beim Laden der Restaurants:", error);
+        console.error('Fehler beim Laden der Restaurants:', error);
       }
     }
     loadRestaurant();
   }, []);
-  
+
   // Load current user
   useEffect(() => {
     async function loadCurrentUser() {
@@ -447,35 +504,35 @@ export default function DashboardPage() {
         const user = await authApi.getCurrentUser();
         setCurrentUser(user);
       } catch (err) {
-        console.error("Fehler beim Laden des aktuellen Users:", err);
+        console.error('Fehler beim Laden des aktuellen Users:', err);
       }
     }
     loadCurrentUser();
   }, []);
-  
+
   // Set initial area when areas load
   useEffect(() => {
     if (areas.length > 0 && !selectedAreaId) {
       setSelectedAreaId(areas[0].id);
-    } else if (areas.length > 0 && selectedAreaId && !areas.some(a => a.id === selectedAreaId)) {
+    } else if (areas.length > 0 && selectedAreaId && !areas.some((a) => a.id === selectedAreaId)) {
       setSelectedAreaId(areas[0].id);
     } else if (areas.length === 0) {
       setSelectedAreaId(null);
     }
   }, [areas, selectedAreaId]);
-  
+
   // Settings error toast
   useEffect(() => {
     if (settingsError) {
-      addToast(settingsError, "error");
+      addToast(settingsError, 'error');
     }
   }, [settingsError, addToast]);
-  
+
   // Zoom settings persistence
   useEffect(() => {
     if (settingsInitializedRef.current || !settings) return;
     const stored = (settings.settings || {})[DASHBOARD_ZOOM_SETTINGS_KEY];
-    const storedNumber = typeof stored === "number" ? stored : Number(stored);
+    const storedNumber = typeof stored === 'number' ? stored : Number(stored);
     if (Number.isFinite(storedNumber)) {
       const clamped = Math.min(3, Math.max(0.5, storedNumber));
       setZoomLevel(clamped);
@@ -485,7 +542,7 @@ export default function DashboardPage() {
     }
     settingsInitializedRef.current = true;
   }, [settings, zoomLevel]);
-  
+
   useEffect(() => {
     if (!settingsInitializedRef.current || !settings) return;
     const rounded = Number(zoomLevel.toFixed(2));
@@ -497,9 +554,9 @@ export default function DashboardPage() {
     }
     zoomSaveTimeoutRef.current = window.setTimeout(() => {
       updateSettings({ [DASHBOARD_ZOOM_SETTINGS_KEY]: rounded }).catch((err) => {
-        console.error("Fehler beim Speichern des Zoom-Levels:", err);
-        addToast("Zoom-Einstellung konnte nicht gespeichert werden.", "error");
-        lastPersistedZoomRef.current = "";
+        console.error('Fehler beim Speichern des Zoom-Levels:', err);
+        addToast('Zoom-Einstellung konnte nicht gespeichert werden.', 'error');
+        lastPersistedZoomRef.current = '';
       });
     }, 300);
     return () => {
@@ -509,7 +566,7 @@ export default function DashboardPage() {
       }
     };
   }, [zoomLevel, settings, updateSettings, addToast]);
-  
+
   // Cleanup RAF
   useEffect(() => {
     return () => {
@@ -519,7 +576,7 @@ export default function DashboardPage() {
       }
     };
   }, []);
-  
+
   // Click outside handlers
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -530,17 +587,17 @@ export default function DashboardPage() {
         setActionsMenuOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   // ============================================
   // ZOOM HANDLERS
   // ============================================
-  
+
   const handleZoomIn = useCallback(() => {
     setIsZooming(true);
-    setZoomLevel(prev => {
+    setZoomLevel((prev) => {
       const newZoom = Math.min(prev * 1.2, 3);
       setTimeout(() => setIsZooming(false), 150);
       return newZoom;
@@ -549,7 +606,7 @@ export default function DashboardPage() {
 
   const handleZoomOut = useCallback(() => {
     setIsZooming(true);
-    setZoomLevel(prev => {
+    setZoomLevel((prev) => {
       const newZoom = Math.max(prev / 1.2, 0.5);
       setTimeout(() => setIsZooming(false), 150);
       return newZoom;
@@ -564,9 +621,9 @@ export default function DashboardPage() {
   // ============================================
   // DATE NAVIGATION
   // ============================================
-  
+
   const navigateDate = useCallback((days: number) => {
-    setSelectedDate(prev => {
+    setSelectedDate((prev) => {
       const newDate = new Date(prev);
       newDate.setDate(newDate.getDate() + days);
       return newDate;
@@ -576,23 +633,28 @@ export default function DashboardPage() {
   // ============================================
   // DRAG & DROP HANDLERS
   // ============================================
-  
+
   const handleDragStart = useCallback((event: DragStartEvent) => {
     const id = event.active.id;
     const activeData = event.active.data.current as
-      | { type?: "reservation" | "table" | "block"; reservationId?: number; tableId?: number; blockId?: number }
+      | {
+          type?: 'reservation' | 'table' | 'block';
+          reservationId?: number;
+          tableId?: number;
+          blockId?: number;
+        }
       | undefined;
     const activeType = activeData?.type;
-    
+
     panRef.current.isPanning = false;
     setIsPanning(false);
-    
-    if (activeType === "reservation") {
+
+    if (activeType === 'reservation') {
       const reservationId = activeData?.reservationId ?? Math.abs(id as number);
       setActiveReservationId(reservationId);
       setTableDetailsOpen(false);
-    } else if (activeType === "block") {
-      const blockId = activeData?.blockId ?? Number(String(id).replace("block-", ""));
+    } else if (activeType === 'block') {
+      const blockId = activeData?.blockId ?? Number(String(id).replace('block-', ''));
       setActiveBlockId(Number.isNaN(blockId) ? null : blockId);
     } else {
       const tableId = activeData?.tableId ?? (id as number);
@@ -600,376 +662,428 @@ export default function DashboardPage() {
     }
   }, []);
 
-  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
-    const { active, over } = event;
-    const activeIdValue = active.id;
-    const activeData = active.data.current as
-      | { type?: "reservation" | "table" | "block"; reservationId?: number; tableId?: number; blockId?: number }
-      | undefined;
-    const activeType = activeData?.type;
+  const handleDragEnd = useCallback(
+    async (event: DragEndEvent) => {
+      const { active, over } = event;
+      const activeIdValue = active.id;
+      const activeData = active.data.current as
+        | {
+            type?: 'reservation' | 'table' | 'block';
+            reservationId?: number;
+            tableId?: number;
+            blockId?: number;
+          }
+        | undefined;
+      const activeType = activeData?.type;
 
-    // Block drag handling
-    if (activeType === "block") {
-      const blockId = activeData?.blockId ?? Number(String(activeIdValue).replace("block-", ""));
-      const block = blocks.find((item) => item.id === blockId);
-      if (!block || !restaurant) {
+      // Block drag handling
+      if (activeType === 'block') {
+        const blockId = activeData?.blockId ?? Number(String(activeIdValue).replace('block-', ''));
+        const block = blocks.find((item) => item.id === blockId);
+        if (!block || !restaurant) {
+          setActiveBlockId(null);
+          return;
+        }
+
+        if (over && typeof over.id === 'number' && over.id > 0) {
+          const tableId = over.id;
+          const table = tables.find((t) => t.id === tableId);
+          if (!table) {
+            setActiveBlockId(null);
+            return;
+          }
+          if (!table.is_active) {
+            addToast(`${table.number} ist deaktiviert und kann nicht blockiert werden.`, 'error');
+            setActiveBlockId(null);
+            return;
+          }
+
+          const alreadyAssigned = blockAssignments.some(
+            (assignment) => assignment.block_id === block.id && assignment.table_id === tableId
+          );
+          if (alreadyAssigned) {
+            addToast(`Block ist bereits auf ${table.number} zugewiesen.`, 'info');
+            setActiveBlockId(null);
+            return;
+          }
+
+          if (hasBlockConflict(tableId, block.start_at, block.end_at)) {
+            addToast(
+              `Es existiert bereits eine Blockierung in diesem Zeitraum auf ${table.number}.`,
+              'error'
+            );
+            setActiveBlockId(null);
+            return;
+          }
+
+          const tableReservations = getTableReservations(tableId);
+          const blockStart = parseISO(block.start_at);
+          const blockEnd = parseISO(block.end_at);
+          const conflict = tableReservations.some((reservation) => {
+            const isActive =
+              reservation.status !== 'canceled' &&
+              reservation.status !== 'completed' &&
+              reservation.status !== 'no_show';
+            if (!isActive) return false;
+            const resStart = parseISO(reservation.start_at);
+            const resEnd = parseISO(reservation.end_at);
+            return blockStart < resEnd && blockEnd > resStart;
+          });
+
+          if (conflict) {
+            addToast(
+              `Blockierung überschneidet sich mit einer Reservierung auf ${table.number}.`,
+              'error'
+            );
+            setActiveBlockId(null);
+            return;
+          }
+
+          try {
+            await blockAssignmentsApi.create(restaurant.id, {
+              block_id: block.id,
+              table_id: tableId,
+            });
+            addToast(`Blockierung auf ${table.number} erstellt.`, 'success');
+            refreshData(true);
+          } catch (error) {
+            console.error('Fehler beim Erstellen der Blockzuordnung:', error);
+            addToast('Fehler beim Erstellen der Blockierung', 'error');
+          }
+        }
+
         setActiveBlockId(null);
         return;
       }
 
-      if (over && typeof over.id === "number" && over.id > 0) {
-        const tableId = over.id;
-        const table = tables.find((t) => t.id === tableId);
-        if (!table) {
-          setActiveBlockId(null);
-          return;
-        }
-        if (!table.is_active) {
-          addToast(`${table.number} ist deaktiviert und kann nicht blockiert werden.`, "error");
-          setActiveBlockId(null);
-          return;
-        }
-        
-        const alreadyAssigned = blockAssignments.some(
-          (assignment) => assignment.block_id === block.id && assignment.table_id === tableId
-        );
-        if (alreadyAssigned) {
-          addToast(`Block ist bereits auf ${table.number} zugewiesen.`, "info");
-          setActiveBlockId(null);
-          return;
-        }
+      // Reservation drag handling
+      if (
+        activeType === 'reservation' ||
+        (activeType !== 'table' && (activeIdValue as number) < 0)
+      ) {
+        const reservationId = activeData?.reservationId ?? Math.abs(activeIdValue as number);
+        const reservation = reservations.find((r) => r.id === reservationId);
 
-        if (hasBlockConflict(tableId, block.start_at, block.end_at)) {
-          addToast(`Es existiert bereits eine Blockierung in diesem Zeitraum auf ${table.number}.`, "error");
-          setActiveBlockId(null);
-          return;
-        }
-
-        const tableReservations = getTableReservations(tableId);
-        const blockStart = parseISO(block.start_at);
-        const blockEnd = parseISO(block.end_at);
-        const conflict = tableReservations.some((reservation) => {
-          const isActive =
-            reservation.status !== "canceled" &&
-            reservation.status !== "completed" &&
-            reservation.status !== "no_show";
-          if (!isActive) return false;
-          const resStart = parseISO(reservation.start_at);
-          const resEnd = parseISO(reservation.end_at);
-          return blockStart < resEnd && blockEnd > resStart;
-        });
-        
-        if (conflict) {
-          addToast(`Blockierung überschneidet sich mit einer Reservierung auf ${table.number}.`, "error");
-          setActiveBlockId(null);
-          return;
-        }
-
-        try {
-          await blockAssignmentsApi.create(restaurant.id, {
-            block_id: block.id,
-            table_id: tableId,
-          });
-          addToast(`Blockierung auf ${table.number} erstellt.`, "success");
-          refreshData(true);
-        } catch (error) {
-          console.error("Fehler beim Erstellen der Blockzuordnung:", error);
-          addToast("Fehler beim Erstellen der Blockierung", "error");
-        }
-      }
-
-      setActiveBlockId(null);
-      return;
-    }
-
-    // Reservation drag handling
-    if (activeType === "reservation" || (activeType !== "table" && (activeIdValue as number) < 0)) {
-      const reservationId = activeData?.reservationId ?? Math.abs(activeIdValue as number);
-      const reservation = reservations.find((r) => r.id === reservationId);
-
-      if (!reservation || !restaurant) {
-        setActiveReservationId(null);
-        return;
-      }
-
-      // Drop on waitlist
-      if (over && (over.id === "waitlist" || over.id === "waitlist-dropzone" || String(over.id) === "waitlist")) {
-        try {
-          await reservationsApi.update(restaurant.id, reservation.id, {
-            table_id: null,
-            status: "pending",
-          });
-          const tempTableId = reservationToTempTableMap.get(reservation.id);
-          if (tempTableId !== undefined) {
-            const tableDayConfigId = Math.abs(tempTableId);
-            try {
-              await reservationTableDayConfigsApi.delete(restaurant.id, reservation.id, tableDayConfigId);
-            } catch (error) {
-              console.error("Fehler beim Entfernen der Zuordnung zu temporärem Tisch:", error);
-            }
-          }
-          addToast(
-            `${reservation.guest_name || "Gast"} wurde zurück auf die Warteliste verschoben.`,
-            "info"
-          );
-          refreshData(true);
-        } catch (error) {
-          console.error("Fehler beim Entfernen des Tisches:", error);
-          addToast("Fehler beim Entfernen des Tisches", "error");
-        }
-        setActiveReservationId(null);
-        return;
-      }
-
-      // Drop on table
-      if (over && typeof over.id === "number" && over.id !== 0) {
-        const tableId = over.id;
-        const table = tables.find((t) => t.id === tableId);
-
-        if (!table) {
+        if (!reservation || !restaurant) {
           setActiveReservationId(null);
           return;
         }
 
-        if (!table.is_active) {
-          addToast(`${table.number} ist deaktiviert und kann nicht zugewiesen werden.`, "error");
-          setActiveReservationId(null);
-          return;
-        }
-
-        if (table.is_active && table.capacity >= reservation.party_size) {
-          if (tableId > 0 && hasBlockConflict(tableId, reservation.start_at, reservation.end_at)) {
-            addToast(`${table.number} ist in diesem Zeitraum blockiert.`, "error");
-            setActiveReservationId(null);
-            return;
-          }
-
-          // Temporary table
-          if (tableId < 0) {
-            try {
-              const tableDayConfigId = Math.abs(tableId);
-              await reservationsApi.update(restaurant.id, reservation.id, {
-                table_id: null,
-                status: "confirmed",
-              });
-              await reservationTableDayConfigsApi.create(restaurant.id, {
-                reservation_id: reservation.id,
-                table_day_config_id: tableDayConfigId,
-                start_at: reservation.start_at,
-                end_at: reservation.end_at,
-              });
-              addToast(
-                `Reservierung ${reservation.guest_name || "Gast"} auf temporären Tisch ${table.number} zugewiesen.`,
-                "success"
-              );
-              refreshData(true);
-            } catch (error) {
-              console.error("Fehler beim Zuweisen des temporären Tisches:", error);
-              addToast("Fehler beim Zuweisen des temporären Tisches", "error");
-            }
-            setActiveReservationId(null);
-            return;
-          }
-
-          // Check time conflict
-          if (hasTimeConflict(reservation, tableId)) {
-            addToast(
-              `Konflikt: ${reservation.guest_name || "Gast"} kollidiert mit einer bestehenden Reservierung auf ${table.number}.`,
-              "error"
-            );
-            setActiveReservationId(null);
-            return;
-          }
-
-          // Assign to standard table
+        // Drop on waitlist
+        if (
+          over &&
+          (over.id === 'waitlist' ||
+            over.id === 'waitlist-dropzone' ||
+            String(over.id) === 'waitlist')
+        ) {
           try {
             await reservationsApi.update(restaurant.id, reservation.id, {
-              table_id: tableId,
-              status: "confirmed",
+              table_id: null,
+              status: 'pending',
             });
+            const tempTableId = reservationToTempTableMap.get(reservation.id);
+            if (tempTableId !== undefined) {
+              const tableDayConfigId = Math.abs(tempTableId);
+              try {
+                await reservationTableDayConfigsApi.delete(
+                  restaurant.id,
+                  reservation.id,
+                  tableDayConfigId
+                );
+              } catch (error) {
+                console.error('Fehler beim Entfernen der Zuordnung zu temporärem Tisch:', error);
+              }
+            }
             addToast(
-              `${table.number} zugewiesen an ${reservation.guest_name || "Gast"}.`,
-              "success"
+              `${reservation.guest_name || 'Gast'} wurde zurück auf die Warteliste verschoben.`,
+              'info'
             );
             refreshData(true);
           } catch (error) {
-            console.error("Fehler beim Zuweisen des Tisches:", error);
-            addToast("Fehler beim Zuweisen des Tisches", "error");
+            console.error('Fehler beim Entfernen des Tisches:', error);
+            addToast('Fehler beim Entfernen des Tisches', 'error');
           }
-        } else {
-          addToast(
-            `${table.number} hat nicht genügend Plätze für ${reservation.guest_name || "diese Reservierung"}.`,
-            "error"
-          );
+          setActiveReservationId(null);
+          return;
         }
+
+        // Drop on table
+        if (over && typeof over.id === 'number' && over.id !== 0) {
+          const tableId = over.id;
+          const table = tables.find((t) => t.id === tableId);
+
+          if (!table) {
+            setActiveReservationId(null);
+            return;
+          }
+
+          if (!table.is_active) {
+            addToast(`${table.number} ist deaktiviert und kann nicht zugewiesen werden.`, 'error');
+            setActiveReservationId(null);
+            return;
+          }
+
+          if (table.is_active && table.capacity >= reservation.party_size) {
+            if (
+              tableId > 0 &&
+              hasBlockConflict(tableId, reservation.start_at, reservation.end_at)
+            ) {
+              addToast(`${table.number} ist in diesem Zeitraum blockiert.`, 'error');
+              setActiveReservationId(null);
+              return;
+            }
+
+            // Temporary table
+            if (tableId < 0) {
+              try {
+                const tableDayConfigId = Math.abs(tableId);
+                await reservationsApi.update(restaurant.id, reservation.id, {
+                  table_id: null,
+                  status: 'confirmed',
+                });
+                await reservationTableDayConfigsApi.create(restaurant.id, {
+                  reservation_id: reservation.id,
+                  table_day_config_id: tableDayConfigId,
+                  start_at: reservation.start_at,
+                  end_at: reservation.end_at,
+                });
+                addToast(
+                  `Reservierung ${reservation.guest_name || 'Gast'} auf temporären Tisch ${table.number} zugewiesen.`,
+                  'success'
+                );
+                refreshData(true);
+              } catch (error) {
+                console.error('Fehler beim Zuweisen des temporären Tisches:', error);
+                addToast('Fehler beim Zuweisen des temporären Tisches', 'error');
+              }
+              setActiveReservationId(null);
+              return;
+            }
+
+            // Check time conflict
+            if (hasTimeConflict(reservation, tableId)) {
+              addToast(
+                `Konflikt: ${reservation.guest_name || 'Gast'} kollidiert mit einer bestehenden Reservierung auf ${table.number}.`,
+                'error'
+              );
+              setActiveReservationId(null);
+              return;
+            }
+
+            // Assign to standard table
+            try {
+              await reservationsApi.update(restaurant.id, reservation.id, {
+                table_id: tableId,
+                status: 'confirmed',
+              });
+              addToast(
+                `${table.number} zugewiesen an ${reservation.guest_name || 'Gast'}.`,
+                'success'
+              );
+              refreshData(true);
+            } catch (error) {
+              console.error('Fehler beim Zuweisen des Tisches:', error);
+              addToast('Fehler beim Zuweisen des Tisches', 'error');
+            }
+          } else {
+            addToast(
+              `${table.number} hat nicht genügend Plätze für ${reservation.guest_name || 'diese Reservierung'}.`,
+              'error'
+            );
+          }
+        }
+
+        setActiveReservationId(null);
+        return;
       }
 
-      setActiveReservationId(null);
-      return;
-    }
+      // Table drag handling (position change)
+      const tableId = activeData?.tableId ?? activeIdValue;
+      const table = tables.find((t) => t.id === tableId);
+      const isTempTable = table?.id ? table.id < 0 : false;
 
-    // Table drag handling (position change)
-    const tableId = activeData?.tableId ?? activeIdValue;
-    const table = tables.find((t) => t.id === tableId);
-    const isTempTable = table?.id ? table.id < 0 : false;
+      if (!table || !restaurant) {
+        setActiveId(null);
+        return;
+      }
 
-    if (!table || !restaurant) {
+      const deltaX = event.delta?.x || 0;
+      const deltaY = event.delta?.y || 0;
+
+      if (Math.abs(deltaX) < 1 && Math.abs(deltaY) < 1) {
+        setActiveId(null);
+        return;
+      }
+
+      const currentX = table.position_x || 0;
+      const currentY = table.position_y || 0;
+      const effectiveZoom = zoomLevel > 0 ? zoomLevel : 1;
+      const newX = currentX + deltaX / effectiveZoom;
+      const newY = currentY + deltaY / effectiveZoom;
+
+      const dateStr = format(selectedDate, 'yyyy-MM-dd');
+      try {
+        const existingConfig = tableDayConfigs.find((c) =>
+          isTempTable
+            ? c.table_id === null && c.is_temporary && c.number === table.number
+            : c.table_id === table.id
+        );
+
+        const updateData: any = {
+          table_id: isTempTable ? null : table.id,
+          date: dateStr,
+          position_x: Math.max(0, newX),
+          position_y: Math.max(0, newY),
+        };
+
+        if (isTempTable) {
+          updateData.is_temporary = true;
+          updateData.number = table.number;
+          updateData.capacity = table.capacity;
+          updateData.shape = table.shape;
+          updateData.notes = table.notes;
+        }
+
+        if (existingConfig) {
+          if (existingConfig.width !== null) updateData.width = existingConfig.width;
+          if (existingConfig.height !== null) updateData.height = existingConfig.height;
+          if (existingConfig.is_active !== null) updateData.is_active = existingConfig.is_active;
+          if (existingConfig.color !== null) updateData.color = existingConfig.color;
+          if (existingConfig.rotation !== null) updateData.rotation = existingConfig.rotation;
+          if (existingConfig.join_group_id !== null)
+            updateData.join_group_id = existingConfig.join_group_id;
+          if (existingConfig.is_joinable !== null)
+            updateData.is_joinable = existingConfig.is_joinable;
+        } else {
+          updateData.width = table.width;
+          updateData.height = table.height;
+          updateData.is_active = table.is_active;
+          updateData.color = table.color;
+          updateData.rotation = table.rotation;
+          updateData.is_joinable = table.is_joinable;
+        }
+
+        await tableDayConfigsApi.createOrUpdate(restaurant.id, updateData);
+        addToast(`Tisch ${table.number} wurde verschoben.`, 'success');
+        refreshData(true);
+      } catch (error) {
+        console.error('Fehler beim Speichern der Tischposition:', error);
+        addToast('Fehler beim Speichern der Tischposition', 'error');
+      }
+
       setActiveId(null);
-      return;
-    }
-
-    const deltaX = event.delta?.x || 0;
-    const deltaY = event.delta?.y || 0;
-    
-    if (Math.abs(deltaX) < 1 && Math.abs(deltaY) < 1) {
-      setActiveId(null);
-      return;
-    }
-    
-    const currentX = table.position_x || 0;
-    const currentY = table.position_y || 0;
-    const effectiveZoom = zoomLevel > 0 ? zoomLevel : 1;
-    const newX = currentX + deltaX / effectiveZoom;
-    const newY = currentY + deltaY / effectiveZoom;
-
-    const dateStr = format(selectedDate, "yyyy-MM-dd");
-    try {
-      const existingConfig = tableDayConfigs.find((c) =>
-        isTempTable
-          ? c.table_id === null && c.is_temporary && c.number === table.number
-          : c.table_id === table.id
-      );
-      
-      const updateData: any = {
-        table_id: isTempTable ? null : table.id,
-        date: dateStr,
-        position_x: Math.max(0, newX),
-        position_y: Math.max(0, newY),
-      };
-      
-      if (isTempTable) {
-        updateData.is_temporary = true;
-        updateData.number = table.number;
-        updateData.capacity = table.capacity;
-        updateData.shape = table.shape;
-        updateData.notes = table.notes;
-      }
-      
-      if (existingConfig) {
-        if (existingConfig.width !== null) updateData.width = existingConfig.width;
-        if (existingConfig.height !== null) updateData.height = existingConfig.height;
-        if (existingConfig.is_active !== null) updateData.is_active = existingConfig.is_active;
-        if (existingConfig.color !== null) updateData.color = existingConfig.color;
-        if (existingConfig.rotation !== null) updateData.rotation = existingConfig.rotation;
-        if (existingConfig.join_group_id !== null) updateData.join_group_id = existingConfig.join_group_id;
-        if (existingConfig.is_joinable !== null) updateData.is_joinable = existingConfig.is_joinable;
-      } else {
-        updateData.width = table.width;
-        updateData.height = table.height;
-        updateData.is_active = table.is_active;
-        updateData.color = table.color;
-        updateData.rotation = table.rotation;
-        updateData.is_joinable = table.is_joinable;
-      }
-      
-      await tableDayConfigsApi.createOrUpdate(restaurant.id, updateData);
-      addToast(`Tisch ${table.number} wurde verschoben.`, "success");
-      refreshData(true);
-    } catch (error) {
-      console.error("Fehler beim Speichern der Tischposition:", error);
-      addToast("Fehler beim Speichern der Tischposition", "error");
-    }
-
-    setActiveId(null);
-  }, [
-    blocks, blockAssignments, tables, reservations, restaurant, 
-    reservationToTempTableMap, tableDayConfigs, selectedDate, zoomLevel,
-    addToast, refreshData, hasBlockConflict, hasTimeConflict, getTableReservations
-  ]);
+    },
+    [
+      blocks,
+      blockAssignments,
+      tables,
+      reservations,
+      restaurant,
+      reservationToTempTableMap,
+      tableDayConfigs,
+      selectedDate,
+      zoomLevel,
+      addToast,
+      refreshData,
+      hasBlockConflict,
+      hasTimeConflict,
+      getTableReservations,
+    ]
+  );
 
   // ============================================
   // TABLE HANDLERS
   // ============================================
 
-  const handleTableClick = useCallback((table: Table, event?: React.MouseEvent) => {
-    if (selectionMode) {
-      event?.stopPropagation();
-      setSelectedTableIds(prev => {
-        const newSet = new Set(prev);
-        if (newSet.has(table.id)) {
-          newSet.delete(table.id);
-          if (table.join_group_id) {
-            tables.filter(t => t.join_group_id === table.join_group_id && t.id !== table.id)
-              .forEach(t => newSet.delete(t.id));
+  const handleTableClick = useCallback(
+    (table: Table, event?: React.MouseEvent) => {
+      if (selectionMode) {
+        event?.stopPropagation();
+        setSelectedTableIds((prev) => {
+          const newSet = new Set(prev);
+          if (newSet.has(table.id)) {
+            newSet.delete(table.id);
+            if (table.join_group_id) {
+              tables
+                .filter((t) => t.join_group_id === table.join_group_id && t.id !== table.id)
+                .forEach((t) => newSet.delete(t.id));
+            }
+          } else {
+            newSet.add(table.id);
+            if (table.join_group_id) {
+              tables
+                .filter((t) => t.join_group_id === table.join_group_id && t.id !== table.id)
+                .forEach((t) => newSet.add(t.id));
+            }
           }
-        } else {
-          newSet.add(table.id);
-          if (table.join_group_id) {
-            tables.filter(t => t.join_group_id === table.join_group_id && t.id !== table.id)
-              .forEach(t => newSet.add(t.id));
-          }
-        }
-        return newSet;
-      });
-    } else {
-      setSelectedTable(table);
-      setSelectedReservation(null);
-      setTableDetailsOpen(true);
-    }
-  }, [selectionMode, tables]);
+          return newSet;
+        });
+      } else {
+        setSelectedTable(table);
+        setSelectedReservation(null);
+        setTableDetailsOpen(true);
+      }
+    },
+    [selectionMode, tables]
+  );
 
-  const handleHideTable = useCallback(async (table: Table) => {
-    if (!restaurant) return;
-    
-    const dateStr = format(selectedDate, "yyyy-MM-dd");
-    const tableId = table.id < 0 ? null : table.id;
-    
-    try {
-      const existingConfig = tableDayConfigs.find(c => 
-        c.table_id === tableId || (tableId === null && c.is_temporary && c.number === table.number)
-      );
-      
-      const updateData: any = {
-        table_id: tableId,
-        date: dateStr,
-        is_hidden: true,
-        position_x: existingConfig?.position_x ?? table.position_x,
-        position_y: existingConfig?.position_y ?? table.position_y,
-        width: existingConfig?.width ?? table.width,
-        height: existingConfig?.height ?? table.height,
-        is_active: existingConfig?.is_active ?? table.is_active,
-        color: existingConfig?.color ?? table.color,
-        join_group_id: existingConfig?.join_group_id,
-        is_joinable: existingConfig?.is_joinable ?? table.is_joinable,
-        rotation: existingConfig?.rotation ?? table.rotation,
-        number: existingConfig?.number ?? table.number,
-        capacity: existingConfig?.capacity ?? table.capacity,
-        shape: existingConfig?.shape ?? table.shape,
-        notes: existingConfig?.notes ?? table.notes,
-        is_temporary: existingConfig?.is_temporary || table.id < 0,
-      };
-      
-      await tableDayConfigsApi.createOrUpdate(restaurant.id, updateData);
-      addToast(`Tisch ${table.number} wurde für diesen Tag ausgeblendet.`, "success");
-      refreshData(true);
-    } catch (error) {
-      console.error("Fehler beim Verstecken des Tisches:", error);
-      addToast("Fehler beim Verstecken des Tisches", "error");
-    }
-  }, [restaurant, selectedDate, tableDayConfigs, addToast, refreshData]);
+  const handleHideTable = useCallback(
+    async (table: Table) => {
+      if (!restaurant) return;
+
+      const dateStr = format(selectedDate, 'yyyy-MM-dd');
+      const tableId = table.id < 0 ? null : table.id;
+
+      try {
+        const existingConfig = tableDayConfigs.find(
+          (c) =>
+            c.table_id === tableId ||
+            (tableId === null && c.is_temporary && c.number === table.number)
+        );
+
+        const updateData: any = {
+          table_id: tableId,
+          date: dateStr,
+          is_hidden: true,
+          position_x: existingConfig?.position_x ?? table.position_x,
+          position_y: existingConfig?.position_y ?? table.position_y,
+          width: existingConfig?.width ?? table.width,
+          height: existingConfig?.height ?? table.height,
+          is_active: existingConfig?.is_active ?? table.is_active,
+          color: existingConfig?.color ?? table.color,
+          join_group_id: existingConfig?.join_group_id,
+          is_joinable: existingConfig?.is_joinable ?? table.is_joinable,
+          rotation: existingConfig?.rotation ?? table.rotation,
+          number: existingConfig?.number ?? table.number,
+          capacity: existingConfig?.capacity ?? table.capacity,
+          shape: existingConfig?.shape ?? table.shape,
+          notes: existingConfig?.notes ?? table.notes,
+          is_temporary: existingConfig?.is_temporary || table.id < 0,
+        };
+
+        await tableDayConfigsApi.createOrUpdate(restaurant.id, updateData);
+        addToast(`Tisch ${table.number} wurde für diesen Tag ausgeblendet.`, 'success');
+        refreshData(true);
+      } catch (error) {
+        console.error('Fehler beim Verstecken des Tisches:', error);
+        addToast('Fehler beim Verstecken des Tisches', 'error');
+      }
+    },
+    [restaurant, selectedDate, tableDayConfigs, addToast, refreshData]
+  );
 
   const handleJoinTables = useCallback(async () => {
     if (!restaurant || selectedTableIds.size < 2) return;
-    
+
     try {
       const groupId = Math.min(...Array.from(selectedTableIds));
-      const dateStr = format(selectedDate, "yyyy-MM-dd");
-      
+      const dateStr = format(selectedDate, 'yyyy-MM-dd');
+
       await Promise.all(
-        Array.from(selectedTableIds).map(tableId => {
-          const table = tables.find(t => t.id === tableId);
+        Array.from(selectedTableIds).map((tableId) => {
+          const table = tables.find((t) => t.id === tableId);
           if (!table) return Promise.resolve();
-          
+
           const isTempTable = table.id < 0;
           return tableDayConfigsApi.createOrUpdate(restaurant.id, {
             table_id: isTempTable ? null : tableId,
@@ -995,35 +1109,35 @@ export default function DashboardPage() {
           });
         })
       );
-      
-      addToast(`${selectedTableIds.size} Tische wurden zusammengeschoben.`, "success");
+
+      addToast(`${selectedTableIds.size} Tische wurden zusammengeschoben.`, 'success');
       setSelectedTableIds(new Set());
       setSelectionMode(false);
       refreshData(true);
     } catch (error) {
-      console.error("Fehler beim Zusammenführen der Tische:", error);
-      addToast("Fehler beim Zusammenführen der Tische", "error");
+      console.error('Fehler beim Zusammenführen der Tische:', error);
+      addToast('Fehler beim Zusammenführen der Tische', 'error');
     }
   }, [restaurant, selectedTableIds, selectedDate, tables, addToast, refreshData]);
 
   const handleUnjoinTables = useCallback(async () => {
     if (!restaurant || selectedTableIds.size === 0) return;
-    
+
     try {
-      const dateStr = format(selectedDate, "yyyy-MM-dd");
-      
+      const dateStr = format(selectedDate, 'yyyy-MM-dd');
+
       await Promise.all(
-        Array.from(selectedTableIds).map(tableId => {
-          const table = tables.find(t => t.id === tableId);
+        Array.from(selectedTableIds).map((tableId) => {
+          const table = tables.find((t) => t.id === tableId);
           if (!table) return Promise.resolve();
-          
+
           const isTempTable = table.id < 0;
-          const existingConfig = tableDayConfigs.find(c =>
+          const existingConfig = tableDayConfigs.find((c) =>
             isTempTable
               ? c.table_id === null && c.is_temporary && c.number === table.number
               : c.table_id === tableId
           );
-          
+
           return tableDayConfigsApi.createOrUpdate(restaurant.id, {
             table_id: isTempTable ? null : tableId,
             date: dateStr,
@@ -1048,14 +1162,14 @@ export default function DashboardPage() {
           });
         })
       );
-      
-      addToast(`${selectedTableIds.size} Tische wurden getrennt.`, "success");
+
+      addToast(`${selectedTableIds.size} Tische wurden getrennt.`, 'success');
       setSelectedTableIds(new Set());
       setSelectionMode(false);
       refreshData(true);
     } catch (error) {
-      console.error("Fehler beim Trennen der Tische:", error);
-      addToast("Fehler beim Trennen der Tische", "error");
+      console.error('Fehler beim Trennen der Tische:', error);
+      addToast('Fehler beim Trennen der Tische', 'error');
     }
   }, [restaurant, selectedTableIds, selectedDate, tables, tableDayConfigs, addToast, refreshData]);
 
@@ -1064,78 +1178,87 @@ export default function DashboardPage() {
     setSelectionMode(false);
   }, []);
 
-  const handleCreateTempTable = useCallback(async (tableData: {
-    number: string;
-    capacity: number;
-    shape?: string;
-    position_x?: number;
-    position_y?: number;
-    width?: number;
-    height?: number;
-    color?: string;
-    notes?: string;
-  }) => {
-    if (!restaurant) return;
-    
-    const dateStr = format(selectedDate, "yyyy-MM-dd");
-    
-    try {
-      await tableDayConfigsApi.createOrUpdate(restaurant.id, {
-        table_id: null,
-        date: dateStr,
-        is_temporary: true,
-        is_hidden: false,
-        number: tableData.number,
-        capacity: tableData.capacity,
-        shape: tableData.shape ?? "rectangle",
-        position_x: tableData.position_x ?? 50,
-        position_y: tableData.position_y ?? 50,
-        width: tableData.width ?? 120,
-        height: tableData.height ?? 120,
-        is_active: true,
-        color: tableData.color ?? null,
-        notes: tableData.notes ?? null,
-        is_joinable: false,
-        join_group_id: null,
-      });
-      
-      addToast(`Tisch ${tableData.number} wurde für diesen Tag erstellt.`, "success");
-      refreshData(true);
-    } catch (error) {
-      console.error("Fehler beim Erstellen des temporären Tisches:", error);
-      addToast("Fehler beim Erstellen des temporären Tisches", "error");
-    }
-  }, [restaurant, selectedDate, addToast, refreshData]);
+  const handleCreateTempTable = useCallback(
+    async (tableData: {
+      number: string;
+      capacity: number;
+      shape?: string;
+      position_x?: number;
+      position_y?: number;
+      width?: number;
+      height?: number;
+      color?: string;
+      notes?: string;
+    }) => {
+      if (!restaurant) return;
+
+      const dateStr = format(selectedDate, 'yyyy-MM-dd');
+
+      try {
+        await tableDayConfigsApi.createOrUpdate(restaurant.id, {
+          table_id: null,
+          date: dateStr,
+          is_temporary: true,
+          is_hidden: false,
+          number: tableData.number,
+          capacity: tableData.capacity,
+          shape: tableData.shape ?? 'rectangle',
+          position_x: tableData.position_x ?? 50,
+          position_y: tableData.position_y ?? 50,
+          width: tableData.width ?? 120,
+          height: tableData.height ?? 120,
+          is_active: true,
+          color: tableData.color ?? null,
+          notes: tableData.notes ?? null,
+          is_joinable: false,
+          join_group_id: null,
+        });
+
+        addToast(`Tisch ${tableData.number} wurde für diesen Tag erstellt.`, 'success');
+        refreshData(true);
+      } catch (error) {
+        console.error('Fehler beim Erstellen des temporären Tisches:', error);
+        addToast('Fehler beim Erstellen des temporären Tisches', 'error');
+      }
+    },
+    [restaurant, selectedDate, addToast, refreshData]
+  );
 
   const handleResetTablesForDate = useCallback(async () => {
     if (!restaurant) return;
-    
-    if (!confirmAction("Möchten Sie wirklich alle tages-spezifischen Änderungen für diesen Tag zurücksetzen?")) {
+
+    if (
+      !confirmAction(
+        'Möchten Sie wirklich alle tages-spezifischen Änderungen für diesen Tag zurücksetzen?'
+      )
+    ) {
       return;
     }
 
-    const dateStr = format(selectedDate, "yyyy-MM-dd");
+    const dateStr = format(selectedDate, 'yyyy-MM-dd');
     try {
-      const tempConfigIds = tableDayConfigs.filter((config) => config.is_temporary).map((config) => config.id);
-      
+      const tempConfigIds = tableDayConfigs
+        .filter((config) => config.is_temporary)
+        .map((config) => config.id);
+
       if (tempConfigIds.length > 0) {
         const tempAssignments = reservationTableDayConfigs.filter((assignment) =>
           tempConfigIds.includes(assignment.table_day_config_id)
         );
-        
+
         if (tempAssignments.length > 0) {
           const reservationCount = new Set(tempAssignments.map((a) => a.reservation_id)).size;
           const ok = confirmAction(
-            `Es gibt ${reservationCount} Reservierung${reservationCount === 1 ? "" : "en"} auf temporären Tischen. Diese werden als "Ausstehend" zurückgesetzt. Fortfahren?`
+            `Es gibt ${reservationCount} Reservierung${reservationCount === 1 ? '' : 'en'} auf temporären Tischen. Diese werden als "Ausstehend" zurückgesetzt. Fortfahren?`
           );
           if (!ok) return;
-          
+
           const updatedReservations = new Set<number>();
           for (const assignment of tempAssignments) {
             if (!updatedReservations.has(assignment.reservation_id)) {
               await reservationsApi.update(restaurant.id, assignment.reservation_id, {
                 table_id: null,
-                status: "pending",
+                status: 'pending',
               });
               updatedReservations.add(assignment.reservation_id);
             }
@@ -1145,109 +1268,145 @@ export default function DashboardPage() {
               assignment.table_day_config_id
             );
           }
-          addToast("Reservierungen wurden zurück in die Reservierungsübersicht verschoben.", "success");
+          addToast(
+            'Reservierungen wurden zurück in die Reservierungsübersicht verschoben.',
+            'success'
+          );
         }
       }
-      
+
       await tableDayConfigsApi.deleteAllForDate(restaurant.id, dateStr);
-      addToast("Tischanordnung wurde auf die Standard-Anordnung zurückgesetzt.", "success");
+      addToast('Tischanordnung wurde auf die Standard-Anordnung zurückgesetzt.', 'success');
       refreshData(true);
     } catch (error) {
-      console.error("Fehler beim Zurücksetzen der Tischanordnung:", error);
-      addToast("Fehler beim Zurücksetzen der Tischanordnung.", "error");
+      console.error('Fehler beim Zurücksetzen der Tischanordnung:', error);
+      addToast('Fehler beim Zurücksetzen der Tischanordnung.', 'error');
     }
-  }, [restaurant, selectedDate, tableDayConfigs, reservationTableDayConfigs, addToast, refreshData]);
+  }, [
+    restaurant,
+    selectedDate,
+    tableDayConfigs,
+    reservationTableDayConfigs,
+    addToast,
+    refreshData,
+  ]);
 
   // ============================================
   // RESERVATION HANDLERS
   // ============================================
 
-  const handleReservationClick = useCallback((reservation: Reservation, table?: Table) => {
-    setSelectedReservation(reservation);
-    setSelectedTable(table || tables.find((t) => t.id === reservation.table_id) || null);
-    setReservationDialogOpen(true);
-  }, [tables]);
+  const handleReservationClick = useCallback(
+    (reservation: Reservation, table?: Table) => {
+      setSelectedReservation(reservation);
+      setSelectedTable(table || tables.find((t) => t.id === reservation.table_id) || null);
+      setReservationDialogOpen(true);
+    },
+    [tables]
+  );
 
-  const handleReservationDeleted = useCallback(async (reservation: Reservation) => {
-    if (!restaurant) return;
-    const ok = confirmAction("Reservierung wirklich löschen?");
-    if (!ok) return;
-    try {
-      await reservationsApi.delete(restaurant.id, reservation.id);
-      refreshData(true);
-      setReservationDialogOpen(false);
-    } catch (error) {
-      console.error("Fehler beim Löschen der Reservierung:", error);
-      addToast("Fehler beim Löschen der Reservierung", "error");
-    }
-  }, [restaurant, addToast, refreshData]);
+  const handleReservationDeleted = useCallback(
+    async (reservation: Reservation) => {
+      if (!restaurant) return;
+      const ok = confirmAction('Reservierung wirklich löschen?');
+      if (!ok) return;
+      try {
+        await reservationsApi.delete(restaurant.id, reservation.id);
+        refreshData(true);
+        setReservationDialogOpen(false);
+      } catch (error) {
+        console.error('Fehler beim Löschen der Reservierung:', error);
+        addToast('Fehler beim Löschen der Reservierung', 'error');
+      }
+    },
+    [restaurant, addToast, refreshData]
+  );
 
   const handleBlockTemplateEdit = useCallback((block: Block) => {
     setEditingBlock(block);
     setBlockEditOpen(true);
   }, []);
 
-  const updateReservationStatus = useCallback(async (
-    reservation: Reservation,
-    newStatus: Reservation["status"]
-  ) => {
-    if (!restaurant) return;
+  const updateReservationStatus = useCallback(
+    async (reservation: Reservation, newStatus: Reservation['status']) => {
+      if (!restaurant) return;
 
-    setUpdatingStatus(reservation.id);
-    try {
-      await reservationsApi.update(restaurant.id, reservation.id, {
-        status: newStatus,
-      });
-      const variant =
-        newStatus === "completed" || newStatus === "no_show" || newStatus === "seated"
-          ? "success"
-          : "info";
-      addToast(
-        `${reservation.guest_name || "Gast"} → Status: ${getStatusLabel(newStatus)}`,
-        variant
-      );
-      refreshData(true);
-    } catch (error) {
-      console.error("Fehler beim Aktualisieren des Status:", error);
-      addToast("Fehler beim Aktualisieren des Status", "error");
-    } finally {
-      setUpdatingStatus(null);
-    }
-  }, [restaurant, addToast, refreshData]);
+      setUpdatingStatus(reservation.id);
+      try {
+        await reservationsApi.update(restaurant.id, reservation.id, {
+          status: newStatus,
+        });
+        const variant =
+          newStatus === 'completed' || newStatus === 'no_show' || newStatus === 'seated'
+            ? 'success'
+            : 'info';
+        addToast(
+          `${reservation.guest_name || 'Gast'} → Status: ${getStatusLabel(newStatus)}`,
+          variant
+        );
+        refreshData(true);
+      } catch (error) {
+        console.error('Fehler beim Aktualisieren des Status:', error);
+        addToast('Fehler beim Aktualisieren des Status', 'error');
+      } finally {
+        setUpdatingStatus(null);
+      }
+    },
+    [restaurant, addToast, refreshData]
+  );
 
   // ============================================
   // HELPER FUNCTIONS
   // ============================================
 
-  const getStatusLabel = useCallback((status: Reservation["status"]) => {
+  const getStatusLabel = useCallback((status: Reservation['status']) => {
     switch (status) {
-      case "confirmed": return "Bestätigt";
-      case "seated": return "Platziert";
-      case "completed": return "Abgeschlossen";
-      case "canceled": return "Storniert";
-      case "no_show": return "No-Show";
-      default: return "Ausstehend";
+      case 'confirmed':
+        return 'Bestätigt';
+      case 'seated':
+        return 'Platziert';
+      case 'completed':
+        return 'Abgeschlossen';
+      case 'canceled':
+        return 'Storniert';
+      case 'no_show':
+        return 'No-Show';
+      default:
+        return 'Ausstehend';
     }
   }, []);
 
-  const STATUS_ICON_MAP: Record<Reservation["status"], { Icon: typeof Clock; tone: string }> = useMemo(() => ({
-    pending: { Icon: Clock, tone: "bg-blue-900/40 border-blue-600 text-blue-100" },
-    confirmed: { Icon: ShieldCheck, tone: "bg-indigo-900/40 border-indigo-600 text-indigo-100" },
-    seated: { Icon: Users, tone: "bg-emerald-900/40 border-emerald-600 text-emerald-100" },
-    completed: { Icon: CheckCircle, tone: "bg-amber-900/30 border-amber-600 text-amber-100" },
-    canceled: { Icon: XCircle, tone: "bg-red-900/30 border-red-600 text-red-100" },
-    no_show: { Icon: XCircle, tone: "bg-orange-900/30 border-orange-600 text-orange-100" },
-  }), []);
+  const STATUS_ICON_MAP: Record<Reservation['status'], { Icon: typeof Clock; tone: string }> =
+    useMemo(
+      () => ({
+        pending: { Icon: Clock, tone: 'bg-blue-900/40 border-blue-600 text-blue-100' },
+        confirmed: {
+          Icon: ShieldCheck,
+          tone: 'bg-indigo-900/40 border-indigo-600 text-indigo-100',
+        },
+        seated: { Icon: Users, tone: 'bg-emerald-900/40 border-emerald-600 text-emerald-100' },
+        completed: { Icon: CheckCircle, tone: 'bg-amber-900/30 border-amber-600 text-amber-100' },
+        canceled: { Icon: XCircle, tone: 'bg-red-900/30 border-red-600 text-red-100' },
+        no_show: { Icon: XCircle, tone: 'bg-orange-900/30 border-orange-600 text-orange-100' },
+      }),
+      []
+    );
 
   const getObstacleLabel = useCallback((type: string) => {
     switch (type) {
-      case "door": return "Tür";
-      case "stairs": return "Treppe";
-      case "kitchen": return "Küche";
-      case "bar": return "Bar";
-      case "wall": return "Wand";
-      case "other": return "Sonstiges";
-      default: return type;
+      case 'door':
+        return 'Tür';
+      case 'stairs':
+        return 'Treppe';
+      case 'kitchen':
+        return 'Küche';
+      case 'bar':
+        return 'Bar';
+      case 'wall':
+        return 'Wand';
+      case 'other':
+        return 'Sonstiges';
+      default:
+        return type;
     }
   }, []);
 
@@ -1262,7 +1421,9 @@ export default function DashboardPage() {
   if (!restaurant) {
     return (
       <div className="p-6 bg-gray-900 min-h-screen">
-        <p className="text-gray-400">Kein Restaurant gefunden. Bitte erstelle zuerst ein Restaurant.</p>
+        <p className="text-gray-400">
+          Kein Restaurant gefunden. Bitte erstelle zuerst ein Restaurant.
+        </p>
       </div>
     );
   }
@@ -1276,11 +1437,11 @@ export default function DashboardPage() {
             <div
               key={toast.id}
               className={`min-w-[260px] rounded-lg border px-4 py-3 shadow-[0_14px_32px_rgba(0,0,0,0.35)] text-sm ${
-                toast.variant === "error"
-                  ? "bg-red-900/80 border-red-500 text-red-50"
-                  : toast.variant === "success"
-                  ? "bg-green-900/80 border-green-500 text-green-50"
-                  : "bg-slate-800/90 border-slate-600 text-slate-100"
+                toast.variant === 'error'
+                  ? 'bg-red-900/80 border-red-500 text-red-50'
+                  : toast.variant === 'success'
+                    ? 'bg-green-900/80 border-green-500 text-green-50'
+                    : 'bg-slate-800/90 border-slate-600 text-slate-100'
               }`}
             >
               {toast.message}
@@ -1322,18 +1483,20 @@ export default function DashboardPage() {
               </div>
               <div className="text-left ml-2 md:ml-4 border-l border-gray-600 pl-2 md:pl-4">
                 <div className="text-xs md:text-sm font-semibold text-white whitespace-nowrap">
-                  {format(now, "EEEE, d. MMMM yyyy", { locale: de })}
+                  {format(now, 'EEEE, d. MMMM yyyy', { locale: de })}
                 </div>
                 <div className="text-base md:text-lg lg:text-xl font-bold text-blue-300 tracking-tight whitespace-nowrap">
-                  {format(now, "HH:mm")}
+                  {format(now, 'HH:mm')}
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-2 min-w-0 shrink-0 justify-end">
               <div className="text-right leading-tight">
-                <div className="text-[10px] uppercase tracking-wide text-gray-400">Ausgewählter Tag</div>
+                <div className="text-[10px] uppercase tracking-wide text-gray-400">
+                  Ausgewählter Tag
+                </div>
                 <div className="text-xs font-semibold text-white whitespace-nowrap">
-                  {format(selectedDate, "EEE, d.M.yyyy", { locale: de })}
+                  {format(selectedDate, 'EEE, d.M.yyyy', { locale: de })}
                 </div>
               </div>
               <div className="flex items-center gap-1 shrink-0">
@@ -1348,7 +1511,9 @@ export default function DashboardPage() {
                       <XSquare className="w-3.5 h-3.5 mr-1" />
                       <span className="text-xs">Abbrechen</span>
                     </Button>
-                    {(currentUser?.role === "servecta" || currentUser?.role === "restaurantinhaber" || currentUser?.role === "schichtleiter") && (
+                    {(currentUser?.role === 'servecta' ||
+                      currentUser?.role === 'restaurantinhaber' ||
+                      currentUser?.role === 'schichtleiter') && (
                       <>
                         <Button
                           variant="default"
@@ -1379,7 +1544,9 @@ export default function DashboardPage() {
                   </>
                 ) : (
                   <>
-                    {(currentUser?.role === "servecta" || currentUser?.role === "restaurantinhaber" || currentUser?.role === "schichtleiter") && (
+                    {(currentUser?.role === 'servecta' ||
+                      currentUser?.role === 'restaurantinhaber' ||
+                      currentUser?.role === 'schichtleiter') && (
                       <div className="relative" ref={actionsMenuRef}>
                         <Button
                           variant="outline"
@@ -1390,7 +1557,9 @@ export default function DashboardPage() {
                         >
                           <EllipsisVertical className="w-4 h-4 mr-2" />
                           <span className="text-xs">Tageslayout</span>
-                          <ChevronDown className={`w-3.5 h-3.5 ml-2 transition-transform ${actionsMenuOpen ? "rotate-180" : ""}`} />
+                          <ChevronDown
+                            className={`w-3.5 h-3.5 ml-2 transition-transform ${actionsMenuOpen ? 'rotate-180' : ''}`}
+                          />
                         </Button>
                         {actionsMenuOpen && (
                           <div className="absolute right-0 mt-2 w-64 rounded-lg border border-gray-700 bg-gray-900 shadow-xl z-40 overflow-hidden">
@@ -1403,8 +1572,8 @@ export default function DashboardPage() {
                               disabled={!selectedAreaId || areas.length === 0}
                               className={`w-full px-3 py-2 text-left text-sm flex items-center gap-2 transition-colors ${
                                 !selectedAreaId || areas.length === 0
-                                  ? "text-gray-500 cursor-not-allowed bg-gray-900"
-                                  : "text-gray-100 hover:bg-gray-800/70"
+                                  ? 'text-gray-500 cursor-not-allowed bg-gray-900'
+                                  : 'text-gray-100 hover:bg-gray-800/70'
                               }`}
                             >
                               <Plus className="w-4 h-4" />
@@ -1484,7 +1653,7 @@ export default function DashboardPage() {
             <div
               className={`
                 absolute md:relative z-[30] transition-[width] duration-300 ease-in-out
-                ${sidebarOpen ? "w-72 md:w-80" : "w-14"}
+                ${sidebarOpen ? 'w-72 md:w-80' : 'w-14'}
                 top-0 left-0
                 h-full
               `}
@@ -1511,7 +1680,7 @@ export default function DashboardPage() {
                 onToggle={() => setSidebarOpen(!sidebarOpen)}
               />
             </div>
-            
+
             {/* Overlay für mobile */}
             {sidebarOpen && (
               <div
@@ -1521,11 +1690,11 @@ export default function DashboardPage() {
             )}
 
             {/* Tischplan */}
-            <div 
+            <div
               ref={tablePlanRef}
               className="flex-1 relative overflow-hidden z-10 min-w-0 w-full select-none"
-              style={{ 
-                userSelect: 'none', 
+              style={{
+                userSelect: 'none',
                 WebkitUserSelect: 'none',
                 MozUserSelect: 'none',
                 msUserSelect: 'none',
@@ -1538,9 +1707,9 @@ export default function DashboardPage() {
               {/* Pan-Hintergrund-Layer */}
               <div
                 className="absolute inset-0 z-0"
-                style={{ 
+                style={{
                   touchAction: 'none',
-                  cursor: isPanning ? 'grabbing' : 'grab'
+                  cursor: isPanning ? 'grabbing' : 'grab',
                 }}
                 onTouchStart={(e) => {
                   if (activeId || activeReservationId || activeBlockId) {
@@ -1548,11 +1717,19 @@ export default function DashboardPage() {
                     setIsPanning(false);
                     return;
                   }
-                  
+
                   const target = e.target as HTMLElement;
-                  const isInteractive = target.closest('[data-dnd-draggable], [data-dnd-droppable], button, a, input, select, textarea');
-                  
-                  if (e.touches.length === 1 && !activeId && !activeReservationId && !activeBlockId && !isInteractive) {
+                  const isInteractive = target.closest(
+                    '[data-dnd-draggable], [data-dnd-droppable], button, a, input, select, textarea'
+                  );
+
+                  if (
+                    e.touches.length === 1 &&
+                    !activeId &&
+                    !activeReservationId &&
+                    !activeBlockId &&
+                    !isInteractive
+                  ) {
                     const touch = e.touches[0];
                     panRef.current.isPanning = true;
                     panRef.current.startX = touch.clientX - panOffset.x;
@@ -1580,35 +1757,49 @@ export default function DashboardPage() {
                       touch2.clientX - touch1.clientX,
                       touch2.clientY - touch1.clientY
                     );
-                    
+
                     if (zoomRef.current.initialDistance > 0) {
                       const scale = distance / zoomRef.current.initialDistance;
-                      const newZoom = Math.max(0.5, Math.min(3, zoomRef.current.initialZoom * scale));
-                      
+                      const newZoom = Math.max(
+                        0.5,
+                        Math.min(3, zoomRef.current.initialZoom * scale)
+                      );
+
                       const centerX = (touch1.clientX + touch2.clientX) / 2;
                       const centerY = (touch1.clientY + touch2.clientY) / 2;
                       const rect = tablePlanRef.current?.getBoundingClientRect();
-                      
+
                       if (rect) {
                         const relativeX = centerX - rect.left;
                         const relativeY = centerY - rect.top;
                         const zoomFactor = newZoom / zoomLevel;
-                        
-                        setPanOffset(prev => ({
+
+                        setPanOffset((prev) => ({
                           x: relativeX - (relativeX - prev.x) * zoomFactor,
                           y: relativeY - (relativeY - prev.y) * zoomFactor,
                         }));
                       }
-                      
+
                       setZoomLevel(newZoom);
                     }
                     e.preventDefault();
                     e.stopPropagation();
-                  } else if (panRef.current.isPanning && e.touches.length === 1 && !activeId && !activeReservationId && !activeBlockId) {
+                  } else if (
+                    panRef.current.isPanning &&
+                    e.touches.length === 1 &&
+                    !activeId &&
+                    !activeReservationId &&
+                    !activeBlockId
+                  ) {
                     const touch = e.touches[0];
-                    const target = document.elementFromPoint(touch.clientX, touch.clientY) as HTMLElement;
-                    const isInteractive = target?.closest('[data-dnd-draggable], [data-dnd-droppable], button, a, input, select, textarea');
-                    
+                    const target = document.elementFromPoint(
+                      touch.clientX,
+                      touch.clientY
+                    ) as HTMLElement;
+                    const isInteractive = target?.closest(
+                      '[data-dnd-draggable], [data-dnd-droppable], button, a, input, select, textarea'
+                    );
+
                     if (!isInteractive) {
                       setPanOffset({
                         x: touch.clientX - panRef.current.startX,
@@ -1648,7 +1839,7 @@ export default function DashboardPage() {
                       const zoomDelta = e.deltaY > 0 ? 0.9 : 1.1;
                       const newZoom = Math.max(0.5, Math.min(3, zoomLevel * zoomDelta));
                       const zoomFactor = newZoom / zoomLevel;
-                      setPanOffset(prev => ({
+                      setPanOffset((prev) => ({
                         x: mouseX - (mouseX - prev.x) * zoomFactor,
                         y: mouseY - (mouseY - prev.y) * zoomFactor,
                       }));
@@ -1668,7 +1859,12 @@ export default function DashboardPage() {
                   }
                 }}
                 onMouseMove={(e) => {
-                  if (panRef.current.isPanning && !activeId && !activeReservationId && !activeBlockId) {
+                  if (
+                    panRef.current.isPanning &&
+                    !activeId &&
+                    !activeReservationId &&
+                    !activeBlockId
+                  ) {
                     pendingPanRef.current = {
                       x: e.clientX - panRef.current.startX,
                       y: e.clientY - panRef.current.startY,
@@ -1679,7 +1875,9 @@ export default function DashboardPage() {
                         panRafRef.current = null;
                         const next = pendingPanRef.current;
                         if (!next) return;
-                        setPanOffset((prev) => (prev.x === next.x && prev.y === next.y ? prev : next));
+                        setPanOffset((prev) =>
+                          prev.x === next.x && prev.y === next.y ? prev : next
+                        );
                       });
                     }
                     e.preventDefault();
@@ -1711,10 +1909,12 @@ export default function DashboardPage() {
                     >
                       <span className="truncate">
                         {selectedAreaId
-                          ? areas.find((a) => a.id === selectedAreaId)?.name || "Area auswählen"
-                          : "Area auswählen"}
+                          ? areas.find((a) => a.id === selectedAreaId)?.name || 'Area auswählen'
+                          : 'Area auswählen'}
                       </span>
-                      <ChevronDown className={`h-4 w-4 transition-transform ${areaMenuOpen ? "rotate-180" : ""}`} />
+                      <ChevronDown
+                        className={`h-4 w-4 transition-transform ${areaMenuOpen ? 'rotate-180' : ''}`}
+                      />
                     </button>
                     {areaMenuOpen && (
                       <div className="absolute bottom-full mb-2 w-full rounded-lg border border-gray-700 bg-gray-900 shadow-xl max-h-60 overflow-auto">
@@ -1728,8 +1928,8 @@ export default function DashboardPage() {
                             }}
                             className={`w-full px-3 py-2 text-left text-sm ${
                               selectedAreaId === area.id
-                                ? "font-semibold text-white"
-                                : "text-gray-200 hover:bg-gray-800/70"
+                                ? 'font-semibold text-white'
+                                : 'text-gray-200 hover:bg-gray-800/70'
                             }`}
                           >
                             {area.name}
@@ -1776,12 +1976,15 @@ export default function DashboardPage() {
               </div>
 
               {/* Tischplan-Inhalt */}
-              <div 
+              <div
                 className="absolute inset-0 w-full h-full z-10 pointer-events-none select-none"
                 style={{
                   transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomLevel})`,
                   transformOrigin: '0 0',
-                  transition: (!isPanning && !isZooming) ? 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)' : 'none',
+                  transition:
+                    !isPanning && !isZooming
+                      ? 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)'
+                      : 'none',
                   userSelect: 'none',
                   WebkitUserSelect: 'none',
                   MozUserSelect: 'none',
@@ -1800,7 +2003,7 @@ export default function DashboardPage() {
                       width: obstacle.width,
                       height: obstacle.height,
                       transform: `rotate(${obstacle.rotation || 0}deg)`,
-                      backgroundColor: obstacle.color || "rgba(75,85,99,0.8)",
+                      backgroundColor: obstacle.color || 'rgba(75,85,99,0.8)',
                     }}
                     title={obstacle.name || getObstacleLabel(obstacle.type)}
                   >
@@ -1839,21 +2042,28 @@ export default function DashboardPage() {
                         try {
                           await reservationsApi.update(restaurant.id, reservation.id, {
                             table_id: null,
-                            status: "pending",
+                            status: 'pending',
                           });
                           const tempTableId = reservationToTempTableMap.get(reservation.id);
                           if (tempTableId !== undefined) {
                             const tableDayConfigId = Math.abs(tempTableId);
                             try {
-                              await reservationTableDayConfigsApi.delete(restaurant.id, reservation.id, tableDayConfigId);
+                              await reservationTableDayConfigsApi.delete(
+                                restaurant.id,
+                                reservation.id,
+                                tableDayConfigId
+                              );
                             } catch (error) {
-                              console.error("Fehler beim Entfernen der Zuordnung zu temporärem Tisch:", error);
+                              console.error(
+                                'Fehler beim Entfernen der Zuordnung zu temporärem Tisch:',
+                                error
+                              );
                             }
                           }
                           refreshData(true);
                         } catch (error) {
-                          console.error("Fehler beim Entfernen des Tisches:", error);
-                          addToast("Fehler beim Entfernen des Tisches", "error");
+                          console.error('Fehler beim Entfernen des Tisches:', error);
+                          addToast('Fehler beim Entfernen des Tisches', 'error');
                         }
                       }}
                       isDragging={isActive}

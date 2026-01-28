@@ -1,13 +1,13 @@
-import { api } from "./client";
-import { UpsellPackage } from "./upsell-packages";
+import { api } from './client';
+import { UpsellPackage } from './upsell-packages';
 
 export type ReservationStatus =
-  | "pending"
-  | "confirmed"
-  | "seated"
-  | "completed"
-  | "canceled"
-  | "no_show";
+  | 'pending'
+  | 'confirmed'
+  | 'seated'
+  | 'completed'
+  | 'canceled'
+  | 'no_show';
 
 export interface Reservation {
   id: number;
@@ -75,33 +75,25 @@ export const reservationsApi = {
     params?: { from?: string; to?: string; status?: ReservationStatus; table_id?: number }
   ): Promise<Reservation[]> => {
     const queryParams = new URLSearchParams();
-    if (params?.from) queryParams.append("from", params.from);
-    if (params?.to) queryParams.append("to", params.to);
-    if (params?.status) queryParams.append("status", params.status);
-    if (params?.table_id) queryParams.append("table_id", params.table_id.toString());
-    
+    if (params?.from) queryParams.append('from', params.from);
+    if (params?.to) queryParams.append('to', params.to);
+    if (params?.status) queryParams.append('status', params.status);
+    if (params?.table_id) queryParams.append('table_id', params.table_id.toString());
+
     const query = queryParams.toString();
     // Backend-Route ist @router.get("/"), daher trailing slash erforderlich
     return api.get<Reservation[]>(
-      `/restaurants/${restaurantId}/reservations/${query ? `?${query}` : ""}`
+      `/restaurants/${restaurantId}/reservations/${query ? `?${query}` : ''}`
     );
   },
 
   get: async (restaurantId: number, reservationId: number): Promise<Reservation> => {
-    return api.get<Reservation>(
-      `/restaurants/${restaurantId}/reservations/${reservationId}`
-    );
+    return api.get<Reservation>(`/restaurants/${restaurantId}/reservations/${reservationId}`);
   },
 
-  create: async (
-    restaurantId: number,
-    data: ReservationCreate
-  ): Promise<Reservation> => {
+  create: async (restaurantId: number, data: ReservationCreate): Promise<Reservation> => {
     // Backend-Route ist @router.post("/"), daher trailing slash erforderlich
-    return api.post<Reservation>(
-      `/restaurants/${restaurantId}/reservations/`,
-      data
-    );
+    return api.post<Reservation>(`/restaurants/${restaurantId}/reservations/`, data);
   },
 
   update: async (

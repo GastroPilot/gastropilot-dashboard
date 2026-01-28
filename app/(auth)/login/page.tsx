@@ -1,33 +1,35 @@
-"use client";
+'use client';
 
-import { useState, useCallback, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { authApi } from "@/lib/api/auth";
-import { restaurantsApi } from "@/lib/api/restaurants";
-import { ApiError } from "@/lib/api/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { 
-  LogIn, 
-  Key, 
-  User, 
-  CreditCard, 
-  AlertCircle, 
+import { useState, useCallback, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { authApi } from '@/lib/api/auth';
+import { restaurantsApi } from '@/lib/api/restaurants';
+import { ApiError } from '@/lib/api/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import {
+  LogIn,
+  Key,
+  User,
+  CreditCard,
+  AlertCircle,
   Loader2,
   Shield,
-  ArrowRight
-} from "lucide-react";
+  ArrowRight,
+} from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
-  const [operatorNumber, setOperatorNumber] = useState("");
-  const [pin, setPin] = useState("");
-  const [error, setError] = useState("");
+  const [operatorNumber, setOperatorNumber] = useState('');
+  const [pin, setPin] = useState('');
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [restaurantName, setRestaurantName] = useState<string>("GastroPilot");
-  const [toasts, setToasts] = useState<{ id: string; message: string; variant?: "info" | "error" | "success" }[]>([]);
+  const [restaurantName, setRestaurantName] = useState<string>('GastroPilot');
+  const [toasts, setToasts] = useState<
+    { id: string; message: string; variant?: 'info' | 'error' | 'success' }[]
+  >([]);
 
   useEffect(() => {
     const loadRestaurantName = async () => {
@@ -36,14 +38,14 @@ export default function LoginPage() {
         setRestaurantName(name);
       } catch (err) {
         // Ignore errors - restaurant name is optional
-        console.error("Fehler beim Laden des Restaurantnamens:", err);
+        console.error('Fehler beim Laden des Restaurantnamens:', err);
       }
     };
     loadRestaurantName();
   }, []);
 
   const addToast = useCallback(
-    (message: string, variant: "info" | "error" | "success" = "info") => {
+    (message: string, variant: 'info' | 'error' | 'success' = 'info') => {
       const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
       setToasts((prev) => [...prev, { id, message, variant }]);
       setTimeout(() => {
@@ -54,67 +56,65 @@ export default function LoginPage() {
   );
 
   const handleOperatorNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, "").slice(0, 4);
+    const value = e.target.value.replace(/\D/g, '').slice(0, 4);
     setOperatorNumber(value);
-    setError(""); // Clear error when user types
+    setError(''); // Clear error when user types
   };
 
   const handlePinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, "").slice(0, 8);
+    const value = e.target.value.replace(/\D/g, '').slice(0, 8);
     setPin(value);
-    setError(""); // Clear error when user types
+    setError(''); // Clear error when user types
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    
+    setError('');
+
     if (operatorNumber.length !== 4) {
-      const errorMsg = "Bedienernummer muss 4 Ziffern lang sein";
+      const errorMsg = 'Bedienernummer muss 4 Ziffern lang sein';
       setError(errorMsg);
-      addToast(errorMsg, "error");
+      addToast(errorMsg, 'error');
       return;
     }
-    
+
     if (pin.length < 6 || pin.length > 8) {
-      const errorMsg = "PIN muss 6-8 Ziffern lang sein";
+      const errorMsg = 'PIN muss 6-8 Ziffern lang sein';
       setError(errorMsg);
-      addToast(errorMsg, "error");
+      addToast(errorMsg, 'error');
       return;
     }
-    
+
     setLoading(true);
 
     try {
       await authApi.login({ operator_number: operatorNumber, pin });
-      
-      const token = typeof window !== "undefined" 
-        ? localStorage.getItem("access_token") 
-        : null;
-      
+
+      const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+
       if (!token) {
-        const errorMsg = "Token konnte nicht gespeichert werden";
+        const errorMsg = 'Token konnte nicht gespeichert werden';
         setError(errorMsg);
-        addToast(errorMsg, "error");
+        addToast(errorMsg, 'error');
         setLoading(false);
         return;
       }
-      
-      addToast("Erfolgreich angemeldet", "success");
+
+      addToast('Erfolgreich angemeldet', 'success');
       // Small delay to show success toast
       setTimeout(() => {
-        window.location.href = "/dashboard";
+        window.location.href = '/dashboard';
       }, 300);
     } catch (err) {
-      console.error("Login error:", err);
+      console.error('Login error:', err);
       if (err instanceof ApiError) {
-        const errorMsg = err.message || "Ungültige Bedienernummer oder PIN";
+        const errorMsg = err.message || 'Ungültige Bedienernummer oder PIN';
         setError(errorMsg);
-        addToast(errorMsg, "error");
+        addToast(errorMsg, 'error');
       } else {
-        const errorMsg = "Ein Fehler ist aufgetreten";
+        const errorMsg = 'Ein Fehler ist aufgetreten';
         setError(errorMsg);
-        addToast(errorMsg, "error");
+        addToast(errorMsg, 'error');
       }
       setLoading(false);
     }
@@ -129,11 +129,11 @@ export default function LoginPage() {
             <div
               key={toast.id}
               className={`min-w-[260px] rounded-lg border px-4 py-3 shadow-[0_14px_32px_rgba(0,0,0,0.35)] text-sm ${
-                toast.variant === "error"
-                  ? "bg-red-900/80 border-red-500 text-red-50"
-                  : toast.variant === "success"
-                  ? "bg-green-900/80 border-green-500 text-green-50"
-                  : "bg-slate-800/90 border-slate-600 text-slate-100"
+                toast.variant === 'error'
+                  ? 'bg-red-900/80 border-red-500 text-red-50'
+                  : toast.variant === 'success'
+                    ? 'bg-green-900/80 border-green-500 text-green-50'
+                    : 'bg-slate-800/90 border-slate-600 text-slate-100'
               }`}
             >
               {toast.message}
@@ -148,9 +148,7 @@ export default function LoginPage() {
           <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-500 via-cyan-400 to-emerald-400 shadow-lg shadow-blue-500/25 mb-4">
             <Shield className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">
-            {restaurantName}
-          </h1>
+          <h1 className="text-3xl font-bold text-white mb-2">{restaurantName}</h1>
           <p className="text-gray-400 text-sm">Reservierungsmanagement</p>
         </div>
 
@@ -174,8 +172,8 @@ export default function LoginPage() {
               )}
 
               <div className="space-y-2">
-                <label 
-                  htmlFor="operatorNumber" 
+                <label
+                  htmlFor="operatorNumber"
                   className="flex items-center gap-2 text-sm font-medium text-gray-300"
                 >
                   <User className="w-4 h-4 text-blue-400" />
@@ -197,8 +195,8 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-2">
-                <label 
-                  htmlFor="pin" 
+                <label
+                  htmlFor="pin"
                   className="flex items-center gap-2 text-sm font-medium text-gray-300"
                 >
                   <Key className="w-4 h-4 text-blue-400" />
@@ -218,9 +216,9 @@ export default function LoginPage() {
                 />
               </div>
 
-              <Button 
-                type="submit" 
-                className="w-full gap-2 touch-manipulation min-h-[48px] text-base font-semibold" 
+              <Button
+                type="submit"
+                className="w-full gap-2 touch-manipulation min-h-[48px] text-base font-semibold"
                 disabled={loading}
               >
                 {loading ? (
@@ -238,7 +236,7 @@ export default function LoginPage() {
             </form>
 
             <div className="mt-6 pt-6 border-t border-gray-700">
-              <Link 
+              <Link
                 href="/login-nfc"
                 className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-gray-600 bg-gray-800/50 text-gray-300 hover:bg-gray-800 hover:text-white transition-colors touch-manipulation min-h-[44px]"
               >

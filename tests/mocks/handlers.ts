@@ -76,8 +76,8 @@ const mockOrders = [
 export const handlers = [
   // Auth endpoints
   http.post(`${API_URL}/auth/login`, async ({ request }) => {
-    const body = await request.json() as { operator_number: string; pin: string };
-    
+    const body = (await request.json()) as { operator_number: string; pin: string };
+
     if (body.operator_number === '1234' && body.pin === '123456') {
       return HttpResponse.json({
         access_token: 'mock_access_token',
@@ -86,17 +86,16 @@ export const handlers = [
         expires_in: 3600,
       });
     }
-    
-    return new HttpResponse(
-      JSON.stringify({ detail: 'Invalid operator number or PIN' }),
-      { status: 401 }
-    );
+
+    return new HttpResponse(JSON.stringify({ detail: 'Invalid operator number or PIN' }), {
+      status: 401,
+    });
   }),
-  
+
   http.get(`${API_URL}/auth/me`, () => {
     return HttpResponse.json(mockUser);
   }),
-  
+
   http.post(`${API_URL}/auth/refresh`, () => {
     return HttpResponse.json({
       access_token: 'new_mock_access_token',
@@ -105,61 +104,55 @@ export const handlers = [
       expires_in: 3600,
     });
   }),
-  
+
   // Restaurant endpoints
   http.get(`${API_URL}/restaurants`, () => {
     return HttpResponse.json([mockRestaurant]);
   }),
-  
+
   http.get(`${API_URL}/restaurants/:id`, () => {
     return HttpResponse.json(mockRestaurant);
   }),
-  
+
   // Table endpoints
   http.get(`${API_URL}/restaurants/:restaurantId/tables`, () => {
     return HttpResponse.json(mockTables);
   }),
-  
+
   http.patch(`${API_URL}/restaurants/:restaurantId/tables/:tableId`, async ({ request }) => {
-    const body = await request.json() as Record<string, unknown>;
+    const body = (await request.json()) as Record<string, unknown>;
     return HttpResponse.json({ ...mockTables[0], ...body });
   }),
-  
+
   // Reservation endpoints
   http.get(`${API_URL}/restaurants/:restaurantId/reservations`, () => {
     return HttpResponse.json(mockReservations);
   }),
-  
+
   http.post(`${API_URL}/restaurants/:restaurantId/reservations`, async ({ request }) => {
-    const body = await request.json() as Record<string, unknown>;
-    return HttpResponse.json(
-      { id: 2, restaurant_id: 1, ...body },
-      { status: 201 }
-    );
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json({ id: 2, restaurant_id: 1, ...body }, { status: 201 });
   }),
-  
+
   http.patch(`${API_URL}/restaurants/:restaurantId/reservations/:id`, async ({ request }) => {
-    const body = await request.json() as Record<string, unknown>;
+    const body = (await request.json()) as Record<string, unknown>;
     return HttpResponse.json({ ...mockReservations[0], ...body });
   }),
-  
+
   http.delete(`${API_URL}/restaurants/:restaurantId/reservations/:id`, () => {
     return new HttpResponse(null, { status: 204 });
   }),
-  
+
   // Order endpoints
   http.get(`${API_URL}/restaurants/:restaurantId/orders`, () => {
     return HttpResponse.json(mockOrders);
   }),
-  
+
   http.post(`${API_URL}/restaurants/:restaurantId/orders`, async ({ request }) => {
-    const body = await request.json() as Record<string, unknown>;
-    return HttpResponse.json(
-      { id: 2, restaurant_id: 1, status: 'open', ...body },
-      { status: 201 }
-    );
+    const body = (await request.json()) as Record<string, unknown>;
+    return HttpResponse.json({ id: 2, restaurant_id: 1, status: 'open', ...body }, { status: 201 });
   }),
-  
+
   // Areas endpoints
   http.get(`${API_URL}/restaurants/:restaurantId/areas`, () => {
     return HttpResponse.json([
@@ -167,31 +160,31 @@ export const handlers = [
       { id: 2, restaurant_id: 1, name: 'Terrasse' },
     ]);
   }),
-  
+
   // Obstacles endpoints
   http.get(`${API_URL}/restaurants/:restaurantId/obstacles`, () => {
     return HttpResponse.json([]);
   }),
-  
+
   // Blocks endpoints
   http.get(`${API_URL}/restaurants/:restaurantId/blocks`, () => {
     return HttpResponse.json([]);
   }),
-  
+
   http.get(`${API_URL}/restaurants/:restaurantId/block-assignments`, () => {
     return HttpResponse.json([]);
   }),
-  
+
   // User settings
   http.get(`${API_URL}/user-settings`, () => {
     return HttpResponse.json({ settings: {} });
   }),
-  
+
   http.patch(`${API_URL}/user-settings`, async ({ request }) => {
-    const body = await request.json() as Record<string, unknown>;
+    const body = (await request.json()) as Record<string, unknown>;
     return HttpResponse.json({ settings: body });
   }),
-  
+
   // License
   http.get(`${API_URL}/license`, () => {
     return HttpResponse.json({

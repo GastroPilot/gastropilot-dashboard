@@ -1,20 +1,20 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { useRouter } from "next/navigation";
-import { authApi, User, UserCreate, UserUpdate } from "@/lib/api/auth";
-import { ApiError } from "@/lib/api/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { LoadingOverlay } from "@/components/loading-overlay";
-import { confirmAction } from "@/lib/utils";
-import { 
-  Plus, 
-  X, 
-  Edit, 
-  Trash2, 
-  Users, 
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { authApi, User, UserCreate, UserUpdate } from '@/lib/api/auth';
+import { ApiError } from '@/lib/api/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { LoadingOverlay } from '@/components/loading-overlay';
+import { confirmAction } from '@/lib/utils';
+import {
+  Plus,
+  X,
+  Edit,
+  Trash2,
+  Users,
   Search,
   Shield,
   UserCheck,
@@ -27,8 +27,8 @@ import {
   Key,
   CreditCard,
   User as UserIcon,
-  ChevronDown
-} from "lucide-react";
+  ChevronDown,
+} from 'lucide-react';
 
 export default function OperatorsPage() {
   const router = useRouter();
@@ -38,29 +38,31 @@ export default function OperatorsPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingOperator, setEditingOperator] = useState<User | null>(null);
   const [formData, setFormData] = useState<OperatorFormData>({
-    operator_number: "",
-    pin: "",
-    nfc_tag_id: "",
-    first_name: "",
-    last_name: "",
-    role: "mitarbeiter",
+    operator_number: '',
+    pin: '',
+    nfc_tag_id: '',
+    first_name: '',
+    last_name: '',
+    role: 'mitarbeiter',
     is_active: true,
   });
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState<string>('all');
   const [roleMenuOpen, setRoleMenuOpen] = useState(false);
   const roleMenuRef = useRef<HTMLDivElement | null>(null);
   const [formRoleMenuOpen, setFormRoleMenuOpen] = useState(false);
   const formRoleMenuRef = useRef<HTMLDivElement | null>(null);
   const [statusMenuOpen, setStatusMenuOpen] = useState(false);
   const statusMenuRef = useRef<HTMLDivElement | null>(null);
-  const [toasts, setToasts] = useState<{ id: string; message: string; variant?: "info" | "error" | "success" }[]>([]);
+  const [toasts, setToasts] = useState<
+    { id: string; message: string; variant?: 'info' | 'error' | 'success' }[]
+  >([]);
 
   const addToast = useCallback(
-    (message: string, variant: "info" | "error" | "success" = "info") => {
+    (message: string, variant: 'info' | 'error' | 'success' = 'info') => {
       const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
       setToasts((prev) => [...prev, { id, message, variant }]);
       setTimeout(() => {
@@ -88,8 +90,8 @@ export default function OperatorsPage() {
         setStatusMenuOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const loadCurrentUser = async () => {
@@ -97,7 +99,7 @@ export default function OperatorsPage() {
       const user = await authApi.getCurrentUser();
       setCurrentUser(user);
     } catch (err) {
-      console.error("Fehler beim Laden des aktuellen Users:", err);
+      console.error('Fehler beim Laden des aktuellen Users:', err);
     }
   };
 
@@ -107,12 +109,12 @@ export default function OperatorsPage() {
       const data = await authApi.listOperators();
       setOperators(data);
     } catch (err) {
-      console.error("Fehler beim Laden der Bediener:", err);
+      console.error('Fehler beim Laden der Bediener:', err);
       if (err instanceof ApiError && err.status === 403) {
-        router.push("/dashboard");
-        addToast("Zugriff verweigert", "error");
+        router.push('/dashboard');
+        addToast('Zugriff verweigert', 'error');
       } else {
-        addToast("Fehler beim Laden der Bediener", "error");
+        addToast('Fehler beim Laden der Bediener', 'error');
       }
     } finally {
       setLoading(false);
@@ -120,38 +122,38 @@ export default function OperatorsPage() {
   };
 
   const handleOperatorNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, "").slice(0, 4);
+    const value = e.target.value.replace(/\D/g, '').slice(0, 4);
     setFormData({ ...formData, operator_number: value });
   };
 
   const handlePinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, "").slice(0, 8);
+    const value = e.target.value.replace(/\D/g, '').slice(0, 8);
     setFormData({ ...formData, pin: value });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setError('');
 
     if (editingOperator) {
       // Update existing operator
       if (formData.operator_number && formData.operator_number.length !== 4) {
-        setError("Bedienernummer muss 4 Ziffern lang sein");
+        setError('Bedienernummer muss 4 Ziffern lang sein');
         return;
       }
 
       if (formData.pin && (formData.pin.length < 6 || formData.pin.length > 8)) {
-        setError("PIN muss 6-8 Ziffern lang sein");
+        setError('PIN muss 6-8 Ziffern lang sein');
         return;
       }
 
       if (formData.first_name && formData.first_name.length < 2) {
-        setError("Vorname muss mindestens 2 Zeichen lang sein");
+        setError('Vorname muss mindestens 2 Zeichen lang sein');
         return;
       }
 
       if (formData.last_name && formData.last_name.length < 2) {
-        setError("Nachname muss mindestens 2 Zeichen lang sein");
+        setError('Nachname muss mindestens 2 Zeichen lang sein');
         return;
       }
 
@@ -171,26 +173,26 @@ export default function OperatorsPage() {
         setEditingOperator(null);
         setShowCreateForm(false);
         setFormData({
-          operator_number: "",
-          pin: "",
-          nfc_tag_id: "",
-          first_name: "",
-          last_name: "",
-          role: "mitarbeiter",
+          operator_number: '',
+          pin: '',
+          nfc_tag_id: '',
+          first_name: '',
+          last_name: '',
+          role: 'mitarbeiter',
           is_active: true,
         });
-        addToast("Bediener erfolgreich aktualisiert", "success");
+        addToast('Bediener erfolgreich aktualisiert', 'success');
         await loadOperators();
       } catch (err) {
-        console.error("Fehler beim Aktualisieren des Bedieners:", err);
+        console.error('Fehler beim Aktualisieren des Bedieners:', err);
         if (err instanceof ApiError) {
-          const errorMessage = err.message || "Fehler beim Aktualisieren des Bedieners";
+          const errorMessage = err.message || 'Fehler beim Aktualisieren des Bedieners';
           setError(errorMessage);
-          addToast(errorMessage, "error");
+          addToast(errorMessage, 'error');
         } else {
-          const errorMessage = "Ein unerwarteter Fehler ist aufgetreten";
+          const errorMessage = 'Ein unerwarteter Fehler ist aufgetreten';
           setError(errorMessage);
-          addToast(errorMessage, "error");
+          addToast(errorMessage, 'error');
         }
       } finally {
         setSubmitting(false);
@@ -198,28 +200,31 @@ export default function OperatorsPage() {
     } else {
       // Create new operator
       if (formData.operator_number.length !== 4) {
-        setError("Bedienernummer muss 4 Ziffern lang sein");
+        setError('Bedienernummer muss 4 Ziffern lang sein');
         return;
       }
 
       if (formData.pin.length < 6 || formData.pin.length > 8) {
-        setError("PIN muss 6-8 Ziffern lang sein");
+        setError('PIN muss 6-8 Ziffern lang sein');
         return;
       }
 
       if (formData.first_name.length < 2) {
-        setError("Vorname muss mindestens 2 Zeichen lang sein");
+        setError('Vorname muss mindestens 2 Zeichen lang sein');
         return;
       }
 
       if (formData.last_name.length < 2) {
-        setError("Nachname muss mindestens 2 Zeichen lang sein");
+        setError('Nachname muss mindestens 2 Zeichen lang sein');
         return;
       }
 
       // Prüfe reservierte Bedienernummern nur beim Erstellen, nicht beim Bearbeiten
-      if (!editingOperator && (formData.operator_number === "0000" || formData.operator_number === "0001")) {
-        setError("Bedienernummer ist für Servecta reserviert");
+      if (
+        !editingOperator &&
+        (formData.operator_number === '0000' || formData.operator_number === '0001')
+      ) {
+        setError('Bedienernummer ist für Servecta reserviert');
         return;
       }
 
@@ -234,26 +239,26 @@ export default function OperatorsPage() {
         await authApi.createOperator(createData);
         setShowCreateForm(false);
         setFormData({
-          operator_number: "",
-          pin: "",
-          nfc_tag_id: "",
-          first_name: "",
-          last_name: "",
-          role: "mitarbeiter",
+          operator_number: '',
+          pin: '',
+          nfc_tag_id: '',
+          first_name: '',
+          last_name: '',
+          role: 'mitarbeiter',
           is_active: true,
         });
-        addToast("Bediener erfolgreich angelegt", "success");
+        addToast('Bediener erfolgreich angelegt', 'success');
         await loadOperators();
       } catch (err) {
-        console.error("Fehler beim Erstellen des Bedieners:", err);
+        console.error('Fehler beim Erstellen des Bedieners:', err);
         if (err instanceof ApiError) {
-          const errorMessage = err.message || "Fehler beim Erstellen des Bedieners";
+          const errorMessage = err.message || 'Fehler beim Erstellen des Bedieners';
           setError(errorMessage);
-          addToast(errorMessage, "error");
+          addToast(errorMessage, 'error');
         } else {
-          const errorMessage = "Ein unerwarteter Fehler ist aufgetreten";
+          const errorMessage = 'Ein unerwarteter Fehler ist aufgetreten';
           setError(errorMessage);
-          addToast(errorMessage, "error");
+          addToast(errorMessage, 'error');
         }
       } finally {
         setSubmitting(false);
@@ -265,32 +270,36 @@ export default function OperatorsPage() {
     setEditingOperator(operator);
     setFormData({
       operator_number: operator.operator_number,
-      pin: "", // PIN wird nicht angezeigt
-      nfc_tag_id: operator.nfc_tag_id || "",
+      pin: '', // PIN wird nicht angezeigt
+      nfc_tag_id: operator.nfc_tag_id || '',
       first_name: operator.first_name,
       last_name: operator.last_name,
-      role: operator.role as "servecta" | "restaurantinhaber" | "schichtleiter" | "mitarbeiter",
+      role: operator.role as 'servecta' | 'restaurantinhaber' | 'schichtleiter' | 'mitarbeiter',
       is_active: operator.is_active,
     });
     setShowCreateForm(true);
-    setError("");
+    setError('');
   };
 
   const handleDelete = async (operator: User) => {
-    if (!confirmAction(`Möchtest du den Bediener ${operator.first_name} ${operator.last_name} (${operator.operator_number}) wirklich löschen?`)) {
+    if (
+      !confirmAction(
+        `Möchtest du den Bediener ${operator.first_name} ${operator.last_name} (${operator.operator_number}) wirklich löschen?`
+      )
+    ) {
       return;
     }
 
     try {
       await authApi.deleteOperator(operator.id);
-      addToast(`Bediener ${operator.first_name} ${operator.last_name} wurde gelöscht`, "success");
+      addToast(`Bediener ${operator.first_name} ${operator.last_name} wurde gelöscht`, 'success');
       await loadOperators();
     } catch (err) {
-      console.error("Fehler beim Löschen des Bedieners:", err);
+      console.error('Fehler beim Löschen des Bedieners:', err);
       if (err instanceof ApiError) {
-        addToast(err.message || "Fehler beim Löschen des Bedieners", "error");
+        addToast(err.message || 'Fehler beim Löschen des Bedieners', 'error');
       } else {
-        addToast("Ein Fehler ist aufgetreten", "error");
+        addToast('Ein Fehler ist aufgetreten', 'error');
       }
     }
   };
@@ -298,28 +307,28 @@ export default function OperatorsPage() {
   const handleCancel = () => {
     setShowCreateForm(false);
     setEditingOperator(null);
-    setError("");
+    setError('');
     setFormData({
-      operator_number: "",
-      pin: "",
-      nfc_tag_id: "",
-      first_name: "",
-      last_name: "",
-      role: "mitarbeiter",
+      operator_number: '',
+      pin: '',
+      nfc_tag_id: '',
+      first_name: '',
+      last_name: '',
+      role: 'mitarbeiter',
       is_active: true,
     });
   };
 
   const getRoleLabel = (role: string) => {
     switch (role) {
-      case "servecta":
-        return "Servecta";
-      case "restaurantinhaber":
-        return "Restaurantinhaber";
-      case "schichtleiter":
-        return "Schichtleiter";
-      case "mitarbeiter":
-        return "Mitarbeiter";
+      case 'servecta':
+        return 'Servecta';
+      case 'restaurantinhaber':
+        return 'Restaurantinhaber';
+      case 'schichtleiter':
+        return 'Schichtleiter';
+      case 'mitarbeiter':
+        return 'Mitarbeiter';
       default:
         return role;
     }
@@ -327,11 +336,11 @@ export default function OperatorsPage() {
 
   const getRoleIcon = (role: string) => {
     switch (role) {
-      case "servecta":
+      case 'servecta':
         return Shield;
-      case "restaurantinhaber":
+      case 'restaurantinhaber':
         return UserCheck;
-      case "schichtleiter":
+      case 'schichtleiter':
         return UserIcon;
       default:
         return UserIcon;
@@ -339,28 +348,31 @@ export default function OperatorsPage() {
   };
 
   const formatLastLogin = (value?: string | null) => {
-    if (!value) return "—";
+    if (!value) return '—';
     try {
       const date = new Date(value);
-      return new Intl.DateTimeFormat("de-DE", {
-        dateStyle: "short",
-        timeStyle: "short",
+      return new Intl.DateTimeFormat('de-DE', {
+        dateStyle: 'short',
+        timeStyle: 'short',
       }).format(date);
     } catch (error) {
-      console.warn("Konnte last_login_at_utc nicht formatieren:", error);
-      return "—";
+      console.warn('Konnte last_login_at_utc nicht formatieren:', error);
+      return '—';
     }
   };
 
   const filteredOperators = useMemo(() => {
     return operators.filter((operator) => {
-      const matchesSearch = 
+      const matchesSearch =
         operator.operator_number.includes(searchQuery) ||
-        `${operator.first_name} ${operator.last_name}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (operator.nfc_tag_id && operator.nfc_tag_id.toLowerCase().includes(searchQuery.toLowerCase()));
-      
-      const matchesRole = roleFilter === "all" || operator.role === roleFilter;
-      
+        `${operator.first_name} ${operator.last_name}`
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase()) ||
+        (operator.nfc_tag_id &&
+          operator.nfc_tag_id.toLowerCase().includes(searchQuery.toLowerCase()));
+
+      const matchesRole = roleFilter === 'all' || operator.role === roleFilter;
+
       return matchesSearch && matchesRole;
     });
   }, [operators, searchQuery, roleFilter]);
@@ -379,11 +391,11 @@ export default function OperatorsPage() {
             <div
               key={toast.id}
               className={`min-w-[260px] rounded-lg border px-4 py-3 shadow-[0_14px_32px_rgba(0,0,0,0.35)] text-sm ${
-                toast.variant === "error"
-                  ? "bg-red-900/80 border-red-500 text-red-50"
-                  : toast.variant === "success"
-                  ? "bg-green-900/80 border-green-500 text-green-50"
-                  : "bg-slate-800/90 border-slate-600 text-slate-100"
+                toast.variant === 'error'
+                  ? 'bg-red-900/80 border-red-500 text-red-50'
+                  : toast.variant === 'success'
+                    ? 'bg-green-900/80 border-green-500 text-green-50'
+                    : 'bg-slate-800/90 border-slate-600 text-slate-100'
               }`}
             >
               {toast.message}
@@ -401,11 +413,9 @@ export default function OperatorsPage() {
                 <Users className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h1 className="text-xl md:text-2xl font-bold text-white">
-                  Bedienerverwaltung
-                </h1>
+                <h1 className="text-xl md:text-2xl font-bold text-white">Bedienerverwaltung</h1>
                 <p className="text-xs md:text-sm text-gray-400 mt-0.5">
-                  {operators.length} {operators.length === 1 ? "Bediener" : "Bediener"} insgesamt
+                  {operators.length} {operators.length === 1 ? 'Bediener' : 'Bediener'} insgesamt
                 </p>
               </div>
             </div>
@@ -432,7 +442,7 @@ export default function OperatorsPage() {
                 <div className="flex justify-between items-center">
                   <CardTitle className="flex items-center gap-2 text-white">
                     <UserIcon className="w-5 h-5 text-blue-400" />
-                    {editingOperator ? "Bediener bearbeiten" : "Neuen Bediener anlegen"}
+                    {editingOperator ? 'Bediener bearbeiten' : 'Neuen Bediener anlegen'}
                   </CardTitle>
                   <Button
                     variant="ghost"
@@ -458,8 +468,8 @@ export default function OperatorsPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label 
-                        htmlFor="operator_number" 
+                      <label
+                        htmlFor="operator_number"
                         className="flex items-center gap-2 text-sm font-medium text-gray-300"
                       >
                         <Key className="w-4 h-4 text-blue-400" />
@@ -481,8 +491,8 @@ export default function OperatorsPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <label 
-                        htmlFor="pin" 
+                      <label
+                        htmlFor="pin"
                         className="flex items-center gap-2 text-sm font-medium text-gray-300"
                       >
                         <Key className="w-4 h-4 text-blue-400" />
@@ -495,23 +505,21 @@ export default function OperatorsPage() {
                         pattern="[0-9]{6,8}"
                         value={formData.pin}
                         onChange={handlePinChange}
-                        placeholder={editingOperator ? "Leer lassen, um nicht zu ändern" : "••••••"}
+                        placeholder={editingOperator ? 'Leer lassen, um nicht zu ändern' : '••••••'}
                         maxLength={8}
                         required={!editingOperator}
                         className="text-center text-xl tracking-widest font-mono bg-gray-800/50 border-gray-600 text-white focus:border-blue-500"
                       />
                       {editingOperator && (
-                        <p className="text-xs text-gray-500">
-                          Leer lassen, um PIN nicht zu ändern
-                        </p>
+                        <p className="text-xs text-gray-500">Leer lassen, um PIN nicht zu ändern</p>
                       )}
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
-                      <label 
-                        htmlFor="first_name" 
+                      <label
+                        htmlFor="first_name"
                         className="flex items-center gap-2 text-sm font-medium text-gray-300"
                       >
                         <UserIcon className="w-4 h-4 text-blue-400" />
@@ -521,9 +529,7 @@ export default function OperatorsPage() {
                         id="first_name"
                         type="text"
                         value={formData.first_name}
-                        onChange={(e) =>
-                          setFormData({ ...formData, first_name: e.target.value })
-                        }
+                        onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
                         placeholder="Max"
                         required
                         minLength={2}
@@ -533,8 +539,8 @@ export default function OperatorsPage() {
                     </div>
 
                     <div className="space-y-2">
-                      <label 
-                        htmlFor="last_name" 
+                      <label
+                        htmlFor="last_name"
                         className="flex items-center gap-2 text-sm font-medium text-gray-300"
                       >
                         <UserIcon className="w-4 h-4 text-blue-400" />
@@ -544,9 +550,7 @@ export default function OperatorsPage() {
                         id="last_name"
                         type="text"
                         value={formData.last_name}
-                        onChange={(e) =>
-                          setFormData({ ...formData, last_name: e.target.value })
-                        }
+                        onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
                         placeholder="Mustermann"
                         required
                         minLength={2}
@@ -557,8 +561,8 @@ export default function OperatorsPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <label 
-                      htmlFor="nfc_tag_id" 
+                    <label
+                      htmlFor="nfc_tag_id"
                       className="flex items-center gap-2 text-sm font-medium text-gray-300"
                     >
                       <CreditCard className="w-4 h-4 text-blue-400" />
@@ -567,22 +571,26 @@ export default function OperatorsPage() {
                     <Input
                       id="nfc_tag_id"
                       type="text"
-                      value={formData.nfc_tag_id || ""}
+                      value={formData.nfc_tag_id || ''}
                       onChange={(e) =>
-                        setFormData({ ...formData, nfc_tag_id: e.target.value.trim().toUpperCase() })
+                        setFormData({
+                          ...formData,
+                          nfc_tag_id: e.target.value.trim().toUpperCase(),
+                        })
                       }
                       placeholder="04A1B2C3D4E5F6"
                       maxLength={64}
                       className="font-mono bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-500 focus:border-blue-500"
                     />
                     <p className="text-xs text-gray-500">
-                      Die Tag-ID des NFC-Transponders für Login ohne PIN. Wird automatisch in Großbuchstaben konvertiert.
+                      Die Tag-ID des NFC-Transponders für Login ohne PIN. Wird automatisch in
+                      Großbuchstaben konvertiert.
                     </p>
                   </div>
 
                   <div className="space-y-2">
-                    <label 
-                      htmlFor="role" 
+                    <label
+                      htmlFor="role"
                       className="flex items-center gap-2 text-sm font-medium text-gray-300"
                     >
                       <Shield className="w-4 h-4 text-blue-400" />
@@ -598,23 +606,25 @@ export default function OperatorsPage() {
                           <FormRoleIcon className="w-4 h-4 text-gray-200" />
                           {getRoleLabel(formData.role)}
                         </span>
-                        <ChevronDown className={`w-4 h-4 transition-transform ${formRoleMenuOpen ? "rotate-180" : ""}`} />
+                        <ChevronDown
+                          className={`w-4 h-4 transition-transform ${formRoleMenuOpen ? 'rotate-180' : ''}`}
+                        />
                       </button>
                       {formRoleMenuOpen && (
                         <div className="absolute mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 shadow-xl z-40 overflow-hidden">
                           <div className="divide-y divide-gray-800/80">
-                            {currentUser?.role === "servecta" && (
+                            {currentUser?.role === 'servecta' && (
                               <button
                                 type="button"
                                 onClick={() => {
-                                  setFormData({ ...formData, role: "servecta" });
+                                  setFormData({ ...formData, role: 'servecta' });
                                   setFormRoleMenuOpen(false);
                                 }}
                                 className={`w-full px-3 py-2 text-left text-sm transition-colors ${
-                                  formData.role === "servecta"
-                                ? "bg-gray-800 text-white font-semibold"
-                                : "text-gray-200 hover:bg-gray-800/70"
-                            }`}
+                                  formData.role === 'servecta'
+                                    ? 'bg-gray-800 text-white font-semibold'
+                                    : 'text-gray-200 hover:bg-gray-800/70'
+                                }`}
                               >
                                 <span className="flex items-center gap-2">
                                   <Shield className="w-4 h-4 text-purple-300" />
@@ -625,80 +635,83 @@ export default function OperatorsPage() {
                             <button
                               type="button"
                               onClick={() => {
-                                setFormData({ ...formData, role: "restaurantinhaber" });
+                                setFormData({ ...formData, role: 'restaurantinhaber' });
                                 setFormRoleMenuOpen(false);
                               }}
                               className={`w-full px-3 py-2 text-left text-sm transition-colors ${
-                                formData.role === "restaurantinhaber"
-                                ? "bg-gray-800 text-white font-semibold"
-                                : "text-gray-200 hover:bg-gray-800/70"
-                            }`}
-                              >
-                                <span className="flex items-center gap-2">
-                                  <UserCheck className="w-4 h-4 text-blue-300" />
-                                  Restaurantinhaber
-                                </span>
-                              </button>
+                                formData.role === 'restaurantinhaber'
+                                  ? 'bg-gray-800 text-white font-semibold'
+                                  : 'text-gray-200 hover:bg-gray-800/70'
+                              }`}
+                            >
+                              <span className="flex items-center gap-2">
+                                <UserCheck className="w-4 h-4 text-blue-300" />
+                                Restaurantinhaber
+                              </span>
+                            </button>
                             <button
                               type="button"
                               onClick={() => {
-                                setFormData({ ...formData, role: "schichtleiter" });
+                                setFormData({ ...formData, role: 'schichtleiter' });
                                 setFormRoleMenuOpen(false);
                               }}
                               className={`w-full px-3 py-2 text-left text-sm transition-colors ${
-                                formData.role === "schichtleiter"
-                                ? "bg-gray-800 text-white font-semibold"
-                                : "text-gray-200 hover:bg-gray-800/70"
-                            }`}
-                              >
-                                <span className="flex items-center gap-2">
-                                  <UserIcon className="w-4 h-4 text-yellow-300" />
-                                  Schichtleiter
-                                </span>
-                              </button>
+                                formData.role === 'schichtleiter'
+                                  ? 'bg-gray-800 text-white font-semibold'
+                                  : 'text-gray-200 hover:bg-gray-800/70'
+                              }`}
+                            >
+                              <span className="flex items-center gap-2">
+                                <UserIcon className="w-4 h-4 text-yellow-300" />
+                                Schichtleiter
+                              </span>
+                            </button>
                             <button
                               type="button"
                               onClick={() => {
-                                setFormData({ ...formData, role: "mitarbeiter" });
+                                setFormData({ ...formData, role: 'mitarbeiter' });
                                 setFormRoleMenuOpen(false);
                               }}
                               className={`w-full px-3 py-2 text-left text-sm transition-colors ${
-                                formData.role === "mitarbeiter"
-                                ? "bg-gray-800 text-white font-semibold"
-                                : "text-gray-200 hover:bg-gray-800/70"
-                            }`}
-                              >
-                                <span className="flex items-center gap-2">
-                                  <UserIcon className="w-4 h-4 text-gray-200" />
-                                  Mitarbeiter
-                                </span>
-                              </button>
+                                formData.role === 'mitarbeiter'
+                                  ? 'bg-gray-800 text-white font-semibold'
+                                  : 'text-gray-200 hover:bg-gray-800/70'
+                              }`}
+                            >
+                              <span className="flex items-center gap-2">
+                                <UserIcon className="w-4 h-4 text-gray-200" />
+                                Mitarbeiter
+                              </span>
+                            </button>
                           </div>
                         </div>
                       )}
                     </div>
                     <div className="text-xs text-gray-500 space-y-1">
-                      {formData.role === "servecta" && (
+                      {formData.role === 'servecta' && (
                         <p className="text-red-400 font-semibold">
                           ⚠️ Warnung: Servecta-Rolle gibt alle Berechtigungen!
                         </p>
                       )}
-                      {formData.role === "restaurantinhaber" && (
+                      {formData.role === 'restaurantinhaber' && (
                         <p>Restaurantinhaber kann Bediener verwalten (außer Servecta)</p>
                       )}
-                      {formData.role === "schichtleiter" && (
+                      {formData.role === 'schichtleiter' && (
                         <p>Schichtleiter kann Reservierungen bearbeiten und Tische verwalten</p>
                       )}
-                      {formData.role === "mitarbeiter" && (
-                        <p>Mitarbeiter kann Reservierungen annehmen, zuweisen, platzieren und abschließen</p>
+                      {formData.role === 'mitarbeiter' && (
+                        <p>
+                          Mitarbeiter kann Reservierungen annehmen, zuweisen, platzieren und
+                          abschließen
+                        </p>
                       )}
                     </div>
                   </div>
 
                   {editingOperator && (
                     <div className="space-y-2">
-                      <label 
-                        htmlFor="is_active" 
+                      <label
+                        htmlFor="is_active"
                         className="flex items-center gap-2 text-sm font-medium text-gray-300"
                       >
                         <UserCheck className="w-4 h-4 text-blue-400" />
@@ -716,9 +729,11 @@ export default function OperatorsPage() {
                             ) : (
                               <UserX className="w-4 h-4 text-red-300" />
                             )}
-                            {formData.is_active ? "Aktiv" : "Inaktiv"}
+                            {formData.is_active ? 'Aktiv' : 'Inaktiv'}
                           </span>
-                          <ChevronDown className={`w-4 h-4 transition-transform ${statusMenuOpen ? "rotate-180" : ""}`} />
+                          <ChevronDown
+                            className={`w-4 h-4 transition-transform ${statusMenuOpen ? 'rotate-180' : ''}`}
+                          />
                         </button>
                         {statusMenuOpen && (
                           <div className="absolute mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 shadow-xl z-40 overflow-hidden">
@@ -731,8 +746,8 @@ export default function OperatorsPage() {
                                 }}
                                 className={`w-full px-3 py-2 text-left text-sm transition-colors ${
                                   formData.is_active
-                                    ? "bg-gray-800 text-white font-semibold"
-                                    : "text-gray-200 hover:bg-gray-800/70"
+                                    ? 'bg-gray-800 text-white font-semibold'
+                                    : 'text-gray-200 hover:bg-gray-800/70'
                                 }`}
                               >
                                 <span className="flex items-center gap-2">
@@ -748,8 +763,8 @@ export default function OperatorsPage() {
                                 }}
                                 className={`w-full px-3 py-2 text-left text-sm transition-colors ${
                                   formData.is_active === false
-                                    ? "bg-gray-800 text-white font-semibold"
-                                    : "text-gray-200 hover:bg-gray-800/70"
+                                    ? 'bg-gray-800 text-white font-semibold'
+                                    : 'text-gray-200 hover:bg-gray-800/70'
                                 }`}
                               >
                                 <span className="flex items-center gap-2">
@@ -762,15 +777,16 @@ export default function OperatorsPage() {
                         )}
                       </div>
                       <p className="text-xs text-gray-500">
-                        Inaktive Bediener können sich nicht anmelden, bleiben aber in der Historie erhalten.
+                        Inaktive Bediener können sich nicht anmelden, bleiben aber in der Historie
+                        erhalten.
                       </p>
                     </div>
                   )}
 
                   <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-700">
-                    <Button 
-                      type="submit" 
-                      className="flex-1 gap-2 touch-manipulation min-h-[44px]" 
+                    <Button
+                      type="submit"
+                      className="flex-1 gap-2 touch-manipulation min-h-[44px]"
                       disabled={submitting}
                     >
                       {submitting ? (
@@ -782,7 +798,7 @@ export default function OperatorsPage() {
                         <>
                           <Save className="w-4 h-4" />
                           <span>
-                            {editingOperator ? "Änderungen speichern" : "Bediener anlegen"}
+                            {editingOperator ? 'Änderungen speichern' : 'Bediener anlegen'}
                           </span>
                         </>
                       )}
@@ -829,17 +845,19 @@ export default function OperatorsPage() {
                     >
                       <span className="flex items-center gap-2">
                         <Users className="w-4 h-4 text-gray-300" />
-                        {roleFilter === "all"
-                          ? "Alle Rollen"
-                          : roleFilter === "servecta"
-                          ? "Servecta"
-                          : roleFilter === "restaurantinhaber"
-                          ? "Restaurantinhaber"
-                          : roleFilter === "schichtleiter"
-                          ? "Schichtleiter"
-                          : "Mitarbeiter"}
+                        {roleFilter === 'all'
+                          ? 'Alle Rollen'
+                          : roleFilter === 'servecta'
+                            ? 'Servecta'
+                            : roleFilter === 'restaurantinhaber'
+                              ? 'Restaurantinhaber'
+                              : roleFilter === 'schichtleiter'
+                                ? 'Schichtleiter'
+                                : 'Mitarbeiter'}
                       </span>
-                      <ChevronDown className={`w-4 h-4 transition-transform ${roleMenuOpen ? "rotate-180" : ""}`} />
+                      <ChevronDown
+                        className={`w-4 h-4 transition-transform ${roleMenuOpen ? 'rotate-180' : ''}`}
+                      />
                     </button>
                     {roleMenuOpen && (
                       <div className="absolute mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 shadow-xl z-40 overflow-hidden">
@@ -847,13 +865,13 @@ export default function OperatorsPage() {
                           <button
                             type="button"
                             onClick={() => {
-                              setRoleFilter("all");
+                              setRoleFilter('all');
                               setRoleMenuOpen(false);
                             }}
                             className={`w-full px-3 py-2 text-left text-sm transition-colors ${
-                              roleFilter === "all"
-                                ? "bg-gray-800 text-white font-semibold"
-                                : "text-gray-200 hover:bg-gray-800/70"
+                              roleFilter === 'all'
+                                ? 'bg-gray-800 text-white font-semibold'
+                                : 'text-gray-200 hover:bg-gray-800/70'
                             }`}
                           >
                             <span className="flex items-center gap-2">
@@ -861,35 +879,35 @@ export default function OperatorsPage() {
                               Alle Rollen
                             </span>
                           </button>
-                          {currentUser?.role === "servecta" && (
+                          {currentUser?.role === 'servecta' && (
                             <button
                               type="button"
                               onClick={() => {
-                                setRoleFilter("servecta");
+                                setRoleFilter('servecta');
                                 setRoleMenuOpen(false);
                               }}
                               className={`w-full px-3 py-2 text-left text-sm transition-colors ${
-                                roleFilter === "servecta"
-                                ? "bg-gray-800 text-white font-semibold"
-                                : "text-gray-200 hover:bg-gray-800/70"
-                            }`}
-                          >
-                            <span className="flex items-center gap-2">
-                              <Shield className="w-4 h-4 text-purple-300" />
-                              Servecta
-                            </span>
-                          </button>
+                                roleFilter === 'servecta'
+                                  ? 'bg-gray-800 text-white font-semibold'
+                                  : 'text-gray-200 hover:bg-gray-800/70'
+                              }`}
+                            >
+                              <span className="flex items-center gap-2">
+                                <Shield className="w-4 h-4 text-purple-300" />
+                                Servecta
+                              </span>
+                            </button>
                           )}
                           <button
                             type="button"
                             onClick={() => {
-                              setRoleFilter("restaurantinhaber");
+                              setRoleFilter('restaurantinhaber');
                               setRoleMenuOpen(false);
                             }}
                             className={`w-full px-3 py-2 text-left text-sm transition-colors ${
-                              roleFilter === "restaurantinhaber"
-                                ? "bg-gray-800 text-white font-semibold"
-                                : "text-gray-200 hover:bg-gray-800/70"
+                              roleFilter === 'restaurantinhaber'
+                                ? 'bg-gray-800 text-white font-semibold'
+                                : 'text-gray-200 hover:bg-gray-800/70'
                             }`}
                           >
                             <span className="flex items-center gap-2">
@@ -900,13 +918,13 @@ export default function OperatorsPage() {
                           <button
                             type="button"
                             onClick={() => {
-                              setRoleFilter("schichtleiter");
+                              setRoleFilter('schichtleiter');
                               setRoleMenuOpen(false);
                             }}
                             className={`w-full px-3 py-2 text-left text-sm transition-colors ${
-                              roleFilter === "schichtleiter"
-                                ? "bg-gray-800 text-white font-semibold"
-                                : "text-gray-200 hover:bg-gray-800/70"
+                              roleFilter === 'schichtleiter'
+                                ? 'bg-gray-800 text-white font-semibold'
+                                : 'text-gray-200 hover:bg-gray-800/70'
                             }`}
                           >
                             <span className="flex items-center gap-2">
@@ -917,13 +935,13 @@ export default function OperatorsPage() {
                           <button
                             type="button"
                             onClick={() => {
-                              setRoleFilter("mitarbeiter");
+                              setRoleFilter('mitarbeiter');
                               setRoleMenuOpen(false);
                             }}
                             className={`w-full px-3 py-2 text-left text-sm transition-colors ${
-                              roleFilter === "mitarbeiter"
-                                ? "bg-gray-800 text-white font-semibold"
-                                : "text-gray-200 hover:bg-gray-800/70"
+                              roleFilter === 'mitarbeiter'
+                                ? 'bg-gray-800 text-white font-semibold'
+                                : 'text-gray-200 hover:bg-gray-800/70'
                             }`}
                           >
                             <span className="flex items-center gap-2">
@@ -943,9 +961,9 @@ export default function OperatorsPage() {
                 <div className="text-center py-12 text-gray-400">
                   <Users className="w-16 h-16 mx-auto mb-4 opacity-50" />
                   <p className="text-lg font-medium">
-                    {operators.length === 0 
-                      ? "Noch keine Bediener vorhanden"
-                      : "Keine Bediener gefunden"}
+                    {operators.length === 0
+                      ? 'Noch keine Bediener vorhanden'
+                      : 'Keine Bediener gefunden'}
                   </p>
                   {operators.length === 0 && (
                     <p className="text-sm mt-2">
@@ -958,11 +976,17 @@ export default function OperatorsPage() {
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-gray-700">
-                        <th className="text-left py-3 px-4 font-medium text-gray-300">Bedienernummer</th>
+                        <th className="text-left py-3 px-4 font-medium text-gray-300">
+                          Bedienernummer
+                        </th>
                         <th className="text-left py-3 px-4 font-medium text-gray-300">Name</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-300">NFC Tag-ID</th>
+                        <th className="text-left py-3 px-4 font-medium text-gray-300">
+                          NFC Tag-ID
+                        </th>
                         <th className="text-left py-3 px-4 font-medium text-gray-300">Rolle</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-300">Letzter Login</th>
+                        <th className="text-left py-3 px-4 font-medium text-gray-300">
+                          Letzter Login
+                        </th>
                         <th className="text-left py-3 px-4 font-medium text-gray-300">Status</th>
                         <th className="text-right py-3 px-4 font-medium text-gray-300">Aktionen</th>
                       </tr>
@@ -971,8 +995,8 @@ export default function OperatorsPage() {
                       {filteredOperators.map((operator) => {
                         const RoleIcon = getRoleIcon(operator.role);
                         return (
-                          <tr 
-                            key={operator.id} 
+                          <tr
+                            key={operator.id}
                             className="border-b border-gray-700 hover:bg-gray-800/30 transition-colors"
                           >
                             <td className="py-3 px-4 font-mono font-semibold text-white">
@@ -999,13 +1023,13 @@ export default function OperatorsPage() {
                             <td className="py-3 px-4">
                               <span
                                 className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium ${
-                                  operator.role === "servecta"
-                                    ? "bg-purple-900/50 text-purple-300 border border-purple-700/50"
-                                    : operator.role === "restaurantinhaber"
-                                    ? "bg-blue-900/50 text-blue-300 border border-blue-700/50"
-                                    : operator.role === "schichtleiter"
-                                    ? "bg-yellow-900/50 text-yellow-300 border border-yellow-700/50"
-                                    : "bg-gray-700/50 text-gray-300 border border-gray-600/50"
+                                  operator.role === 'servecta'
+                                    ? 'bg-purple-900/50 text-purple-300 border border-purple-700/50'
+                                    : operator.role === 'restaurantinhaber'
+                                      ? 'bg-blue-900/50 text-blue-300 border border-blue-700/50'
+                                      : operator.role === 'schichtleiter'
+                                        ? 'bg-yellow-900/50 text-yellow-300 border border-yellow-700/50'
+                                        : 'bg-gray-700/50 text-gray-300 border border-gray-600/50'
                                 }`}
                               >
                                 <RoleIcon className="w-3.5 h-3.5" />

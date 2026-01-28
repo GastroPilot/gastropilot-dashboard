@@ -86,14 +86,14 @@ export const dashboardApi = {
     const params = dateStr ? `?date=${dateStr}` : '';
     return api.get<DashboardData>(`/dashboard/batch/${restaurantId}${params}`);
   },
-  
+
   /**
    * Fetch kitchen view data in a single request.
    */
   async getKitchenData(restaurantId: number): Promise<KitchenData> {
     return api.get<KitchenData>(`/dashboard/kitchen/${restaurantId}`);
   },
-  
+
   /**
    * Fetch insights/analytics data in a single request.
    */

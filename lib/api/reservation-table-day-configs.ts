@@ -1,4 +1,4 @@
-import { api } from "./client";
+import { api } from './client';
 
 export interface ReservationTableDayConfig {
   reservation_id: number;
@@ -61,4 +61,3 @@ export const reservationTableDayConfigsApi = {
     );
   },
 };
-

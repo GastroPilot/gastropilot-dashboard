@@ -1,4 +1,4 @@
-import { api, ApiError } from "./client";
+import { api, ApiError } from './client';
 
 export interface UserSettings {
   id: number;
@@ -19,7 +19,7 @@ export const userSettingsApi = {
    * Wichtig: MIT trailing slash, da Backend-Route "/" ist (wird zu "/v1/users/me/settings/")
    */
   getMySettings: async (): Promise<UserSettings> => {
-    return api.get<UserSettings>("/users/me/settings/");
+    return api.get<UserSettings>('/users/me/settings/');
   },
 
   /**
@@ -28,12 +28,12 @@ export const userSettingsApi = {
    */
   updateMySettings: async (data: UserSettingsUpdatePayload): Promise<UserSettings> => {
     try {
-      return await api.patch<UserSettings>("/users/me/settings/", data);
+      return await api.patch<UserSettings>('/users/me/settings/', data);
     } catch (error) {
       if (error instanceof ApiError) {
         throw error;
       }
-      throw new ApiError(500, "Unbekannter Fehler beim Aktualisieren der Einstellungen", error);
+      throw new ApiError(500, 'Unbekannter Fehler beim Aktualisieren der Einstellungen', error);
     }
   },
 
@@ -48,7 +48,7 @@ export const userSettingsApi = {
       if (error instanceof ApiError) {
         throw error;
       }
-      throw new ApiError(500, "Unbekannter Fehler beim Löschen der Einstellung", error);
+      throw new ApiError(500, 'Unbekannter Fehler beim Löschen der Einstellung', error);
     }
   },
 };

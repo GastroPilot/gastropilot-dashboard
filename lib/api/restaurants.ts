@@ -1,5 +1,5 @@
-import { api } from "./client";
-import { API_BASE_URL, API_PREFIX, buildApiUrl } from "./config";
+import { api } from './client';
+import { API_BASE_URL, API_PREFIX, buildApiUrl } from './config';
 
 export interface Restaurant {
   id: number;
@@ -45,7 +45,7 @@ export type RestaurantUpdate = Partial<RestaurantCreate>;
 export const restaurantsApi = {
   list: async (): Promise<Restaurant[]> => {
     // Backend-Route ist @router.get("/"), daher trailing slash erforderlich
-    return api.get<Restaurant[]>("/restaurants/");
+    return api.get<Restaurant[]>('/restaurants/');
   },
 
   get: async (id: number): Promise<Restaurant> => {
@@ -54,7 +54,7 @@ export const restaurantsApi = {
 
   create: async (data: RestaurantCreate): Promise<Restaurant> => {
     // Backend-Route ist @router.post("/"), daher trailing slash erforderlich
-    return api.post<Restaurant>("/restaurants/", data);
+    return api.post<Restaurant>('/restaurants/', data);
   },
 
   update: async (id: number, data: Partial<RestaurantCreate>): Promise<Restaurant> => {
@@ -71,24 +71,24 @@ export const restaurantsApi = {
    */
   getPublicName: async (): Promise<string> => {
     try {
-      const url = buildApiUrl(API_BASE_URL, API_PREFIX, "/restaurants/public/name");
+      const url = buildApiUrl(API_BASE_URL, API_PREFIX, '/restaurants/public/name');
       const response = await fetch(url, {
-        method: "GET",
+        method: 'GET',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         credentials: 'include', // Wichtig für CORS mit credentials (auch für public endpoints)
       });
-      
+
       if (!response.ok) {
-        return "GastroPilot";
+        return 'GastroPilot';
       }
-      
+
       const data = await response.json();
-      return data.name || "GastroPilot";
+      return data.name || 'GastroPilot';
     } catch (error) {
-      console.error("Fehler beim Laden des Restaurantnamens:", error);
-      return "GastroPilot";
+      console.error('Fehler beim Laden des Restaurantnamens:', error);
+      return 'GastroPilot';
     }
   },
 };

@@ -1,5 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { reservationsApi, Reservation, ReservationCreate, ReservationUpdate, ReservationStatus } from '@/lib/api/reservations';
+import {
+  reservationsApi,
+  Reservation,
+  ReservationCreate,
+  ReservationUpdate,
+  ReservationStatus,
+} from '@/lib/api/reservations';
 import { format } from 'date-fns';
 import { useDashboardDataStore } from '@/lib/stores/dashboard-store';
 
@@ -27,8 +33,10 @@ export const reservationKeys = {
 export function useReservations(restaurantId: number | undefined, date?: Date) {
   const dateStr = date ? format(date, 'yyyy-MM-dd') : undefined;
   // Convert date to from/to filter format expected by API
-  const filters: ReservationFilters | undefined = dateStr ? { from: dateStr, to: dateStr } : undefined;
-  
+  const filters: ReservationFilters | undefined = dateStr
+    ? { from: dateStr, to: dateStr }
+    : undefined;
+
   return useQuery({
     queryKey: reservationKeys.list(restaurantId!, filters),
     queryFn: () => reservationsApi.list(restaurantId!, filters),
@@ -54,29 +62,29 @@ export function useReservation(restaurantId: number | undefined, id: number | un
 export function useCreateReservation() {
   const queryClient = useQueryClient();
   const addReservation = useDashboardDataStore((s) => s.addReservation);
-  
+
   return useMutation({
     mutationFn: ({ restaurantId, data }: { restaurantId: number; data: ReservationCreate }) =>
       reservationsApi.create(restaurantId, data),
     onMutate: async ({ restaurantId, data }) => {
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: reservationKeys.lists() });
-      
+
       // Snapshot previous value
       const dateStr = data.start_at.split('T')[0];
       const previousReservations = queryClient.getQueryData(
         reservationKeys.list(restaurantId, { from: dateStr, to: dateStr })
       );
-      
+
       // Optimistically add to store
       const tempReservation: Reservation = {
         id: -Date.now(), // Temporary negative ID
         restaurant_id: restaurantId,
         ...data,
       } as Reservation;
-      
+
       addReservation(tempReservation);
-      
+
       return { previousReservations, tempId: tempReservation.id };
     },
     onError: (_, __, context) => {
@@ -98,7 +106,7 @@ export function useCreateReservation() {
 export function useUpdateReservation() {
   const queryClient = useQueryClient();
   const updateReservation = useDashboardDataStore((s) => s.updateReservation);
-  
+
   return useMutation({
     mutationFn: ({
       restaurantId,
@@ -125,7 +133,7 @@ export function useUpdateReservation() {
 export function useDeleteReservation() {
   const queryClient = useQueryClient();
   const removeReservation = useDashboardDataStore((s) => s.removeReservation);
-  
+
   return useMutation({
     mutationFn: ({ restaurantId, id }: { restaurantId: number; id: number }) =>
       reservationsApi.delete(restaurantId, id),

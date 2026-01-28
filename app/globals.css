@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* Verhindere Text-Selektion auf DnD-Elementen */
 [data-dnd-draggable],
@@ -14,16 +14,20 @@
 /* Tablet-Optimierungen */
 @media (min-width: 768px) and (max-width: 1024px) {
   /* Kompakte Touch-Targets für Tablets */
-  button, a, input, select, textarea {
+  button,
+  a,
+  input,
+  select,
+  textarea {
     min-height: 40px !important;
   }
-  
+
   /* Kompakte Schriftgrößen für Tablets */
   body {
     font-size: 14px;
     -webkit-text-size-adjust: 100%;
   }
-  
+
   /* Verbesserte Touch-Interaktion */
   * {
     -webkit-tap-highlight-color: rgba(59, 130, 246, 0.3);

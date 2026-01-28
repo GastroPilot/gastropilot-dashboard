@@ -1,28 +1,24 @@
-"use client";
+'use client';
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
-import Link from "next/link";
-import { authApi, User } from "@/lib/api/auth";
-import { restaurantsApi } from "@/lib/api/restaurants";
-import { licenseApi, Features } from "@/lib/api/license";
-import { Button } from "@/components/ui/button";
-import { confirmAction } from "@/lib/utils";
-import { LogOut, Menu, X } from "lucide-react";
-import { LoadingOverlay } from "@/components/loading-overlay";
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
+import { authApi, User } from '@/lib/api/auth';
+import { restaurantsApi } from '@/lib/api/restaurants';
+import { licenseApi, Features } from '@/lib/api/license';
+import { Button } from '@/components/ui/button';
+import { confirmAction } from '@/lib/utils';
+import { LogOut, Menu, X } from 'lucide-react';
+import { LoadingOverlay } from '@/components/loading-overlay';
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [isNavOpen, setIsNavOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
-  const [restaurantName, setRestaurantName] = useState<string>("GastroPilot");
+  const [restaurantName, setRestaurantName] = useState<string>('GastroPilot');
   const [features, setFeatures] = useState<Features | null>(null);
   const profileMenuRef = useRef<HTMLDivElement | null>(null);
 
@@ -32,34 +28,37 @@ export default function DashboardLayout({
 
       // Prüfe, ob Token abgelaufen ist und versuche es zu refreshen
       if (authApi.isTokenExpired()) {
-        console.log("Token abgelaufen, versuche Refresh...");
+        console.log('Token abgelaufen, versuche Refresh...');
         const refreshed = await authApi.refresh();
         if (!refreshed) {
-          console.log("Token-Refresh fehlgeschlagen, leite zur Login-Seite weiter");
-          router.push("/login");
+          console.log('Token-Refresh fehlgeschlagen, leite zur Login-Seite weiter');
+          router.push('/login');
           setLoading(false);
           return;
         }
       }
 
       if (!authApi.isAuthenticated()) {
-        console.log("Nicht authentifiziert, leite zur Login-Seite weiter");
-        router.push("/login");
+        console.log('Nicht authentifiziert, leite zur Login-Seite weiter');
+        router.push('/login');
         setLoading(false);
         return;
       }
 
       try {
-        const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
-        console.log("Token gefunden:", token ? "Ja" : "Nein");
+        const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
+        console.log('Token gefunden:', token ? 'Ja' : 'Nein');
 
         const currentUser = await authApi.getCurrentUser();
-        console.log("User erfolgreich geladen:", currentUser.operator_number);
+        console.log('User erfolgreich geladen:', currentUser.operator_number);
         setUser(currentUser);
       } catch (error) {
-        console.error("Auth check failed:", error);
+        console.error('Auth check failed:', error);
         // Bei 401/403: Versuche nochmal zu refreshen
-        if (error instanceof Error && (error.message.includes("401") || error.message.includes("403"))) {
+        if (
+          error instanceof Error &&
+          (error.message.includes('401') || error.message.includes('403'))
+        ) {
           const refreshed = await authApi.refresh();
           if (refreshed) {
             try {
@@ -68,12 +67,12 @@ export default function DashboardLayout({
               setLoading(false);
               return;
             } catch (retryError) {
-              console.error("Auth check nach Refresh fehlgeschlagen:", retryError);
+              console.error('Auth check nach Refresh fehlgeschlagen:', retryError);
             }
           }
         }
         authApi.logout();
-        router.push("/login");
+        router.push('/login');
       } finally {
         setLoading(false);
       }
@@ -89,7 +88,7 @@ export default function DashboardLayout({
         setRestaurantName(name);
       } catch (err) {
         // Ignore errors - restaurant name is optional
-        console.error("Fehler beim Laden des Restaurantnamens:", err);
+        console.error('Fehler beim Laden des Restaurantnamens:', err);
       }
     };
     loadRestaurantName();
@@ -102,7 +101,7 @@ export default function DashboardLayout({
         setFeatures(featuresData);
       } catch (err) {
         // Ignore errors - use defaults if license check fails
-        console.error("Fehler beim Laden der Features:", err);
+        console.error('Fehler beim Laden der Features:', err);
         // Fallback: alle Features aktiviert (für Development)
         setFeatures({
           reservations_module: true,
@@ -130,107 +129,115 @@ export default function DashboardLayout({
         setIsProfileMenuOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const navLinks = useMemo(() => {
-    const canManageTables = user && (user.role === "servecta" || user.role === "restaurantinhaber" || user.role === "schichtleiter");
-    const isOwner = user && (user.role === "servecta" || user.role === "restaurantinhaber");
-    const canViewAuditLogs = user && (user.role === "servecta" || user.role === "restaurantinhaber" || user.role === "schichtleiter");
-    
+    const canManageTables =
+      user &&
+      (user.role === 'servecta' ||
+        user.role === 'restaurantinhaber' ||
+        user.role === 'schichtleiter');
+    const isOwner = user && (user.role === 'servecta' || user.role === 'restaurantinhaber');
+    const canViewAuditLogs =
+      user &&
+      (user.role === 'servecta' ||
+        user.role === 'restaurantinhaber' ||
+        user.role === 'schichtleiter');
+
     // Prüfe License Features
     const reservationsEnabled = features?.reservations_module ?? true; // Default: enabled
     const ordersEnabled = features?.orders_module ?? true; // Default: enabled
     return [
       {
-        href: "/dashboard",
-        label: "Dashboard",
-        active: pathname === "/dashboard",
+        href: '/dashboard',
+        label: 'Dashboard',
+        active: pathname === '/dashboard',
         show: true,
       },
       {
-        href: "/dashboard/tables",
-        label: "Tische verwalten",
-        active: pathname?.startsWith("/dashboard/tables"),
+        href: '/dashboard/tables',
+        label: 'Tische verwalten',
+        active: pathname?.startsWith('/dashboard/tables'),
         show: !!canManageTables && reservationsEnabled,
       },
       {
-        href: "/dashboard/orders",
-        label: "Bestellungen",
-        active: pathname?.startsWith("/dashboard/orders"),
+        href: '/dashboard/orders',
+        label: 'Bestellungen',
+        active: pathname?.startsWith('/dashboard/orders'),
         show: !!user && ordersEnabled,
       },
       {
-        href: "/dashboard/kitchen",
-        label: "Küchen-Ansicht",
-        active: pathname?.startsWith("/dashboard/kitchen"),
+        href: '/dashboard/kitchen',
+        label: 'Küchen-Ansicht',
+        active: pathname?.startsWith('/dashboard/kitchen'),
         show: !!user && ordersEnabled,
       },
       {
-        href: "/dashboard/order-statistics",
-        label: "Bestellstatistiken",
-        active: pathname?.startsWith("/dashboard/order-statistics"),
-        show: !!user && user.role === "schichtleiter" && ordersEnabled,
+        href: '/dashboard/order-statistics',
+        label: 'Bestellstatistiken',
+        active: pathname?.startsWith('/dashboard/order-statistics'),
+        show: !!user && user.role === 'schichtleiter' && ordersEnabled,
       },
       {
-        href: "/dashboard/order-history",
-        label: "Bestellhistorie",
-        active: pathname?.startsWith("/dashboard/order-history"),
+        href: '/dashboard/order-history',
+        label: 'Bestellhistorie',
+        active: pathname?.startsWith('/dashboard/order-history'),
         show: !!user && ordersEnabled,
       },
       {
-        href: "/dashboard/menu",
-        label: "Menü verwalten",
-        active: pathname?.startsWith("/dashboard/menu"),
+        href: '/dashboard/menu',
+        label: 'Menü verwalten',
+        active: pathname?.startsWith('/dashboard/menu'),
         show: !!canManageTables && ordersEnabled,
       },
       {
-        href: "/dashboard/vouchers",
-        label: "Gutscheine",
-        active: pathname?.startsWith("/dashboard/vouchers"),
+        href: '/dashboard/vouchers',
+        label: 'Gutscheine',
+        active: pathname?.startsWith('/dashboard/vouchers'),
         show: !!isOwner && reservationsEnabled,
       },
       {
-        href: "/dashboard/upsell-packages",
-        label: "Upsell-Pakete",
-        active: pathname?.startsWith("/dashboard/upsell-packages"),
+        href: '/dashboard/upsell-packages',
+        label: 'Upsell-Pakete',
+        active: pathname?.startsWith('/dashboard/upsell-packages'),
         show: !!isOwner && reservationsEnabled,
       },
       {
-        href: "/dashboard/restaurants",
-        label: "Restaurant verwalten",
-        active: pathname === "/dashboard/restaurants",
-        show: user?.role === "servecta",
+        href: '/dashboard/restaurants',
+        label: 'Restaurant verwalten',
+        active: pathname === '/dashboard/restaurants',
+        show: user?.role === 'servecta',
       },
       {
-        href: "/dashboard/operators",
-        label: "Bedienerverwaltung",
-        active: pathname === "/dashboard/operators",
+        href: '/dashboard/operators',
+        label: 'Bedienerverwaltung',
+        active: pathname === '/dashboard/operators',
         show: !!isOwner,
       },
       {
-        href: "/dashboard/owner-insights",
-        label: "Kennzahlen",
-        active: pathname?.startsWith("/dashboard/owner-insights"),
+        href: '/dashboard/owner-insights',
+        label: 'Kennzahlen',
+        active: pathname?.startsWith('/dashboard/owner-insights'),
         show: !!isOwner,
       },
       {
-        href: "/dashboard/hilfecenter",
-        label: "Hilfecenter",
-        active: pathname?.startsWith("/dashboard/hilfecenter"),
+        href: '/dashboard/hilfecenter',
+        label: 'Hilfecenter',
+        active: pathname?.startsWith('/dashboard/hilfecenter'),
         show: !!user,
       },
       {
-        href: "/dashboard/user-settings",
-        label: "Benutzereinstellungen",
-        active: pathname === "/dashboard/user-settings",
+        href: '/dashboard/user-settings',
+        label: 'Benutzereinstellungen',
+        active: pathname === '/dashboard/user-settings',
         show: !!user,
       },
       {
-        href: "/dashboard/audit-logs",
-        label: "Audit-Logs",
-        active: pathname === "/dashboard/audit-logs",
+        href: '/dashboard/audit-logs',
+        label: 'Audit-Logs',
+        active: pathname === '/dashboard/audit-logs',
         show: !!canViewAuditLogs,
       },
     ].filter((link) => link.show);
@@ -241,34 +248,31 @@ export default function DashboardLayout({
     const pick = (href: string) => map.get(href) ?? null;
     const groups = [
       {
-        title: "TAGESGESCHÄFT",
+        title: 'TAGESGESCHÄFT',
         items: [
-          pick("/dashboard"),
-          pick("/dashboard/tables"),
-          pick("/dashboard/orders"),
-          pick("/dashboard/kitchen"),
-          pick("/dashboard/menu"),
-          pick("/dashboard/order-statistics"),
-          pick("/dashboard/order-history"),
-          pick("/dashboard/hilfecenter"),
+          pick('/dashboard'),
+          pick('/dashboard/tables'),
+          pick('/dashboard/orders'),
+          pick('/dashboard/kitchen'),
+          pick('/dashboard/menu'),
+          pick('/dashboard/order-statistics'),
+          pick('/dashboard/order-history'),
+          pick('/dashboard/hilfecenter'),
         ],
       },
       {
-        title: "VERWALTUNG",
+        title: 'VERWALTUNG',
         items: [
-          pick("/dashboard/restaurants"),
-          pick("/dashboard/operators"),
-          pick("/dashboard/vouchers"),
-          pick("/dashboard/upsell-packages"),
-          pick("/dashboard/owner-insights"),
+          pick('/dashboard/restaurants'),
+          pick('/dashboard/operators'),
+          pick('/dashboard/vouchers'),
+          pick('/dashboard/upsell-packages'),
+          pick('/dashboard/owner-insights'),
         ],
       },
       {
-        title: "SYSTEM",
-        items: [
-          pick("/dashboard/user-settings"),
-          pick("/dashboard/audit-logs"),
-        ],
+        title: 'SYSTEM',
+        items: [pick('/dashboard/user-settings'), pick('/dashboard/audit-logs')],
       },
     ].map((group) => ({
       ...group,
@@ -278,19 +282,19 @@ export default function DashboardLayout({
   }, [navLinks]);
 
   const userInitials = useMemo(() => {
-    if (!user) return "??";
-    const first = user.first_name?.[0] ?? "";
-    const last = user.last_name?.[0] ?? "";
-    const fallback = user.operator_number ? String(user.operator_number).slice(-2) : "";
+    if (!user) return '??';
+    const first = user.first_name?.[0] ?? '';
+    const last = user.last_name?.[0] ?? '';
+    const fallback = user.operator_number ? String(user.operator_number).slice(-2) : '';
     const initials = `${first}${last}`.trim() || fallback;
-    return initials.toUpperCase() || "??";
+    return initials.toUpperCase() || '??';
   }, [user]);
 
   const handleLogout = () => {
-    const confirmed = confirmAction("Möchtest du dich wirklich abmelden?");
+    const confirmed = confirmAction('Möchtest du dich wirklich abmelden?');
     if (!confirmed) return;
     authApi.logout();
-    router.push("/login");
+    router.push('/login');
   };
 
   if (loading) {
@@ -316,9 +320,7 @@ export default function DashboardLayout({
                   <div className="text-sm md:text-base font-semibold text-white">
                     {restaurantName}
                   </div>
-                  <div className="text-xs text-gray-400">
-                    Restaurantmanagement
-                  </div>
+                  <div className="text-xs text-gray-400">Restaurantmanagement</div>
                 </div>
               </Link>
             </div>
@@ -326,7 +328,7 @@ export default function DashboardLayout({
               <button
                 type="button"
                 className="sm:hidden inline-flex items-center justify-center rounded-md border border-gray-700 bg-gray-800/90 p-2 text-gray-200 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                aria-label={isNavOpen ? "Navigation schliessen" : "Navigation öffnen"}
+                aria-label={isNavOpen ? 'Navigation schliessen' : 'Navigation öffnen'}
                 aria-expanded={isNavOpen}
                 onClick={() => setIsNavOpen((prev) => !prev)}
               >
@@ -346,7 +348,7 @@ export default function DashboardLayout({
                   type="button"
                   onClick={() => setIsProfileMenuOpen((prev) => !prev)}
                   className={`inline-flex items-center justify-center h-10 w-10 rounded-full border border-white/80 bg-gradient-to-br from-blue-600/80 via-cyan-500/80 to-emerald-500/80 text-white shadow-md shadow-blue-500/30 transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-white/80 focus:ring-offset-2 focus:ring-offset-gray-900 hover:scale-[1.04] hover:-translate-y-[1px] hover:shadow-lg hover:shadow-white/25 ${
-                    isProfileMenuOpen ? "shadow-lg shadow-white/30 ring-2 ring-white/70" : ""
+                    isProfileMenuOpen ? 'shadow-lg shadow-white/30 ring-2 ring-white/70' : ''
                   }`}
                   aria-haspopup="menu"
                   aria-expanded={isProfileMenuOpen}
@@ -357,10 +359,12 @@ export default function DashboardLayout({
                   <div className="absolute right-0 mt-2 w-72 rounded-lg border border-gray-700 bg-gray-900 shadow-xl shadow-black/30 z-50">
                     <div className="px-4 py-3 border-b border-gray-800">
                       <div className="text-sm font-semibold text-white">
-                        {user ? `${user.first_name} ${user.last_name}` : "Profil"}
+                        {user ? `${user.first_name} ${user.last_name}` : 'Profil'}
                       </div>
                       {user && (
-                        <div className="text-xs text-gray-400">#{user.operator_number} • {user.role}</div>
+                        <div className="text-xs text-gray-400">
+                          #{user.operator_number} • {user.role}
+                        </div>
                       )}
                     </div>
                     <div className="py-3 space-y-3">
@@ -376,12 +380,14 @@ export default function DashboardLayout({
                                 href={link.href}
                                 className={`flex items-center justify-between px-3 py-2 rounded-md text-sm transition-all ${
                                   link.active
-                                    ? "bg-blue-900/30 text-white border border-blue-600/60 shadow-[0_10px_24px_rgba(37,99,235,0.25)]"
-                                    : "text-gray-200 hover:bg-gray-800/70 border border-transparent"
+                                    ? 'bg-blue-900/30 text-white border border-blue-600/60 shadow-[0_10px_24px_rgba(37,99,235,0.25)]'
+                                    : 'text-gray-200 hover:bg-gray-800/70 border border-transparent'
                                 }`}
                               >
                                 <span className="flex items-center gap-2">
-                                  <span className={`h-2 w-2 rounded-full ${link.active ? "bg-blue-400 shadow-[0_0_0_3px_rgba(59,130,246,0.25)]" : "bg-gray-500/60"}`} />
+                                  <span
+                                    className={`h-2 w-2 rounded-full ${link.active ? 'bg-blue-400 shadow-[0_0_0_3px_rgba(59,130,246,0.25)]' : 'bg-gray-500/60'}`}
+                                  />
                                   <span>{link.label}</span>
                                 </span>
                               </Link>
@@ -412,8 +418,8 @@ export default function DashboardLayout({
                     href={link.href}
                     className={`flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                       link.active
-                        ? "bg-gray-800 text-white border border-blue-600"
-                        : "text-gray-200 hover:bg-gray-800/80 border border-transparent"
+                        ? 'bg-gray-800 text-white border border-blue-600'
+                        : 'text-gray-200 hover:bg-gray-800/80 border border-transparent'
                     }`}
                   >
                     <span>{link.label}</span>

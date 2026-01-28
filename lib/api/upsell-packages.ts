@@ -1,7 +1,7 @@
 /**
  * API Client für Upsell-Pakete.
  */
-import { api } from "./client";
+import { api } from './client';
 
 export interface UpsellPackage {
   id: number;

@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useDraggable } from "@dnd-kit/core";
-import { Reservation } from "@/lib/api/reservations";
-import { format } from "date-fns";
-import { Clock, Users, X } from "lucide-react";
+import { useDraggable } from '@dnd-kit/core';
+import { Reservation } from '@/lib/api/reservations';
+import { format } from 'date-fns';
+import { Clock, Users, X } from 'lucide-react';
 
 interface ReservationOnTableProps {
   reservation: Reservation;
@@ -12,10 +12,15 @@ interface ReservationOnTableProps {
   isDragging?: boolean;
 }
 
-export function ReservationOnTable({ reservation, onClick, onRemove, isDragging }: ReservationOnTableProps) {
+export function ReservationOnTable({
+  reservation,
+  onClick,
+  onRemove,
+  isDragging,
+}: ReservationOnTableProps) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: -reservation.id, // Negative ID um von Tischen zu unterscheiden
-    data: { type: "reservation", reservationId: reservation.id },
+    data: { type: 'reservation', reservationId: reservation.id },
   });
 
   const style = transform
@@ -46,7 +51,7 @@ export function ReservationOnTable({ reservation, onClick, onRemove, isDragging 
         mb-2 pb-2 border-b border-gray-700 last:border-0 
         cursor-grab active:cursor-grabbing
         hover:bg-gray-800 rounded px-2 py-1
-        ${isDragging ? "opacity-50" : ""}
+        ${isDragging ? 'opacity-50' : ''}
         touch-manipulation
         relative z-[101]
       `}
@@ -54,12 +59,12 @@ export function ReservationOnTable({ reservation, onClick, onRemove, isDragging 
       <div className="flex items-center gap-2 text-white">
         <Clock className="w-3 h-3" />
         <span>
-          {format(startDate, "HH:mm")} - {format(new Date(reservation.end_at), "HH:mm")}
+          {format(startDate, 'HH:mm')} - {format(new Date(reservation.end_at), 'HH:mm')}
         </span>
       </div>
       <div className="mt-1 text-white">
-        {reservation.guest_name || `Gast #${reservation.guest_id || "unbekannt"}`} -{" "}
-        {reservation.party_size} {reservation.party_size === 1 ? "Person" : "Personen"}
+        {reservation.guest_name || `Gast #${reservation.guest_id || 'unbekannt'}`} -{' '}
+        {reservation.party_size} {reservation.party_size === 1 ? 'Person' : 'Personen'}
       </div>
       <div className="mt-1 text-gray-400 text-xs">Status: {reservation.status}</div>
       {onRemove && (
@@ -77,4 +82,3 @@ export function ReservationOnTable({ reservation, onClick, onRemove, isDragging 
     </div>
   );
 }
-

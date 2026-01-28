@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useEffect, useState, useCallback, useRef } from "react";
-import { restaurantsApi, Restaurant } from "@/lib/api/restaurants";
-import { menuApi, MenuItem, MenuCategory } from "@/lib/api/menu";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { LoadingOverlay } from "@/components/loading-overlay";
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { restaurantsApi, Restaurant } from '@/lib/api/restaurants';
+import { menuApi, MenuItem, MenuCategory } from '@/lib/api/menu';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { LoadingOverlay } from '@/components/loading-overlay';
 import {
   Plus,
   Edit,
@@ -19,8 +19,8 @@ import {
   Check,
   CheckCircle,
   XCircle,
-} from "lucide-react";
-import { confirmAction } from "@/lib/utils";
+} from 'lucide-react';
+import { confirmAction } from '@/lib/utils';
 import {
   Dialog,
   DialogContent,
@@ -28,48 +28,48 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 
 export default function MenuPage() {
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [categories, setCategories] = useState<MenuCategory[]>([]);
   const [items, setItems] = useState<MenuItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
-  
+
   // Dialog States
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
   const [itemDialogOpen, setItemDialogOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<MenuCategory | null>(null);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
-  
+
   // Form States
-  const [categoryName, setCategoryName] = useState("");
-  const [categoryDescription, setCategoryDescription] = useState("");
+  const [categoryName, setCategoryName] = useState('');
+  const [categoryDescription, setCategoryDescription] = useState('');
   const [categorySortOrder, setCategorySortOrder] = useState(0);
   const [categoryIsActive, setCategoryIsActive] = useState(true);
-  
-  const [itemName, setItemName] = useState("");
-  const [itemDescription, setItemDescription] = useState("");
+
+  const [itemName, setItemName] = useState('');
+  const [itemDescription, setItemDescription] = useState('');
   const [itemPrice, setItemPrice] = useState<number>(0);
-  const [itemTaxRate, setItemTaxRate] = useState<number>(0.19);  // Default 19%
+  const [itemTaxRate, setItemTaxRate] = useState<number>(0.19); // Default 19%
   const [itemCategoryId, setItemCategoryId] = useState<number | null>(null);
   const [itemIsAvailable, setItemIsAvailable] = useState(true);
   const [itemSortOrder, setItemSortOrder] = useState(0);
   const [taxMenuOpen, setTaxMenuOpen] = useState(false);
   const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
-  
+
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const taxMenuRef = useRef<HTMLDivElement | null>(null);
   const categoryMenuRef = useRef<HTMLDivElement | null>(null);
   const [toasts, setToasts] = useState<
-    { id: string; message: string; variant?: "info" | "error" | "success" }[]
+    { id: string; message: string; variant?: 'info' | 'error' | 'success' }[]
   >([]);
 
   const addToast = useCallback(
-    (message: string, variant: "info" | "error" | "success" = "info") => {
+    (message: string, variant: 'info' | 'error' | 'success' = 'info') => {
       const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
       setToasts((prev) => [...prev, { id, message, variant }]);
       setTimeout(() => {
@@ -83,9 +83,9 @@ export default function MenuPage() {
     try {
       setIsLoading(true);
       const restaurantsData = await restaurantsApi.list();
-      
+
       if (restaurantsData.length === 0) {
-        addToast("Kein Restaurant gefunden", "error");
+        addToast('Kein Restaurant gefunden', 'error');
         return;
       }
 
@@ -100,8 +100,8 @@ export default function MenuPage() {
       setCategories(categoriesData);
       setItems(itemsData);
     } catch (error) {
-      console.error("Fehler beim Laden der Daten:", error);
-      addToast("Fehler beim Laden der Daten", "error");
+      console.error('Fehler beim Laden der Daten:', error);
+      addToast('Fehler beim Laden der Daten', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -121,8 +121,8 @@ export default function MenuPage() {
         setCategoryMenuOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const filteredItems = items.filter((item) => {
@@ -138,9 +138,9 @@ export default function MenuPage() {
   });
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("de-DE", {
-      style: "currency",
-      currency: "EUR",
+    return new Intl.NumberFormat('de-DE', {
+      style: 'currency',
+      currency: 'EUR',
     }).format(amount);
   };
 
@@ -148,16 +148,16 @@ export default function MenuPage() {
     setEditingCategory(category);
     if (category) {
       setCategoryName(category.name);
-      setCategoryDescription(category.description || "");
+      setCategoryDescription(category.description || '');
       setCategorySortOrder(category.sort_order || 0);
       setCategoryIsActive(category.is_active);
     } else {
-      setCategoryName("");
-      setCategoryDescription("");
+      setCategoryName('');
+      setCategoryDescription('');
       setCategorySortOrder(categories.length);
       setCategoryIsActive(true);
     }
-    setError("");
+    setError('');
     setCategoryDialogOpen(true);
   };
 
@@ -165,33 +165,33 @@ export default function MenuPage() {
     setEditingItem(item);
     if (item) {
       setItemName(item.name);
-      setItemDescription(item.description || "");
+      setItemDescription(item.description || '');
       setItemPrice(item.price);
       setItemTaxRate(item.tax_rate || 0.19);
       setItemCategoryId(item.category_id);
       setItemIsAvailable(item.is_available);
       setItemSortOrder(item.sort_order || 0);
     } else {
-      setItemName("");
-      setItemDescription("");
+      setItemName('');
+      setItemDescription('');
       setItemPrice(0);
-      setItemTaxRate(0.19);  // Default 19%
+      setItemTaxRate(0.19); // Default 19%
       setItemCategoryId(selectedCategoryId);
       setItemIsAvailable(true);
       setItemSortOrder(items.length);
     }
-    setError("");
+    setError('');
     setItemDialogOpen(true);
   };
 
   const handleSaveCategory = async () => {
     if (!restaurant || !categoryName.trim()) {
-      setError("Bitte geben Sie einen Kategorienamen ein");
+      setError('Bitte geben Sie einen Kategorienamen ein');
       return;
     }
 
     setLoading(true);
-    setError("");
+    setError('');
     try {
       if (editingCategory) {
         await menuApi.updateCategory(restaurant.id, editingCategory.id, {
@@ -200,7 +200,7 @@ export default function MenuPage() {
           sort_order: categorySortOrder,
           is_active: categoryIsActive,
         });
-        addToast("Kategorie erfolgreich aktualisiert", "success");
+        addToast('Kategorie erfolgreich aktualisiert', 'success');
       } else {
         await menuApi.createCategory(restaurant.id, {
           name: categoryName,
@@ -208,13 +208,13 @@ export default function MenuPage() {
           sort_order: categorySortOrder,
           is_active: categoryIsActive,
         });
-        addToast("Kategorie erfolgreich erstellt", "success");
+        addToast('Kategorie erfolgreich erstellt', 'success');
       }
       setCategoryDialogOpen(false);
       loadData();
     } catch (err) {
-      console.error("Fehler beim Speichern der Kategorie:", err);
-      setError("Fehler beim Speichern der Kategorie");
+      console.error('Fehler beim Speichern der Kategorie:', err);
+      setError('Fehler beim Speichern der Kategorie');
     } finally {
       setLoading(false);
     }
@@ -222,12 +222,12 @@ export default function MenuPage() {
 
   const handleSaveItem = async () => {
     if (!restaurant || !itemName.trim() || itemPrice <= 0) {
-      setError("Bitte füllen Sie alle Pflichtfelder aus");
+      setError('Bitte füllen Sie alle Pflichtfelder aus');
       return;
     }
 
     setLoading(true);
-    setError("");
+    setError('');
     try {
       if (editingItem) {
         await menuApi.updateItem(restaurant.id, editingItem.id, {
@@ -239,7 +239,7 @@ export default function MenuPage() {
           is_available: itemIsAvailable,
           sort_order: itemSortOrder,
         });
-        addToast("Artikel erfolgreich aktualisiert", "success");
+        addToast('Artikel erfolgreich aktualisiert', 'success');
       } else {
         await menuApi.createItem(restaurant.id, {
           name: itemName,
@@ -250,13 +250,13 @@ export default function MenuPage() {
           is_available: itemIsAvailable,
           sort_order: itemSortOrder,
         });
-        addToast("Artikel erfolgreich erstellt", "success");
+        addToast('Artikel erfolgreich erstellt', 'success');
       }
       setItemDialogOpen(false);
       loadData();
     } catch (err) {
-      console.error("Fehler beim Speichern des Artikels:", err);
-      setError("Fehler beim Speichern des Artikels");
+      console.error('Fehler beim Speichern des Artikels:', err);
+      setError('Fehler beim Speichern des Artikels');
     } finally {
       setLoading(false);
     }
@@ -264,10 +264,10 @@ export default function MenuPage() {
 
   const handleDeleteCategory = async (category: MenuCategory) => {
     if (!restaurant) return;
-    
+
     const hasItems = items.some((item) => item.category_id === category.id);
     if (hasItems) {
-      addToast("Kategorie kann nicht gelöscht werden, da sie Artikel enthält", "error");
+      addToast('Kategorie kann nicht gelöscht werden, da sie Artikel enthält', 'error');
       return;
     }
 
@@ -278,11 +278,11 @@ export default function MenuPage() {
 
     try {
       await menuApi.deleteCategory(restaurant.id, category.id);
-      addToast("Kategorie erfolgreich gelöscht", "success");
+      addToast('Kategorie erfolgreich gelöscht', 'success');
       loadData();
     } catch (err) {
-      console.error("Fehler beim Löschen der Kategorie:", err);
-      addToast("Fehler beim Löschen der Kategorie", "error");
+      console.error('Fehler beim Löschen der Kategorie:', err);
+      addToast('Fehler beim Löschen der Kategorie', 'error');
     }
   };
 
@@ -294,13 +294,13 @@ export default function MenuPage() {
 
     try {
       await menuApi.deleteItem(restaurant.id, item.id);
-      addToast("Artikel erfolgreich gelöscht", "success");
+      addToast('Artikel erfolgreich gelöscht', 'success');
       setItemDialogOpen(false);
       setEditingItem(null);
       loadData();
     } catch (err) {
-      console.error("Fehler beim Löschen des Artikels:", err);
-      addToast("Fehler beim Löschen des Artikels", "error");
+      console.error('Fehler beim Löschen des Artikels:', err);
+      addToast('Fehler beim Löschen des Artikels', 'error');
     }
   };
 
@@ -369,8 +369,8 @@ export default function MenuPage() {
             onClick={() => setSelectedCategoryId(null)}
             className={`px-3 py-1 rounded text-sm transition-colors ${
               selectedCategoryId === null
-                ? "bg-blue-600 text-white"
-                : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
             }`}
           >
             Alle Kategorien
@@ -381,8 +381,8 @@ export default function MenuPage() {
               onClick={() => setSelectedCategoryId(category.id)}
               className={`px-3 py-1 rounded text-sm transition-colors ${
                 selectedCategoryId === category.id
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
               }`}
             >
               {category.name}
@@ -398,13 +398,13 @@ export default function MenuPage() {
             <ShoppingCart className="w-16 h-16 text-gray-600 mb-4" />
             <h2 className="text-xl font-semibold text-gray-300 mb-2">
               {searchQuery || selectedCategoryId
-                ? "Keine Artikel gefunden"
-                : "Noch keine Artikel vorhanden"}
+                ? 'Keine Artikel gefunden'
+                : 'Noch keine Artikel vorhanden'}
             </h2>
             <p className="text-gray-500 mb-4">
               {searchQuery || selectedCategoryId
-                ? "Versuchen Sie andere Suchkriterien"
-                : "Erstellen Sie Ihre ersten Artikel"}
+                ? 'Versuchen Sie andere Suchkriterien'
+                : 'Erstellen Sie Ihre ersten Artikel'}
             </p>
             {!searchQuery && !selectedCategoryId && (
               <Button
@@ -458,15 +458,17 @@ export default function MenuPage() {
                       </div>
                     </div>
                     <div className="flex items-center justify-between pt-3 border-t border-gray-700">
-                      <span className="text-lg font-bold text-white">{formatCurrency(item.price)}</span>
+                      <span className="text-lg font-bold text-white">
+                        {formatCurrency(item.price)}
+                      </span>
                       <span
                         className={`text-xs px-2 py-1 rounded ${
                           item.is_available
-                            ? "bg-green-900/30 text-green-300"
-                            : "bg-red-900/30 text-red-300"
+                            ? 'bg-green-900/30 text-green-300'
+                            : 'bg-red-900/30 text-red-300'
                         }`}
                       >
-                        {item.is_available ? "Verfügbar" : "Nicht verfügbar"}
+                        {item.is_available ? 'Verfügbar' : 'Nicht verfügbar'}
                       </span>
                     </div>
                   </div>
@@ -508,9 +510,7 @@ export default function MenuPage() {
                             <div className="h-4 mt-1" aria-hidden="true" />
                           )}
                         </div>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {categoryItems.length} Artikel
-                        </p>
+                        <p className="text-xs text-gray-500 mt-1">{categoryItems.length} Artikel</p>
                       </div>
                       <div className="flex gap-1" />
                     </div>
@@ -526,13 +526,11 @@ export default function MenuPage() {
       <Dialog open={categoryDialogOpen} onOpenChange={setCategoryDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>
-              {editingCategory ? "Kategorie bearbeiten" : "Neue Kategorie"}
-            </DialogTitle>
+            <DialogTitle>{editingCategory ? 'Kategorie bearbeiten' : 'Neue Kategorie'}</DialogTitle>
             <DialogDescription>
               {editingCategory
-                ? "Bearbeiten Sie die Kategoriedetails"
-                : "Erstellen Sie eine neue Kategorie für Ihr Menü"}
+                ? 'Bearbeiten Sie die Kategoriedetails'
+                : 'Erstellen Sie eine neue Kategorie für Ihr Menü'}
             </DialogDescription>
           </DialogHeader>
 
@@ -544,9 +542,7 @@ export default function MenuPage() {
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Name *
-              </label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Name *</label>
               <Input
                 value={categoryName}
                 onChange={(e) => setCategoryName(e.target.value)}
@@ -557,9 +553,7 @@ export default function MenuPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Beschreibung
-              </label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Beschreibung</label>
               <textarea
                 value={categoryDescription}
                 onChange={(e) => setCategoryDescription(e.target.value)}
@@ -596,9 +590,9 @@ export default function MenuPage() {
                 />
                 <span className="flex items-center gap-2">
                   <span
-                    className={`w-2.5 h-2.5 rounded-full ${categoryIsActive ? "bg-green-400" : "bg-gray-500"}`}
+                    className={`w-2.5 h-2.5 rounded-full ${categoryIsActive ? 'bg-green-400' : 'bg-gray-500'}`}
                   />
-                  {categoryIsActive ? "Kategorie aktiv" : "Kategorie inaktiv"}
+                  {categoryIsActive ? 'Kategorie aktiv' : 'Kategorie inaktiv'}
                 </span>
               </label>
             </div>
@@ -632,7 +626,7 @@ export default function MenuPage() {
                 className="bg-blue-600 hover:bg-blue-700 text-white"
               >
                 <Save className="w-4 h-4 mr-2" />
-                {loading ? "Speichern..." : "Speichern"}
+                {loading ? 'Speichern...' : 'Speichern'}
               </Button>
             </div>
           </DialogFooter>
@@ -643,11 +637,11 @@ export default function MenuPage() {
       <Dialog open={itemDialogOpen} onOpenChange={setItemDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{editingItem ? "Artikel bearbeiten" : "Neuer Artikel"}</DialogTitle>
+            <DialogTitle>{editingItem ? 'Artikel bearbeiten' : 'Neuer Artikel'}</DialogTitle>
             <DialogDescription>
               {editingItem
-                ? "Bearbeiten Sie die Artikeldetails"
-                : "Erstellen Sie einen neuen Artikel für Ihr Menü"}
+                ? 'Bearbeiten Sie die Artikeldetails'
+                : 'Erstellen Sie einen neuen Artikel für Ihr Menü'}
             </DialogDescription>
           </DialogHeader>
 
@@ -659,9 +653,7 @@ export default function MenuPage() {
             )}
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Name *
-              </label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Name *</label>
               <Input
                 value={itemName}
                 onChange={(e) => setItemName(e.target.value)}
@@ -672,9 +664,7 @@ export default function MenuPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
-                Beschreibung
-              </label>
+              <label className="block text-sm font-medium text-gray-300 mb-2">Beschreibung</label>
               <textarea
                 value={itemDescription}
                 onChange={(e) => setItemDescription(e.target.value)}
@@ -694,7 +684,7 @@ export default function MenuPage() {
                   type="number"
                   min="0"
                   step="0.01"
-                  value={itemPrice || ""}
+                  value={itemPrice || ''}
                   onChange={(e) => setItemPrice(parseFloat(e.target.value) || 0)}
                   className="bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-500 focus:border-blue-500"
                   disabled={loading}
@@ -703,9 +693,7 @@ export default function MenuPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  MwSt-Satz *
-                </label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">MwSt-Satz *</label>
                 <div ref={taxMenuRef} className="relative">
                   <button
                     type="button"
@@ -714,9 +702,11 @@ export default function MenuPage() {
                     disabled={loading}
                   >
                     <span className="truncate">
-                      {itemTaxRate === 0.07 ? "7% MwSt." : "19% MwSt."}
+                      {itemTaxRate === 0.07 ? '7% MwSt.' : '19% MwSt.'}
                     </span>
-                    <ChevronDown className={`w-4 h-4 transition-transform ${taxMenuOpen ? "rotate-180" : ""}`} />
+                    <ChevronDown
+                      className={`w-4 h-4 transition-transform ${taxMenuOpen ? 'rotate-180' : ''}`}
+                    />
                   </button>
                   {taxMenuOpen && (
                     <div className="absolute left-0 right-0 mt-1 rounded-lg border border-gray-700 bg-gray-900 shadow-xl z-[60] overflow-hidden">
@@ -732,11 +722,11 @@ export default function MenuPage() {
                             }}
                             className={`w-full px-3 py-3 text-sm flex items-center justify-between transition-colors ${
                               isSelected
-                                ? "font-semibold text-white border-l-2 border-blue-500 bg-gray-800/80"
-                                : "text-gray-200 hover:bg-gray-800"
+                                ? 'font-semibold text-white border-l-2 border-blue-500 bg-gray-800/80'
+                                : 'text-gray-200 hover:bg-gray-800'
                             }`}
                           >
-                            {rate === 0.07 ? "7% MwSt." : "19% MwSt."}
+                            {rate === 0.07 ? '7% MwSt.' : '19% MwSt.'}
                             {isSelected && <Check className="w-4 h-4 text-blue-300" />}
                           </button>
                         );
@@ -749,9 +739,7 @@ export default function MenuPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Kategorie
-                </label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Kategorie</label>
                 <div ref={categoryMenuRef} className="relative">
                   <button
                     type="button"
@@ -761,10 +749,13 @@ export default function MenuPage() {
                   >
                     <span className="truncate">
                       {itemCategoryId
-                        ? categories.find((c) => c.id === itemCategoryId)?.name || "Kategorie auswählen"
-                        : "Keine Kategorie"}
+                        ? categories.find((c) => c.id === itemCategoryId)?.name ||
+                          'Kategorie auswählen'
+                        : 'Keine Kategorie'}
                     </span>
-                    <ChevronDown className={`w-4 h-4 transition-transform ${categoryMenuOpen ? "rotate-180" : ""}`} />
+                    <ChevronDown
+                      className={`w-4 h-4 transition-transform ${categoryMenuOpen ? 'rotate-180' : ''}`}
+                    />
                   </button>
                   {categoryMenuOpen && (
                     <div className="absolute left-0 right-0 mt-1 rounded-lg border border-gray-700 bg-gray-900 shadow-xl z-[60] max-h-[60vh] overflow-auto">
@@ -776,8 +767,8 @@ export default function MenuPage() {
                         }}
                         className={`w-full px-3 py-3 text-sm flex items-center justify-between transition-colors ${
                           !itemCategoryId
-                            ? "font-semibold text-white border-l-2 border-blue-500 bg-gray-800/80"
-                            : "text-gray-200 hover:bg-gray-800"
+                            ? 'font-semibold text-white border-l-2 border-blue-500 bg-gray-800/80'
+                            : 'text-gray-200 hover:bg-gray-800'
                         }`}
                       >
                         Keine Kategorie
@@ -797,8 +788,8 @@ export default function MenuPage() {
                               }}
                               className={`w-full px-3 py-3 text-sm flex items-center justify-between transition-colors ${
                                 isSelected
-                                  ? "font-semibold text-white border-l-2 border-blue-500 bg-gray-800/80"
-                                  : "text-gray-200 hover:bg-gray-800"
+                                  ? 'font-semibold text-white border-l-2 border-blue-500 bg-gray-800/80'
+                                  : 'text-gray-200 hover:bg-gray-800'
                               }`}
                             >
                               {category.name}
@@ -838,9 +829,9 @@ export default function MenuPage() {
                 />
                 <span className="flex items-center gap-2">
                   <span
-                    className={`w-2.5 h-2.5 rounded-full ${itemIsAvailable ? "bg-green-400" : "bg-gray-500"}`}
+                    className={`w-2.5 h-2.5 rounded-full ${itemIsAvailable ? 'bg-green-400' : 'bg-gray-500'}`}
                   />
-                  {itemIsAvailable ? "Artikel verfügbar" : "Artikel nicht verfügbar"}
+                  {itemIsAvailable ? 'Artikel verfügbar' : 'Artikel nicht verfügbar'}
                 </span>
               </label>
             </div>
@@ -874,7 +865,7 @@ export default function MenuPage() {
                 className="bg-blue-600 hover:bg-blue-700 text-white"
               >
                 <Save className="w-4 h-4 mr-2" />
-                {loading ? "Speichern..." : "Speichern"}
+                {loading ? 'Speichern...' : 'Speichern'}
               </Button>
             </div>
           </DialogFooter>
@@ -888,11 +879,11 @@ export default function MenuPage() {
             <div
               key={toast.id}
               className={`px-4 py-3 rounded-lg shadow-lg border ${
-                toast.variant === "error"
-                  ? "bg-red-900/90 border-red-600 text-red-100"
-                  : toast.variant === "success"
-                  ? "bg-green-900/90 border-green-600 text-green-100"
-                  : "bg-blue-900/90 border-blue-600 text-blue-100"
+                toast.variant === 'error'
+                  ? 'bg-red-900/90 border-red-600 text-red-100'
+                  : toast.variant === 'success'
+                    ? 'bg-green-900/90 border-green-600 text-green-100'
+                    : 'bg-blue-900/90 border-blue-600 text-blue-100'
               }`}
             >
               {toast.message}
@@ -903,4 +894,3 @@ export default function MenuPage() {
     </div>
   );
 }
-

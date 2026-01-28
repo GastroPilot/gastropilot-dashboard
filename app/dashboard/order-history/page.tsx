@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import { useEffect, useState, useCallback, useRef } from "react";
-import { restaurantsApi, Restaurant } from "@/lib/api/restaurants";
-import { ordersApi, Order, OrderStatus } from "@/lib/api/orders";
-import { tablesApi, Table } from "@/lib/api/tables";
-import { guestsApi, Guest } from "@/lib/api/guests";
-import { LoadingOverlay } from "@/components/loading-overlay";
-import { format, parseISO, subDays, startOfDay, endOfDay } from "date-fns";
-import { de } from "date-fns/locale";
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { restaurantsApi, Restaurant } from '@/lib/api/restaurants';
+import { ordersApi, Order, OrderStatus } from '@/lib/api/orders';
+import { tablesApi, Table } from '@/lib/api/tables';
+import { guestsApi, Guest } from '@/lib/api/guests';
+import { LoadingOverlay } from '@/components/loading-overlay';
+import { format, parseISO, subDays, startOfDay, endOfDay } from 'date-fns';
+import { de } from 'date-fns/locale';
 import {
   History,
   Calendar,
@@ -23,24 +23,24 @@ import {
   ChevronDown,
   Check,
   Search,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { OrderDetailDialog } from "@/components/order-detail-dialog";
-import { OrderWithItems } from "@/lib/api/orders";
-import { useUserSettings } from "@/lib/hooks/use-user-settings";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { OrderDetailDialog } from '@/components/order-detail-dialog';
+import { OrderWithItems } from '@/lib/api/orders';
+import { useUserSettings } from '@/lib/hooks/use-user-settings';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const ALL_STATUSES: OrderStatus[] = [
-  "open",
-  "sent_to_kitchen",
-  "in_preparation",
-  "ready",
-  "served",
-  "paid",
-  "canceled",
+  'open',
+  'sent_to_kitchen',
+  'in_preparation',
+  'ready',
+  'served',
+  'paid',
+  'canceled',
 ];
-const STATUS_SETTINGS_KEY = "orders_status_filters";
+const STATUS_SETTINGS_KEY = 'orders_status_filters';
 
 const normalizeStatusList = (values: unknown): OrderStatus[] => {
   if (!Array.isArray(values)) return [];
@@ -58,38 +58,38 @@ type StatusMeta = { Icon: typeof Clock; tone: string; label: string };
 const STATUS_META: Record<OrderStatus, StatusMeta> = {
   open: {
     Icon: Clock,
-    tone: "bg-blue-900/40 border-blue-600 text-blue-100",
-    label: "Offen",
+    tone: 'bg-blue-900/40 border-blue-600 text-blue-100',
+    label: 'Offen',
   },
   sent_to_kitchen: {
     Icon: ShoppingCart,
-    tone: "bg-indigo-900/40 border-indigo-600 text-indigo-100",
-    label: "An Küche gesendet",
+    tone: 'bg-indigo-900/40 border-indigo-600 text-indigo-100',
+    label: 'An Küche gesendet',
   },
   in_preparation: {
     Icon: Clock,
-    tone: "bg-yellow-900/40 border-yellow-600 text-yellow-100",
-    label: "In Zubereitung",
+    tone: 'bg-yellow-900/40 border-yellow-600 text-yellow-100',
+    label: 'In Zubereitung',
   },
   ready: {
     Icon: CheckCircle,
-    tone: "bg-emerald-900/40 border-emerald-600 text-emerald-100",
-    label: "Fertig",
+    tone: 'bg-emerald-900/40 border-emerald-600 text-emerald-100',
+    label: 'Fertig',
   },
   served: {
     Icon: CheckCircle,
-    tone: "bg-green-900/40 border-green-600 text-green-100",
-    label: "Serviert",
+    tone: 'bg-green-900/40 border-green-600 text-green-100',
+    label: 'Serviert',
   },
   paid: {
     Icon: Euro,
-    tone: "bg-amber-900/30 border-amber-600 text-amber-100",
-    label: "Bezahlt",
+    tone: 'bg-amber-900/30 border-amber-600 text-amber-100',
+    label: 'Bezahlt',
   },
   canceled: {
     Icon: XCircle,
-    tone: "bg-red-900/30 border-red-600 text-red-100",
-    label: "Storniert",
+    tone: 'bg-red-900/30 border-red-600 text-red-100',
+    label: 'Storniert',
   },
 };
 
@@ -101,7 +101,7 @@ export default function OrderHistoryPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<OrderWithItems | null>(null);
   const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [tableMenuOpen, setTableMenuOpen] = useState(false);
   const [statusMenuOpen, setStatusMenuOpen] = useState(false);
   const tableMenuRef = useRef<HTMLDivElement | null>(null);
@@ -109,7 +109,7 @@ export default function OrderHistoryPage() {
   const [selectedStatuses, setSelectedStatuses] = useState<OrderStatus[]>(ALL_STATUSES);
   const { settings, updateSettings } = useUserSettings();
   const settingsInitializedRef = useRef(false);
-  const lastPersistedStatusesRef = useRef<string>("");
+  const lastPersistedStatusesRef = useRef<string>('');
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 20;
 
@@ -119,8 +119,8 @@ export default function OrderHistoryPage() {
     tableId: number | null;
     guestId: number | null;
   }>({
-    startDate: format(startOfDay(subDays(new Date(), 7)), "yyyy-MM-dd"),
-    endDate: format(endOfDay(new Date()), "yyyy-MM-dd"),
+    startDate: format(startOfDay(subDays(new Date(), 7)), 'yyyy-MM-dd'),
+    endDate: format(endOfDay(new Date()), 'yyyy-MM-dd'),
     tableId: null,
     guestId: null,
   });
@@ -145,7 +145,7 @@ export default function OrderHistoryPage() {
       setTables(tablesData);
       setGuests(guestsData);
     } catch (error) {
-      console.error("Fehler beim Laden der Daten:", error);
+      console.error('Fehler beim Laden der Daten:', error);
     } finally {
       setIsLoading(false);
     }
@@ -159,7 +159,7 @@ export default function OrderHistoryPage() {
           setRestaurant(restaurants[0]);
         }
       } catch (error) {
-        console.error("Fehler beim Laden des Restaurants:", error);
+        console.error('Fehler beim Laden des Restaurants:', error);
       }
     };
 
@@ -194,8 +194,8 @@ export default function OrderHistoryPage() {
       try {
         await updateSettings({ [STATUS_SETTINGS_KEY]: normalized });
       } catch (err) {
-        console.error("Fehler beim Speichern der Bestellstatus-Filter:", err);
-        lastPersistedStatusesRef.current = "";
+        console.error('Fehler beim Speichern der Bestellstatus-Filter:', err);
+        lastPersistedStatusesRef.current = '';
       }
     },
     [updateSettings]
@@ -211,10 +211,9 @@ export default function OrderHistoryPage() {
         setStatusMenuOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
 
   const handleOrderClick = async (order: Order) => {
     if (!restaurant) return;
@@ -223,7 +222,7 @@ export default function OrderHistoryPage() {
       setSelectedOrder(orderData);
       setIsOrderDialogOpen(true);
     } catch (error) {
-      console.error("Fehler beim Laden der Bestellung:", error);
+      console.error('Fehler beim Laden der Bestellung:', error);
     }
   };
 
@@ -232,16 +231,12 @@ export default function OrderHistoryPage() {
     if (!statusesToUse.includes(order.status)) return false;
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
-    const orderNumber = order.order_number?.toLowerCase() || "";
+    const orderNumber = order.order_number?.toLowerCase() || '';
     const tableNumber =
-      tables.find((table) => table.id === order.table_id)?.number?.toLowerCase() || "";
+      tables.find((table) => table.id === order.table_id)?.number?.toLowerCase() || '';
     const guest = guests.find((g) => g.id === order.guest_id);
-    const guestName = guest ? `${guest.first_name} ${guest.last_name}`.toLowerCase() : "";
-    return (
-      orderNumber.includes(query) ||
-      tableNumber.includes(query) ||
-      guestName.includes(query)
-    );
+    const guestName = guest ? `${guest.first_name} ${guest.last_name}`.toLowerCase() : '';
+    return orderNumber.includes(query) || tableNumber.includes(query) || guestName.includes(query);
   });
   const totalPages = Math.max(1, Math.ceil(filteredOrders.length / pageSize));
   const safePage = Math.min(currentPage, totalPages);
@@ -256,18 +251,18 @@ export default function OrderHistoryPage() {
     if (filteredOrders.length === 0) return;
 
     const headers = [
-      "Bestellnummer",
-      "Datum",
-      "Tisch",
-      "Gast",
-      "Status",
-      "Zahlungsstatus",
-      "Zwischensumme",
-      "MwSt.",
-      "Rabatt",
-      "Trinkgeld",
-      "Gesamt",
-      "Personen",
+      'Bestellnummer',
+      'Datum',
+      'Tisch',
+      'Gast',
+      'Status',
+      'Zahlungsstatus',
+      'Zwischensumme',
+      'MwSt.',
+      'Rabatt',
+      'Trinkgeld',
+      'Gesamt',
+      'Personen',
     ];
 
     const rows = filteredOrders.map((order) => {
@@ -276,9 +271,9 @@ export default function OrderHistoryPage() {
 
       return [
         order.order_number || `#${order.id}`,
-        format(parseISO(order.opened_at), "dd.MM.yyyy HH:mm", { locale: de }),
-        table ? `Tisch ${table.number}` : "-",
-        guest ? `${guest.first_name} ${guest.last_name}` : "-",
+        format(parseISO(order.opened_at), 'dd.MM.yyyy HH:mm', { locale: de }),
+        table ? `Tisch ${table.number}` : '-',
+        guest ? `${guest.first_name} ${guest.last_name}` : '-',
         order.status,
         order.payment_status,
         order.subtotal.toFixed(2),
@@ -286,36 +281,32 @@ export default function OrderHistoryPage() {
         order.discount_amount.toFixed(2),
         (order.tip_amount || 0).toFixed(2),
         order.total.toFixed(2),
-        order.party_size || "-",
+        order.party_size || '-',
       ];
     });
 
     const csvContent = [
-      headers.join(","),
-      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(",")),
-    ].join("\n");
+      headers.join(','),
+      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
+    ].join('\n');
 
-    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute(
-      "download",
-      `bestellhistorie_${format(new Date(), "yyyy-MM-dd")}.csv`
-    );
-    link.style.visibility = "hidden";
+    link.setAttribute('href', url);
+    link.setAttribute('download', `bestellhistorie_${format(new Date(), 'yyyy-MM-dd')}.csv`);
+    link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("de-DE", {
-      style: "currency",
-      currency: "EUR",
+    return new Intl.NumberFormat('de-DE', {
+      style: 'currency',
+      currency: 'EUR',
     }).format(amount);
   };
-
 
   if (isLoading && !restaurant) {
     return <LoadingOverlay />;
@@ -402,10 +393,12 @@ export default function OrderHistoryPage() {
                   >
                     <span className="truncate">
                       {filters.tableId
-                        ? `${tables.find((t) => t.id === filters.tableId)?.number ?? "-"}`
-                        : "Alle Tische"}
+                        ? `${tables.find((t) => t.id === filters.tableId)?.number ?? '-'}`
+                        : 'Alle Tische'}
                     </span>
-                    <ChevronDown className={`w-4 h-4 transition-transform ${tableMenuOpen ? "rotate-180" : ""}`} />
+                    <ChevronDown
+                      className={`w-4 h-4 transition-transform ${tableMenuOpen ? 'rotate-180' : ''}`}
+                    />
                   </button>
                   {tableMenuOpen && (
                     <div className="absolute mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 shadow-xl z-[80] overflow-hidden">
@@ -417,15 +410,17 @@ export default function OrderHistoryPage() {
                         }}
                         className={`w-full px-3 py-2 text-left flex items-center justify-between gap-2 text-sm transition-colors ${
                           !filters.tableId
-                            ? "bg-gray-800 text-white font-semibold"
-                            : "text-gray-200 hover:bg-gray-800/70"
+                            ? 'bg-gray-800 text-white font-semibold'
+                            : 'text-gray-200 hover:bg-gray-800/70'
                         }`}
                       >
                         <span className="truncate">Alle Tische</span>
                         {!filters.tableId && <Check className="w-4 h-4 text-blue-300" />}
                       </button>
                       {[...tables]
-                        .sort((a, b) => a.number.localeCompare(b.number, undefined, { numeric: true }))
+                        .sort((a, b) =>
+                          a.number.localeCompare(b.number, undefined, { numeric: true })
+                        )
                         .map((table) => {
                           const isSelected = filters.tableId === table.id;
                           return (
@@ -438,8 +433,8 @@ export default function OrderHistoryPage() {
                               }}
                               className={`w-full px-3 py-2 text-left flex items-center justify-between gap-2 text-sm transition-colors ${
                                 isSelected
-                                  ? "bg-gray-800 text-white font-semibold"
-                                  : "text-gray-200 hover:bg-gray-800/70"
+                                  ? 'bg-gray-800 text-white font-semibold'
+                                  : 'text-gray-200 hover:bg-gray-800/70'
                               }`}
                             >
                               <span className="truncate">{table.number}</span>
@@ -463,14 +458,19 @@ export default function OrderHistoryPage() {
                     <div className="flex items-center gap-2 min-w-0">
                       <Filter className="w-4 h-4 text-gray-300" />
                       <span className="truncate">
-                        {selectedStatuses.length === ALL_STATUSES.length || selectedStatuses.length === 0
-                          ? "Alle Status"
-                          : selectedStatuses.map((status) => STATUS_META[status].label).join(", ")}
+                        {selectedStatuses.length === ALL_STATUSES.length ||
+                        selectedStatuses.length === 0
+                          ? 'Alle Status'
+                          : selectedStatuses.map((status) => STATUS_META[status].label).join(', ')}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-gray-300">
-                      <span className="px-2 py-1 rounded-md bg-gray-700 text-xs">{filteredOrders.length}</span>
-                      <ChevronDown className={`w-4 h-4 transition-transform ${statusMenuOpen ? "rotate-180" : ""}`} />
+                      <span className="px-2 py-1 rounded-md bg-gray-700 text-xs">
+                        {filteredOrders.length}
+                      </span>
+                      <ChevronDown
+                        className={`w-4 h-4 transition-transform ${statusMenuOpen ? 'rotate-180' : ''}`}
+                      />
                     </div>
                   </button>
                   {statusMenuOpen && (
@@ -485,9 +485,10 @@ export default function OrderHistoryPage() {
                           });
                         }}
                         className={`w-full px-3 py-3 text-sm flex items-center justify-between transition-colors ${
-                          selectedStatuses.length === ALL_STATUSES.length || selectedStatuses.length === 0
-                            ? "font-semibold text-white border-l-2 border-blue-500 bg-gray-800/80"
-                            : "text-gray-200 hover:bg-gray-800"
+                          selectedStatuses.length === ALL_STATUSES.length ||
+                          selectedStatuses.length === 0
+                            ? 'font-semibold text-white border-l-2 border-blue-500 bg-gray-800/80'
+                            : 'text-gray-200 hover:bg-gray-800'
                         }`}
                       >
                         <span className="flex items-center gap-2">
@@ -497,15 +498,19 @@ export default function OrderHistoryPage() {
                           Alle Status
                         </span>
                         <div className="flex items-center gap-2">
-                          <span className="px-2 py-1 rounded-full text-xs bg-gray-800">{orders.length}</span>
+                          <span className="px-2 py-1 rounded-full text-xs bg-gray-800">
+                            {orders.length}
+                          </span>
                           <span
                             className={`inline-flex items-center justify-center w-6 h-6 rounded-full border ${
-                              selectedStatuses.length === ALL_STATUSES.length || selectedStatuses.length === 0
-                                ? "border-white/60 bg-white/10"
-                                : "border-gray-700 bg-gray-800"
+                              selectedStatuses.length === ALL_STATUSES.length ||
+                              selectedStatuses.length === 0
+                                ? 'border-white/60 bg-white/10'
+                                : 'border-gray-700 bg-gray-800'
                             }`}
                           >
-                            {(selectedStatuses.length === ALL_STATUSES.length || selectedStatuses.length === 0) && (
+                            {(selectedStatuses.length === ALL_STATUSES.length ||
+                              selectedStatuses.length === 0) && (
                               <Check className="w-4 h-4 text-blue-300" />
                             )}
                           </span>
@@ -532,14 +537,14 @@ export default function OrderHistoryPage() {
                             }}
                             className={`w-full px-3 py-3 text-sm flex items-center justify-between transition-colors ${
                               active
-                                ? "font-semibold text-white border-l-2 border-blue-500 bg-gray-800/80 hover:bg-gray-700/80"
-                                : "text-gray-200 hover:bg-gray-800"
+                                ? 'font-semibold text-white border-l-2 border-blue-500 bg-gray-800/80 hover:bg-gray-700/80'
+                                : 'text-gray-200 hover:bg-gray-800'
                             }`}
                           >
                             <span className="flex items-center gap-2">
                               <span
                                 className={`inline-flex items-center justify-center w-8 h-8 rounded-md border shrink-0 ${
-                                  active ? meta.tone : "border-white/10 bg-black/10 text-gray-200"
+                                  active ? meta.tone : 'border-white/10 bg-black/10 text-gray-200'
                                 }`}
                               >
                                 <Icon className="w-4 h-4" />
@@ -547,10 +552,14 @@ export default function OrderHistoryPage() {
                               <span className="capitalize">{meta.label}</span>
                             </span>
                             <span className="flex items-center gap-2">
-                              <span className="px-2 py-1 rounded-full text-xs bg-gray-800">{count}</span>
+                              <span className="px-2 py-1 rounded-full text-xs bg-gray-800">
+                                {count}
+                              </span>
                               <span
                                 className={`inline-flex items-center justify-center w-6 h-6 rounded-full border ${
-                                  active ? "border-white/60 bg-white/10" : "border-gray-700 bg-gray-800"
+                                  active
+                                    ? 'border-white/60 bg-white/10'
+                                    : 'border-gray-700 bg-gray-800'
                                 }`}
                               >
                                 {active && <Check className="w-4 h-4 text-blue-300" />}
@@ -596,91 +605,94 @@ export default function OrderHistoryPage() {
                   <h2 className="text-xl font-semibold text-gray-300 mb-2">
                     Keine Bestellungen gefunden
                   </h2>
-                  <p className="text-gray-500">Passen Sie die Filter an oder wählen Sie einen anderen Zeitraum</p>
+                  <p className="text-gray-500">
+                    Passen Sie die Filter an oder wählen Sie einen anderen Zeitraum
+                  </p>
                 </div>
               ) : (
                 <div className="space-y-4 py-4">
                   <div className="space-y-3">
                     {pagedOrders.map((order) => {
-                    const table = tables.find((t) => t.id === order.table_id);
-                    const guest = guests.find((g) => g.id === order.guest_id);
+                      const table = tables.find((t) => t.id === order.table_id);
+                      const guest = guests.find((g) => g.id === order.guest_id);
 
-                    return (
-                      <div
-                        key={order.id}
-                        onClick={() => handleOrderClick(order)}
-                        className="bg-gray-800 border border-gray-700 rounded-lg p-4 hover:border-gray-600 transition-colors cursor-pointer"
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <div className="font-semibold text-white">
-                                {order.order_number || `#${order.id}`}
+                      return (
+                        <div
+                          key={order.id}
+                          onClick={() => handleOrderClick(order)}
+                          className="bg-gray-800 border border-gray-700 rounded-lg p-4 hover:border-gray-600 transition-colors cursor-pointer"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-3 mb-2">
+                                <div className="font-semibold text-white">
+                                  {order.order_number || `#${order.id}`}
+                                </div>
+                                {table && (
+                                  <div className="flex items-center gap-1 text-gray-400 text-sm">
+                                    <TableIcon className="w-4 h-4" />
+                                    {table.number}
+                                  </div>
+                                )}
+                                {guest && (
+                                  <div className="flex items-center gap-1 text-gray-400 text-sm">
+                                    <User className="w-4 h-4" />
+                                    {guest.first_name} {guest.last_name}
+                                  </div>
+                                )}
                               </div>
-                              {table && (
-                                <div className="flex items-center gap-1 text-gray-400 text-sm">
-                                  <TableIcon className="w-4 h-4" />
-                                  {table.number}
+                              <div className="flex items-center gap-4 text-sm text-gray-400">
+                                <div className="flex items-center gap-1">
+                                  <Calendar className="w-4 h-4" />
+                                  {format(parseISO(order.opened_at), 'dd.MM.yyyy HH:mm', {
+                                    locale: de,
+                                  })}
+                                </div>
+                                <div>
+                                  Status: <span className="text-gray-300">{order.status}</span>
+                                </div>
+                                <div>
+                                  Zahlung:{' '}
+                                  <span
+                                    className={
+                                      order.payment_status === 'paid'
+                                        ? 'text-green-400'
+                                        : order.payment_status === 'partial'
+                                          ? 'text-yellow-400'
+                                          : 'text-red-400'
+                                    }
+                                  >
+                                    {order.payment_status}
+                                  </span>
+                                </div>
+                                {order.party_size && <div>{order.party_size} Personen</div>}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-xl font-bold text-white mb-1">
+                                {formatCurrency(order.total)}
+                              </div>
+                              {order.discount_amount > 0 && (
+                                <div className="text-xs text-red-400">
+                                  Rabatt: {formatCurrency(order.discount_amount)}
                                 </div>
                               )}
-                              {guest && (
-                                <div className="flex items-center gap-1 text-gray-400 text-sm">
-                                  <User className="w-4 h-4" />
-                                  {guest.first_name} {guest.last_name}
+                              {order.tip_amount > 0 && (
+                                <div className="text-xs text-green-400">
+                                  Trinkgeld: {formatCurrency(order.tip_amount)}
                                 </div>
                               )}
                             </div>
-                            <div className="flex items-center gap-4 text-sm text-gray-400">
-                              <div className="flex items-center gap-1">
-                                <Calendar className="w-4 h-4" />
-                                {format(parseISO(order.opened_at), "dd.MM.yyyy HH:mm", { locale: de })}
-                              </div>
-                              <div>
-                                Status: <span className="text-gray-300">{order.status}</span>
-                              </div>
-                              <div>
-                                Zahlung:{" "}
-                                <span
-                                  className={
-                                    order.payment_status === "paid"
-                                      ? "text-green-400"
-                                      : order.payment_status === "partial"
-                                      ? "text-yellow-400"
-                                      : "text-red-400"
-                                  }
-                                >
-                                  {order.payment_status}
-                                </span>
-                              </div>
-                              {order.party_size && (
-                                <div>{order.party_size} Personen</div>
-                              )}
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-xl font-bold text-white mb-1">
-                              {formatCurrency(order.total)}
-                            </div>
-                            {order.discount_amount > 0 && (
-                              <div className="text-xs text-red-400">
-                                Rabatt: {formatCurrency(order.discount_amount)}
-                              </div>
-                            )}
-                            {order.tip_amount > 0 && (
-                              <div className="text-xs text-green-400">
-                                Trinkgeld: {formatCurrency(order.tip_amount)}
-                              </div>
-                            )}
                           </div>
                         </div>
-                      </div>
-                    );
+                      );
                     })}
                   </div>
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-gray-700 pt-3 text-xs text-gray-400">
                     <div>
                       Zeigt {Math.min(pageStart + 1, filteredOrders.length)}-
-                      {Math.min(pageStart + pageSize, filteredOrders.length)} von {filteredOrders.length} Einträgen
+                      {Math.min(pageStart + pageSize, filteredOrders.length)} von{' '}
+                      {filteredOrders.length} Einträgen
                     </div>
                     <div className="flex items-center gap-2">
                       <Button
@@ -726,4 +738,3 @@ export default function OrderHistoryPage() {
     </div>
   );
 }
-

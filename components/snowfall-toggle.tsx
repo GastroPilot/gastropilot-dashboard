@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import SnowfallEffect from "@/components/SnowfallEffect";
-import { userSettingsApi } from "@/lib/api/user-settings";
+import { useEffect, useState } from 'react';
+import SnowfallEffect from '@/components/SnowfallEffect';
+import { userSettingsApi } from '@/lib/api/user-settings';
 
-const SNOW_KEY = "snow_enabled";
-const CONFIRM_KEY = "confirmations_enabled";
+const SNOW_KEY = 'snow_enabled';
+const CONFIRM_KEY = 'confirmations_enabled';
 
 export function SnowfallToggle() {
   const [enabled, setEnabled] = useState(true);
@@ -25,7 +25,7 @@ export function SnowfallToggle() {
           setEnabled(snowEnabled);
         }
 
-        if (typeof window !== "undefined") {
+        if (typeof window !== 'undefined') {
           window.localStorage.setItem(SNOW_KEY, snowEnabled.toString());
           window.localStorage.setItem(CONFIRM_KEY, confirmationsEnabled.toString());
         }

@@ -1,9 +1,17 @@
-"use client";
+'use client';
 
-import { useDraggable } from "@dnd-kit/core";
-import { Reservation } from "@/lib/api/reservations";
-import { format } from "date-fns";
-import { Clock, Users, CheckCircle, XCircle, AlertTriangle, Armchair, ShieldCheck } from "lucide-react";
+import { useDraggable } from '@dnd-kit/core';
+import { Reservation } from '@/lib/api/reservations';
+import { format } from 'date-fns';
+import {
+  Clock,
+  Users,
+  CheckCircle,
+  XCircle,
+  AlertTriangle,
+  Armchair,
+  ShieldCheck,
+} from 'lucide-react';
 
 interface ReservationCardProps {
   reservation: Reservation;
@@ -24,7 +32,7 @@ export function ReservationCard({
 }: ReservationCardProps) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: -reservation.id, // Negative ID um von Tischen zu unterscheiden
-    data: { type: "reservation", reservationId: reservation.id },
+    data: { type: 'reservation', reservationId: reservation.id },
   });
 
   const style = transform
@@ -37,18 +45,42 @@ export function ReservationCard({
   const endDate = new Date(reservation.end_at);
 
   const STATUS_ICON_MAP: Record<
-    Reservation["status"],
+    Reservation['status'],
     { Icon: typeof Clock; tone: string; label: string }
   > = {
-    pending: { Icon: Clock, tone: "bg-blue-900/40 border-blue-600 text-blue-100", label: "Ausstehend" },
-    confirmed: { Icon: ShieldCheck, tone: "bg-indigo-900/40 border-indigo-600 text-indigo-100", label: "Bestätigt" },
-    seated: { Icon: Armchair, tone: "bg-emerald-900/40 border-emerald-600 text-emerald-100", label: "Platziert" },
-    completed: { Icon: CheckCircle, tone: "bg-amber-900/30 border-amber-600 text-amber-100", label: "Abgeschlossen" },
-    canceled: { Icon: XCircle, tone: "bg-red-900/30 border-red-600 text-red-100", label: "Storniert" },
-    no_show: { Icon: AlertTriangle, tone: "bg-orange-900/30 border-orange-600 text-orange-100", label: "No-Show" },
+    pending: {
+      Icon: Clock,
+      tone: 'bg-blue-900/40 border-blue-600 text-blue-100',
+      label: 'Ausstehend',
+    },
+    confirmed: {
+      Icon: ShieldCheck,
+      tone: 'bg-indigo-900/40 border-indigo-600 text-indigo-100',
+      label: 'Bestätigt',
+    },
+    seated: {
+      Icon: Armchair,
+      tone: 'bg-emerald-900/40 border-emerald-600 text-emerald-100',
+      label: 'Platziert',
+    },
+    completed: {
+      Icon: CheckCircle,
+      tone: 'bg-amber-900/30 border-amber-600 text-amber-100',
+      label: 'Abgeschlossen',
+    },
+    canceled: {
+      Icon: XCircle,
+      tone: 'bg-red-900/30 border-red-600 text-red-100',
+      label: 'Storniert',
+    },
+    no_show: {
+      Icon: AlertTriangle,
+      tone: 'bg-orange-900/30 border-orange-600 text-orange-100',
+      label: 'No-Show',
+    },
   };
 
-  const getStatusIcon = (status: Reservation["status"]) => {
+  const getStatusIcon = (status: Reservation['status']) => {
     const entry = STATUS_ICON_MAP[status] || STATUS_ICON_MAP.pending;
     return {
       icon: <entry.Icon className="w-4 h-4" />,
@@ -83,7 +115,7 @@ export function ReservationCard({
         bg-gray-800 rounded-lg shadow-md border border-gray-700 p-2 md:p-3
         cursor-grab active:cursor-grabbing
         hover:shadow-lg hover:bg-gray-750 transition-all
-        ${isDragging ? "opacity-50" : ""}
+        ${isDragging ? 'opacity-50' : ''}
         touch-manipulation
         select-none
         min-h-[70px]
@@ -93,7 +125,7 @@ export function ReservationCard({
         <div className="flex flex-wrap items-center gap-2 text-sm text-gray-200">
           <Clock className="w-3 h-3 md:w-4 md:h-4 text-gray-400" />
           <span className="font-semibold text-white">
-            {format(startDate, "HH:mm")} – {format(endDate, "HH:mm")} Uhr
+            {format(startDate, 'HH:mm')} – {format(endDate, 'HH:mm')} Uhr
           </span>
           <span className="text-gray-300">• {reservation.party_size} Pers.</span>
         </div>
@@ -107,17 +139,11 @@ export function ReservationCard({
       </div>
 
       <div className="mt-2 flex items-center justify-between text-sm text-gray-300">
-        <span className="font-medium text-white">
-          {reservation.guest_name || "Unbekannt"}
-        </span>
+        <span className="font-medium text-white">{reservation.guest_name || 'Unbekannt'}</span>
         {(() => {
           const label = getTableLabel?.(reservation);
           if (label) {
-            return (
-              <span className="text-xs text-blue-300 font-medium">
-                {label}
-              </span>
-            );
+            return <span className="text-xs text-blue-300 font-medium">{label}</span>;
           }
           if (!reservation.table_id) return null;
           return (
@@ -136,4 +162,3 @@ export function ReservationCard({
     </div>
   );
 }
-

@@ -10,13 +10,13 @@ export function debounce<T extends (...args: any[]) => any>(
   wait: number
 ): (...args: Parameters<T>) => void {
   let timeout: NodeJS.Timeout | null = null;
-  
+
   return function executedFunction(...args: Parameters<T>) {
     const later = () => {
       timeout = null;
       func(...args);
     };
-    
+
     if (timeout) {
       clearTimeout(timeout);
     }
@@ -32,7 +32,7 @@ export function throttle<T extends (...args: any[]) => any>(
   limit: number
 ): (...args: Parameters<T>) => void {
   let inThrottle = false;
-  
+
   return function executedFunction(...args: Parameters<T>) {
     if (!inThrottle) {
       func(...args);
@@ -50,10 +50,10 @@ export function rafThrottle<T extends (...args: any[]) => void>(
 ): (...args: Parameters<T>) => void {
   let rafId: number | null = null;
   let lastArgs: Parameters<T> | null = null;
-  
+
   return function executedFunction(...args: Parameters<T>) {
     lastArgs = args;
-    
+
     if (rafId === null) {
       rafId = requestAnimationFrame(() => {
         if (lastArgs) {
@@ -84,14 +84,14 @@ export function memoize<T extends (...args: any[]) => any>(
   keyGenerator: (...args: Parameters<T>) => string = (...args) => JSON.stringify(args)
 ): T {
   const cache = new Map<string, ReturnType<T>>();
-  
+
   return function memoized(...args: Parameters<T>): ReturnType<T> {
     const key = keyGenerator(...args);
-    
+
     if (cache.has(key)) {
       return cache.get(key)!;
     }
-    
+
     const result = func(...args);
     cache.set(key, result);
     return result;
@@ -102,12 +102,10 @@ export function memoize<T extends (...args: any[]) => any>(
  * Create a stable callback that doesn't change reference.
  * Use this to prevent unnecessary re-renders in child components.
  */
-export function useStableCallback<T extends (...args: any[]) => any>(
-  callback: T
-): T {
+export function useStableCallback<T extends (...args: any[]) => any>(callback: T): T {
   const ref = { current: callback };
   ref.current = callback;
-  
+
   // This is a simplified version - in real use, useCallback with useRef would be better
   return ((...args: Parameters<T>) => ref.current(...args)) as T;
 }
@@ -163,7 +161,7 @@ export function formatCurrency(value: number): string {
  */
 export function measurePerformance(name: string): () => void {
   const start = performance.now();
-  
+
   return () => {
     const end = performance.now();
     console.log(`[Performance] ${name}: ${(end - start).toFixed(2)}ms`);
@@ -184,7 +182,7 @@ export function isInViewport(
   const itemBottom = itemTop + itemHeight;
   const viewportTop = scrollTop - overscan * itemHeight;
   const viewportBottom = scrollTop + viewportHeight + overscan * itemHeight;
-  
+
   return itemBottom > viewportTop && itemTop < viewportBottom;
 }
 
@@ -201,6 +199,6 @@ export function getVisibleRange(
   const start = Math.max(0, Math.floor(scrollTop / itemHeight) - overscan);
   const visibleCount = Math.ceil(viewportHeight / itemHeight);
   const end = Math.min(totalItems - 1, start + visibleCount + 2 * overscan);
-  
+
   return { start, end };
 }

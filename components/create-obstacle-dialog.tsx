@@ -1,8 +1,8 @@
-﻿import { useEffect, useState, useRef } from "react";
-import { obstaclesApi, Obstacle, ObstacleCreate, ObstacleUpdate } from "@/lib/api/obstacles";
-import { Area } from "@/lib/api/areas";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+﻿import { useEffect, useState, useRef } from 'react';
+import { obstaclesApi, Obstacle, ObstacleCreate, ObstacleUpdate } from '@/lib/api/obstacles';
+import { Area } from '@/lib/api/areas';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Dialog,
   DialogContent,
@@ -10,19 +10,19 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { ApiError } from "@/lib/api/client";
-import { ChevronDown, Check, Trash2, X, Save } from "lucide-react";
-import { confirmAction } from "@/lib/utils";
+} from '@/components/ui/dialog';
+import { ApiError } from '@/lib/api/client';
+import { ChevronDown, Check, Trash2, X, Save } from 'lucide-react';
+import { confirmAction } from '@/lib/utils';
 
-const PRESET_COLORS = ["#ef4444", "#f97316", "#22c55e", "#3b82f6", "#8b5cf6"];
+const PRESET_COLORS = ['#ef4444', '#f97316', '#22c55e', '#3b82f6', '#8b5cf6'];
 const TYPE_OPTIONS = [
-  { value: "door", label: "Tür" },
-  { value: "stairs", label: "Treppe" },
-  { value: "kitchen", label: "Küche" },
-  { value: "bar", label: "Bar" },
-  { value: "wall", label: "Wand" },
-  { value: "other", label: "Sonstiges" },
+  { value: 'door', label: 'Tür' },
+  { value: 'stairs', label: 'Treppe' },
+  { value: 'kitchen', label: 'Küche' },
+  { value: 'bar', label: 'Bar' },
+  { value: 'wall', label: 'Wand' },
+  { value: 'other', label: 'Sonstiges' },
 ];
 
 interface CreateObstacleDialogProps {
@@ -46,52 +46,52 @@ export function CreateObstacleDialog({
   areas,
   selectedAreaId,
 }: CreateObstacleDialogProps) {
-  const [type, setType] = useState("door");
-  const [name, setName] = useState("");
+  const [type, setType] = useState('door');
+  const [name, setName] = useState('');
   const [x, setX] = useState(50);
   const [y, setY] = useState(50);
   const [width, setWidth] = useState(100);
   const [height, setHeight] = useState(40);
   const [rotation, setRotation] = useState(0);
   const [blocking, setBlocking] = useState(true);
-  const [color, setColor] = useState("");
-  const [notes, setNotes] = useState("");
+  const [color, setColor] = useState('');
+  const [notes, setNotes] = useState('');
   const [areaId, setAreaId] = useState<number | null>(selectedAreaId ?? null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [areaMenuOpen, setAreaMenuOpen] = useState(false);
   const areaMenuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (open) {
-      setError("");
+      setError('');
       if (obstacle) {
-        setType(obstacle.type || "door");
-        setName(obstacle.name || "");
+        setType(obstacle.type || 'door');
+        setName(obstacle.name || '');
         setX(obstacle.x);
         setY(obstacle.y);
         setWidth(obstacle.width);
         setHeight(obstacle.height);
         setRotation(obstacle.rotation || 0);
         setBlocking(obstacle.blocking);
-        setColor(obstacle.color || "");
-        setNotes(obstacle.notes || "");
+        setColor(obstacle.color || '');
+        setNotes(obstacle.notes || '');
         setAreaId(obstacle.area_id ?? selectedAreaId ?? null);
       } else {
-        setType("door");
-        setName("");
+        setType('door');
+        setName('');
         setX(50);
         setY(50);
         setWidth(100);
         setHeight(40);
         setRotation(0);
         setBlocking(true);
-        setColor("");
-        setNotes("");
+        setColor('');
+        setNotes('');
         setAreaId(selectedAreaId ?? null);
       }
     } else {
-      setError("");
+      setError('');
     }
   }, [open, obstacle, selectedAreaId]);
 
@@ -101,16 +101,16 @@ export function CreateObstacleDialog({
         setAreaMenuOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setError('');
     setLoading(true);
     if (!areaId) {
-      setError("Bitte zuerst eine Area auswählen.");
+      setError('Bitte zuerst eine Area auswählen.');
       setLoading(false);
       return;
     }
@@ -135,14 +135,14 @@ export function CreateObstacleDialog({
       }
       onSaved();
       onOpenChange(false);
-      setName("");
-      setNotes("");
-      setColor("");
+      setName('');
+      setNotes('');
+      setColor('');
     } catch (err) {
       if (err instanceof ApiError) {
         setError(err.message);
       } else {
-        setError("Fehler beim Erstellen des Hindernisses");
+        setError('Fehler beim Erstellen des Hindernisses');
       }
     } finally {
       setLoading(false);
@@ -151,7 +151,7 @@ export function CreateObstacleDialog({
 
   const handleDelete = async () => {
     if (!obstacle) return;
-    const confirmed = confirmAction("Hindernis wirklich löschen?");
+    const confirmed = confirmAction('Hindernis wirklich löschen?');
     if (!confirmed) return;
     setLoading(true);
     try {
@@ -160,7 +160,7 @@ export function CreateObstacleDialog({
       onSaved();
       onOpenChange(false);
     } catch (err) {
-      setError("Fehler beim Löschen des Hindernisses");
+      setError('Fehler beim Löschen des Hindernisses');
     } finally {
       setLoading(false);
     }
@@ -170,23 +170,23 @@ export function CreateObstacleDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{obstacle ? "Hindernis bearbeiten" : "Hindernis hinzufügen"}</DialogTitle>
+          <DialogTitle>{obstacle ? 'Hindernis bearbeiten' : 'Hindernis hinzufügen'}</DialogTitle>
           <DialogDescription>Füge Türen, Treppen, Küchenbereiche o. Ä. hinzu.</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
-      {error && (
-        <div className="mb-4 p-3 bg-red-900/50 border border-red-600 text-red-300 rounded-md flex items-start justify-between gap-3">
-          <span>{error}</span>
-          <button
-            type="button"
-            onClick={() => setError("")}
-            className="text-red-200 hover:text-white"
-            aria-label="Fehlermeldung schließen"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      )}
+          {error && (
+            <div className="mb-4 p-3 bg-red-900/50 border border-red-600 text-red-300 rounded-md flex items-start justify-between gap-3">
+              <span>{error}</span>
+              <button
+                type="button"
+                onClick={() => setError('')}
+                className="text-red-200 hover:text-white"
+                aria-label="Fehlermeldung schließen"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
           <div className="space-y-4 px-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -223,9 +223,13 @@ export function CreateObstacleDialog({
                   disabled={areas.length === 0}
                 >
                   <span className="truncate">
-                    {areaId ? areas.find((a) => a.id === areaId)?.name || "Area auswählen" : "Area auswählen"}
+                    {areaId
+                      ? areas.find((a) => a.id === areaId)?.name || 'Area auswählen'
+                      : 'Area auswählen'}
                   </span>
-                  <ChevronDown className={`h-4 w-4 transition-transform ${areaMenuOpen ? "rotate-180" : ""}`} />
+                  <ChevronDown
+                    className={`h-4 w-4 transition-transform ${areaMenuOpen ? 'rotate-180' : ''}`}
+                  />
                 </button>
                 {areaMenuOpen && (
                   <div className="absolute z-10 mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 shadow-xl max-h-60 overflow-auto">
@@ -239,8 +243,8 @@ export function CreateObstacleDialog({
                         }}
                         className={`w-full px-3 py-2 text-left text-sm ${
                           areaId === area.id
-                            ? "font-semibold text-white"
-                            : "text-gray-200 hover:bg-gray-800/70"
+                            ? 'font-semibold text-white'
+                            : 'text-gray-200 hover:bg-gray-800/70'
                         }`}
                       >
                         {area.name}
@@ -259,11 +263,19 @@ export function CreateObstacleDialog({
             <div className="grid grid-cols-2 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium mb-1 text-gray-300">Breite</label>
-                <Input type="number" value={width} onChange={(e) => setWidth(parseInt(e.target.value) || 0)} />
+                <Input
+                  type="number"
+                  value={width}
+                  onChange={(e) => setWidth(parseInt(e.target.value) || 0)}
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1 text-gray-300">Höhe</label>
-                <Input type="number" value={height} onChange={(e) => setHeight(parseInt(e.target.value) || 0)} />
+                <Input
+                  type="number"
+                  value={height}
+                  onChange={(e) => setHeight(parseInt(e.target.value) || 0)}
+                />
               </div>
             </div>
 
@@ -290,7 +302,9 @@ export function CreateObstacleDialog({
                     type="button"
                     onClick={() => setColor(preset)}
                     className={`h-9 w-9 rounded-full border-2 transition-shadow ${
-                      color === preset ? "border-white shadow-lg shadow-black/30" : "border-white/40"
+                      color === preset
+                        ? 'border-white shadow-lg shadow-black/30'
+                        : 'border-white/40'
                     }`}
                     style={{ backgroundColor: preset }}
                     aria-label={`Farbe ${preset}`}
@@ -298,7 +312,7 @@ export function CreateObstacleDialog({
                 ))}
                 <input
                   type="color"
-                  value={color || "#9ca3af"}
+                  value={color || '#9ca3af'}
                   onChange={(e) => setColor(e.target.value)}
                   className="h-9 w-14 bg-gray-800 border border-gray-600 rounded cursor-pointer"
                   aria-label="Eigene Farbe wählen"
@@ -307,7 +321,7 @@ export function CreateObstacleDialog({
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={() => setColor("")}
+                  onClick={() => setColor('')}
                   className="text-gray-300"
                 >
                   Keine Farbe
@@ -339,7 +353,13 @@ export function CreateObstacleDialog({
                 Löschen
               </Button>
             )}
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading} className="gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={loading}
+              className="gap-2"
+            >
               <X className="w-4 h-4" />
               Abbrechen
             </Button>
@@ -367,6 +387,3 @@ export function CreateObstacleDialog({
     </Dialog>
   );
 }
-
-
-

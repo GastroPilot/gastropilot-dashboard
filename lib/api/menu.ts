@@ -1,4 +1,4 @@
-import { api } from "./client";
+import { api } from './client';
 
 export interface MenuCategory {
   id: number;
@@ -17,8 +17,8 @@ export interface MenuItem {
   category_id: number | null;
   name: string;
   description: string | null;
-  price: number;  // Preis inkl. MwSt.
-  tax_rate: number;  // MwSt-Satz (0.19 = 19%, 0.07 = 7%)
+  price: number; // Preis inkl. MwSt.
+  tax_rate: number; // MwSt-Satz (0.19 = 19%, 0.07 = 7%)
   is_available: boolean;
   sort_order: number | null;
   allergens: string[] | null;
@@ -48,8 +48,8 @@ export interface MenuItemCreate {
   category_id?: number | null;
   name: string;
   description?: string | null;
-  price: number;  // Preis inkl. MwSt.
-  tax_rate?: number;  // MwSt-Satz (0.19 = 19%, 0.07 = 7%)
+  price: number; // Preis inkl. MwSt.
+  tax_rate?: number; // MwSt-Satz (0.19 = 19%, 0.07 = 7%)
   is_available?: boolean;
   sort_order?: number;
   allergens?: string[] | null;
@@ -63,8 +63,8 @@ export interface MenuItemUpdate {
   category_id?: number | null;
   name?: string;
   description?: string | null;
-  price?: number;  // Preis inkl. MwSt.
-  tax_rate?: number;  // MwSt-Satz (0.19 = 19%, 0.07 = 7%)
+  price?: number; // Preis inkl. MwSt.
+  tax_rate?: number; // MwSt-Satz (0.19 = 19%, 0.07 = 7%)
   is_available?: boolean;
   sort_order?: number;
   allergens?: string[] | null;
@@ -111,13 +111,13 @@ export const menuApi = {
     params?: { category_id?: number; available_only?: boolean }
   ): Promise<MenuItem[]> => {
     const queryParams = new URLSearchParams();
-    if (params?.category_id) queryParams.append("category_id", params.category_id.toString());
-    if (params?.available_only) queryParams.append("available_only", "true");
+    if (params?.category_id) queryParams.append('category_id', params.category_id.toString());
+    if (params?.available_only) queryParams.append('available_only', 'true');
 
     const query = queryParams.toString();
     // Backend-Route ist @router.get("/"), daher trailing slash erforderlich
     return api.get<MenuItem[]>(
-      `/restaurants/${restaurantId}/menu/items/${query ? `?${query}` : ""}`
+      `/restaurants/${restaurantId}/menu/items/${query ? `?${query}` : ''}`
     );
   },
 
@@ -142,4 +142,3 @@ export const menuApi = {
     return api.delete(`/restaurants/${restaurantId}/menu/items/${itemId}`);
   },
 };
-

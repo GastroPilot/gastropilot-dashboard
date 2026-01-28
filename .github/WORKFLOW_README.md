@@ -33,11 +33,11 @@ SLACK_WEBHOOK_URL               # Slack Webhook URL für Benachrichtigungen (opt
 Gehe zu deinem GitHub Repository → Settings → Environments
 
 Erstelle für jede Umgebung ein Environment:
+
 - `production`
 - `staging`
 - `demo`
 - `test`
-
 
 Für jedes Environment füge folgende Secrets hinzu:
 
@@ -47,7 +47,8 @@ DEPLOY_PATH                     # Deployment-Pfad (optional, Standard: /opt/gast
 HEALTH_URL                      # Health Check URL (optional, Standard: http://localhost:{port})
 ```
 
-**Wichtig**: 
+**Wichtig**:
+
 - SSH-Secrets (`SSH_PRIVATE_KEY`, `SSH_HOST`, `SSH_USER`) sind Repository-Secrets und gelten für alle Environments
 - Environment-spezifische Secrets (`FRONTEND_ENV`, `DEPLOY_PATH`, `HEALTH_URL`) werden automatisch aus dem Environment-Kontext geladen
 - Du musst die Environment-Secrets in jedem Environment separat konfigurieren, nicht mit Environment-Präfixen wie `FRONTEND_ENV_PRODUCTION`
@@ -114,11 +115,11 @@ sudo chown -R $USER:$USER /opt/gastropilot/frontend
 ## 🔄 Workflow-Ablauf
 
 1. **Checkout**: Code wird aus dem Repository gecheckt
-2. **Build**: 
+2. **Build**:
    - Dependencies werden installiert (pnpm/npm)
    - Next.js Build wird erstellt
 3. **Package**: Deployment-Paket wird erstellt (.next, package.json, etc.)
-4. **Deploy**: 
+4. **Deploy**:
    - Paket wird per SSH auf Server hochgeladen
    - Alte .next-Version wird gesichert
    - Neue Version wird extrahiert
@@ -261,4 +262,3 @@ Füge weitere Steps vor oder nach dem Deploy-Step hinzu:
 - [SSH Agent Setup](https://github.com/webfactory/ssh-agent)
 - [Next.js Deployment](https://nextjs.org/docs/deployment)
 - [Screen Dokumentation](https://www.gnu.org/software/screen/)
-

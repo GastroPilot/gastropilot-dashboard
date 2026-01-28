@@ -1,15 +1,15 @@
-import { api } from "./client";
+import { api } from './client';
 
 export type OrderStatus =
-  | "open"
-  | "sent_to_kitchen"
-  | "in_preparation"
-  | "ready"
-  | "served"
-  | "paid"
-  | "canceled";
+  | 'open'
+  | 'sent_to_kitchen'
+  | 'in_preparation'
+  | 'ready'
+  | 'served'
+  | 'paid'
+  | 'canceled';
 
-export type PaymentStatus = "unpaid" | "partial" | "paid";
+export type PaymentStatus = 'unpaid' | 'partial' | 'paid';
 
 export interface SplitPayment {
   method: string;
@@ -133,25 +133,21 @@ export const ordersApi = {
     }
   ): Promise<Order[]> => {
     const queryParams = new URLSearchParams();
-    if (params?.status) queryParams.append("status_filter", params.status);
-    if (params?.table_id) queryParams.append("table_id", params.table_id.toString());
-    if (params?.guest_id) queryParams.append("guest_id", params.guest_id.toString());
+    if (params?.status) queryParams.append('status_filter', params.status);
+    if (params?.table_id) queryParams.append('table_id', params.table_id.toString());
+    if (params?.guest_id) queryParams.append('guest_id', params.guest_id.toString());
     if (params?.reservation_id)
-      queryParams.append("reservation_id", params.reservation_id.toString());
-    if (params?.start_date) queryParams.append("start_date", params.start_date);
-    if (params?.end_date) queryParams.append("end_date", params.end_date);
+      queryParams.append('reservation_id', params.reservation_id.toString());
+    if (params?.start_date) queryParams.append('start_date', params.start_date);
+    if (params?.end_date) queryParams.append('end_date', params.end_date);
 
     const query = queryParams.toString();
     // Backend-Route ist @router.get("/"), daher trailing slash erforderlich
-    return api.get<Order[]>(
-      `/restaurants/${restaurantId}/orders/${query ? `?${query}` : ""}`
-    );
+    return api.get<Order[]>(`/restaurants/${restaurantId}/orders/${query ? `?${query}` : ''}`);
   },
 
   get: async (restaurantId: number, orderId: number): Promise<OrderWithItems> => {
-    return api.get<OrderWithItems>(
-      `/restaurants/${restaurantId}/orders/${orderId}`
-    );
+    return api.get<OrderWithItems>(`/restaurants/${restaurantId}/orders/${orderId}`);
   },
 
   create: async (restaurantId: number, data: OrderCreate): Promise<Order> => {
@@ -159,15 +155,8 @@ export const ordersApi = {
     return api.post<Order>(`/restaurants/${restaurantId}/orders/`, data);
   },
 
-  update: async (
-    restaurantId: number,
-    orderId: number,
-    data: OrderUpdate
-  ): Promise<Order> => {
-    return api.patch<Order>(
-      `/restaurants/${restaurantId}/orders/${orderId}`,
-      data
-    );
+  update: async (restaurantId: number, orderId: number, data: OrderUpdate): Promise<Order> => {
+    return api.patch<Order>(`/restaurants/${restaurantId}/orders/${orderId}`, data);
   },
 
   delete: async (restaurantId: number, orderId: number): Promise<void> => {
@@ -180,10 +169,7 @@ export const ordersApi = {
     orderId: number,
     item: OrderItemCreate
   ): Promise<OrderItem> => {
-    return api.post<OrderItem>(
-      `/restaurants/${restaurantId}/orders/${orderId}/items`,
-      item
-    );
+    return api.post<OrderItem>(`/restaurants/${restaurantId}/orders/${orderId}/items`, item);
   },
 
   updateItem: async (
@@ -198,14 +184,7 @@ export const ordersApi = {
     );
   },
 
-  deleteItem: async (
-    restaurantId: number,
-    orderId: number,
-    itemId: number
-  ): Promise<void> => {
-    return api.delete(
-      `/restaurants/${restaurantId}/orders/${orderId}/items/${itemId}`
-    );
+  deleteItem: async (restaurantId: number, orderId: number, itemId: number): Promise<void> => {
+    return api.delete(`/restaurants/${restaurantId}/orders/${orderId}/items/${itemId}`);
   },
 };
-

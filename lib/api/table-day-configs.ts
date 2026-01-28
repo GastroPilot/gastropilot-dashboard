@@ -1,4 +1,4 @@
-import { api } from "./client";
+import { api } from './client';
 
 export interface TableDayConfig {
   id: number;
@@ -58,7 +58,9 @@ export interface TableDayConfigUpdate {
 
 export const tableDayConfigsApi = {
   getByDate: async (restaurantId: number, date: string): Promise<TableDayConfig[]> => {
-    return api.get<TableDayConfig[]>(`/restaurants/${restaurantId}/table-day-configs/by-date/${date}`);
+    return api.get<TableDayConfig[]>(
+      `/restaurants/${restaurantId}/table-day-configs/by-date/${date}`
+    );
   },
 
   createOrUpdate: async (
@@ -80,32 +82,17 @@ export const tableDayConfigsApi = {
     );
   },
 
-  delete: async (
-    restaurantId: number,
-    date: string,
-    tableId: number
-  ): Promise<void> => {
+  delete: async (restaurantId: number, date: string, tableId: number): Promise<void> => {
     return api.delete(
       `/restaurants/${restaurantId}/table-day-configs/by-date/${date}/table/${tableId}`
     );
   },
 
-  deleteById: async (
-    restaurantId: number,
-    configId: number
-  ): Promise<void> => {
-    return api.delete(
-      `/restaurants/${restaurantId}/table-day-configs/${configId}`
-    );
+  deleteById: async (restaurantId: number, configId: number): Promise<void> => {
+    return api.delete(`/restaurants/${restaurantId}/table-day-configs/${configId}`);
   },
 
-  deleteAllForDate: async (
-    restaurantId: number,
-    date: string
-  ): Promise<void> => {
-    return api.delete(
-      `/restaurants/${restaurantId}/table-day-configs/by-date/${date}`
-    );
+  deleteAllForDate: async (restaurantId: number, date: string): Promise<void> => {
+    return api.delete(`/restaurants/${restaurantId}/table-day-configs/by-date/${date}`);
   },
 };
-

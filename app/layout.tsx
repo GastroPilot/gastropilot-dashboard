@@ -1,12 +1,12 @@
-import type { Metadata } from "next";
-import "./globals.css";
-import { SnowfallToggle } from "@/components/snowfall-toggle";
-import { SiteFooter } from "@/components/site-footer";
-import { QueryProvider } from "@/lib/providers/query-provider";
+import type { Metadata } from 'next';
+import './globals.css';
+import { SnowfallToggle } from '@/components/snowfall-toggle';
+import { SiteFooter } from '@/components/site-footer';
+import { QueryProvider } from '@/lib/providers/query-provider';
 
 export const metadata: Metadata = {
-  title: "Reservierungsmanagement",
-  description: "Verwaltung von Tischen und Reservierungen",
+  title: 'Reservierungsmanagement',
+  description: 'Verwaltung von Tischen und Reservierungen',
 };
 
 export default function RootLayout({

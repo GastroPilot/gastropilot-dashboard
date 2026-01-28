@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import { useEffect, useState, useCallback } from "react";
-import { restaurantsApi, Restaurant } from "@/lib/api/restaurants";
-import { vouchersApi, Voucher, VoucherCreate, VoucherUpdate } from "@/lib/api/vouchers";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { LoadingOverlay } from "@/components/loading-overlay";
-import { Plus, Edit, Trash2, Ticket, X, Save, Copy, CheckCircle2, XCircle } from "lucide-react";
-import { confirmAction } from "@/lib/utils";
+import { useEffect, useState, useCallback } from 'react';
+import { restaurantsApi, Restaurant } from '@/lib/api/restaurants';
+import { vouchersApi, Voucher, VoucherCreate, VoucherUpdate } from '@/lib/api/vouchers';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { LoadingOverlay } from '@/components/loading-overlay';
+import { Plus, Edit, Trash2, Ticket, X, Save, Copy, CheckCircle2, XCircle } from 'lucide-react';
+import { confirmAction } from '@/lib/utils';
 import {
   Dialog,
   DialogContent,
@@ -15,7 +15,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 
 export default function VouchersPage() {
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
@@ -24,25 +24,25 @@ export default function VouchersPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingVoucher, setEditingVoucher] = useState<Voucher | null>(null);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [toasts, setToasts] = useState<
-    { id: string; message: string; variant?: "info" | "error" | "success" }[]
+    { id: string; message: string; variant?: 'info' | 'error' | 'success' }[]
   >([]);
 
   // Form States
-  const [code, setCode] = useState("");
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [type, setType] = useState<"fixed" | "percentage">("fixed");
+  const [code, setCode] = useState('');
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [type, setType] = useState<'fixed' | 'percentage'>('fixed');
   const [value, setValue] = useState<number>(0);
-  const [validFrom, setValidFrom] = useState("");
-  const [validUntil, setValidUntil] = useState("");
+  const [validFrom, setValidFrom] = useState('');
+  const [validUntil, setValidUntil] = useState('');
   const [maxUses, setMaxUses] = useState<number | null>(null);
   const [minOrderValue, setMinOrderValue] = useState<number | null>(null);
   const [isActive, setIsActive] = useState(true);
 
   const addToast = useCallback(
-    (message: string, variant: "info" | "error" | "success" = "info") => {
+    (message: string, variant: 'info' | 'error' | 'success' = 'info') => {
       const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
       setToasts((prev) => [...prev, { id, message, variant }]);
       setTimeout(() => {
@@ -58,7 +58,7 @@ export default function VouchersPage() {
       const restaurantsData = await restaurantsApi.list();
 
       if (restaurantsData.length === 0) {
-        addToast("Kein Restaurant gefunden", "error");
+        addToast('Kein Restaurant gefunden', 'error');
         return;
       }
 
@@ -68,8 +68,8 @@ export default function VouchersPage() {
       const vouchersData = await vouchersApi.list(selectedRestaurant.id, true);
       setVouchers(vouchersData);
     } catch (err) {
-      console.error("Error loading vouchers:", err);
-      addToast("Fehler beim Laden der Gutscheine", "error");
+      console.error('Error loading vouchers:', err);
+      addToast('Fehler beim Laden der Gutscheine', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -80,18 +80,18 @@ export default function VouchersPage() {
   }, [loadData]);
 
   const resetForm = () => {
-    setCode("");
-    setName("");
-    setDescription("");
-    setType("fixed");
+    setCode('');
+    setName('');
+    setDescription('');
+    setType('fixed');
     setValue(0);
-    setValidFrom("");
-    setValidUntil("");
+    setValidFrom('');
+    setValidUntil('');
     setMaxUses(null);
     setMinOrderValue(null);
     setIsActive(true);
     setEditingVoucher(null);
-    setError("");
+    setError('');
   };
 
   const openCreateDialog = () => {
@@ -101,12 +101,12 @@ export default function VouchersPage() {
 
   const openEditDialog = (voucher: Voucher) => {
     setCode(voucher.code);
-    setName(voucher.name || "");
-    setDescription(voucher.description || "");
+    setName(voucher.name || '');
+    setDescription(voucher.description || '');
     setType(voucher.type);
     setValue(voucher.value);
-    setValidFrom(voucher.valid_from ? voucher.valid_from : "");
-    setValidUntil(voucher.valid_until ? voucher.valid_until : "");
+    setValidFrom(voucher.valid_from ? voucher.valid_from : '');
+    setValidUntil(voucher.valid_until ? voucher.valid_until : '');
     setMaxUses(voucher.max_uses);
     setMinOrderValue(voucher.min_order_value);
     setIsActive(voucher.is_active);
@@ -118,22 +118,22 @@ export default function VouchersPage() {
     if (!restaurant) return;
 
     if (!code.trim()) {
-      setError("Gutschein-Code ist erforderlich");
+      setError('Gutschein-Code ist erforderlich');
       return;
     }
 
     if (value <= 0) {
-      setError("Wert muss größer als 0 sein");
+      setError('Wert muss größer als 0 sein');
       return;
     }
 
-    if (type === "percentage" && value > 100) {
-      setError("Prozentwert darf nicht größer als 100 sein");
+    if (type === 'percentage' && value > 100) {
+      setError('Prozentwert darf nicht größer als 100 sein');
       return;
     }
 
     setLoading(true);
-    setError("");
+    setError('');
 
     try {
       if (editingVoucher) {
@@ -149,7 +149,7 @@ export default function VouchersPage() {
           is_active: isActive,
         };
         await vouchersApi.update(restaurant.id, editingVoucher.id, updateData);
-        addToast("Gutschein aktualisiert", "success");
+        addToast('Gutschein aktualisiert', 'success');
       } else {
         const createData: VoucherCreate = {
           restaurant_id: restaurant.id,
@@ -165,15 +165,15 @@ export default function VouchersPage() {
           is_active: isActive,
         };
         await vouchersApi.create(restaurant.id, createData);
-        addToast("Gutschein erstellt", "success");
+        addToast('Gutschein erstellt', 'success');
       }
 
       setDialogOpen(false);
       resetForm();
       await loadData();
     } catch (err: any) {
-      setError(err?.message || "Fehler beim Speichern");
-      addToast(err?.message || "Fehler beim Speichern", "error");
+      setError(err?.message || 'Fehler beim Speichern');
+      addToast(err?.message || 'Fehler beim Speichern', 'error');
     } finally {
       setLoading(false);
     }
@@ -190,16 +190,16 @@ export default function VouchersPage() {
 
     try {
       await vouchersApi.delete(restaurant.id, voucher.id);
-      addToast("Gutschein gelöscht", "success");
+      addToast('Gutschein gelöscht', 'success');
       await loadData();
     } catch (err: any) {
-      addToast(err?.message || "Fehler beim Löschen", "error");
+      addToast(err?.message || 'Fehler beim Löschen', 'error');
     }
   };
 
   const copyCode = (code: string) => {
     navigator.clipboard.writeText(code);
-    addToast("Code kopiert", "success");
+    addToast('Code kopiert', 'success');
   };
 
   if (isLoading) {
@@ -223,11 +223,11 @@ export default function VouchersPage() {
             <div
               key={toast.id}
               className={`min-w-[260px] rounded-lg border px-4 py-3 shadow-[0_14px_32px_rgba(0,0,0,0.35)] text-sm ${
-                toast.variant === "error"
-                  ? "bg-red-900/80 border-red-500 text-red-50"
-                  : toast.variant === "success"
-                  ? "bg-green-900/80 border-green-500 text-green-50"
-                  : "bg-slate-800/90 border-slate-600 text-slate-100"
+                toast.variant === 'error'
+                  ? 'bg-red-900/80 border-red-500 text-red-50'
+                  : toast.variant === 'success'
+                    ? 'bg-green-900/80 border-green-500 text-green-50'
+                    : 'bg-slate-800/90 border-slate-600 text-slate-100'
               }`}
             >
               {toast.message}
@@ -246,9 +246,7 @@ export default function VouchersPage() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-white">Gutschein-Verwaltung</h1>
-                <p className="text-xs md:text-sm text-gray-400 mt-0.5">
-                  {restaurant.name}
-                </p>
+                <p className="text-xs md:text-sm text-gray-400 mt-0.5">{restaurant.name}</p>
               </div>
             </div>
             <div className="flex items-center gap-2 pt-1.5 md:pt-2">
@@ -271,7 +269,9 @@ export default function VouchersPage() {
           {vouchers.length === 0 ? (
             <div className="text-center py-12">
               <Ticket className="w-12 h-12 mx-auto mb-4 text-gray-500" />
-              <h2 className="text-xl font-semibold text-white mb-2">Noch keine Gutscheine vorhanden</h2>
+              <h2 className="text-xl font-semibold text-white mb-2">
+                Noch keine Gutscheine vorhanden
+              </h2>
               <p className="text-gray-400 mb-4">Erstellen Sie Ihren ersten Gutschein</p>
               <Button
                 className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -288,14 +288,16 @@ export default function VouchersPage() {
                   key={voucher.id}
                   className={`bg-gray-800 border rounded-lg p-4 transition-colors ${
                     voucher.is_active
-                      ? "border-gray-700 hover:border-orange-500"
-                      : "border-gray-700 opacity-60"
+                      ? 'border-gray-700 hover:border-orange-500'
+                      : 'border-gray-700 opacity-60'
                   }`}
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <code className="text-lg font-bold text-white font-mono">{voucher.code}</code>
+                        <code className="text-lg font-bold text-white font-mono">
+                          {voucher.code}
+                        </code>
                         <button
                           onClick={() => copyCode(voucher.code)}
                           className="text-gray-400 hover:text-orange-400 transition-colors"
@@ -325,14 +327,16 @@ export default function VouchersPage() {
                     <div className="flex justify-between">
                       <span className="text-gray-400">Typ:</span>
                       <span className="font-medium text-white">
-                        {voucher.type === "fixed" ? `${voucher.value.toFixed(2)} €` : `${voucher.value}%`}
+                        {voucher.type === 'fixed'
+                          ? `${voucher.value.toFixed(2)} €`
+                          : `${voucher.value}%`}
                       </span>
                     </div>
                     {voucher.valid_from && (
                       <div className="flex justify-between">
                         <span className="text-gray-400">Gültig ab:</span>
                         <span className="text-gray-300">
-                          {new Date(voucher.valid_from).toLocaleDateString("de-DE")}
+                          {new Date(voucher.valid_from).toLocaleDateString('de-DE')}
                         </span>
                       </div>
                     )}
@@ -340,7 +344,7 @@ export default function VouchersPage() {
                       <div className="flex justify-between">
                         <span className="text-gray-400">Gültig bis:</span>
                         <span className="text-gray-300">
-                          {new Date(voucher.valid_until).toLocaleDateString("de-DE")}
+                          {new Date(voucher.valid_until).toLocaleDateString('de-DE')}
                         </span>
                       </div>
                     )}
@@ -355,7 +359,9 @@ export default function VouchersPage() {
                     {voucher.min_order_value && (
                       <div className="flex justify-between">
                         <span className="text-gray-400">Mindestbestellwert:</span>
-                        <span className="text-gray-300">{voucher.min_order_value.toFixed(2)} €</span>
+                        <span className="text-gray-300">
+                          {voucher.min_order_value.toFixed(2)} €
+                        </span>
                       </div>
                     )}
                   </div>
@@ -390,13 +396,11 @@ export default function VouchersPage() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-gray-800 border-gray-700 text-gray-100">
           <DialogHeader>
-            <DialogTitle>
-              {editingVoucher ? "Gutschein bearbeiten" : "Neuer Gutschein"}
-            </DialogTitle>
+            <DialogTitle>{editingVoucher ? 'Gutschein bearbeiten' : 'Neuer Gutschein'}</DialogTitle>
             <DialogDescription>
               {editingVoucher
-                ? "Bearbeiten Sie die Gutschein-Details"
-                : "Erstellen Sie einen neuen Gutschein für Ihr Restaurant"}
+                ? 'Bearbeiten Sie die Gutschein-Details'
+                : 'Erstellen Sie einen neuen Gutschein für Ihr Restaurant'}
             </DialogDescription>
           </DialogHeader>
 
@@ -452,12 +456,10 @@ export default function VouchersPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
-                  Typ *
-                </label>
+                <label className="block text-sm font-medium text-gray-300 mb-1">Typ *</label>
                 <select
                   value={type}
-                  onChange={(e) => setType(e.target.value as "fixed" | "percentage")}
+                  onChange={(e) => setType(e.target.value as 'fixed' | 'percentage')}
                   className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 text-white"
                 >
                   <option value="fixed">Fester Betrag (€)</option>
@@ -466,21 +468,19 @@ export default function VouchersPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
-                  Wert *
-                </label>
+                <label className="block text-sm font-medium text-gray-300 mb-1">Wert *</label>
                 <Input
                   type="number"
-                  step={type === "fixed" ? "0.01" : "1"}
+                  step={type === 'fixed' ? '0.01' : '1'}
                   min="0"
-                  max={type === "percentage" ? "100" : undefined}
+                  max={type === 'percentage' ? '100' : undefined}
                   value={value}
                   onChange={(e) => setValue(parseFloat(e.target.value) || 0)}
-                  placeholder={type === "fixed" ? "10.00" : "10"}
+                  placeholder={type === 'fixed' ? '10.00' : '10'}
                   className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  {type === "fixed" ? "Betrag in EUR" : "Prozent (0-100)"}
+                  {type === 'fixed' ? 'Betrag in EUR' : 'Prozent (0-100)'}
                 </p>
               </div>
             </div>
@@ -519,7 +519,7 @@ export default function VouchersPage() {
                 <Input
                   type="number"
                   min="1"
-                  value={maxUses || ""}
+                  value={maxUses || ''}
                   onChange={(e) => setMaxUses(e.target.value ? parseInt(e.target.value) : null)}
                   placeholder="Unbegrenzt"
                   className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
@@ -534,7 +534,7 @@ export default function VouchersPage() {
                   type="number"
                   step="0.01"
                   min="0"
-                  value={minOrderValue || ""}
+                  value={minOrderValue || ''}
                   onChange={(e) =>
                     setMinOrderValue(e.target.value ? parseFloat(e.target.value) : null)
                   }
@@ -574,7 +574,7 @@ export default function VouchersPage() {
               className="bg-blue-600 hover:bg-blue-700 text-white"
             >
               <Save className="w-4 h-4 mr-1" />
-              {loading ? "Speichern..." : "Speichern"}
+              {loading ? 'Speichern...' : 'Speichern'}
             </Button>
           </DialogFooter>
         </DialogContent>

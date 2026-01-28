@@ -1,8 +1,8 @@
-import { api } from "./client";
+import { api } from './client';
 
 /**
  * Verfügbare Module in GastroPilot
- * 
+ *
  * - reservations_module: Reservierungsmodul (Tischplan, Kalender, Warteliste, Gäste-Verwaltung)
  * - orders_module: Bestellungs-/Menümodul (Bestellsystem, Menüverwaltung, Statistiken)
  * - web_reservation_module: Web-Reservierungsformular für die Website
@@ -52,10 +52,10 @@ export const licenseApi = {
    */
   async getFeatures(): Promise<Features> {
     try {
-      const response = await api.get<Features>("/license/features");
+      const response = await api.get<Features>('/license/features');
       return response;
     } catch (error) {
-      console.error("Fehler beim Laden der License-Features:", error);
+      console.error('Fehler beim Laden der License-Features:', error);
       // Fallback: Alle Features aktiviert (für Development)
       return DEV_FEATURES;
     }
@@ -66,13 +66,13 @@ export const licenseApi = {
    */
   async getLicenseInfo(): Promise<LicenseInfo> {
     try {
-      const response = await api.get<LicenseInfo>("/license/info");
+      const response = await api.get<LicenseInfo>('/license/info');
       return response;
     } catch (error) {
-      console.error("Fehler beim Laden der Lizenz-Informationen:", error);
+      console.error('Fehler beim Laden der Lizenz-Informationen:', error);
       return {
         features: DEV_FEATURES,
-        package: "development",
+        package: 'development',
         customer: {
           customer_number: null,
           customer_name: null,

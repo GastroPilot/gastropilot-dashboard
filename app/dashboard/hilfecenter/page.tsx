@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   CheckCircle,
@@ -10,89 +10,89 @@ import {
   AlertCircle,
   BookOpen,
   Target,
-} from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+} from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const workflowSteps = [
   {
     step: 1,
-    title: "Tisch zuweisen (optional)",
-    description: "Ziehe eine Reservierung aus der Warteliste auf einen Tisch im Tischplan.",
+    title: 'Tisch zuweisen (optional)',
+    description: 'Ziehe eine Reservierung aus der Warteliste auf einen Tisch im Tischplan.',
     icon: MapPin,
-    iconColor: "text-blue-400",
-    bgColor: "bg-blue-900/20",
-    borderColor: "border-blue-700/50",
-    status: "bestätigt",
-    statusColor: "text-blue-200",
+    iconColor: 'text-blue-400',
+    bgColor: 'bg-blue-900/20',
+    borderColor: 'border-blue-700/50',
+    status: 'bestätigt',
+    statusColor: 'text-blue-200',
     details: [
-      "Drag & Drop von der Warteliste auf den gewünschten Tisch",
+      'Drag & Drop von der Warteliste auf den gewünschten Tisch',
       "Status bleibt 'bestätigt'",
-      "Tisch wird visuell als belegt markiert",
+      'Tisch wird visuell als belegt markiert',
     ],
   },
   {
     step: 2,
-    title: "Gäste da",
+    title: 'Gäste da',
     description: "Klicke auf 'Gäste da', sobald die Gäste im Restaurant angekommen sind.",
     icon: UserCheck,
-    iconColor: "text-green-400",
-    bgColor: "bg-green-900/20",
-    borderColor: "border-green-700/50",
-    status: "platziert",
-    statusColor: "text-green-300",
+    iconColor: 'text-green-400',
+    bgColor: 'bg-green-900/20',
+    borderColor: 'border-green-700/50',
+    status: 'platziert',
+    statusColor: 'text-green-300',
     details: [
       "Button 'Gäste da' in der Reservierungsansicht klicken",
       "Status wechselt zu 'platziert'",
-      "Gäste sind jetzt offiziell am Tisch",
+      'Gäste sind jetzt offiziell am Tisch',
     ],
   },
   {
     step: 3,
-    title: "Abschließen",
+    title: 'Abschließen',
     description: "Klicke auf 'Abschließen', wenn die Gäste den Tisch verlassen haben.",
     icon: CheckCircle,
-    iconColor: "text-amber-400",
-    bgColor: "bg-amber-900/20",
-    borderColor: "border-amber-700/50",
-    status: "abgeschlossen",
-    statusColor: "text-amber-300",
+    iconColor: 'text-amber-400',
+    bgColor: 'bg-amber-900/20',
+    borderColor: 'border-amber-700/50',
+    status: 'abgeschlossen',
+    statusColor: 'text-amber-300',
     details: [
       "Button 'Abschließen' klicken",
       "Status wechselt zu 'abgeschlossen'",
-      "Tischbindung wird entfernt, Tisch ist wieder frei",
+      'Tischbindung wird entfernt, Tisch ist wieder frei',
     ],
   },
 ];
 
 const statusTransitions = [
   {
-    title: "Standardfluss",
+    title: 'Standardfluss',
     icon: ArrowRight,
-    iconColor: "text-blue-400",
-    bgColor: "bg-blue-900/20",
-    borderColor: "border-blue-700/50",
+    iconColor: 'text-blue-400',
+    bgColor: 'bg-blue-900/20',
+    borderColor: 'border-blue-700/50',
     transitions: [
       {
-        from: "Bestätigt",
-        to: "Gäste da",
-        result: "Status: platziert",
+        from: 'Bestätigt',
+        to: 'Gäste da',
+        result: 'Status: platziert',
       },
       {
-        from: "Platziert",
-        to: "Abschließen",
-        result: "Status: abgeschlossen",
+        from: 'Platziert',
+        to: 'Abschließen',
+        result: 'Status: abgeschlossen',
       },
     ],
   },
   {
-    title: "Abweichungen",
+    title: 'Abweichungen',
     icon: AlertCircle,
-    iconColor: "text-amber-400",
-    bgColor: "bg-amber-900/20",
-    borderColor: "border-amber-700/50",
+    iconColor: 'text-amber-400',
+    bgColor: 'bg-amber-900/20',
+    borderColor: 'border-amber-700/50',
     transitions: [
-      { from: "Bestätigt", to: "No-Show", result: "Status: no_show" },
-      { from: "Bestätigt", to: "Stornieren", result: "Status: storniert" },
+      { from: 'Bestätigt', to: 'No-Show', result: 'Status: no_show' },
+      { from: 'Bestätigt', to: 'Stornieren', result: 'Status: storniert' },
     ],
   },
 ];
@@ -109,7 +109,9 @@ export default function HilfecenterPage() {
             </div>
             <div>
               <h1 className="text-xl md:text-2xl font-bold text-white">Hilfecenter</h1>
-              <p className="text-xs md:text-sm text-gray-400 mt-0.5">Tisch- & Reservierungsabläufe verstehen</p>
+              <p className="text-xs md:text-sm text-gray-400 mt-0.5">
+                Tisch- & Reservierungsabläufe verstehen
+              </p>
             </div>
           </div>
         </div>
@@ -128,9 +130,9 @@ export default function HilfecenterPage() {
             </CardHeader>
             <CardContent className="pt-6">
               <p className="text-gray-300 leading-relaxed">
-                Der klare Ablauf stellt sicher, dass Gäste erst platziert werden, wenn sie wirklich da sind, und dass
-                Reservierungen sauber abgeschlossen werden. So bleiben Warteliste, Tischplan und Historie konsistent und
-                nachvollziehbar.
+                Der klare Ablauf stellt sicher, dass Gäste erst platziert werden, wenn sie wirklich
+                da sind, und dass Reservierungen sauber abgeschlossen werden. So bleiben Warteliste,
+                Tischplan und Historie konsistent und nachvollziehbar.
               </p>
             </CardContent>
           </Card>
@@ -152,18 +154,26 @@ export default function HilfecenterPage() {
                     <CardHeader className="border-b border-gray-700">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <div className={`h-8 w-8 rounded-lg ${step.bgColor} flex items-center justify-center`}>
+                          <div
+                            className={`h-8 w-8 rounded-lg ${step.bgColor} flex items-center justify-center`}
+                          >
                             <Icon className={`w-4 h-4 ${step.iconColor}`} />
                           </div>
-                          <CardTitle className="text-base text-white">Schritt {step.step}</CardTitle>
+                          <CardTitle className="text-base text-white">
+                            Schritt {step.step}
+                          </CardTitle>
                         </div>
-                        {index < workflowSteps.length - 1 && <ArrowRight className="w-5 h-5 text-gray-600 hidden md:block" />}
+                        {index < workflowSteps.length - 1 && (
+                          <ArrowRight className="w-5 h-5 text-gray-600 hidden md:block" />
+                        )}
                       </div>
                     </CardHeader>
                     <CardContent className="pt-4 space-y-3">
                       <div className="flex items-center justify-between">
                         <p className="text-white font-semibold">{step.title}</p>
-                        <span className={`text-xs font-semibold ${step.statusColor}`}>{step.status}</span>
+                        <span className={`text-xs font-semibold ${step.statusColor}`}>
+                          {step.status}
+                        </span>
                       </div>
                       <p className="text-sm text-gray-300">{step.description}</p>
                       <ul className="list-disc list-inside space-y-1 text-sm text-gray-400">
@@ -195,7 +205,10 @@ export default function HilfecenterPage() {
                   </CardHeader>
                   <CardContent className="pt-4 space-y-3">
                     {block.transitions.map((t, idx) => (
-                      <div key={`${block.title}-${idx}`} className={`p-3 rounded-lg ${block.bgColor} border border-gray-700/70`}>
+                      <div
+                        key={`${block.title}-${idx}`}
+                        className={`p-3 rounded-lg ${block.bgColor} border border-gray-700/70`}
+                      >
                         <div className="flex items-center justify-between text-sm text-gray-200">
                           <span>{t.from}</span>
                           <ArrowRight className="w-4 h-4 text-gray-400" />

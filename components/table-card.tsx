@@ -1,13 +1,27 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useDraggable, useDroppable } from "@dnd-kit/core";
-import { Table } from "@/lib/api/tables";
-import { Reservation } from "@/lib/api/reservations";
-import { Order, OrderStatus } from "@/lib/api/orders";
-import { format } from "date-fns";
-import { Users, Clock, Check, Link, Crown, AlertTriangle, PartyPopper, Accessibility, Ban, ShoppingCart, CheckCircle, Euro, X } from "lucide-react";
-import { ReservationOnTable } from "./reservation-on-table";
+import { useState, useEffect } from 'react';
+import { useDraggable, useDroppable } from '@dnd-kit/core';
+import { Table } from '@/lib/api/tables';
+import { Reservation } from '@/lib/api/reservations';
+import { Order, OrderStatus } from '@/lib/api/orders';
+import { format } from 'date-fns';
+import {
+  Users,
+  Clock,
+  Check,
+  Link,
+  Crown,
+  AlertTriangle,
+  PartyPopper,
+  Accessibility,
+  Ban,
+  ShoppingCart,
+  CheckCircle,
+  Euro,
+  X,
+} from 'lucide-react';
+import { ReservationOnTable } from './reservation-on-table';
 
 interface TablePosition {
   x: number;
@@ -15,13 +29,29 @@ interface TablePosition {
 }
 
 const ORDER_BADGE_META: Record<OrderStatus, { label: string; tone: string; Icon: typeof Clock }> = {
-  open: { label: "Offen", tone: "bg-blue-600 border-blue-400 text-white", Icon: Clock },
-  sent_to_kitchen: { label: "An Küche gesendet", tone: "bg-indigo-600 border-indigo-400 text-white", Icon: ShoppingCart },
-  in_preparation: { label: "In Zubereitung", tone: "bg-yellow-500 border-yellow-300 text-white", Icon: Clock },
-  ready: { label: "Fertig", tone: "bg-emerald-600 border-emerald-400 text-white", Icon: CheckCircle },
-  served: { label: "Serviert", tone: "bg-green-600 border-green-400 text-white", Icon: CheckCircle },
-  paid: { label: "Bezahlt", tone: "bg-amber-500 border-amber-300 text-gray-900", Icon: Euro },
-  canceled: { label: "Storniert", tone: "bg-red-600 border-red-400 text-white", Icon: X },
+  open: { label: 'Offen', tone: 'bg-blue-600 border-blue-400 text-white', Icon: Clock },
+  sent_to_kitchen: {
+    label: 'An Küche gesendet',
+    tone: 'bg-indigo-600 border-indigo-400 text-white',
+    Icon: ShoppingCart,
+  },
+  in_preparation: {
+    label: 'In Zubereitung',
+    tone: 'bg-yellow-500 border-yellow-300 text-white',
+    Icon: Clock,
+  },
+  ready: {
+    label: 'Fertig',
+    tone: 'bg-emerald-600 border-emerald-400 text-white',
+    Icon: CheckCircle,
+  },
+  served: {
+    label: 'Serviert',
+    tone: 'bg-green-600 border-green-400 text-white',
+    Icon: CheckCircle,
+  },
+  paid: { label: 'Bezahlt', tone: 'bg-amber-500 border-amber-300 text-gray-900', Icon: Euro },
+  canceled: { label: 'Storniert', tone: 'bg-red-600 border-red-400 text-white', Icon: X },
 };
 
 interface TableCardProps {
@@ -58,12 +88,10 @@ export function TableCard({
   blockStatus,
 }: TableCardProps) {
   const activeReservations = reservations.filter(
-    (r) => r.status === "confirmed" || r.status === "seated"
+    (r) => r.status === 'confirmed' || r.status === 'seated'
   );
-  const activeOrders = (orders || []).filter(
-    (o) => o.status !== "paid" && o.status !== "canceled"
-  );
-  const hasReadyOrders = activeOrders.some((order) => order.status === "ready");
+  const activeOrders = (orders || []).filter((o) => o.status !== 'paid' && o.status !== 'canceled');
+  const hasReadyOrders = activeOrders.some((order) => order.status === 'ready');
   const primaryOrder =
     activeOrders.length > 0
       ? activeOrders
@@ -72,11 +100,16 @@ export function TableCard({
       : null;
   const orderBadge = primaryOrder ? ORDER_BADGE_META[primaryOrder.status] : null;
   const isInactive = !table.is_active;
-  const selectedDateKey = selectedDate ? selectedDate.toDateString() : "today";
+  const selectedDateKey = selectedDate ? selectedDate.toDateString() : 'today';
   const getReferenceNow = () => {
     const base = new Date(selectedDate ?? new Date());
     const realNow = new Date();
-    base.setHours(realNow.getHours(), realNow.getMinutes(), realNow.getSeconds(), realNow.getMilliseconds());
+    base.setHours(
+      realNow.getHours(),
+      realNow.getMinutes(),
+      realNow.getSeconds(),
+      realNow.getMilliseconds()
+    );
     return base.getTime();
   };
 
@@ -97,11 +130,13 @@ export function TableCard({
 
   // Disable table dragging if explicitly disabled, in selection mode, or if there are active reservations (unless allowed)
   const isTableDraggingDisabled =
-    selectionMode || !allowDragging || (!allowDraggingWithReservations && activeReservations.length > 0);
+    selectionMode ||
+    !allowDragging ||
+    (!allowDraggingWithReservations && activeReservations.length > 0);
 
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: table.id,
-    data: { type: "table", tableId: table.id },
+    data: { type: 'table', tableId: table.id },
     disabled: isDragging || isTableDraggingDisabled, // Disable table dragging when there are reservations
   });
 
@@ -116,16 +151,16 @@ export function TableCard({
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    
+
     // Berechne optimale Tooltip-Position
     const viewportHeight = window.innerHeight;
     const viewportWidth = window.innerWidth;
     const tooltipHeight = 200; // Geschätzte Höhe des Tooltips
     const tooltipWidth = 256; // 64 * 4 = 256px (w-64)
-    
+
     // Vertikale Position: oben wenn Tisch unten, unten wenn Tisch oben
     const vertical = position.y > viewportHeight - 300 ? 'top' : 'bottom';
-    
+
     // Horizontale Position: links wenn Tisch links, rechts wenn Tisch rechts, sonst zentriert
     let horizontal: 'left' | 'center' | 'right' = 'center';
     if (position.x < tooltipWidth / 2) {
@@ -133,7 +168,7 @@ export function TableCard({
     } else if (position.x > viewportWidth - tooltipWidth / 2) {
       horizontal = 'right';
     }
-    
+
     setTooltipPosition({ vertical, horizontal });
   }, [position.x, position.y]);
 
@@ -158,7 +193,7 @@ export function TableCard({
       activeReservations
         .filter((r) => {
           const start = new Date(r.start_at).getTime();
-          return r.status === "seated" || now >= start;
+          return r.status === 'seated' || now >= start;
         })
         .sort((a, b) => new Date(a.end_at).getTime() - new Date(b.end_at).getTime())[0] || null
     );
@@ -173,52 +208,60 @@ export function TableCard({
     );
   })();
 
-  const remainingMsCurrent =
-    currentReservation?.end_at ? new Date(currentReservation.end_at).getTime() - nowTs : null;
-  const isOverdue = typeof remainingMsCurrent === "number" ? remainingMsCurrent <= 0 : false;
+  const remainingMsCurrent = currentReservation?.end_at
+    ? new Date(currentReservation.end_at).getTime() - nowTs
+    : null;
+  const isOverdue = typeof remainingMsCurrent === 'number' ? remainingMsCurrent <= 0 : false;
   const finishingSoon =
-    typeof remainingMsCurrent === "number" && remainingMsCurrent > 0 && remainingMsCurrent <= 15 * 60 * 1000;
+    typeof remainingMsCurrent === 'number' &&
+    remainingMsCurrent > 0 &&
+    remainingMsCurrent <= 15 * 60 * 1000;
 
   const statusVisual = (() => {
-    if (!table.is_active) return { bg: "#2D3748", text: "#A0AEC0" }; // frei (inaktiv)
-    if (blockStatus?.isBlocked) return { bg: "#C53030", text: "#FFFFFF" }; // blockiert
-    if (isOverdue) return { bg: "#C53030", text: "#FFFFFF" }; // überzogen
-    if (finishingSoon) return { bg: "#DD6B20", text: "#FFFFFF" }; // bald fertig
-    if (currentReservation) return { bg: "#3182CE", text: "#FFFFFF" }; // besetzt
+    if (!table.is_active) return { bg: '#2D3748', text: '#A0AEC0' }; // frei (inaktiv)
+    if (blockStatus?.isBlocked) return { bg: '#C53030', text: '#FFFFFF' }; // blockiert
+    if (isOverdue) return { bg: '#C53030', text: '#FFFFFF' }; // überzogen
+    if (finishingSoon) return { bg: '#DD6B20', text: '#FFFFFF' }; // bald fertig
+    if (currentReservation) return { bg: '#3182CE', text: '#FFFFFF' }; // besetzt
     const upcomingSoon =
-      upcomingReservation && new Date(upcomingReservation.start_at).getTime() - nowTs <= 30 * 60 * 1000;
-    if (upcomingSoon) return { bg: "#38A169", text: "#FFFFFF" }; // reserviert, Gäste kommen gleich
-    return { bg: "#2D3748", text: "#A0AEC0" }; // frei
+      upcomingReservation &&
+      new Date(upcomingReservation.start_at).getTime() - nowTs <= 30 * 60 * 1000;
+    if (upcomingSoon) return { bg: '#38A169', text: '#FFFFFF' }; // reserviert, Gäste kommen gleich
+    return { bg: '#2D3748', text: '#A0AEC0' }; // frei
   })();
 
   const tagSource = currentReservation || upcomingReservation;
   const tagLabels = tagSource?.tags?.filter(Boolean) ?? [];
 
-  const renderTagBadge = (tag?: string, extraClass = "") => {
+  const renderTagBadge = (tag?: string, extraClass = '') => {
     if (!tag) return null;
-    const base = "inline-flex items-center justify-center rounded-full border p-1.5 shadow-lg text-white";
+    const base =
+      'inline-flex items-center justify-center rounded-full border p-1.5 shadow-lg text-white';
     switch (tag.toLowerCase()) {
-      case "vip":
+      case 'vip':
         return (
           <span className={`${base} bg-amber-500 border-amber-300 ${extraClass}`} title="VIP">
             <Crown className="w-3.5 h-3.5" />
           </span>
         );
-      case "allergie":
+      case 'allergie':
         return (
           <span className={`${base} bg-red-500 border-red-300 ${extraClass}`} title="Allergie">
             <AlertTriangle className="w-3.5 h-3.5" />
           </span>
         );
-      case "geburtstag":
+      case 'geburtstag':
         return (
           <span className={`${base} bg-pink-500 border-pink-300 ${extraClass}`} title="Geburtstag">
             <PartyPopper className="w-3.5 h-3.5" />
           </span>
         );
-      case "barrierefrei":
+      case 'barrierefrei':
         return (
-          <span className={`${base} bg-emerald-500 border-emerald-300 ${extraClass}`} title="Barrierefrei">
+          <span
+            className={`${base} bg-emerald-500 border-emerald-300 ${extraClass}`}
+            title="Barrierefrei"
+          >
             <Accessibility className="w-3.5 h-3.5" />
           </span>
         );
@@ -247,22 +290,22 @@ export function TableCard({
 
     const gradientClasses =
       fractionLeft > 0.5 && !isOver
-        ? "from-emerald-400/90 via-emerald-500/80 to-emerald-500/80 text-emerald-50 border-emerald-300/50"
+        ? 'from-emerald-400/90 via-emerald-500/80 to-emerald-500/80 text-emerald-50 border-emerald-300/50'
         : fractionLeft > 0.2 && !isOver
-        ? "from-amber-400/90 via-amber-500/80 to-amber-500/80 text-amber-50 border-amber-300/50"
-        : "from-rose-400/95 via-rose-500/85 to-rose-500/80 text-rose-50 border-rose-300/60";
+          ? 'from-amber-400/90 via-amber-500/80 to-amber-500/80 text-amber-50 border-amber-300/50'
+          : 'from-rose-400/95 via-rose-500/85 to-rose-500/80 text-rose-50 border-rose-300/60';
 
     const barColor =
       fractionLeft > 0.5 && !isOver
-        ? "bg-emerald-400"
+        ? 'bg-emerald-400'
         : fractionLeft > 0.2 && !isOver
-        ? "bg-amber-400"
-        : "bg-rose-400";
+          ? 'bg-amber-400'
+          : 'bg-rose-400';
 
     return {
-      remainingLabel: `${isOver ? "-" : ""}${formatRemaining(remaining)}`,
-      startLabel: format(new Date(currentReservation.start_at), "HH:mm"),
-      endLabel: format(new Date(currentReservation.end_at), "HH:mm"),
+      remainingLabel: `${isOver ? '-' : ''}${formatRemaining(remaining)}`,
+      startLabel: format(new Date(currentReservation.start_at), 'HH:mm'),
+      endLabel: format(new Date(currentReservation.end_at), 'HH:mm'),
       progress: isOver ? 1 : Math.min(1, Math.max(0, 1 - fractionLeft)),
       gradientClasses,
       barColor,
@@ -274,7 +317,7 @@ export function TableCard({
     const candidate =
       upcomingReservation ||
       activeReservations
-        .filter((r) => r.status === "confirmed")
+        .filter((r) => r.status === 'confirmed')
         .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime())[0];
     if (!candidate) return null;
     const start = new Date(candidate.start_at);
@@ -295,8 +338,8 @@ export function TableCard({
 
     const minutesUntil = Math.max(0, Math.round((start.getTime() - nowTs) / 60000));
     return {
-      startLabel: format(start, "HH:mm"),
-      endLabel: format(end, "HH:mm"),
+      startLabel: format(start, 'HH:mm'),
+      endLabel: format(end, 'HH:mm'),
       minutesUntil: isSelectedDateToday ? minutesUntil : undefined,
     };
   })();
@@ -314,12 +357,18 @@ export function TableCard({
       data-dnd-droppable="true"
       style={{
         ...style,
-        position: "absolute",
+        position: 'absolute',
         left: `${position.x}px`,
         top: `${position.y}px`,
         width: `${width}px`,
         height: `${height}px`,
-        cursor: isInactive ? "not-allowed" : isTableDraggingDisabled ? "default" : (isDragging ? "grabbing" : "grab"),
+        cursor: isInactive
+          ? 'not-allowed'
+          : isTableDraggingDisabled
+            ? 'default'
+            : isDragging
+              ? 'grabbing'
+              : 'grab',
         pointerEvents: 'auto',
         userSelect: 'none',
         WebkitUserSelect: 'none',
@@ -340,12 +389,12 @@ export function TableCard({
         rounded-lg shadow-lg transition-all duration-200
         hover:scale-105 hover:shadow-xl
         flex flex-col items-center justify-center
-        ${isDragging ? "opacity-50" : ""}
-        ${isOver ? "ring-4 ring-yellow-400 ring-offset-2 scale-110" : ""}
-        ${isInactive ? "opacity-80 saturate-75" : ""}
-        ${isSelected ? "ring-4 ring-blue-400 ring-offset-2" : ""}
-        ${hasReadyOrders ? "outline outline-2 outline-emerald-400 outline-offset-2" : ""}
-        ${selectionMode ? "cursor-pointer" : ""}
+        ${isDragging ? 'opacity-50' : ''}
+        ${isOver ? 'ring-4 ring-yellow-400 ring-offset-2 scale-110' : ''}
+        ${isInactive ? 'opacity-80 saturate-75' : ''}
+        ${isSelected ? 'ring-4 ring-blue-400 ring-offset-2' : ''}
+        ${hasReadyOrders ? 'outline outline-2 outline-emerald-400 outline-offset-2' : ''}
+        ${selectionMode ? 'cursor-pointer' : ''}
         group
         relative z-20
         select-none
@@ -353,11 +402,11 @@ export function TableCard({
     >
       {selectionMode && (
         <div className="absolute top-2 left-2 z-30">
-          <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center ${
-            isSelected 
-              ? "bg-blue-500 border-blue-400" 
-              : "bg-gray-800/80 border-gray-600"
-          }`}>
+          <div
+            className={`w-6 h-6 rounded-md border-2 flex items-center justify-center ${
+              isSelected ? 'bg-blue-500 border-blue-400' : 'bg-gray-800/80 border-gray-600'
+            }`}
+          >
             {isSelected && <Check className="w-4 h-4 text-white" />}
           </div>
         </div>
@@ -379,8 +428,8 @@ export function TableCard({
             color: statusVisual.text,
             backgroundColor: statusVisual.bg,
             borderColor: statusVisual.bg,
-            borderWidth: "1px",
-            borderStyle: "solid",
+            borderWidth: '1px',
+            borderStyle: 'solid',
           }}
         >
           <span className="flex items-center gap-0.5 relative">
@@ -410,28 +459,40 @@ export function TableCard({
               {blockStatus.reason}
             </span>
           )}
-          <span className="inline-flex items-center gap-2 text-sm font-semibold tabular-nums opacity-90" style={{ color: statusVisual.text }}>
+          <span
+            className="inline-flex items-center gap-2 text-sm font-semibold tabular-nums opacity-90"
+            style={{ color: statusVisual.text }}
+          >
             <Ban className="w-4 h-4" />
-            {blockStatus.timeRange || "Blockiert"}
+            {blockStatus.timeRange || 'Blockiert'}
           </span>
         </div>
       )}
       {remainingInfo && !blockStatus?.isBlockedNow && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <span className="inline-flex items-center gap-2 text-sm font-semibold tabular-nums opacity-85" style={{ color: statusVisual.text }}>
+          <span
+            className="inline-flex items-center gap-2 text-sm font-semibold tabular-nums opacity-85"
+            style={{ color: statusVisual.text }}
+          >
             <Clock className="w-4 h-4" />
             {remainingInfo.remainingLabel}
           </span>
         </div>
       )}
-      {!remainingInfo && !blockStatus?.isBlockedNow && upcomingDisplay && typeof upcomingDisplay.minutesUntil === "number" && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <span className="inline-flex items-center gap-2 text-sm font-semibold tabular-nums opacity-85" style={{ color: statusVisual.text }}>
-            <Clock className="w-4 h-4" />
-            in {upcomingDisplay.minutesUntil}min
-          </span>
-        </div>
-      )}
+      {!remainingInfo &&
+        !blockStatus?.isBlockedNow &&
+        upcomingDisplay &&
+        typeof upcomingDisplay.minutesUntil === 'number' && (
+          <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <span
+              className="inline-flex items-center gap-2 text-sm font-semibold tabular-nums opacity-85"
+              style={{ color: statusVisual.text }}
+            >
+              <Clock className="w-4 h-4" />
+              in {upcomingDisplay.minutesUntil}min
+            </span>
+          </div>
+        )}
       {table.join_group_id && (
         <div className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2">
           <span
@@ -459,7 +520,7 @@ export function TableCard({
       {tagLabels.length > 0 && (
         <div className="pointer-events-none absolute -top-3 -left-3 z-30 flex items-center">
           {tagLabels.map((tag, index) => (
-            <div key={`${tag}-${index}`} className={index === 0 ? "" : "-ml-2"}>
+            <div key={`${tag}-${index}`} className={index === 0 ? '' : '-ml-2'}>
               {renderTagBadge(tag)}
             </div>
           ))}
@@ -479,13 +540,15 @@ export function TableCard({
               {blockStatus.reason}
             </span>
           )}
-          <span className="inline-flex items-center gap-2 text-sm font-semibold tabular-nums opacity-85" style={{ color: statusVisual.text }}>
+          <span
+            className="inline-flex items-center gap-2 text-sm font-semibold tabular-nums opacity-85"
+            style={{ color: statusVisual.text }}
+          >
             <Ban className="w-4 h-4" />
             {blockStatus.timeRange}
           </span>
         </div>
       )}
-
     </div>
   );
 }

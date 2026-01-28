@@ -1,7 +1,7 @@
 /**
  * API Client für Gutscheine.
  */
-import { api } from "./client";
+import { api } from './client';
 
 export interface Voucher {
   id: number;
@@ -9,7 +9,7 @@ export interface Voucher {
   code: string;
   name: string | null;
   description: string | null;
-  type: "fixed" | "percentage";
+  type: 'fixed' | 'percentage';
   value: number;
   valid_from: string | null;
   valid_until: string | null;
@@ -26,7 +26,7 @@ export interface VoucherCreate {
   code: string;
   name?: string | null;
   description?: string | null;
-  type: "fixed" | "percentage";
+  type: 'fixed' | 'percentage';
   value: number;
   valid_from?: string | null;
   valid_until?: string | null;
@@ -38,7 +38,7 @@ export interface VoucherCreate {
 export interface VoucherUpdate {
   name?: string | null;
   description?: string | null;
-  type?: "fixed" | "percentage";
+  type?: 'fixed' | 'percentage';
   value?: number;
   valid_from?: string | null;
   valid_until?: string | null;
@@ -82,14 +82,11 @@ class VouchersApi {
     code: string,
     reservationAmount?: number
   ): Promise<VoucherValidateResponse> {
-    return api.post<VoucherValidateResponse>(
-      `/restaurants/${restaurantId}/vouchers/validate`,
-      {
-        code,
-        restaurant_id: restaurantId,
-        reservation_amount: reservationAmount,
-      }
-    );
+    return api.post<VoucherValidateResponse>(`/restaurants/${restaurantId}/vouchers/validate`, {
+      code,
+      restaurant_id: restaurantId,
+      reservation_amount: reservationAmount,
+    });
   }
 }
 

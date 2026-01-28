@@ -1,5 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { restaurantsApi, Restaurant, RestaurantCreate, RestaurantUpdate } from '@/lib/api/restaurants';
+import {
+  restaurantsApi,
+  Restaurant,
+  RestaurantCreate,
+  RestaurantUpdate,
+} from '@/lib/api/restaurants';
 
 export const restaurantKeys = {
   all: ['restaurants'] as const,
@@ -35,7 +40,7 @@ export function useRestaurant(id: number | undefined) {
  */
 export function useCreateRestaurant() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (data: RestaurantCreate) => restaurantsApi.create(data),
     onSuccess: () => {
@@ -49,7 +54,7 @@ export function useCreateRestaurant() {
  */
 export function useUpdateRestaurant() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: RestaurantUpdate }) =>
       restaurantsApi.update(id, data),
@@ -65,7 +70,7 @@ export function useUpdateRestaurant() {
  */
 export function useDeleteRestaurant() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (id: number) => restaurantsApi.delete(id),
     onSuccess: () => {

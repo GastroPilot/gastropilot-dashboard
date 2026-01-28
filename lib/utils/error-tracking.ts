@@ -1,10 +1,10 @@
 /**
  * Error tracking utilities for the frontend.
- * 
+ *
  * This is a lightweight error tracking implementation that logs errors
  * to the console in development and can be extended to send errors to
  * a backend service in production.
- * 
+ *
  * Note: Sentry integration is available in the backend. For frontend
  * error tracking with Sentry, wait for @sentry/nextjs to support Next.js 16.
  */
@@ -36,12 +36,9 @@ const MAX_BREADCRUMBS = 100;
 /**
  * Capture an error with additional context.
  */
-export function captureError(
-  error: Error,
-  context?: ErrorContext
-): string | undefined {
+export function captureError(error: Error, context?: ErrorContext): string | undefined {
   const errorId = crypto.randomUUID();
-  
+
   console.error('[Error Captured]', {
     id: errorId,
     error: error.message,
@@ -51,13 +48,13 @@ export function captureError(
     breadcrumbs: breadcrumbs.slice(-10),
     timestamp: new Date().toISOString(),
   });
-  
+
   // In production, you could send this to your backend
   if (process.env.NODE_ENV === 'production') {
     // Example: Send to backend error logging endpoint
     // fetch('/api/errors', { method: 'POST', body: JSON.stringify({ ... }) });
   }
-  
+
   return errorId;
 }
 
@@ -70,31 +67,34 @@ export function captureMessage(
   context?: ErrorContext
 ): string | undefined {
   const messageId = crypto.randomUUID();
-  
-  const logMethod = level === 'error' || level === 'fatal' 
-    ? console.error 
-    : level === 'warning' 
-      ? console.warn 
-      : console.log;
-  
+
+  const logMethod =
+    level === 'error' || level === 'fatal'
+      ? console.error
+      : level === 'warning'
+        ? console.warn
+        : console.log;
+
   logMethod(`[${level.toUpperCase()}]`, message, {
     id: messageId,
     context,
     user: currentUserContext,
     timestamp: new Date().toISOString(),
   });
-  
+
   return messageId;
 }
 
 /**
  * Set user context for error tracking.
  */
-export function setUserContext(user: {
-  id: number | string;
-  role?: string;
-  operatorNumber?: string;
-} | null): void {
+export function setUserContext(
+  user: {
+    id: number | string;
+    role?: string;
+    operatorNumber?: string;
+  } | null
+): void {
   if (user) {
     currentUserContext = {
       id: String(user.id),
@@ -122,7 +122,7 @@ export function addBreadcrumb(
     level,
     timestamp: Date.now() / 1000,
   });
-  
+
   // Keep only the last MAX_BREADCRUMBS
   if (breadcrumbs.length > MAX_BREADCRUMBS) {
     breadcrumbs.shift();
@@ -153,7 +153,7 @@ export function reportFeedback(
     feedback,
     timestamp: new Date().toISOString(),
   });
-  
+
   // In production, send to backend
   if (process.env.NODE_ENV === 'production') {
     // fetch('/api/feedback', { method: 'POST', body: JSON.stringify({ eventId, ...feedback }) });

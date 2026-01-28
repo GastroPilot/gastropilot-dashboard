@@ -1,4 +1,4 @@
-import { api } from "./client";
+import { api } from './client';
 
 export interface Guest {
   id: number;
@@ -43,11 +43,7 @@ export const guestsApi = {
     return api.post<Guest>(`/restaurants/${restaurantId}/guests/`, data);
   },
 
-  update: async (
-    restaurantId: number,
-    guestId: number,
-    data: GuestUpdate
-  ): Promise<Guest> => {
+  update: async (restaurantId: number, guestId: number, data: GuestUpdate): Promise<Guest> => {
     return api.patch<Guest>(`/restaurants/${restaurantId}/guests/${guestId}`, data);
   },
 

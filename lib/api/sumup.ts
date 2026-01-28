@@ -1,14 +1,14 @@
-import { api } from "./client";
+import { api } from './client';
 
 // Types
 
 export interface SumUpReader {
   id: string;
   name: string;
-  status: "unknown" | "processing" | "paired" | "expired";
+  status: 'unknown' | 'processing' | 'paired' | 'expired';
   device: {
     identifier: string;
-    model: "solo" | "virtual-solo";
+    model: 'solo' | 'virtual-solo';
   };
   metadata?: Record<string, any>;
   created_at: string;
@@ -21,8 +21,14 @@ export interface SumUpReaderStatus {
   connection_type?: string;
   firmware_version?: string;
   last_activity?: string;
-  state?: "IDLE" | "SELECTING_TIP" | "WAITING_FOR_CARD" | "WAITING_FOR_PIN" | "WAITING_FOR_SIGNATURE" | "UPDATING_FIRMWARE";
-  status: "ONLINE" | "OFFLINE";
+  state?:
+    | 'IDLE'
+    | 'SELECTING_TIP'
+    | 'WAITING_FOR_CARD'
+    | 'WAITING_FOR_PIN'
+    | 'WAITING_FOR_SIGNATURE'
+    | 'UPDATING_FIRMWARE';
+  status: 'ONLINE' | 'OFFLINE';
 }
 
 export interface PaymentRequest {
@@ -36,9 +42,9 @@ export interface PaymentRequest {
 
 export interface PaymentResponse {
   payment_id: number;
-  checkout_id?: string | null;  // Checkout ID für weitere Verarbeitung
+  checkout_id?: string | null; // Checkout ID für weitere Verarbeitung
   client_transaction_id: string;
-  reader_id?: string | null;  // Optional, da Zahlung ohne Reader-ID möglich ist
+  reader_id?: string | null; // Optional, da Zahlung ohne Reader-ID möglich ist
   amount: number;
   currency: string;
   status: string;
@@ -84,7 +90,9 @@ export async function getReaderStatus(
   restaurantId: number,
   readerId: string
 ): Promise<SumUpReaderStatus> {
-  return api.get<SumUpReaderStatus>(`/restaurants/${restaurantId}/sumup/readers/${readerId}/status`);
+  return api.get<SumUpReaderStatus>(
+    `/restaurants/${restaurantId}/sumup/readers/${readerId}/status`
+  );
 }
 
 /**
@@ -104,10 +112,7 @@ export async function startPayment(
 /**
  * Bricht eine laufende Zahlung am Terminal ab.
  */
-export async function terminatePayment(
-  restaurantId: number,
-  readerId: string
-): Promise<void> {
+export async function terminatePayment(restaurantId: number, readerId: string): Promise<void> {
   return api.post<void>(`/restaurants/${restaurantId}/sumup/readers/${readerId}/terminate`);
 }
 
@@ -124,7 +129,7 @@ export interface SumUpPayment {
   transaction_id?: string | null;
   amount: number;
   currency: string;
-  status: "pending" | "processing" | "successful" | "failed" | "canceled";
+  status: 'pending' | 'processing' | 'successful' | 'failed' | 'canceled';
   initiated_at: string;
   completed_at?: string | null;
   created_at_utc: string;
@@ -157,8 +162,8 @@ export async function getPayments(
   limit: number = 100
 ): Promise<SumUpPayment[]> {
   const params = new URLSearchParams();
-  if (status) params.append("status", status);
-  params.append("limit", limit.toString());
+  if (status) params.append('status', status);
+  params.append('limit', limit.toString());
   return api.get<SumUpPayment[]>(
     `/restaurants/${restaurantId}/sumup/payments?${params.toString()}`
   );
@@ -171,7 +176,5 @@ export async function getOrderPayments(
   restaurantId: number,
   orderId: number
 ): Promise<SumUpPayment[]> {
-  return api.get<SumUpPayment[]>(
-    `/restaurants/${restaurantId}/sumup/orders/${orderId}/payments`
-  );
+  return api.get<SumUpPayment[]>(`/restaurants/${restaurantId}/sumup/orders/${orderId}/payments`);
 }

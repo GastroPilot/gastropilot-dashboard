@@ -1,4 +1,4 @@
-import { api } from "./client";
+import { api } from './client';
 
 export interface BlockAssignment {
   id: number;
@@ -15,20 +15,12 @@ export interface BlockAssignmentCreate {
 export const blockAssignmentsApi = {
   list: async (restaurantId: number): Promise<BlockAssignment[]> => {
     // Backend-Route ist @router.get("/"), daher trailing slash erforderlich
-    return api.get<BlockAssignment[]>(
-      `/restaurants/${restaurantId}/block-assignments/`
-    );
+    return api.get<BlockAssignment[]>(`/restaurants/${restaurantId}/block-assignments/`);
   },
 
-  create: async (
-    restaurantId: number,
-    data: BlockAssignmentCreate
-  ): Promise<BlockAssignment> => {
+  create: async (restaurantId: number, data: BlockAssignmentCreate): Promise<BlockAssignment> => {
     // Backend-Route ist @router.post("/"), daher trailing slash erforderlich
-    return api.post<BlockAssignment>(
-      `/restaurants/${restaurantId}/block-assignments/`,
-      data
-    );
+    return api.post<BlockAssignment>(`/restaurants/${restaurantId}/block-assignments/`, data);
   },
 
   delete: async (restaurantId: number, assignmentId: number): Promise<{ message: string }> => {

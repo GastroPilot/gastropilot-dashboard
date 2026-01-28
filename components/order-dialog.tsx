@@ -1,11 +1,19 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useRef } from "react";
-import { ordersApi, Order, OrderCreate, OrderUpdate, OrderWithItems, OrderItem, OrderItemCreate } from "@/lib/api/orders";
-import { Table } from "@/lib/api/tables";
-import { menuApi, MenuItem, MenuCategory } from "@/lib/api/menu";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useState, useEffect, useRef } from 'react';
+import {
+  ordersApi,
+  Order,
+  OrderCreate,
+  OrderUpdate,
+  OrderWithItems,
+  OrderItem,
+  OrderItemCreate,
+} from '@/lib/api/orders';
+import { Table } from '@/lib/api/tables';
+import { menuApi, MenuItem, MenuCategory } from '@/lib/api/menu';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Dialog,
   DialogContent,
@@ -13,10 +21,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { ApiError } from "@/lib/api/client";
-import { format, parseISO } from "date-fns";
-import { de } from "date-fns/locale";
+} from '@/components/ui/dialog';
+import { ApiError } from '@/lib/api/client';
+import { format, parseISO } from 'date-fns';
+import { de } from 'date-fns/locale';
 import {
   ShoppingCart,
   Table as TableIcon,
@@ -29,9 +37,9 @@ import {
   Users,
   FileText,
   Search,
-} from "lucide-react";
-import { confirmAction } from "@/lib/utils";
-import { AITableSuggestion } from "@/components/ai-table-suggestion";
+} from 'lucide-react';
+import { confirmAction } from '@/lib/utils';
+import { AITableSuggestion } from '@/components/ai-table-suggestion';
 
 interface OrderDialogProps {
   open: boolean;
@@ -42,7 +50,7 @@ interface OrderDialogProps {
   availableTables?: Table[];
   onOrderCreated: () => void;
   onOrderUpdated?: () => void;
-  onNotify?: (message: string, variant?: "info" | "success" | "error") => void;
+  onNotify?: (message: string, variant?: 'info' | 'success' | 'error') => void;
 }
 
 export function OrderDialog({
@@ -58,17 +66,17 @@ export function OrderDialog({
 }: OrderDialogProps) {
   const [selectedTableId, setSelectedTableId] = useState<number | null>(null);
   const [partySize, setPartySize] = useState<number | null>(null);
-  const [notes, setNotes] = useState("");
-  const [specialRequests, setSpecialRequests] = useState("");
-  const [status, setStatus] = useState<string>("open");
-  const [paymentMethod, setPaymentMethod] = useState<string>("");
+  const [notes, setNotes] = useState('');
+  const [specialRequests, setSpecialRequests] = useState('');
+  const [status, setStatus] = useState<string>('open');
+  const [paymentMethod, setPaymentMethod] = useState<string>('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [items, setItems] = useState<OrderItem[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [menuCategories, setMenuCategories] = useState<MenuCategory[]>([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
-  const [menuSearchQuery, setMenuSearchQuery] = useState("");
+  const [menuSearchQuery, setMenuSearchQuery] = useState('');
   const [showMenuSelection, setShowMenuSelection] = useState(false);
   const [tableMenuOpen, setTableMenuOpen] = useState(false);
   const [showManualTableSelect, setShowManualTableSelect] = useState(false);
@@ -79,26 +87,26 @@ export function OrderDialog({
       if (order) {
         setSelectedTableId(order.table_id);
         setPartySize(order.party_size);
-        setNotes(order.notes || "");
-        setSpecialRequests(order.special_requests || "");
+        setNotes(order.notes || '');
+        setSpecialRequests(order.special_requests || '');
         setStatus(order.status);
-        setPaymentMethod(order.payment_method || "");
+        setPaymentMethod(order.payment_method || '');
         setItems(order.items || []);
       } else {
         setSelectedTableId(table?.id || null);
         setPartySize(table ? Math.min(table.capacity, 4) : null);
-        setNotes("");
-        setSpecialRequests("");
-        setStatus("open");
-        setPaymentMethod("");
+        setNotes('');
+        setSpecialRequests('');
+        setStatus('open');
+        setPaymentMethod('');
         setItems([]);
         // Zeige AI-Vorschläge wenn kein Tisch vorausgewählt ist
         setShowManualTableSelect(!!table?.id);
       }
-      setError("");
+      setError('');
       loadMenuData();
     } else {
-      setError("");
+      setError('');
     }
   }, [open, order, table, restaurantId]);
 
@@ -108,8 +116,8 @@ export function OrderDialog({
         setTableMenuOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const loadMenuData = async () => {
@@ -121,7 +129,7 @@ export function OrderDialog({
       setMenuItems(itemsData);
       setMenuCategories(categoriesData);
     } catch (err) {
-      console.error("Fehler beim Laden des Menüs:", err);
+      console.error('Fehler beim Laden des Menüs:', err);
     }
   };
 
@@ -148,7 +156,7 @@ export function OrderDialog({
       unit_price: menuItem.price,
       total_price: menuItem.price,
       tax_rate: menuItem.tax_rate ?? 0.19,
-      status: "pending",
+      status: 'pending',
       notes: null,
       sort_order: items.length,
       created_at_utc: new Date().toISOString(),
@@ -156,13 +164,13 @@ export function OrderDialog({
     };
     setItems([...items, newItem]);
     setShowMenuSelection(false);
-    setMenuSearchQuery("");
+    setMenuSearchQuery('');
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("de-DE", {
-      style: "currency",
-      currency: "EUR",
+    return new Intl.NumberFormat('de-DE', {
+      style: 'currency',
+      currency: 'EUR',
     }).format(amount);
   };
 
@@ -177,11 +185,11 @@ export function OrderDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setError('');
     if (!order && items.length === 0) {
-      const message = "Bitte füge mindestens einen Artikel hinzu.";
+      const message = 'Bitte füge mindestens einen Artikel hinzu.';
       setError(message);
-      onNotify?.(message, "error");
+      onNotify?.(message, 'error');
       return;
     }
     setLoading(true);
@@ -199,7 +207,7 @@ export function OrderDialog({
         };
 
         await ordersApi.update(restaurantId, order.id, updateData);
-        onNotify?.("Bestellung erfolgreich aktualisiert", "success");
+        onNotify?.('Bestellung erfolgreich aktualisiert', 'success');
         onOrderUpdated?.();
       } else {
         // Create new order
@@ -219,52 +227,50 @@ export function OrderDialog({
         };
 
         await ordersApi.create(restaurantId, createData);
-        onNotify?.("Bestellung erfolgreich erstellt", "success");
+        onNotify?.('Bestellung erfolgreich erstellt', 'success');
         onOrderCreated();
       }
 
       onOpenChange(false);
     } catch (err) {
-      console.error("Fehler beim Speichern der Bestellung:", err);
+      console.error('Fehler beim Speichern der Bestellung:', err);
       if (err instanceof ApiError) {
         setError(err.message);
       } else {
-        setError("Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.");
+        setError('Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.');
       }
     } finally {
       setLoading(false);
     }
   };
 
-
   const handleRemoveItem = (index: number) => {
     if (items[index].id && items[index].id > 1000) {
       // Real item from backend
-      const confirmed = confirmAction("Möchten Sie diese Position wirklich löschen?");
+      const confirmed = confirmAction('Möchten Sie diese Position wirklich löschen?');
       if (!confirmed) return;
     }
     setItems(items.filter((_, i) => i !== index));
   };
 
-
   const handleDeleteOrder = async () => {
     if (!order) return;
 
-    const confirmed = confirmAction("Möchten Sie diese Bestellung wirklich löschen?");
+    const confirmed = confirmAction('Möchten Sie diese Bestellung wirklich löschen?');
     if (!confirmed) return;
 
     setLoading(true);
     try {
       await ordersApi.delete(restaurantId, order.id);
-      onNotify?.("Bestellung erfolgreich gelöscht", "success");
+      onNotify?.('Bestellung erfolgreich gelöscht', 'success');
       onOrderUpdated?.();
       onOpenChange(false);
     } catch (err) {
-      console.error("Fehler beim Löschen der Bestellung:", err);
+      console.error('Fehler beim Löschen der Bestellung:', err);
       if (err instanceof ApiError) {
         setError(err.message);
       } else {
-        setError("Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.");
+        setError('Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.');
       }
     } finally {
       setLoading(false);
@@ -279,13 +285,11 @@ export function OrderDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            {order ? "Bestellung bearbeiten" : "Neue Bestellung"}
-          </DialogTitle>
+          <DialogTitle>{order ? 'Bestellung bearbeiten' : 'Neue Bestellung'}</DialogTitle>
           <DialogDescription>
             {order
               ? `Bearbeite Bestellung ${order.order_number || `#${order.id}`}`
-              : "Erstelle eine neue Bestellung"}
+              : 'Erstelle eine neue Bestellung'}
           </DialogDescription>
         </DialogHeader>
 
@@ -295,7 +299,7 @@ export function OrderDialog({
               <span>{error}</span>
               <button
                 type="button"
-                onClick={() => setError("")}
+                onClick={() => setError('')}
                 className="text-red-200 hover:text-white"
               >
                 ×
@@ -314,7 +318,9 @@ export function OrderDialog({
                   const selectedTable = availableTables.find((t) => t.id === tableId);
                   if (selectedTable) {
                     setPartySize((prev) =>
-                      prev ? Math.min(prev, selectedTable.capacity) : Math.min(selectedTable.capacity, 4)
+                      prev
+                        ? Math.min(prev, selectedTable.capacity)
+                        : Math.min(selectedTable.capacity, 4)
                     );
                   }
                 }}
@@ -338,17 +344,23 @@ export function OrderDialog({
                 >
                   <span className="truncate">
                     {selectedTableId
-                      ? availableTables.find((t) => t.id === selectedTableId)?.number ?? "Tisch wählen"
-                      : "Kein Tisch"}
+                      ? (availableTables.find((t) => t.id === selectedTableId)?.number ??
+                        'Tisch wählen')
+                      : 'Kein Tisch'}
                   </span>
                   <svg
-                    className={`h-4 w-4 transition-transform ${tableMenuOpen ? "rotate-180" : ""}`}
+                    className={`h-4 w-4 transition-transform ${tableMenuOpen ? 'rotate-180' : ''}`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
                     xmlns="http://www.w3.org/2000/svg"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 9l-7 7-7-7"
+                    />
                   </svg>
                 </button>
                 {tableMenuOpen && (
@@ -361,15 +373,19 @@ export function OrderDialog({
                       }}
                       className={`w-full px-3 py-3 text-sm transition-colors flex items-center justify-between ${
                         !selectedTableId
-                          ? "bg-gray-800/80 text-white font-semibold border-l-2 border-blue-500"
-                          : "text-gray-100 hover:bg-gray-800/60"
+                          ? 'bg-gray-800/80 text-white font-semibold border-l-2 border-blue-500'
+                          : 'text-gray-100 hover:bg-gray-800/60'
                       }`}
                     >
                       <span className="truncate">Kein Tisch</span>
-                      {!selectedTableId && <Check className="w-4 h-4 text-blue-300 flex-shrink-0" />}
+                      {!selectedTableId && (
+                        <Check className="w-4 h-4 text-blue-300 flex-shrink-0" />
+                      )}
                     </button>
                     {[...availableTables]
-                      .sort((a, b) => a.number.localeCompare(b.number, undefined, { numeric: true }))
+                      .sort((a, b) =>
+                        a.number.localeCompare(b.number, undefined, { numeric: true })
+                      )
                       .map((t) => {
                         const isActive = selectedTableId === t.id;
                         return (
@@ -385,8 +401,8 @@ export function OrderDialog({
                             }}
                             className={`w-full px-3 py-3 text-sm transition-colors flex items-center justify-between ${
                               isActive
-                                ? "bg-gray-800/80 text-white font-semibold border-l-2 border-blue-500"
-                                : "text-gray-100 hover:bg-gray-800/60"
+                                ? 'bg-gray-800/80 text-white font-semibold border-l-2 border-blue-500'
+                                : 'text-gray-100 hover:bg-gray-800/60'
                             }`}
                           >
                             <span className="truncate">
@@ -408,10 +424,8 @@ export function OrderDialog({
                 <Input
                   type="number"
                   min="1"
-                  value={partySize || ""}
-                  onChange={(e) =>
-                    setPartySize(e.target.value ? parseInt(e.target.value) : null)
-                  }
+                  value={partySize || ''}
+                  onChange={(e) => setPartySize(e.target.value ? parseInt(e.target.value) : null)}
                   placeholder="z.B. 4"
                   className="bg-gray-800 border-gray-600 text-white"
                   disabled={loading}
@@ -423,9 +437,7 @@ export function OrderDialog({
             {order && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Status
-                  </label>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Status</label>
                   <select
                     value={status}
                     onChange={(e) => setStatus(e.target.value)}
@@ -478,7 +490,7 @@ export function OrderDialog({
                     disabled={loading}
                   >
                     <Plus className="w-4 h-4 mr-1" />
-                    {showMenuSelection ? "Auswahl schließen" : "Artikel hinzufügen"}
+                    {showMenuSelection ? 'Auswahl schließen' : 'Artikel hinzufügen'}
                   </Button>
                 )}
               </div>
@@ -503,8 +515,8 @@ export function OrderDialog({
                         onClick={() => setSelectedCategoryId(null)}
                         className={`px-3 py-1 rounded text-sm ${
                           selectedCategoryId === null
-                            ? "bg-blue-600 text-white"
-                            : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                         }`}
                       >
                         Alle
@@ -518,8 +530,8 @@ export function OrderDialog({
                             onClick={() => setSelectedCategoryId(category.id)}
                             className={`px-3 py-1 rounded text-sm ${
                               selectedCategoryId === category.id
-                                ? "bg-blue-600 text-white"
-                                : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                             }`}
                           >
                             {category.name}
@@ -530,9 +542,7 @@ export function OrderDialog({
                   <div className="max-h-64 overflow-y-auto space-y-2">
                     {filteredMenuItems.length === 0 ? (
                       <div className="text-center py-4 text-gray-400">
-                        {menuSearchQuery
-                          ? "Keine Artikel gefunden"
-                          : "Keine verfügbaren Artikel"}
+                        {menuSearchQuery ? 'Keine Artikel gefunden' : 'Keine verfügbaren Artikel'}
                       </div>
                     ) : (
                       filteredMenuItems.map((menuItem) => (
@@ -580,10 +590,7 @@ export function OrderDialog({
               ) : (
                 <div className="space-y-3 border border-gray-700 rounded-md p-4">
                   {items.map((item, index) => (
-                    <div
-                      key={item.id || index}
-                      className="bg-gray-700/50 rounded-md p-3"
-                    >
+                    <div key={item.id || index} className="bg-gray-700/50 rounded-md p-3">
                       <div className="grid grid-cols-1 md:grid-cols-12 gap-2 items-center">
                         <div className="md:col-span-9">
                           <div className="font-medium text-white">{item.item_name}</div>
@@ -695,13 +702,9 @@ export function OrderDialog({
                   <X className="w-4 h-4" />
                   Abbrechen
                 </Button>
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  className="gap-2"
-                >
+                <Button type="submit" disabled={loading} className="gap-2">
                   <Save className="w-4 h-4 mr-2" />
-                  {loading ? "Speichern..." : "Speichern"}
+                  {loading ? 'Speichern...' : 'Speichern'}
                 </Button>
               </div>
             </div>
@@ -711,4 +714,3 @@ export function OrderDialog({
     </Dialog>
   );
 }
-

@@ -1,17 +1,17 @@
-"use client";
+'use client';
 
-import { useEffect, useState, useCallback, useRef } from "react";
-import { restaurantsApi, Restaurant } from "@/lib/api/restaurants";
-import { ordersApi, Order, OrderStatus, OrderWithItems } from "@/lib/api/orders";
-import { tablesApi, Table } from "@/lib/api/tables";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { LoadingOverlay } from "@/components/loading-overlay";
-import { OrderDialog } from "@/components/order-dialog";
-import { OrderDetailDialog } from "@/components/order-detail-dialog";
-import { useUserSettings } from "@/lib/hooks/use-user-settings";
-import { format, parseISO } from "date-fns";
-import { de } from "date-fns/locale";
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { restaurantsApi, Restaurant } from '@/lib/api/restaurants';
+import { ordersApi, Order, OrderStatus, OrderWithItems } from '@/lib/api/orders';
+import { tablesApi, Table } from '@/lib/api/tables';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { LoadingOverlay } from '@/components/loading-overlay';
+import { OrderDialog } from '@/components/order-dialog';
+import { OrderDetailDialog } from '@/components/order-detail-dialog';
+import { useUserSettings } from '@/lib/hooks/use-user-settings';
+import { format, parseISO } from 'date-fns';
+import { de } from 'date-fns/locale';
 import {
   Plus,
   ShoppingCart,
@@ -24,18 +24,18 @@ import {
   Euro,
   Table as TableIcon,
   ChevronDown,
-} from "lucide-react";
+} from 'lucide-react';
 
 const ALL_STATUSES: OrderStatus[] = [
-  "open",
-  "sent_to_kitchen",
-  "in_preparation",
-  "ready",
-  "served",
-  "paid",
-  "canceled",
+  'open',
+  'sent_to_kitchen',
+  'in_preparation',
+  'ready',
+  'served',
+  'paid',
+  'canceled',
 ];
-const STATUS_SETTINGS_KEY = "orders_status_filters";
+const STATUS_SETTINGS_KEY = 'orders_status_filters';
 
 const normalizeStatusList = (values: any): OrderStatus[] => {
   if (!Array.isArray(values)) return [];
@@ -53,38 +53,38 @@ type StatusMeta = { Icon: typeof Clock; tone: string; label: string };
 const STATUS_META: Record<OrderStatus, StatusMeta> = {
   open: {
     Icon: Clock,
-    tone: "bg-blue-900/40 border-blue-600 text-blue-100",
-    label: "Offen",
+    tone: 'bg-blue-900/40 border-blue-600 text-blue-100',
+    label: 'Offen',
   },
   sent_to_kitchen: {
     Icon: ShoppingCart,
-    tone: "bg-indigo-900/40 border-indigo-600 text-indigo-100",
-    label: "An Küche gesendet",
+    tone: 'bg-indigo-900/40 border-indigo-600 text-indigo-100',
+    label: 'An Küche gesendet',
   },
   in_preparation: {
     Icon: Clock,
-    tone: "bg-yellow-900/40 border-yellow-600 text-yellow-100",
-    label: "In Zubereitung",
+    tone: 'bg-yellow-900/40 border-yellow-600 text-yellow-100',
+    label: 'In Zubereitung',
   },
   ready: {
     Icon: CheckCircle,
-    tone: "bg-emerald-900/40 border-emerald-600 text-emerald-100",
-    label: "Fertig",
+    tone: 'bg-emerald-900/40 border-emerald-600 text-emerald-100',
+    label: 'Fertig',
   },
   served: {
     Icon: CheckCircle,
-    tone: "bg-green-900/40 border-green-600 text-green-100",
-    label: "Serviert",
+    tone: 'bg-green-900/40 border-green-600 text-green-100',
+    label: 'Serviert',
   },
   paid: {
     Icon: Euro,
-    tone: "bg-amber-900/30 border-amber-600 text-amber-100",
-    label: "Bezahlt",
+    tone: 'bg-amber-900/30 border-amber-600 text-amber-100',
+    label: 'Bezahlt',
   },
   canceled: {
     Icon: XCircle,
-    tone: "bg-red-900/30 border-red-600 text-red-100",
-    label: "Storniert",
+    tone: 'bg-red-900/30 border-red-600 text-red-100',
+    label: 'Storniert',
   },
 };
 
@@ -93,13 +93,13 @@ export default function OrdersPage() {
   const [tables, setTables] = useState<Table[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatuses, setSelectedStatuses] = useState<OrderStatus[]>(ALL_STATUSES);
   const [statusMenuOpen, setStatusMenuOpen] = useState(false);
   const [selectedTableId, setSelectedTableId] = useState<number | null>(null);
   const [tableMenuOpen, setTableMenuOpen] = useState(false);
   const [toasts, setToasts] = useState<
-    { id: string; message: string; variant?: "info" | "error" | "success" }[]
+    { id: string; message: string; variant?: 'info' | 'error' | 'success' }[]
   >([]);
   const [orderDialogOpen, setOrderDialogOpen] = useState(false);
   const [orderDetailDialogOpen, setOrderDetailDialogOpen] = useState(false);
@@ -107,12 +107,12 @@ export default function OrdersPage() {
   const [selectedTableForOrder, setSelectedTableForOrder] = useState<Table | null>(null);
   const { settings, updateSettings, error: settingsError } = useUserSettings();
   const settingsInitializedRef = useRef(false);
-  const lastPersistedStatusesRef = useRef<string>("");
+  const lastPersistedStatusesRef = useRef<string>('');
   const statusMenuRef = useRef<HTMLDivElement | null>(null);
   const tableMenuRef = useRef<HTMLDivElement | null>(null);
 
   const addToast = useCallback(
-    (message: string, variant: "info" | "error" | "success" = "info") => {
+    (message: string, variant: 'info' | 'error' | 'success' = 'info') => {
       const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
       setToasts((prev) => [...prev, { id, message, variant }]);
       setTimeout(() => {
@@ -126,9 +126,9 @@ export default function OrdersPage() {
     try {
       setIsLoading(true);
       const restaurantsData = await restaurantsApi.list();
-      
+
       if (restaurantsData.length === 0) {
-        addToast("Kein Restaurant gefunden", "error");
+        addToast('Kein Restaurant gefunden', 'error');
         return;
       }
 
@@ -143,8 +143,8 @@ export default function OrdersPage() {
       setTables(tablesData);
       setOrders(ordersData);
     } catch (error) {
-      console.error("Fehler beim Laden der Daten:", error);
-      addToast("Fehler beim Laden der Daten", "error");
+      console.error('Fehler beim Laden der Daten:', error);
+      addToast('Fehler beim Laden der Daten', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -167,13 +167,13 @@ export default function OrdersPage() {
         setTableMenuOpen(false);
       }
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   useEffect(() => {
     if (!settingsError) return;
-    addToast(settingsError, "error");
+    addToast(settingsError, 'error');
   }, [settingsError, addToast]);
 
   useEffect(() => {
@@ -198,9 +198,9 @@ export default function OrdersPage() {
       try {
         await updateSettings({ [STATUS_SETTINGS_KEY]: normalized });
       } catch (err) {
-        console.error("Fehler beim Speichern der Bestellstatus-Filter:", err);
-        addToast("Status-Filter konnten nicht gespeichert werden.", "error");
-        lastPersistedStatusesRef.current = "";
+        console.error('Fehler beim Speichern der Bestellstatus-Filter:', err);
+        addToast('Status-Filter konnten nicht gespeichert werden.', 'error');
+        lastPersistedStatusesRef.current = '';
       }
     },
     [updateSettings, addToast]
@@ -212,9 +212,9 @@ export default function OrdersPage() {
     if (selectedTableId && order.table_id !== selectedTableId) return false;
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      const orderNumber = order.order_number?.toLowerCase() || "";
+      const orderNumber = order.order_number?.toLowerCase() || '';
       const table = tables.find((t) => t.id === order.table_id);
-      const tableNumber = table?.number.toLowerCase() || "";
+      const tableNumber = table?.number.toLowerCase() || '';
       return orderNumber.includes(query) || tableNumber.includes(query);
     }
     return true;
@@ -223,15 +223,15 @@ export default function OrdersPage() {
     selectedStatuses.length > 0 && selectedStatuses.length < ALL_STATUSES.length;
 
   const getTableName = (tableId: number | null) => {
-    if (!tableId) return "Kein Tisch";
+    if (!tableId) return 'Kein Tisch';
     const table = tables.find((t) => t.id === tableId);
-    return table ? `${table.number}` : "Unbekannter Tisch";
+    return table ? `${table.number}` : 'Unbekannter Tisch';
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("de-DE", {
-      style: "currency",
-      currency: "EUR",
+    return new Intl.NumberFormat('de-DE', {
+      style: 'currency',
+      currency: 'EUR',
     }).format(amount);
   };
 
@@ -295,10 +295,12 @@ export default function OrdersPage() {
               <div className="flex items-center gap-2 min-w-0">
                 <TableIcon className="w-4 h-4 text-gray-300" />
                 <span className="truncate">
-                  {selectedTableId ? getTableName(selectedTableId) : "Alle Tische"}
+                  {selectedTableId ? getTableName(selectedTableId) : 'Alle Tische'}
                 </span>
               </div>
-              <ChevronDown className={`w-4 h-4 transition-transform ${tableMenuOpen ? "rotate-180" : ""}`} />
+              <ChevronDown
+                className={`w-4 h-4 transition-transform ${tableMenuOpen ? 'rotate-180' : ''}`}
+              />
             </button>
             {tableMenuOpen && (
               <div className="absolute right-0 mt-1 w-64 rounded-lg border border-gray-700 bg-gray-900 shadow-xl z-[50] max-h-[70vh] overflow-auto">
@@ -310,8 +312,8 @@ export default function OrdersPage() {
                   }}
                   className={`w-full px-3 py-3 text-sm flex items-center justify-between transition-colors ${
                     !selectedTableId
-                      ? "font-semibold text-white border-l-2 border-blue-500 bg-gray-800/80"
-                      : "text-gray-200 hover:bg-gray-800"
+                      ? 'font-semibold text-white border-l-2 border-blue-500 bg-gray-800/80'
+                      : 'text-gray-200 hover:bg-gray-800'
                   }`}
                 >
                   Alle Tische
@@ -329,8 +331,8 @@ export default function OrdersPage() {
                       }}
                       className={`w-full px-3 py-3 text-sm flex items-center justify-between transition-colors ${
                         selectedTableId === table.id
-                          ? "font-semibold text-white border-l-2 border-blue-500 bg-gray-800/80"
-                          : "text-gray-200 hover:bg-gray-800"
+                          ? 'font-semibold text-white border-l-2 border-blue-500 bg-gray-800/80'
+                          : 'text-gray-200 hover:bg-gray-800'
                       }`}
                     >
                       {table.number}
@@ -350,14 +352,18 @@ export default function OrdersPage() {
               <div className="flex items-center gap-2 min-w-0">
                 <Filter className="w-4 h-4 text-gray-300" />
                 <span className="truncate">
-              {selectedStatuses.length === ALL_STATUSES.length || selectedStatuses.length === 0
-                ? "Alle Status"
-                : selectedStatuses.map((status) => STATUS_META[status].label).join(", ")}
+                  {selectedStatuses.length === ALL_STATUSES.length || selectedStatuses.length === 0
+                    ? 'Alle Status'
+                    : selectedStatuses.map((status) => STATUS_META[status].label).join(', ')}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-gray-300">
-                <span className="px-2 py-1 rounded-md bg-gray-700 text-xs">{filteredOrders.length}</span>
-                <ChevronDown className={`w-4 h-4 transition-transform ${statusMenuOpen ? "rotate-180" : ""}`} />
+                <span className="px-2 py-1 rounded-md bg-gray-700 text-xs">
+                  {filteredOrders.length}
+                </span>
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform ${statusMenuOpen ? 'rotate-180' : ''}`}
+                />
               </div>
             </button>
             {statusMenuOpen && (
@@ -373,8 +379,8 @@ export default function OrdersPage() {
                   }}
                   className={`w-full px-3 py-3 text-sm flex items-center justify-between transition-colors ${
                     selectedStatuses.length === ALL_STATUSES.length || selectedStatuses.length === 0
-                      ? "font-semibold text-white border-l-2 border-blue-500 bg-gray-800/80"
-                      : "text-gray-200 hover:bg-gray-800"
+                      ? 'font-semibold text-white border-l-2 border-blue-500 bg-gray-800/80'
+                      : 'text-gray-200 hover:bg-gray-800'
                   }`}
                 >
                   <span className="flex items-center gap-2">
@@ -384,15 +390,19 @@ export default function OrdersPage() {
                     Alle Status
                   </span>
                   <div className="flex items-center gap-2">
-                    <span className="px-2 py-1 rounded-full text-xs bg-gray-800">{orders.length}</span>
+                    <span className="px-2 py-1 rounded-full text-xs bg-gray-800">
+                      {orders.length}
+                    </span>
                     <span
                       className={`inline-flex items-center justify-center w-6 h-6 rounded-full border ${
-                        selectedStatuses.length === ALL_STATUSES.length || selectedStatuses.length === 0
-                          ? "border-white/60 bg-white/10"
-                          : "border-gray-700 bg-gray-800"
+                        selectedStatuses.length === ALL_STATUSES.length ||
+                        selectedStatuses.length === 0
+                          ? 'border-white/60 bg-white/10'
+                          : 'border-gray-700 bg-gray-800'
                       }`}
                     >
-                      {(selectedStatuses.length === ALL_STATUSES.length || selectedStatuses.length === 0) && (
+                      {(selectedStatuses.length === ALL_STATUSES.length ||
+                        selectedStatuses.length === 0) && (
                         <Check className="w-4 h-4 text-blue-300" />
                       )}
                     </span>
@@ -419,14 +429,14 @@ export default function OrdersPage() {
                       }}
                       className={`w-full px-3 py-3 text-sm flex items-center justify-between transition-colors ${
                         active
-                          ? "font-semibold text-white border-l-2 border-blue-500 bg-gray-800/80 hover:bg-gray-700/80"
-                          : "text-gray-200 hover:bg-gray-800"
+                          ? 'font-semibold text-white border-l-2 border-blue-500 bg-gray-800/80 hover:bg-gray-700/80'
+                          : 'text-gray-200 hover:bg-gray-800'
                       }`}
                     >
                       <span className="flex items-center gap-2">
                         <span
                           className={`inline-flex items-center justify-center w-8 h-8 rounded-md border shrink-0 ${
-                            active ? meta.tone : "border-white/10 bg-black/10 text-gray-200"
+                            active ? meta.tone : 'border-white/10 bg-black/10 text-gray-200'
                           }`}
                         >
                           <Icon className="w-4 h-4" />
@@ -437,7 +447,7 @@ export default function OrdersPage() {
                         <span className="px-2 py-1 rounded-full text-xs bg-gray-800">{count}</span>
                         <span
                           className={`inline-flex items-center justify-center w-6 h-6 rounded-full border ${
-                            active ? "border-white/60 bg-white/10" : "border-gray-700 bg-gray-800"
+                            active ? 'border-white/60 bg-white/10' : 'border-gray-700 bg-gray-800'
                           }`}
                         >
                           {active && <Check className="w-4 h-4 text-blue-300" />}
@@ -462,8 +472,8 @@ export default function OrdersPage() {
             </h2>
             <p className="text-gray-500 mb-4">
               {searchQuery || hasActiveStatusFilter
-                ? "Versuchen Sie andere Suchkriterien"
-                : "Erstellen Sie Ihre erste Bestellung"}
+                ? 'Versuchen Sie andere Suchkriterien'
+                : 'Erstellen Sie Ihre erste Bestellung'}
             </p>
             {!searchQuery && !hasActiveStatusFilter && (
               <Button
@@ -517,7 +527,7 @@ export default function OrdersPage() {
                     <div className="flex justify-between text-gray-300">
                       <span>Eröffnet:</span>
                       <span className="text-gray-400">
-                        {format(parseISO(order.opened_at), "dd.MM.yyyy HH:mm", {
+                        {format(parseISO(order.opened_at), 'dd.MM.yyyy HH:mm', {
                           locale: de,
                         })}
                       </span>
@@ -537,21 +547,21 @@ export default function OrdersPage() {
                       </div>
                       <div className="flex justify-between text-xs text-gray-400 mt-1">
                         <span>
-                          Zahlungsstatus:{" "}
+                          Zahlungsstatus:{' '}
                           <span
                             className={
-                              order.payment_status === "paid"
-                                ? "text-green-400"
-                                : order.payment_status === "partial"
-                                ? "text-yellow-400"
-                                : "text-red-400"
+                              order.payment_status === 'paid'
+                                ? 'text-green-400'
+                                : order.payment_status === 'partial'
+                                  ? 'text-yellow-400'
+                                  : 'text-red-400'
                             }
                           >
-                            {order.payment_status === "paid"
-                              ? "Bezahlt"
-                              : order.payment_status === "partial"
-                              ? "Teilweise"
-                              : "Offen"}
+                            {order.payment_status === 'paid'
+                              ? 'Bezahlt'
+                              : order.payment_status === 'partial'
+                                ? 'Teilweise'
+                                : 'Offen'}
                           </span>
                         </span>
                       </div>
@@ -571,11 +581,11 @@ export default function OrdersPage() {
             <div
               key={toast.id}
               className={`px-4 py-3 rounded-lg shadow-lg border ${
-                toast.variant === "error"
-                  ? "bg-red-900/90 border-red-600 text-red-100"
-                  : toast.variant === "success"
-                  ? "bg-green-900/90 border-green-600 text-green-100"
-                  : "bg-blue-900/90 border-blue-600 text-blue-100"
+                toast.variant === 'error'
+                  ? 'bg-red-900/90 border-red-600 text-red-100'
+                  : toast.variant === 'success'
+                    ? 'bg-green-900/90 border-green-600 text-green-100'
+                    : 'bg-blue-900/90 border-blue-600 text-blue-100'
               }`}
             >
               {toast.message}
@@ -619,4 +629,3 @@ export default function OrdersPage() {
     </div>
   );
 }
-

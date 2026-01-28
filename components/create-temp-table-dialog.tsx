@@ -1,12 +1,19 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { tableDayConfigsApi } from "@/lib/api/table-day-configs";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ApiError } from "@/lib/api/client";
-import { format } from "date-fns";
+import { useState, useEffect } from 'react';
+import { tableDayConfigsApi } from '@/lib/api/table-day-configs';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { ApiError } from '@/lib/api/client';
+import { format } from 'date-fns';
 
 interface CreateTempTableDialogProps {
   open: boolean;
@@ -15,7 +22,7 @@ interface CreateTempTableDialogProps {
   selectedDate: Date;
   onTableCreated: () => void;
   initialPosition?: { x: number; y: number };
-  onNotify?: (message: string, variant?: "info" | "success" | "error") => void;
+  onNotify?: (message: string, variant?: 'info' | 'success' | 'error') => void;
 }
 
 export function CreateTempTableDialog({
@@ -27,32 +34,32 @@ export function CreateTempTableDialog({
   initialPosition,
   onNotify,
 }: CreateTempTableDialogProps) {
-  const [number, setNumber] = useState("");
+  const [number, setNumber] = useState('');
   const [capacity, setCapacity] = useState(4);
-  const [notes, setNotes] = useState("");
+  const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
 
   useEffect(() => {
     if (open) {
-      setNumber("");
+      setNumber('');
       setCapacity(4);
-      setNotes("");
-      setError("");
+      setNotes('');
+      setError('');
     }
   }, [open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError("");
+    setError('');
 
     try {
-      const dateStr = format(selectedDate, "yyyy-MM-dd");
-      
+      const dateStr = format(selectedDate, 'yyyy-MM-dd');
+
       const positionX = initialPosition?.x ?? 50;
       const positionY = initialPosition?.y ?? 50;
-      
+
       await tableDayConfigsApi.createOrUpdate(restaurantId, {
         table_id: null,
         date: dateStr,
@@ -60,7 +67,7 @@ export function CreateTempTableDialog({
         is_hidden: false,
         number,
         capacity,
-        shape: "rectangle",
+        shape: 'rectangle',
         position_x: positionX,
         position_y: positionY,
         width: 120,
@@ -73,16 +80,16 @@ export function CreateTempTableDialog({
       });
 
       onTableCreated();
-      onNotify?.(`Tisch ${number} wurde für diesen Tag erstellt.`, "success");
+      onNotify?.(`Tisch ${number} wurde für diesen Tag erstellt.`, 'success');
       onOpenChange(false);
     } catch (err) {
       if (err instanceof ApiError) {
-        setError(err.message || "Fehler beim Erstellen des Tisches");
+        setError(err.message || 'Fehler beim Erstellen des Tisches');
       } else {
-        setError("Fehler beim Erstellen des Tisches");
+        setError('Fehler beim Erstellen des Tisches');
       }
-      onNotify?.("Fehler beim Erstellen des temporären Tisches", "error");
-      console.error("Fehler beim Erstellen des temporären Tisches:", err);
+      onNotify?.('Fehler beim Erstellen des temporären Tisches', 'error');
+      console.error('Fehler beim Erstellen des temporären Tisches:', err);
     } finally {
       setLoading(false);
     }
@@ -94,7 +101,7 @@ export function CreateTempTableDialog({
         <DialogHeader>
           <DialogTitle>Neuen Tisch für diesen Tag hinzufügen</DialogTitle>
           <DialogDescription>
-            Dieser Tisch wird nur für den {format(selectedDate, "dd.MM.yyyy")} existieren.
+            Dieser Tisch wird nur für den {format(selectedDate, 'dd.MM.yyyy')} existieren.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
@@ -136,7 +143,9 @@ export function CreateTempTableDialog({
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="temp-notes" className="text-sm font-medium text-gray-300">Notizen</label>
+              <label htmlFor="temp-notes" className="text-sm font-medium text-gray-300">
+                Notizen
+              </label>
               <textarea
                 id="temp-notes"
                 value={notes}
@@ -148,11 +157,16 @@ export function CreateTempTableDialog({
             </div>
           </div>
           <DialogFooter className="mt-4">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={loading}
+            >
               Abbrechen
             </Button>
             <Button type="submit" disabled={loading || !number || !capacity}>
-              {loading ? "Wird erstellt..." : "Tisch erstellen"}
+              {loading ? 'Wird erstellt...' : 'Tisch erstellen'}
             </Button>
           </DialogFooter>
         </form>

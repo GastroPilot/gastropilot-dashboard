@@ -1,12 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
-import { ApiError } from "../api/client";
-import {
-  userSettingsApi,
-  UserSettings,
-  UserSettingsUpdatePayload,
-} from "../api/user-settings";
+import { useCallback, useEffect, useState } from 'react';
+import { ApiError } from '../api/client';
+import { userSettingsApi, UserSettings, UserSettingsUpdatePayload } from '../api/user-settings';
 
-type ToastVariant = "info" | "error" | "success";
+type ToastVariant = 'info' | 'error' | 'success';
 
 interface Toast {
   id: string;
@@ -22,7 +18,7 @@ export function useUserSettings(options: { autoLoad?: boolean } = {}) {
   const [error, setError] = useState<string | null>(null);
   const [toasts, setToasts] = useState<Toast[]>([]);
 
-  const addToast = useCallback((message: string, variant: ToastVariant = "info") => {
+  const addToast = useCallback((message: string, variant: ToastVariant = 'info') => {
     const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
     setToasts((prev) => [...prev, { id, message, variant }]);
     setTimeout(() => {
@@ -32,12 +28,12 @@ export function useUserSettings(options: { autoLoad?: boolean } = {}) {
 
   const extractErrorMessage = useCallback((err: unknown) => {
     if (err instanceof ApiError) {
-      return err.message || "Fehler beim Laden der Einstellungen";
+      return err.message || 'Fehler beim Laden der Einstellungen';
     }
     if (err instanceof Error) {
       return err.message;
     }
-    return "Unbekannter Fehler";
+    return 'Unbekannter Fehler';
   }, []);
 
   const refresh = useCallback(async () => {
@@ -50,7 +46,7 @@ export function useUserSettings(options: { autoLoad?: boolean } = {}) {
     } catch (err) {
       const message = extractErrorMessage(err);
       setError(message);
-      addToast(message, "error");
+      addToast(message, 'error');
       return null;
     } finally {
       setIsLoading(false);
@@ -58,7 +54,7 @@ export function useUserSettings(options: { autoLoad?: boolean } = {}) {
   }, [addToast, extractErrorMessage]);
 
   const updateSettings = useCallback(
-    async (data: UserSettingsUpdatePayload["settings"]) => {
+    async (data: UserSettingsUpdatePayload['settings']) => {
       setIsUpdating(true);
       setError(null);
       try {
@@ -68,7 +64,7 @@ export function useUserSettings(options: { autoLoad?: boolean } = {}) {
       } catch (err) {
         const message = extractErrorMessage(err);
         setError(message);
-        addToast(message, "error");
+        addToast(message, 'error');
         throw err;
       } finally {
         setIsUpdating(false);
@@ -88,7 +84,7 @@ export function useUserSettings(options: { autoLoad?: boolean } = {}) {
       } catch (err) {
         const message = extractErrorMessage(err);
         setError(message);
-        addToast(message, "error");
+        addToast(message, 'error');
         throw err;
       } finally {
         setIsUpdating(false);

@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import * as React from "react";
+import * as React from 'react';
 
 interface DialogProps {
   open: boolean;
@@ -36,7 +36,7 @@ interface DialogFooterProps {
 export function Dialog({ open, onOpenChange, children, disableOverlayPointerEvents }: DialogProps) {
   if (!open) return null;
 
-  const overlayPointerClass = disableOverlayPointerEvents ? "pointer-events-none" : "";
+  const overlayPointerClass = disableOverlayPointerEvents ? 'pointer-events-none' : '';
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center">
@@ -49,7 +49,12 @@ export function Dialog({ open, onOpenChange, children, disableOverlayPointerEven
   );
 }
 
-export function DialogContent({ children, className = "", onClose, showClose = true }: DialogContentProps) {
+export function DialogContent({
+  children,
+  className = '',
+  onClose,
+  showClose = true,
+}: DialogContentProps) {
   return (
     <div
       className={`
@@ -85,9 +90,11 @@ export function DialogDescription({ children }: DialogDescriptionProps) {
   return <p className="text-sm text-gray-400 mt-1">{children}</p>;
 }
 
-export function DialogFooter({ children, className = "" }: DialogFooterProps) {
+export function DialogFooter({ children, className = '' }: DialogFooterProps) {
   return (
-    <div className={`px-4 md:px-6 py-3 md:py-4 border-t border-gray-700 flex flex-col md:flex-row justify-end gap-2 md:gap-3 ${className}`}>
+    <div
+      className={`px-4 md:px-6 py-3 md:py-4 border-t border-gray-700 flex flex-col md:flex-row justify-end gap-2 md:gap-3 ${className}`}
+    >
       {children}
     </div>
   );

@@ -30,12 +30,12 @@ interface UseDashboardReturn {
   blockAssignments: BlockAssignment[];
   orders: Order[];
   selectedDate: Date;
-  
+
   // State
   isLoading: boolean;
   isRefreshing: boolean;
   error: Error | null;
-  
+
   // Actions
   setSelectedDate: (date: Date) => void;
   refresh: () => Promise<void>;
@@ -44,7 +44,7 @@ interface UseDashboardReturn {
 
 /**
  * Optimierter Dashboard-Hook der den Batch-Endpoint nutzt.
- * 
+ *
  * Vorteile gegenüber einzelnen API-Aufrufen:
  * - Ein Request statt 10+
  * - Schnellere initiale Ladezeit
@@ -56,7 +56,7 @@ export function useOptimizedDashboard({
   onError,
 }: UseDashboardOptions = {}): UseDashboardReturn {
   const queryClient = useQueryClient();
-  
+
   // Zustand Store
   const {
     restaurant,
@@ -80,109 +80,119 @@ export function useOptimizedDashboard({
     setOrders,
     setSelectedDate: setStoreDate,
   } = useDashboardDataStore();
-  
+
   const { setIsInitialLoading } = useDashboardUIStore();
-  
+
   // Local state
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  
+
   // Refs for debouncing
   const lastFetchRef = useRef<string>('');
   const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
-  
+
   /**
    * Fetch all dashboard data in one request
    */
-  const fetchDashboardData = useCallback(async (
-    restId: number,
-    date: Date,
-    options: { background?: boolean } = {}
-  ) => {
-    const dateStr = format(date, 'yyyy-MM-dd');
-    const cacheKey = `${restId}-${dateStr}`;
-    
-    // Skip if same request is already in progress or recently completed
-    if (lastFetchRef.current === cacheKey && options.background) {
-      return;
-    }
-    
-    // Cancel previous request
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    abortControllerRef.current = new AbortController();
-    
-    if (!options.background) {
-      setIsLoading(true);
-      setIsInitialLoading(true);
-    } else {
-      setIsRefreshing(true);
-    }
-    
-    try {
-      const data = await dashboardApi.getDashboardData(restId, date);
-      
-      lastFetchRef.current = cacheKey;
-      
-      // Update store with all data at once
-      if (data.restaurant) {
-        setRestaurant(data.restaurant as Restaurant);
+  const fetchDashboardData = useCallback(
+    async (restId: number, date: Date, options: { background?: boolean } = {}) => {
+      const dateStr = format(date, 'yyyy-MM-dd');
+      const cacheKey = `${restId}-${dateStr}`;
+
+      // Skip if same request is already in progress or recently completed
+      if (lastFetchRef.current === cacheKey && options.background) {
+        return;
       }
-      setAreas(data.areas as Area[]);
-      setAllTables(data.tables as Table[]);
-      setTables(data.tables as Table[]);
-      setAllObstacles(data.obstacles as Obstacle[]);
-      setObstacles(data.obstacles as Obstacle[]);
-      setReservations(data.reservations as Reservation[]);
-      setBlocks(data.blocks as Block[]);
-      setBlockAssignments(data.block_assignments as BlockAssignment[]);
-      setOrders(data.orders as Order[]);
-      
-      setError(null);
-    } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') {
-        return; // Request was cancelled, ignore
+
+      // Cancel previous request
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
       }
-      
-      const error = err instanceof Error ? err : new Error('Failed to fetch dashboard data');
-      setError(error);
-      onError?.(error);
-    } finally {
+      abortControllerRef.current = new AbortController();
+
       if (!options.background) {
-        setIsLoading(false);
-        setIsInitialLoading(false);
+        setIsLoading(true);
+        setIsInitialLoading(true);
       } else {
-        setIsRefreshing(false);
+        setIsRefreshing(true);
       }
-    }
-  }, [
-    setRestaurant, setAreas, setAllTables, setTables,
-    setAllObstacles, setObstacles, setReservations,
-    setBlocks, setBlockAssignments, setOrders,
-    setIsInitialLoading, onError
-  ]);
-  
+
+      try {
+        const data = await dashboardApi.getDashboardData(restId, date);
+
+        lastFetchRef.current = cacheKey;
+
+        // Update store with all data at once
+        if (data.restaurant) {
+          setRestaurant(data.restaurant as Restaurant);
+        }
+        setAreas(data.areas as Area[]);
+        setAllTables(data.tables as Table[]);
+        setTables(data.tables as Table[]);
+        setAllObstacles(data.obstacles as Obstacle[]);
+        setObstacles(data.obstacles as Obstacle[]);
+        setReservations(data.reservations as Reservation[]);
+        setBlocks(data.blocks as Block[]);
+        setBlockAssignments(data.block_assignments as BlockAssignment[]);
+        setOrders(data.orders as Order[]);
+
+        setError(null);
+      } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') {
+          return; // Request was cancelled, ignore
+        }
+
+        const error = err instanceof Error ? err : new Error('Failed to fetch dashboard data');
+        setError(error);
+        onError?.(error);
+      } finally {
+        if (!options.background) {
+          setIsLoading(false);
+          setIsInitialLoading(false);
+        } else {
+          setIsRefreshing(false);
+        }
+      }
+    },
+    [
+      setRestaurant,
+      setAreas,
+      setAllTables,
+      setTables,
+      setAllObstacles,
+      setObstacles,
+      setReservations,
+      setBlocks,
+      setBlockAssignments,
+      setOrders,
+      setIsInitialLoading,
+      onError,
+    ]
+  );
+
   /**
    * Debounced date change handler
    */
-  const setSelectedDate = useCallback((date: Date) => {
-    setStoreDate(date);
-    
-    // Debounce the fetch
-    if (fetchTimeoutRef.current) {
-      clearTimeout(fetchTimeoutRef.current);
-    }
-    
-    fetchTimeoutRef.current = setTimeout(() => {
-      if (restaurantId) {
-        fetchDashboardData(restaurantId, date, { background: true });
+  const setSelectedDate = useCallback(
+    (date: Date) => {
+      setStoreDate(date);
+
+      // Debounce the fetch
+      if (fetchTimeoutRef.current) {
+        clearTimeout(fetchTimeoutRef.current);
       }
-    }, 150); // Small delay to batch rapid date changes
-  }, [restaurantId, setStoreDate, fetchDashboardData]);
-  
+
+      fetchTimeoutRef.current = setTimeout(() => {
+        if (restaurantId) {
+          fetchDashboardData(restaurantId, date, { background: true });
+        }
+      }, 150); // Small delay to batch rapid date changes
+    },
+    [restaurantId, setStoreDate, fetchDashboardData]
+  );
+
   /**
    * Force refresh
    */
@@ -190,7 +200,7 @@ export function useOptimizedDashboard({
     if (!restaurantId) return;
     await fetchDashboardData(restaurantId, selectedDate);
   }, [restaurantId, selectedDate, fetchDashboardData]);
-  
+
   /**
    * Background refresh (doesn't show loading state)
    */
@@ -199,13 +209,13 @@ export function useOptimizedDashboard({
     lastFetchRef.current = ''; // Force refetch
     await fetchDashboardData(restaurantId, selectedDate, { background: true });
   }, [restaurantId, selectedDate, fetchDashboardData]);
-  
+
   // Initial fetch
   useEffect(() => {
     if (restaurantId) {
       fetchDashboardData(restaurantId, selectedDate);
     }
-    
+
     return () => {
       if (fetchTimeoutRef.current) {
         clearTimeout(fetchTimeoutRef.current);
@@ -215,7 +225,7 @@ export function useOptimizedDashboard({
       }
     };
   }, [restaurantId]); // Only re-run when restaurantId changes
-  
+
   // Refetch when date changes (with debounce already applied in setSelectedDate)
   useEffect(() => {
     // This effect handles external date changes (not from setSelectedDate)
@@ -223,7 +233,7 @@ export function useOptimizedDashboard({
       fetchDashboardData(restaurantId, selectedDate, { background: true });
     }
   }, [selectedDate]); // eslint-disable-line react-hooks/exhaustive-deps
-  
+
   return {
     restaurant,
     areas,
@@ -254,14 +264,14 @@ export function useDashboardPolling(
   } = {}
 ) {
   const { interval = 30000, enabled = true } = options;
-  
+
   useEffect(() => {
     if (!enabled) return;
-    
+
     const pollInterval = setInterval(() => {
       refreshFn().catch(console.error);
     }, interval);
-    
+
     return () => clearInterval(pollInterval);
   }, [refreshFn, interval, enabled]);
 }
@@ -271,7 +281,7 @@ export function useDashboardPolling(
  */
 export function useOptimizedClock(updateInterval = 10000) {
   const [now, setNow] = useState(() => new Date());
-  
+
   useEffect(() => {
     // Initial sync to nearest interval
     const syncToInterval = () => {
@@ -279,21 +289,21 @@ export function useOptimizedClock(updateInterval = 10000) {
       const nextInterval = Math.ceil(currentMs / updateInterval) * updateInterval;
       return nextInterval - currentMs;
     };
-    
+
     // First update syncs to interval
     const initialTimeout = setTimeout(() => {
       setNow(new Date());
-      
+
       // Then update at regular intervals
       const interval = setInterval(() => {
         setNow(new Date());
       }, updateInterval);
-      
+
       return () => clearInterval(interval);
     }, syncToInterval());
-    
+
     return () => clearTimeout(initialTimeout);
   }, [updateInterval]);
-  
+
   return now;
 }

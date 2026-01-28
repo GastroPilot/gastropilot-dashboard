@@ -1,11 +1,17 @@
-"use client";
+'use client';
 
-import { useEffect, useState, useCallback } from "react";
-import { restaurantsApi, Restaurant } from "@/lib/api/restaurants";
-import { orderStatisticsApi, RevenueStatistics, TopItem, CategoryStatistics, HourlyStatistics } from "@/lib/api/order-statistics";
-import { LoadingOverlay } from "@/components/loading-overlay";
-import { format, subDays, startOfDay, endOfDay } from "date-fns";
-import { de } from "date-fns/locale";
+import { useEffect, useState, useCallback } from 'react';
+import { restaurantsApi, Restaurant } from '@/lib/api/restaurants';
+import {
+  orderStatisticsApi,
+  RevenueStatistics,
+  TopItem,
+  CategoryStatistics,
+  HourlyStatistics,
+} from '@/lib/api/order-statistics';
+import { LoadingOverlay } from '@/components/loading-overlay';
+import { format, subDays, startOfDay, endOfDay } from 'date-fns';
+import { de } from 'date-fns/locale';
 import {
   TrendingUp,
   ShoppingCart,
@@ -18,9 +24,9 @@ import {
   Percent,
   Clock,
   Package,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 export default function OrderStatisticsPage() {
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
@@ -34,8 +40,8 @@ export default function OrderStatisticsPage() {
     start: string;
     end: string;
   }>({
-    start: format(startOfDay(subDays(new Date(), 7)), "yyyy-MM-dd"),
-    end: format(endOfDay(new Date()), "yyyy-MM-dd"),
+    start: format(startOfDay(subDays(new Date(), 7)), 'yyyy-MM-dd'),
+    end: format(endOfDay(new Date()), 'yyyy-MM-dd'),
   });
 
   const loadData = useCallback(async () => {
@@ -68,7 +74,7 @@ export default function OrderStatisticsPage() {
       setCategoryStats(categories);
       setHourlyStats(hourly);
     } catch (error) {
-      console.error("Fehler beim Laden der Statistiken:", error);
+      console.error('Fehler beim Laden der Statistiken:', error);
     } finally {
       setIsLoading(false);
     }
@@ -82,7 +88,7 @@ export default function OrderStatisticsPage() {
           setRestaurant(restaurants[0]);
         }
       } catch (error) {
-        console.error("Fehler beim Laden des Restaurants:", error);
+        console.error('Fehler beim Laden des Restaurants:', error);
       }
     };
 
@@ -96,9 +102,9 @@ export default function OrderStatisticsPage() {
   }, [restaurant, loadData]);
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("de-DE", {
-      style: "currency",
-      currency: "EUR",
+    return new Intl.NumberFormat('de-DE', {
+      style: 'currency',
+      currency: 'EUR',
     }).format(amount);
   };
 
@@ -116,9 +122,7 @@ export default function OrderStatisticsPage() {
               <BarChart3 className="w-8 h-8" />
               Bestellstatistiken
             </h1>
-            <p className="text-sm text-gray-400">
-              Übersicht über Umsatz, Top-Artikel und Trends
-            </p>
+            <p className="text-sm text-gray-400">Übersicht über Umsatz, Top-Artikel und Trends</p>
           </div>
           <div className="flex items-center gap-3">
             <Input
@@ -186,7 +190,7 @@ export default function OrderStatisticsPage() {
                 <div className="text-xs text-gray-500 mt-1">
                   {revenueStats.total_tips > 0
                     ? `${((revenueStats.total_tips / revenueStats.total_revenue) * 100).toFixed(1)}% vom Umsatz`
-                    : "Kein Trinkgeld"}
+                    : 'Kein Trinkgeld'}
                 </div>
               </div>
 
@@ -316,7 +320,9 @@ export default function OrderStatisticsPage() {
                           )}
                         </div>
                       </div>
-                      <div className="text-xs text-gray-400 mt-2">{String(hour).padStart(2, "0")}:00</div>
+                      <div className="text-xs text-gray-400 mt-2">
+                        {String(hour).padStart(2, '0')}:00
+                      </div>
                     </div>
                   );
                 })}
@@ -326,9 +332,7 @@ export default function OrderStatisticsPage() {
         ) : (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <BarChart3 className="w-16 h-16 text-gray-600 mb-4" />
-            <h2 className="text-xl font-semibold text-gray-300 mb-2">
-              Keine Daten verfügbar
-            </h2>
+            <h2 className="text-xl font-semibold text-gray-300 mb-2">Keine Daten verfügbar</h2>
             <p className="text-gray-500">Laden Sie Daten für einen Zeitraum</p>
           </div>
         )}
@@ -336,4 +340,3 @@ export default function OrderStatisticsPage() {
     </div>
   );
 }
-

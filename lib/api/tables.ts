@@ -1,4 +1,4 @@
-import { api } from "./client";
+import { api } from './client';
 
 export interface Table {
   id: number;
@@ -70,11 +70,7 @@ export const tablesApi = {
     return api.post<Table>(`/restaurants/${restaurantId}/tables/`, data);
   },
 
-  update: async (
-    restaurantId: number,
-    tableId: number,
-    data: TableUpdate
-  ): Promise<Table> => {
+  update: async (restaurantId: number, tableId: number, data: TableUpdate): Promise<Table> => {
     return api.patch<Table>(`/restaurants/${restaurantId}/tables/${tableId}`, data);
   },
 
@@ -84,36 +80,36 @@ export const tablesApi = {
 
   join: async (restaurantId: number, tableIds: number[]): Promise<Table[]> => {
     if (tableIds.length < 2) {
-      throw new Error("Mindestens 2 Tische müssen ausgewählt sein");
+      throw new Error('Mindestens 2 Tische müssen ausgewählt sein');
     }
-    
+
     // Erstelle eine neue join_group_id (nutze die kleinste Tisch-ID als Gruppen-ID)
     const groupId = Math.min(...tableIds);
-    
+
     // Aktualisiere alle Tische in der Gruppe
     const updates = await Promise.all(
-      tableIds.map(tableId =>
+      tableIds.map((tableId) =>
         api.patch<Table>(`/restaurants/${restaurantId}/tables/${tableId}`, {
           is_joinable: true,
           join_group_id: groupId,
         })
       )
     );
-    
+
     return updates;
   },
 
   unjoin: async (restaurantId: number, tableIds: number[]): Promise<Table[]> => {
     // Entferne die Gruppierung von allen Tischen
     const updates = await Promise.all(
-      tableIds.map(tableId =>
+      tableIds.map((tableId) =>
         api.patch<Table>(`/restaurants/${restaurantId}/tables/${tableId}`, {
           is_joinable: false,
           join_group_id: null,
         })
       )
     );
-    
+
     return updates;
   },
 };

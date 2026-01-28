@@ -1,4 +1,4 @@
-import { api } from "./client";
+import { api } from './client';
 
 /**
  * Tischvorschlag von der KI mit Confidence-Score.
@@ -44,7 +44,7 @@ export interface AIStatusResponse {
 export const aiApi = {
   /**
    * Fragt KI-Vorschläge für Tischzuordnung an.
-   * 
+   *
    * @param restaurantId - ID des Restaurants
    * @param request - Optional mit context_hint (z.B. Gästename)
    * @returns Top-3 Tischvorschläge mit Confidence-Score
@@ -61,7 +61,7 @@ export const aiApi = {
 
   /**
    * Prüft ob AI-Features verfügbar sind.
-   * 
+   *
    * @param restaurantId - ID des Restaurants
    * @returns AI Status mit verfügbaren Features
    */

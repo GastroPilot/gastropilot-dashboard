@@ -18,10 +18,8 @@ export const orderKeys = {
   list: (restaurantId: number, filters?: OrderFilters) =>
     [...orderKeys.lists(), restaurantId, filters] as const,
   details: () => [...orderKeys.all, 'detail'] as const,
-  detail: (restaurantId: number, id: number) =>
-    [...orderKeys.details(), restaurantId, id] as const,
-  statistics: (restaurantId: number) =>
-    [...orderKeys.all, 'statistics', restaurantId] as const,
+  detail: (restaurantId: number, id: number) => [...orderKeys.details(), restaurantId, id] as const,
+  statistics: (restaurantId: number) => [...orderKeys.all, 'statistics', restaurantId] as const,
 };
 
 /**
@@ -54,13 +52,13 @@ export function useOrder(restaurantId: number | undefined, id: number | undefine
 export function useCreateOrder() {
   const queryClient = useQueryClient();
   const addOrder = useDashboardDataStore((s) => s.addOrder);
-  
+
   return useMutation({
     mutationFn: ({ restaurantId, data }: { restaurantId: number; data: OrderCreate }) =>
       ordersApi.create(restaurantId, data),
     onMutate: async ({ restaurantId, data }) => {
       await queryClient.cancelQueries({ queryKey: orderKeys.lists() });
-      
+
       // Optimistically add to store with all required Order fields
       const now = new Date().toISOString();
       const tempOrder: Order = {
@@ -90,9 +88,9 @@ export function useCreateOrder() {
         created_at_utc: now,
         updated_at_utc: now,
       };
-      
+
       addOrder(tempOrder);
-      
+
       return { tempId: tempOrder.id };
     },
     onSettled: () => {
@@ -107,7 +105,7 @@ export function useCreateOrder() {
 export function useUpdateOrder() {
   const queryClient = useQueryClient();
   const updateOrder = useDashboardDataStore((s) => s.updateOrder);
-  
+
   return useMutation({
     mutationFn: ({
       restaurantId,
@@ -133,7 +131,7 @@ export function useUpdateOrder() {
  */
 export function useDeleteOrder() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: ({ restaurantId, id }: { restaurantId: number; id: number }) =>
       ordersApi.delete(restaurantId, id),

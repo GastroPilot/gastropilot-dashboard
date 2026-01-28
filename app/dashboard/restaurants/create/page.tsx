@@ -1,31 +1,31 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { restaurantsApi, RestaurantCreate } from "@/lib/api/restaurants";
-import { ApiError } from "@/lib/api/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { restaurantsApi, RestaurantCreate } from '@/lib/api/restaurants';
+import { ApiError } from '@/lib/api/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 export default function CreateRestaurantPage() {
   const router = useRouter();
   const [formData, setFormData] = useState<RestaurantCreate>({
-    name: "",
-    address: "",
-    phone: "",
-    email: "",
-    description: "",
+    name: '',
+    address: '',
+    phone: '',
+    email: '',
+    description: '',
   });
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setError('');
 
     if (formData.name.trim().length === 0) {
-      setError("Restaurantname ist erforderlich");
+      setError('Restaurantname ist erforderlich');
       return;
     }
 
@@ -42,13 +42,13 @@ export default function CreateRestaurantPage() {
       };
 
       await restaurantsApi.create(dataToSend);
-      router.push("/dashboard");
+      router.push('/dashboard');
     } catch (err) {
-      console.error("Fehler beim Erstellen des Restaurants:", err);
+      console.error('Fehler beim Erstellen des Restaurants:', err);
       if (err instanceof ApiError) {
-        setError(err.message || "Fehler beim Erstellen des Restaurants");
+        setError(err.message || 'Fehler beim Erstellen des Restaurants');
       } else {
-        setError("Ein Fehler ist aufgetreten");
+        setError('Ein Fehler ist aufgetreten');
       }
     } finally {
       setLoading(false);
@@ -77,9 +77,7 @@ export default function CreateRestaurantPage() {
                 id="name"
                 type="text"
                 value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="Mein Restaurant"
                 required
                 minLength={1}
@@ -94,10 +92,8 @@ export default function CreateRestaurantPage() {
               <Input
                 id="address"
                 type="text"
-                value={formData.address || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, address: e.target.value || null })
-                }
+                value={formData.address || ''}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value || null })}
                 placeholder="Musterstraße 123, 12345 Musterstadt"
                 maxLength={500}
               />
@@ -110,10 +106,8 @@ export default function CreateRestaurantPage() {
               <Input
                 id="phone"
                 type="tel"
-                value={formData.phone || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, phone: e.target.value || null })
-                }
+                value={formData.phone || ''}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value || null })}
                 placeholder="+49 123 456789"
                 maxLength={50}
               />
@@ -126,10 +120,8 @@ export default function CreateRestaurantPage() {
               <Input
                 id="email"
                 type="email"
-                value={formData.email || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value || null })
-                }
+                value={formData.email || ''}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value || null })}
                 placeholder="info@restaurant.de"
                 maxLength={255}
               />
@@ -141,10 +133,8 @@ export default function CreateRestaurantPage() {
               </label>
               <textarea
                 id="description"
-                value={formData.description || ""}
-                onChange={(e) =>
-                  setFormData({ ...formData, description: e.target.value || null })
-                }
+                value={formData.description || ''}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value || null })}
                 placeholder="Beschreibung des Restaurants..."
                 rows={4}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -153,13 +143,9 @@ export default function CreateRestaurantPage() {
 
             <div className="flex gap-2">
               <Button type="submit" className="flex-1" disabled={loading}>
-                {loading ? "Wird erstellt..." : "Restaurant anlegen"}
+                {loading ? 'Wird erstellt...' : 'Restaurant anlegen'}
               </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => router.push("/dashboard")}
-              >
+              <Button type="button" variant="outline" onClick={() => router.push('/dashboard')}>
                 Abbrechen
               </Button>
             </div>
@@ -169,4 +155,3 @@ export default function CreateRestaurantPage() {
     </div>
   );
 }
-
