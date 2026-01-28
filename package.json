@@ -49,6 +49,7 @@
     "@testing-library/react": "^16.1.0",
     "@vitejs/plugin-react": "^4.3.4",
     "@vitest/coverage-v8": "^4.0.18",
+    "@vitest/ui": "4.0.18",
     "eslint": "^8",
     "eslint-config-next": "15.4.0-canary.47",
     "jsdom": "^25.0.1",
