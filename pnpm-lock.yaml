@@ -21,7 +21,7 @@ importers:
         specifier: 4.1.7
         version: 4.1.7
       '@tanstack/react-query':
-        specifier: ^5.62.0
+        specifier: ^5.90.20
         version: 5.90.20(react@19.1.0)
       '@types/node':
         specifier: ^22.15.18
