@@ -1,16 +1,69 @@
 /**
  * API Konfiguration
- * Lädt die Konfiguration aus Environment-Variablen entsprechend env.example
- * 
+ *
+ * Dynamische URL-Generierung basierend auf der Frontend-Domain:
+ * - localhost → localhost:8001 (Entwicklung)
+ * - gpilot.app → api.gpilot.app (Prod)
+ * - kunde.gpilot.app → api-kunde.gpilot.app (Kunde/Prod)
+ * - staging.gpilot.app → api-staging.gpilot.app (Staging)
+ * - demo.gpilot.app → api-demo.gpilot.app (Demo)
+ *
  * Struktur:
- * - API_BASE_URL: Basis-URL ohne Pfad (z.B. 'http://localhost:8001')
+ * - API_BASE_URL: Basis-URL ohne Pfad (dynamisch oder aus Environment)
  * - API_PREFIX: API-Versions-Präfix (z.B. 'v1')
  * - API_URL: Vollständige API-URL (API_BASE_URL + API_PREFIX)
  */
 
-// API_BASE_URL: Basis-URL (kann Pfad enthalten, z.B. 'http://localhost:8001' oder 'https://api.gastropilot.org/app/test')
+/**
+ * Generiert die API-Base-URL basierend auf der aktuellen Frontend-Domain.
+ *
+ * Schema:
+ * - localhost → http://localhost:8001
+ * - gpilot.app → https://api.gpilot.app (Prod ohne Subdomain)
+ * - {subdomain}.gpilot.app → https://api-{subdomain}.gpilot.app
+ *
+ * Kann durch NEXT_PUBLIC_API_BASE_URL Environment-Variable überschrieben werden.
+ */
+export function getApiBaseUrl(): string {
+  // Environment-Variable hat Vorrang (für manuelle Konfiguration)
+  const envBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.API_BASE_URL;
+  if (envBaseUrl) {
+    return envBaseUrl;
+  }
+
+  // Server-Side Rendering: Fallback auf localhost
+  if (typeof window === 'undefined') {
+    return 'http://localhost:8001';
+  }
+
+  const hostname = window.location.hostname;
+
+  // Localhost Entwicklung
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return 'http://localhost:8001';
+  }
+
+  // Prod ohne Subdomain: gpilot.app → api.gpilot.app
+  if (hostname === 'gpilot.app') {
+    return 'https://api.gpilot.app';
+  }
+
+  // Dynamische URL-Generierung für gpilot.app Subdomains
+  // Schema: {subdomain}.gpilot.app → api-{subdomain}.gpilot.app
+  const gpilotMatch = hostname.match(/^([^.]+)\.gpilot\.app$/);
+  if (gpilotMatch) {
+    const subdomain = gpilotMatch[1];
+    return `https://api-${subdomain}.gpilot.app`;
+  }
+
+  // Fallback für unbekannte Domains
+  console.warn(`[API Config] Unbekannte Domain: ${hostname}, verwende localhost als Fallback`);
+  return 'http://localhost:8001';
+}
+
+// API_BASE_URL: Basis-URL (dynamisch generiert oder aus Environment)
 // Trailing slashes werden in buildApiUrl entfernt
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.API_BASE_URL || "http://localhost:8001";
+export const API_BASE_URL = getApiBaseUrl();
 
 // API_PREFIX: API-Versions-Präfix (z.B. 'v1')
 export const API_PREFIX = process.env.NEXT_PUBLIC_API_PREFIX || process.env.API_PREFIX || "v1";
@@ -22,8 +75,8 @@ const cleanBaseUrl = API_BASE_URL.replace(/\/+$/, '');
 // Entferne leading/trailing slashes von API_PREFIX
 const cleanPrefix = API_PREFIX ? API_PREFIX.replace(/^\/+|\/+$/g, '') : '';
 // Konstruiere ohne trailing slash am Ende (vermeidet Backend-Redirects)
-export const API_URL = cleanPrefix 
-  ? `${cleanBaseUrl}/${cleanPrefix}` 
+export const API_URL = cleanPrefix
+  ? `${cleanBaseUrl}/${cleanPrefix}`
   : cleanBaseUrl;
 
 /**

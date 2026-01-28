@@ -6,6 +6,7 @@ import { useDashboardDataStore } from '@/lib/stores/dashboard-store';
 import { reservationKeys } from '@/lib/hooks/queries/use-reservations';
 import { orderKeys } from '@/lib/hooks/queries/use-orders';
 import { tableKeys } from '@/lib/hooks/queries/use-tables';
+import { getApiBaseUrl } from '@/lib/api/config';
 
 type WebSocketChannel = 'orders' | 'reservations' | 'tables' | 'kitchen' | 'all';
 
@@ -66,12 +67,13 @@ export function useWebSocket({
   const getWsUrl = useCallback(() => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null;
     if (!token || !restaurantId) return null;
-    
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8001/api/v1';
-    const wsProtocol = apiUrl.startsWith('https') ? 'wss' : 'ws';
-    const baseUrl = apiUrl.replace(/^https?/, wsProtocol).replace('/api/v1', '');
-    
-    return `${baseUrl}/v1/ws/${restaurantId}?token=${token}`;
+
+    // Verwende die dynamische API-URL-Generierung
+    const apiBaseUrl = getApiBaseUrl();
+    const wsProtocol = apiBaseUrl.startsWith('https') ? 'wss' : 'ws';
+    const wsBaseUrl = apiBaseUrl.replace(/^https?/, wsProtocol);
+
+    return `${wsBaseUrl}/v1/ws/${restaurantId}?token=${token}`;
   }, [restaurantId]);
   
   const handleMessage = useCallback((event: MessageEvent) => {

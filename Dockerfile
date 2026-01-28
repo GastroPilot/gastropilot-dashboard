@@ -17,10 +17,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Set build-time environment variables (can be overridden)
-ARG NEXT_PUBLIC_API_URL
+# Set build-time environment variables
+# API-URL wird zur Laufzeit dynamisch basierend auf der Domain generiert
 ARG NEXT_PUBLIC_APP_VERSION=0.9.0
-ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_APP_VERSION=$NEXT_PUBLIC_APP_VERSION
 
 # Build Next.js application

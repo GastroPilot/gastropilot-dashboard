@@ -108,7 +108,8 @@ jobs:
       - name: Build application
         run: npm run build
         env:
-          NEXT_PUBLIC_API_URL: http://localhost:8000
+          # E2E Tests laufen gegen lokales Backend
+          NEXT_PUBLIC_API_BASE_URL: http://localhost:8000
 
       - name: Run E2E tests (Chromium only for PRs)
         run: npx playwright test --project=chromium
@@ -141,8 +142,7 @@ jobs:
 
       - name: Build application
         run: npm run build
-        env:
-          NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL || 'http://localhost:8000' }}
+        # API-URL wird zur Laufzeit dynamisch generiert, kein Build-Zeit Override nötig
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -202,7 +202,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            NEXT_PUBLIC_API_URL=${{ secrets.API_URL || 'https://api-staging.gpilot.app' }}
             NEXT_PUBLIC_APP_VERSION=${{ github.sha }}
 
       - name: Image digest
