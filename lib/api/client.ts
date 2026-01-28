@@ -1,4 +1,4 @@
-import { API_BASE_URL, API_PREFIX, API_URL, buildApiUrl } from './config';
+import { getApiBaseUrl, API_PREFIX, buildApiUrl } from './config';
 
 export class ApiError extends Error {
   constructor(
@@ -29,7 +29,7 @@ async function refreshToken(): Promise<string | null> {
         return null;
       }
 
-      const refreshUrl = buildApiUrl(API_BASE_URL, API_PREFIX, "/auth/refresh");
+      const refreshUrl = buildApiUrl(getApiBaseUrl(), API_PREFIX, "/auth/refresh");
       const response = await fetch(refreshUrl, {
         method: "POST",
         headers: {
@@ -82,7 +82,7 @@ async function request<T>(
   options: RequestInit = {},
   retryOnAuthError: boolean = true
 ): Promise<T> {
-  const url = buildApiUrl(API_BASE_URL, API_PREFIX, endpoint);
+  const url = buildApiUrl(getApiBaseUrl(), API_PREFIX, endpoint);
   
   // Prüfe ob Token abgelaufen ist und erneuere es proaktiv
   let token = typeof window !== "undefined" 
