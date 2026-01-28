@@ -282,7 +282,7 @@ jobs:
     name: Deploy to Test
     runs-on: ubuntu-latest
     needs: [docker-build-test]
-    if: github.event_name == 'push' && (startsWith(github.ref, 'refs/heads/feature/') || startsWith(github.ref, 'refs/heads/fix/'))
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'test' || github.event_name == 'push' && (startsWith(github.ref, 'refs/heads/feature/') || startsWith(github.ref, 'refs/heads/fix/'))
     environment:
       name: test
       url: https://test.gpilot.app
