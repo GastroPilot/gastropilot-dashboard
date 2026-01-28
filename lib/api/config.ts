@@ -71,6 +71,18 @@ export function getApiBaseUrl(): string {
 // API_PREFIX: API-Versions-Präfix (z.B. 'v1')
 export const API_PREFIX = process.env.NEXT_PUBLIC_API_PREFIX || process.env.API_PREFIX || "v1";
 
+// API_BASE_URL: Basis-URL (für Rückwärtskompatibilität, wird beim Module-Load evaluiert)
+// HINWEIS: Für dynamische URL-Generierung zur Laufzeit getApiBaseUrl() verwenden!
+export const API_BASE_URL = getApiBaseUrl();
+
+// API_URL: Vollständige API-URL (API_BASE_URL + API_PREFIX)
+// HINWEIS: Für dynamische URL-Generierung zur Laufzeit buildApiUrl(getApiBaseUrl(), API_PREFIX, endpoint) verwenden!
+const cleanBaseUrl = API_BASE_URL.replace(/\/+$/, '');
+const cleanPrefix = API_PREFIX ? API_PREFIX.replace(/^\/+|\/+$/g, '') : '';
+export const API_URL = cleanPrefix
+  ? `${cleanBaseUrl}/${cleanPrefix}`
+  : cleanBaseUrl;
+
 /**
  * Helper-Funktion zur korrekten URL-Konstruktion ohne doppelte Slashes
  * 
