@@ -39,7 +39,7 @@ export const reservationTableDayConfigsApi = {
     tableDayConfigId: number
   ): Promise<void> => {
     return api.delete(
-      `/restaurants/${restaurantId}/reservation-table-day-configs?reservation_id=${reservationId}&table_day_config_id=${tableDayConfigId}`
+      `/restaurants/${restaurantId}/reservation-table-day-configs/?reservation_id=${reservationId}&table_day_config_id=${tableDayConfigId}`
     );
   },
 

@@ -160,7 +160,7 @@ export const authApi = {
   },
 
   listOperators: async (): Promise<User[]> => {
-    return api.get<User[]>("/auth/operators");
+    return api.get<User[]>("/auth/operators/");
   },
 
   updateOperator: async (operatorId: number, data: UserUpdate): Promise<User> => {

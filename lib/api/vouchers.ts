@@ -57,7 +57,7 @@ export interface VoucherValidateResponse {
 class VouchersApi {
   async list(restaurantId: number, includeInactive: boolean = false): Promise<Voucher[]> {
     return api.get<Voucher[]>(
-      `/restaurants/${restaurantId}/vouchers?include_inactive=${includeInactive}`
+      `/restaurants/${restaurantId}/vouchers/?include_inactive=${includeInactive}`
     );
   }
 

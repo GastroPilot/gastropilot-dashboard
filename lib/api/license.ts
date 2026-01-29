@@ -52,7 +52,7 @@ export const licenseApi = {
    */
   async getFeatures(): Promise<Features> {
     try {
-      const response = await api.get<Features>("/license/features");
+      const response = await api.get<Features>("/license/features/");
       return response;
     } catch (error) {
       console.error("Fehler beim Laden der License-Features:", error);
@@ -66,7 +66,7 @@ export const licenseApi = {
    */
   async getLicenseInfo(): Promise<LicenseInfo> {
     try {
-      const response = await api.get<LicenseInfo>("/license/info");
+      const response = await api.get<LicenseInfo>("/license/info/");
       return response;
     } catch (error) {
       console.error("Fehler beim Laden der Lizenz-Informationen:", error);

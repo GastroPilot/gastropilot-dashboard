@@ -144,7 +144,7 @@ export async function getFailedPayments(
   limit: number = 50
 ): Promise<SumUpPayment[]> {
   return api.get<SumUpPayment[]>(
-    `/restaurants/${restaurantId}/sumup/payments/failed?limit=${limit}`
+    `/restaurants/${restaurantId}/sumup/payments/failed/?limit=${limit}`
   );
 }
 
@@ -160,7 +160,7 @@ export async function getPayments(
   if (status) params.append("status", status);
   params.append("limit", limit.toString());
   return api.get<SumUpPayment[]>(
-    `/restaurants/${restaurantId}/sumup/payments?${params.toString()}`
+    `/restaurants/${restaurantId}/sumup/payments/?${params.toString()}`
   );
 }
 
