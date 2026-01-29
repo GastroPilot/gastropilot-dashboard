@@ -263,6 +263,7 @@ export default function DashboardPage() {
   // ============================================
   
   const [restaurantId, setRestaurantId] = useState<number | null>(null);
+  const [restaurantsLoaded, setRestaurantsLoaded] = useState(false);
   const [selectedAreaId, setSelectedAreaId] = useState<number | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   
@@ -435,6 +436,8 @@ export default function DashboardPage() {
         }
       } catch (error) {
         console.error("Fehler beim Laden der Restaurants:", error);
+      } finally {
+        setRestaurantsLoaded(true);
       }
     }
     loadRestaurant();
@@ -1255,14 +1258,42 @@ export default function DashboardPage() {
   // RENDER
   // ============================================
 
+  // Warte bis die Restaurant-Liste geladen wurde
+  if (!restaurantsLoaded) {
+    return <LoadingOverlay />;
+  }
+
+  // Kein Restaurant gefunden - zeige Hinweis mit Link zur Verwaltung
+  if (!restaurantId) {
+    return (
+      <div className="p-6 bg-gray-900 min-h-screen flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <h2 className="text-xl font-semibold text-white mb-4">Kein Restaurant gefunden</h2>
+          <p className="text-gray-400 mb-6">
+            Bitte erstelle zuerst ein Restaurant, um das Dashboard nutzen zu können.
+          </p>
+          <Link
+            href="/dashboard/restaurants/create"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Restaurant erstellen
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Restaurant-Daten werden geladen
   if (isInitialLoading) {
     return <LoadingOverlay />;
   }
 
+  // Fallback falls restaurant Daten nicht geladen werden konnten
   if (!restaurant) {
     return (
       <div className="p-6 bg-gray-900 min-h-screen">
-        <p className="text-gray-400">Kein Restaurant gefunden. Bitte erstelle zuerst ein Restaurant.</p>
+        <p className="text-gray-400">Fehler beim Laden des Restaurants. Bitte versuche es erneut.</p>
       </div>
     );
   }

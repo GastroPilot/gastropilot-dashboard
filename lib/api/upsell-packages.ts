@@ -60,7 +60,7 @@ export interface UpsellPackageAvailabilityResponse {
 class UpsellPackagesApi {
   async list(restaurantId: number, includeInactive: boolean = false): Promise<UpsellPackage[]> {
     return api.get<UpsellPackage[]>(
-      `/restaurants/${restaurantId}/upsell-packages?include_inactive=${includeInactive}`
+      `/restaurants/${restaurantId}/upsell-packages/?include_inactive=${includeInactive}`
     );
   }
 

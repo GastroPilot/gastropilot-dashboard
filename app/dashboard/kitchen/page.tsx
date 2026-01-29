@@ -37,6 +37,8 @@ export default function KitchenPage() {
   const [toasts, setToasts] = useState<
     { id: string; message: string; variant?: "info" | "error" | "success" }[]
   >([]);
+  // Track ob Browser Notifications unterstützt werden (für Hydration-Konsistenz)
+  const [supportsNotifications, setSupportsNotifications] = useState(false);
   const autoRefreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -48,6 +50,11 @@ export default function KitchenPage() {
   // Keep refs in sync with state
   useEffect(() => { soundEnabledRef.current = soundEnabled; }, [soundEnabled]);
   useEffect(() => { notificationsEnabledRef.current = notificationsEnabled; }, [notificationsEnabled]);
+  
+  // Check für Browser Notifications nach Mount (Hydration-safe)
+  useEffect(() => {
+    setSupportsNotifications("Notification" in window);
+  }, []);
   useEffect(() => { lastOrderCountRef.current = lastOrderCount; }, [lastOrderCount]);
 
   const addToast = useCallback(
@@ -329,7 +336,7 @@ export default function KitchenPage() {
               >
                 🔊 {soundEnabled ? "Sound: An" : "Sound: Aus"}
               </Button>
-              {typeof window !== "undefined" && "Notification" in window && (
+              {supportsNotifications && (
                 <Button
                   variant="outline"
                   size="sm"

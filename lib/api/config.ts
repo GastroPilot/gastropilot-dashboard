@@ -15,50 +15,17 @@
  */
 
 /**
- * Generiert die API-Base-URL basierend auf der aktuellen Frontend-Domain.
- *
- * Schema:
- * - localhost → http://localhost:8001
- * - gpilot.app → https://api.gpilot.app (Prod ohne Subdomain)
- * - {subdomain}.gpilot.app → https://api-{subdomain}.gpilot.app
- *
- * Kann durch NEXT_PUBLIC_API_BASE_URL Environment-Variable überschrieben werden.
- * Für SSR (Server-Side Rendering) wird SSR_API_BASE_URL verwendet.
+ * Berechnet die API-URL basierend auf dem Hostnamen (reine Logik, kein window-Zugriff).
+ * Diese Funktion kann sowohl Server- als auch Client-seitig verwendet werden.
  */
-export function getApiBaseUrl(): string {
-  // Environment-Variable hat Vorrang (für manuelle Konfiguration)
-  const envBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.API_BASE_URL;
-  if (envBaseUrl) {
-    console.log(`[API Config] Using env variable: ${envBaseUrl}`);
-    return envBaseUrl;
-  }
-
-  // Server-Side Rendering: Verwende SSR_API_BASE_URL oder leere URL (kein SSR-Fetch)
-  // WICHTIG: Im Docker-Container ist localhost nicht erreichbar!
-  // Bei leerem SSR_API_BASE_URL werden keine SSR-API-Calls gemacht (Client-only)
-  if (typeof window === 'undefined') {
-    const ssrApiUrl = process.env.SSR_API_BASE_URL;
-    if (ssrApiUrl) {
-      console.log(`[API Config] SSR using SSR_API_BASE_URL: ${ssrApiUrl}`);
-      return ssrApiUrl;
-    }
-    // Fallback für lokale Entwicklung (außerhalb Docker)
-    console.log('[API Config] SSR detected, no SSR_API_BASE_URL set, using localhost (dev only)');
-    return 'http://localhost:8001';
-  }
-
-  const hostname = window.location.hostname;
-  console.log(`[API Config] Client-side hostname: ${hostname}`);
-
+function computeApiUrlFromHostname(hostname: string): string {
   // Localhost Entwicklung
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    console.log('[API Config] Localhost detected');
     return 'http://localhost:8001';
   }
 
   // Prod ohne Subdomain: gpilot.app → api.gpilot.app
   if (hostname === 'gpilot.app') {
-    console.log('[API Config] Production domain detected');
     return 'https://api.gpilot.app';
   }
 
@@ -67,30 +34,77 @@ export function getApiBaseUrl(): string {
   const gpilotMatch = hostname.match(/^([^.]+)\.gpilot\.app$/);
   if (gpilotMatch) {
     const subdomain = gpilotMatch[1];
-    const apiUrl = `https://api-${subdomain}.gpilot.app`;
-    console.log(`[API Config] Subdomain detected: ${subdomain} → ${apiUrl}`);
-    return apiUrl;
+    return `https://api-${subdomain}.gpilot.app`;
   }
 
   // Fallback für unbekannte Domains
-  console.warn(`[API Config] Unbekannte Domain: ${hostname}, verwende localhost als Fallback`);
   return 'http://localhost:8001';
 }
 
+// Cache für Client-seitige API-URL (verhindert mehrfache Berechnungen und Logs)
+let _clientApiUrlCache: string | null = null;
+
+/**
+ * Generiert die API-Base-URL basierend auf der aktuellen Frontend-Domain.
+ *
+ * Schema:
+ * - localhost → http://localhost:8001
+ * - gpilot.app → https://api.gpilot.app (Prod ohne Subdomain)
+ * - {subdomain}.gpilot.app → https://api-{subdomain}.gpilot.app
+ *
+ * Kann durch NEXT_PUBLIC_API_BASE_URL Environment-Variable überschrieben werden.
+ * 
+ * WICHTIG: Diese Funktion sollte nur in Client Components ("use client") verwendet werden!
+ * Für konsistente Hydration wird bei SSR ein Platzhalter verwendet.
+ */
+export function getApiBaseUrl(): string {
+  // Environment-Variable hat Vorrang (für manuelle Konfiguration)
+  // NEXT_PUBLIC_ Variablen sind sowohl Server- als auch Client-seitig verfügbar
+  const envBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+  if (envBaseUrl) {
+    return envBaseUrl;
+  }
+
+  // Server-Side Rendering: Verwende einen Platzhalter für konsistente Hydration
+  // API-Calls werden sowieso nur Client-seitig gemacht (React Query in "use client" Components)
+  if (typeof window === 'undefined') {
+    // Für SSR: Der Platzhalter wird nie wirklich verwendet, da API-Calls nur Client-seitig erfolgen
+    return '';
+  }
+
+  // Client-seitig: Berechne und cache die URL
+  if (_clientApiUrlCache === null) {
+    const hostname = window.location.hostname;
+    _clientApiUrlCache = computeApiUrlFromHostname(hostname);
+    console.log(`[API Config] Client: ${hostname} → ${_clientApiUrlCache}`);
+  }
+  
+  return _clientApiUrlCache;
+}
+
 // API_PREFIX: API-Versions-Präfix (z.B. 'v1')
-export const API_PREFIX = process.env.NEXT_PUBLIC_API_PREFIX || process.env.API_PREFIX || "v1";
+export const API_PREFIX = process.env.NEXT_PUBLIC_API_PREFIX || "v1";
 
-// API_BASE_URL: Basis-URL (für Rückwärtskompatibilität, wird beim Module-Load evaluiert)
-// HINWEIS: Für dynamische URL-Generierung zur Laufzeit getApiBaseUrl() verwenden!
-export const API_BASE_URL = getApiBaseUrl();
+// DEPRECATED: Diese Konstanten werden beim Module-Load evaluiert und können
+// Hydration-Probleme verursachen. Verwende stattdessen getApiBaseUrl() zur Laufzeit!
+// Sie bleiben nur für Rückwärtskompatibilität erhalten.
 
-// API_URL: Vollständige API-URL (API_BASE_URL + API_PREFIX)
-// HINWEIS: Für dynamische URL-Generierung zur Laufzeit buildApiUrl(getApiBaseUrl(), API_PREFIX, endpoint) verwenden!
-const cleanBaseUrl = API_BASE_URL.replace(/\/+$/, '');
-const cleanPrefix = API_PREFIX ? API_PREFIX.replace(/^\/+|\/+$/g, '') : '';
-export const API_URL = cleanPrefix
-  ? `${cleanBaseUrl}/${cleanPrefix}`
-  : cleanBaseUrl;
+// Getter für API_BASE_URL - wird lazy evaluiert
+let _cachedApiBaseUrl: string | null = null;
+export function getStaticApiBaseUrl(): string {
+  if (_cachedApiBaseUrl === null) {
+    _cachedApiBaseUrl = getApiBaseUrl();
+  }
+  return _cachedApiBaseUrl;
+}
+
+// Für Rückwärtskompatibilität: API_BASE_URL als Getter
+// WARNUNG: Nicht in Komponenten verwenden, die hydratiert werden!
+export const API_BASE_URL = '';  // Leer für SSR-Konsistenz
+
+// API_URL: Vollständige API-URL 
+// WARNUNG: Nicht in Komponenten verwenden, die hydratiert werden!
+export const API_URL = '';  // Leer für SSR-Konsistenz
 
 /**
  * Helper-Funktion zur korrekten URL-Konstruktion ohne doppelte Slashes
