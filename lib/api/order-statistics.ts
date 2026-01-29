@@ -40,7 +40,7 @@ export const orderStatisticsApi = {
 
     const query = queryParams.toString();
     return api.get<RevenueStatistics>(
-      `/restaurants/${restaurantId}/order-statistics/revenue/${query ? `?${query}` : ""}`
+      `/restaurants/${restaurantId}/order-statistics/revenue${query ? `?${query}` : ""}`
     );
   },
 
@@ -55,7 +55,7 @@ export const orderStatisticsApi = {
 
     const query = queryParams.toString();
     return api.get<TopItem[]>(
-      `/restaurants/${restaurantId}/order-statistics/top-items/${query ? `?${query}` : ""}`
+      `/restaurants/${restaurantId}/order-statistics/top-items${query ? `?${query}` : ""}`
     );
   },
 
@@ -69,7 +69,7 @@ export const orderStatisticsApi = {
 
     const query = queryParams.toString();
     return api.get<CategoryStatistics>(
-      `/restaurants/${restaurantId}/order-statistics/category-statistics/${query ? `?${query}` : ""}`
+      `/restaurants/${restaurantId}/order-statistics/category-statistics${query ? `?${query}` : ""}`
     );
   },
 
@@ -83,7 +83,7 @@ export const orderStatisticsApi = {
 
     const query = queryParams.toString();
     return api.get<HourlyStatistics>(
-      `/restaurants/${restaurantId}/order-statistics/hourly-statistics/${query ? `?${query}` : ""}`
+      `/restaurants/${restaurantId}/order-statistics/hourly-statistics${query ? `?${query}` : ""}`
     );
   },
 };

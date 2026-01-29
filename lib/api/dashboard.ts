@@ -84,14 +84,14 @@ export const dashboardApi = {
   async getDashboardData(restaurantId: number, date?: Date): Promise<DashboardData> {
     const dateStr = date ? date.toISOString().split('T')[0] : undefined;
     const params = dateStr ? `?date=${dateStr}` : '';
-    return api.get<DashboardData>(`/dashboard/batch/${restaurantId}/${params}`);
+    return api.get<DashboardData>(`/dashboard/batch/${restaurantId}${params}`);
   },
   
   /**
    * Fetch kitchen view data in a single request.
    */
   async getKitchenData(restaurantId: number): Promise<KitchenData> {
-    return api.get<KitchenData>(`/dashboard/kitchen/${restaurantId}/`);
+    return api.get<KitchenData>(`/dashboard/kitchen/${restaurantId}`);
   },
   
   /**
@@ -110,7 +110,7 @@ export const dashboardApi = {
     }
     const queryString = params.toString();
     return api.get<InsightsData>(
-      `/dashboard/insights/${restaurantId}/${queryString ? `?${queryString}` : ''}`
+      `/dashboard/insights/${restaurantId}${queryString ? `?${queryString}` : ''}`
     );
   },
 };
