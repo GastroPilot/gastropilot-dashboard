@@ -1,4 +1,4 @@
-import { api } from "./client";
+import { api, refreshToken } from "./client";
 
 export interface LoginRequest {
   operator_number: string;
@@ -94,34 +94,25 @@ export const authApi = {
   refresh: async (): Promise<TokenResponse | null> => {
     if (typeof window === "undefined") return null;
     
-    const refreshToken = localStorage.getItem("refresh_token");
-    if (!refreshToken) {
-      console.warn("⚠️ Kein Refresh-Token gefunden");
+    // Verwende die zentrale refreshToken() Funktion aus client.ts
+    // Diese hat ein Singleton-Pattern und verhindert Race Conditions
+    const newAccessToken = await refreshToken();
+    
+    if (!newAccessToken) {
       return null;
     }
-
-    try {
-      const response = await api.post<TokenResponse>("/auth/refresh", {
-        refresh_token: refreshToken,
-      });
-      
-      // Speichere neue Tokens
-      localStorage.setItem("access_token", response.access_token);
-      localStorage.setItem("refresh_token", response.refresh_token);
-      
-      // Speichere neue Ablaufzeit
-      const expiresIn = response.expires_in || 3600;
-      const expiresAt = Date.now() + expiresIn * 1000;
-      localStorage.setItem("access_token_expires_at", expiresAt.toString());
-      
-      console.log("✅ Token erfolgreich erneuert");
-      return response;
-    } catch (error) {
-      console.error("❌ Token-Refresh fehlgeschlagen:", error);
-      // Bei Fehler: Tokens löschen und zum Login weiterleiten
-      authApi.logout();
-      return null;
-    }
+    
+    // Erstelle ein TokenResponse-Objekt aus den gespeicherten Werten
+    const storedRefreshToken = localStorage.getItem("refresh_token");
+    const expiresAt = localStorage.getItem("access_token_expires_at");
+    const expiresIn = expiresAt ? Math.floor((parseInt(expiresAt, 10) - Date.now()) / 1000) : 3600;
+    
+    return {
+      access_token: newAccessToken,
+      refresh_token: storedRefreshToken || "",
+      token_type: "bearer",
+      expires_in: expiresIn,
+    };
   },
 
   getCurrentUser: async (): Promise<User> => {

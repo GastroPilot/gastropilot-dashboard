@@ -11,12 +11,35 @@ export class ApiError extends Error {
   }
 }
 
-// Singleton für Refresh-Request, um mehrere gleichzeitige Requests zu vermeiden
-let refreshPromise: Promise<string | null> | null = null;
+// ============================================
+// GLOBALER TOKEN REFRESH SINGLETON
+// Verhindert Race Conditions bei parallelen Requests
+// ============================================
 
-async function refreshToken(): Promise<string | null> {
+let refreshPromise: Promise<string | null> | null = null;
+let lastRefreshTime = 0;
+const REFRESH_COOLDOWN = 2000; // 2 Sekunden Cooldown zwischen Refreshes
+
+/**
+ * Globale Token-Refresh-Funktion mit Singleton-Pattern.
+ * Verhindert Race Conditions bei parallelen API-Calls.
+ * 
+ * WICHTIG: Diese Funktion wird von allen Stellen verwendet, die Token refreshen müssen.
+ * Niemals direkt den /auth/refresh Endpoint aufrufen!
+ */
+export async function refreshToken(): Promise<string | null> {
+  // Wenn bereits ein Refresh läuft, warte auf das Ergebnis
   if (refreshPromise) {
+    console.log("🔄 Refresh bereits in Arbeit, warte auf Ergebnis...");
     return refreshPromise;
+  }
+
+  // Cooldown: Wenn kürzlich ein Refresh stattfand, nicht nochmal refreshen
+  const now = Date.now();
+  if (now - lastRefreshTime < REFRESH_COOLDOWN) {
+    console.log("⏳ Refresh Cooldown aktiv, überspringe...");
+    const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+    return token;
   }
 
   refreshPromise = (async () => {
@@ -26,9 +49,11 @@ async function refreshToken(): Promise<string | null> {
         : null;
 
       if (!refreshTokenValue) {
+        console.warn("⚠️ Kein Refresh-Token gefunden");
         return null;
       }
 
+      console.log("🔄 Starte Token-Refresh...");
       const refreshUrl = buildApiUrl(getApiBaseUrl(), API_PREFIX, "/auth/refresh");
       const response = await fetch(refreshUrl, {
         method: "POST",
@@ -36,10 +61,11 @@ async function refreshToken(): Promise<string | null> {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ refresh_token: refreshTokenValue }),
-        credentials: 'include', // Wichtig für CORS mit credentials
+        credentials: 'include',
       });
 
       if (!response.ok) {
+        console.error("❌ Refresh fehlgeschlagen:", response.status);
         // Refresh fehlgeschlagen, Tokens löschen
         if (typeof window !== "undefined") {
           localStorage.removeItem("access_token");
@@ -60,6 +86,8 @@ async function refreshToken(): Promise<string | null> {
         localStorage.setItem("access_token_expires_at", expiresAt.toString());
       }
 
+      lastRefreshTime = Date.now();
+      console.log("✅ Token erfolgreich erneuert");
       return data.access_token;
     } catch (error) {
       console.error("❌ Token-Refresh fehlgeschlagen:", error);
@@ -70,7 +98,11 @@ async function refreshToken(): Promise<string | null> {
       }
       return null;
     } finally {
-      refreshPromise = null;
+      // Wichtig: Promise erst nach kurzer Verzögerung zurücksetzen,
+      // um Race Conditions bei fast gleichzeitigen Requests zu vermeiden
+      setTimeout(() => {
+        refreshPromise = null;
+      }, 100);
     }
   })();
 
