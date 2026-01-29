@@ -581,9 +581,11 @@ export function TableDetailsDialog({
             <form ref={editFormRef} onSubmit={handleSubmit} className="space-y-3 rounded-xl border border-gray-700 bg-gray-800/80 p-4 shadow-[0_10px_30px_rgba(0,0,0,0.3)]">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  {allowTableManagement && (
+                  {/* {allowTableManagement && ( }
                     <p className="text-xs text-gray-400">Tischnummer</p>
-                  )}
+                  )} */
+                  <p className="text-xs text-gray-400">Tischnummer</p>
+                  }
                   <Input
                     placeholder="Tischnummer"
                     value={number}
@@ -592,9 +594,11 @@ export function TableDetailsDialog({
                   />
                 </div>
                 <div className="space-y-1">
-                  {allowTableManagement && (
+                  {/* {allowTableManagement && (
                     <p className="text-xs text-gray-400">Max. Plätze</p>
-                  )}
+                  )} */
+                  <p className="text-xs text-gray-400">Max. Plätze</p>
+                  }
                   <Input
                     type="number"
                     min="1"
@@ -645,9 +649,10 @@ export function TableDetailsDialog({
                 </div>
               )}
               <div className="space-y-1">
-                {allowTableManagement && (
+                {/* {allowTableManagement && (
                   <p className="text-xs text-gray-400">Notizen</p>
-                )}
+                )} */
+                <p className="text-xs text-gray-400">Notizen</p> }
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}

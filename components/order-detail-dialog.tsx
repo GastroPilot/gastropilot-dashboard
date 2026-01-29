@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { ordersApi, OrderStatus, OrderWithItems, OrderItemCreate, SplitPayment } from "@/lib/api/orders";
 import { tablesApi, Table } from "@/lib/api/tables";
 import { menuApi, MenuItem, MenuCategory } from "@/lib/api/menu";
@@ -127,13 +127,13 @@ export function OrderDetailDialog({
       setRestaurant(null);
       setSumupPayments([]);
     }
-  }, [open, orderId, restaurantId]);
+  }, [open, orderId, restaurantId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (open && orderId && restaurant?.sumup_enabled) {
       loadSumUpPayments();
     }
-  }, [open, orderId, restaurant?.sumup_enabled]);
+  }, [open, orderId, restaurant?.sumup_enabled]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Polling für SumUp Payments - aktualisiert automatisch, wenn Zahlungen noch verarbeitet werden
   useEffect(() => {
@@ -202,7 +202,7 @@ export function OrderDetailDialog({
         clearInterval(intervalId);
       }
     };
-  }, [open, orderId, restaurant?.sumup_enabled]);
+  }, [open, orderId, restaurant?.sumup_enabled]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!statusMenuOpen) return;
@@ -262,6 +262,7 @@ export function OrderDetailDialog({
       handleSavePaymentDetails();
     }, 600);
     return () => window.clearTimeout(timeoutId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     order,
     paymentDetailsDirty,

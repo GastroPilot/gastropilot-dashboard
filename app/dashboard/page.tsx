@@ -233,7 +233,7 @@ function useDashboardData(restaurantId: number | null, selectedDate: Date) {
         abortControllerRef.current.abort();
       }
     };
-  }, [restaurantId]); // Only on restaurantId change
+  }, [restaurantId]); // eslint-disable-line react-hooks/exhaustive-deps -- Only on restaurantId change
   
   // Date change - background refresh
   useEffect(() => {
@@ -1187,6 +1187,21 @@ export default function DashboardPage() {
     setBlockEditOpen(true);
   }, []);
 
+  // ============================================
+  // HELPER FUNCTIONS
+  // ============================================
+
+  const getStatusLabel = useCallback((status: Reservation["status"]) => {
+    switch (status) {
+      case "confirmed": return "Bestätigt";
+      case "seated": return "Platziert";
+      case "completed": return "Abgeschlossen";
+      case "canceled": return "Storniert";
+      case "no_show": return "No-Show";
+      default: return "Ausstehend";
+    }
+  }, []);
+
   const updateReservationStatus = useCallback(async (
     reservation: Reservation,
     newStatus: Reservation["status"]
@@ -1213,22 +1228,7 @@ export default function DashboardPage() {
     } finally {
       setUpdatingStatus(null);
     }
-  }, [restaurant, addToast, refreshData]);
-
-  // ============================================
-  // HELPER FUNCTIONS
-  // ============================================
-
-  const getStatusLabel = useCallback((status: Reservation["status"]) => {
-    switch (status) {
-      case "confirmed": return "Bestätigt";
-      case "seated": return "Platziert";
-      case "completed": return "Abgeschlossen";
-      case "canceled": return "Storniert";
-      case "no_show": return "No-Show";
-      default: return "Ausstehend";
-    }
-  }, []);
+  }, [restaurant, addToast, refreshData, getStatusLabel]);
 
   const STATUS_ICON_MAP: Record<Reservation["status"], { Icon: typeof Clock; tone: string }> = useMemo(() => ({
     pending: { Icon: Clock, tone: "bg-blue-900/40 border-blue-600 text-blue-100" },
@@ -1552,7 +1552,8 @@ export default function DashboardPage() {
                   const target = e.target as HTMLElement;
                   const isInteractive = target.closest('[data-dnd-draggable], [data-dnd-droppable], button, a, input, select, textarea');
                   
-                  if (e.touches.length === 1 && !activeId && !activeReservationId && !activeBlockId && !isInteractive) {
+                  // if (e.touches.length === 1 && !activeId && !activeReservationId && !activeBlockId && !isInteractive) {
+                  if (e.touches.length === 1 && !isInteractive) {
                     const touch = e.touches[0];
                     panRef.current.isPanning = true;
                     panRef.current.startX = touch.clientX - panOffset.x;

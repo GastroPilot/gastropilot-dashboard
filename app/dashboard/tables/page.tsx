@@ -191,26 +191,6 @@ export default function TableManagementPage() {
     setPanOffset({ x: 0, y: 0 });
   };
 
-  useEffect(() => {
-    loadCurrentUser();
-    loadData();
-  }, []);
-
-  useEffect(() => {
-    setTables(filterByArea(allTables, selectedAreaId));
-    setObstacles(filterByArea(allObstacles, selectedAreaId));
-  }, [selectedAreaId, allTables, allObstacles, filterByArea]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (areaMenuRef.current && !areaMenuRef.current.contains(event.target as Node)) {
-        setAreaMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
   const loadCurrentUser = async () => {
     try {
       const user = await authApi.getCurrentUser();
@@ -220,7 +200,7 @@ export default function TableManagementPage() {
     }
   };
 
-  const loadData = async (background = false, preferredAreaId: number | null = selectedAreaId) => {
+  const loadData = useCallback(async (background = false, preferredAreaId: number | null = null) => {
     try {
       if (background) {
         setIsRefreshing(true);
@@ -263,7 +243,27 @@ export default function TableManagementPage() {
         setLoading(false);
       }
     }
-  };
+  }, [filterByArea]);
+
+  useEffect(() => {
+    loadCurrentUser();
+    loadData();
+  }, [loadData]);
+
+  useEffect(() => {
+    setTables(filterByArea(allTables, selectedAreaId));
+    setObstacles(filterByArea(allObstacles, selectedAreaId));
+  }, [selectedAreaId, allTables, allObstacles, filterByArea]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (areaMenuRef.current && !areaMenuRef.current.contains(event.target as Node)) {
+        setAreaMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const openCreateAreaDialog = () => {
     setEditingArea(null);

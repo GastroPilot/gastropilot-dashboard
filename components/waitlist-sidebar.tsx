@@ -223,7 +223,7 @@ export function WaitlistSidebar({
         notes.includes(query)
       );
     });
-  }, [reservations, searchQuery, activeFilters, waitlistFilters, allFilterKeys]);
+  }, [reservations, searchQuery, activeFilters, waitlistFilters, statusFilterKeys]);
 
   const filteredBlocks = useMemo(() => {
     if (!showBlocks) return [];

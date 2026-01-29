@@ -23,7 +23,6 @@ import {
   Save,
   Loader2,
   AlertCircle,
-  CheckCircle2,
   Key,
   CreditCard,
   User as UserIcon,
@@ -70,27 +69,6 @@ export default function OperatorsPage() {
     []
   );
 
-  useEffect(() => {
-    loadCurrentUser();
-    loadOperators();
-  }, []);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const targetNode = event.target as Node;
-      if (roleMenuRef.current && !roleMenuRef.current.contains(targetNode)) {
-        setRoleMenuOpen(false);
-      }
-      if (formRoleMenuRef.current && !formRoleMenuRef.current.contains(targetNode)) {
-        setFormRoleMenuOpen(false);
-      }
-      if (statusMenuRef.current && !statusMenuRef.current.contains(targetNode)) {
-        setStatusMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   const loadCurrentUser = async () => {
     try {
@@ -218,8 +196,13 @@ export default function OperatorsPage() {
       }
 
       // Prüfe reservierte Bedienernummern nur beim Erstellen, nicht beim Bearbeiten
-      if (!editingOperator && (formData.operator_number === "0000" || formData.operator_number === "0001")) {
-        setError("Bedienernummer ist für Servecta reserviert");
+      // if (!editingOperator && (formData.operator_number === "0000" || formData.operator_number === "0001")) {
+      //   setError("Bedienernummer ist für Servecta reserviert");
+      //   return;
+      // }
+
+      if (formData.operator_number === '0000' || formData.operator_number === '0001') {
+        setError("Bedienernummer ist reserviert!");
         return;
       }
 

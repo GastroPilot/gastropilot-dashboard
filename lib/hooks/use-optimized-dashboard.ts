@@ -214,7 +214,7 @@ export function useOptimizedDashboard({
         abortControllerRef.current.abort();
       }
     };
-  }, [restaurantId]); // Only re-run when restaurantId changes
+  }, [restaurantId]); // eslint-disable-line react-hooks/exhaustive-deps -- Only re-run when restaurantId changes
   
   // Refetch when date changes (with debounce already applied in setSelectedDate)
   useEffect(() => {

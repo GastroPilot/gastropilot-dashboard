@@ -147,10 +147,16 @@ export function TableCard({
   const height = table.height || 120;
 
   useEffect(() => {
-    setNowTs(getReferenceNow());
-    const id = setInterval(() => setNowTs(getReferenceNow()), 10000);
+    const computeReferenceNow = () => {
+      const base = new Date(selectedDate ?? new Date());
+      const realNow = new Date();
+      base.setHours(realNow.getHours(), realNow.getMinutes(), realNow.getSeconds(), realNow.getMilliseconds());
+      return base.getTime();
+    };
+    setNowTs(computeReferenceNow());
+    const id = setInterval(() => setNowTs(computeReferenceNow()), 10000);
     return () => clearInterval(id);
-  }, [selectedDateKey]);
+  }, [selectedDateKey, selectedDate]);
 
   const currentReservation = (() => {
     const now = nowTs;

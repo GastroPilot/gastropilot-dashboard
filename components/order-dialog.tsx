@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { ordersApi, Order, OrderCreate, OrderUpdate, OrderWithItems, OrderItem, OrderItemCreate } from "@/lib/api/orders";
 import { Table } from "@/lib/api/tables";
 import { menuApi, MenuItem, MenuCategory } from "@/lib/api/menu";
@@ -74,6 +74,19 @@ export function OrderDialog({
   const [showManualTableSelect, setShowManualTableSelect] = useState(false);
   const tableMenuRef = useRef<HTMLDivElement | null>(null);
 
+  const loadMenuData = useCallback(async () => {
+    try {
+      const [itemsData, categoriesData] = await Promise.all([
+        menuApi.listItems(restaurantId, { available_only: true }),
+        menuApi.listCategories(restaurantId),
+      ]);
+      setMenuItems(itemsData);
+      setMenuCategories(categoriesData);
+    } catch (err) {
+      console.error("Fehler beim Laden des Menüs:", err);
+    }
+  }, [restaurantId]);
+
   useEffect(() => {
     if (open) {
       if (order) {
@@ -100,7 +113,7 @@ export function OrderDialog({
     } else {
       setError("");
     }
-  }, [open, order, table, restaurantId]);
+  }, [open, order, table, restaurantId, loadMenuData]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -111,19 +124,6 @@ export function OrderDialog({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
-  const loadMenuData = async () => {
-    try {
-      const [itemsData, categoriesData] = await Promise.all([
-        menuApi.listItems(restaurantId, { available_only: true }),
-        menuApi.listCategories(restaurantId),
-      ]);
-      setMenuItems(itemsData);
-      setMenuCategories(categoriesData);
-    } catch (err) {
-      console.error("Fehler beim Laden des Menüs:", err);
-    }
-  };
 
   const filteredMenuItems = menuItems.filter((item) => {
     if (selectedCategoryId && item.category_id !== selectedCategoryId) return false;

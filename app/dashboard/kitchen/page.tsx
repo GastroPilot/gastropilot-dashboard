@@ -6,8 +6,7 @@ import { ordersApi, OrderWithItems, OrderStatus } from "@/lib/api/orders";
 import { tablesApi, Table } from "@/lib/api/tables";
 import { Button } from "@/components/ui/button";
 import { LoadingOverlay } from "@/components/loading-overlay";
-import { format, parseISO } from "date-fns";
-import { de } from "date-fns/locale";
+import { parseISO } from "date-fns";
 import {
   Clock,
   ChefHat,
@@ -40,6 +39,16 @@ export default function KitchenPage() {
   >([]);
   const autoRefreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Refs for values used in loadData callback to avoid stale closures
+  const soundEnabledRef = useRef(soundEnabled);
+  const notificationsEnabledRef = useRef(notificationsEnabled);
+  const lastOrderCountRef = useRef(lastOrderCount);
+
+  // Keep refs in sync with state
+  useEffect(() => { soundEnabledRef.current = soundEnabled; }, [soundEnabled]);
+  useEffect(() => { notificationsEnabledRef.current = notificationsEnabled; }, [notificationsEnabled]);
+  useEffect(() => { lastOrderCountRef.current = lastOrderCount; }, [lastOrderCount]);
 
   const addToast = useCallback(
     (message: string, variant: "info" | "error" | "success" = "info") => {
@@ -111,18 +120,18 @@ export default function KitchenPage() {
       );
 
       // Benachrichtigungen für neue Bestellungen
-      if (background && lastOrderCount > 0) {
+      if (background && lastOrderCountRef.current > 0) {
         const newOrderCount = enrichedOrders.filter(
           (o) => o.status === "sent_to_kitchen"
         ).length;
-        if (newOrderCount > lastOrderCount) {
+        if (newOrderCount > lastOrderCountRef.current) {
           // Neue Bestellung erhalten
-          if (soundEnabled) {
+          if (soundEnabledRef.current) {
             playNotificationSound();
           }
-          if (notificationsEnabled && "Notification" in window && Notification.permission === "granted") {
+          if (notificationsEnabledRef.current && "Notification" in window && Notification.permission === "granted") {
             new Notification("Neue Bestellung", {
-              body: `${newOrderCount - lastOrderCount} neue Bestellung(en) erhalten`,
+              body: `${newOrderCount - lastOrderCountRef.current} neue Bestellung(en) erhalten`,
               icon: "/favicon.ico",
             });
           }

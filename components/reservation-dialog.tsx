@@ -198,7 +198,7 @@ export function ReservationDialog({
     wasOpen.current = open;
     lastReservationId.current = reservation?.id ?? null;
     lastTableId.current = table?.id ?? null;
-  }, [open, reservation, table, selectedDate]);
+  }, [open, reservation, table, selectedDate]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Lade Reservierung neu, wenn Dialog geöffnet wird, um sicherzustellen, dass Upsell-Pakete vorhanden sind
   useEffect(() => {
@@ -214,7 +214,7 @@ export function ReservationDialog({
     } else {
       setLoadedReservation(reservation || null);
     }
-  }, [open, reservation?.id, restaurantId]);
+  }, [open, reservation?.id, restaurantId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

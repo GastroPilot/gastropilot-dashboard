@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { format, parseISO, differenceInMinutes, differenceInHours, differenceInDays, subDays, startOfDay, endOfDay, addMinutes } from "date-fns";
 import { de } from "date-fns/locale";
 import { restaurantsApi, Restaurant } from "@/lib/api/restaurants";
@@ -134,7 +134,7 @@ export default function OwnerInsightsPage() {
     return () => {
       active = false;
     };
-  }, [rangePreset, customFrom, customTo, restaurant?.id, range.from, range.to, reloadTick]);
+  }, [rangePreset, customFrom, customTo, restaurant, range.from, range.to, reloadTick]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -175,7 +175,7 @@ export default function OwnerInsightsPage() {
     });
   }, [prevReservations, statusFilter]);
 
-  const computeKpis = (list: Reservation[], windowRange: { from: Date; to: Date }) => {
+  const computeKpis = useCallback((list: Reservation[], windowRange: { from: Date; to: Date }) => {
     const total = list.length;
     const covers = list.reduce((sum, r) => sum + r.party_size, 0);
     const confirmed = list.filter((r) => ["confirmed", "seated", "completed"].includes(r.status) && r.table_id !== null).length;
@@ -230,10 +230,10 @@ export default function OwnerInsightsPage() {
       peakRate,
       avgRate,
     };
-  };
+  }, [tables]);
 
-  const kpis = useMemo(() => computeKpis(filteredReservations, range), [filteredReservations, range, tables]);
-  const prevKpis = useMemo(() => computeKpis(prevFilteredReservations, prevRange), [prevFilteredReservations, prevRange, tables]);
+  const kpis = useMemo(() => computeKpis(filteredReservations, range), [filteredReservations, range, computeKpis]);
+  const prevKpis = useMemo(() => computeKpis(prevFilteredReservations, prevRange), [prevFilteredReservations, prevRange, computeKpis]);
 
   const renderDelta = (value: number, isPercent = false) => {
     if (!isFinite(value) || value === 0) return <span className="text-xs text-gray-400">±0</span>;

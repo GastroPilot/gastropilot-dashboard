@@ -140,3 +140,7 @@ dist
 .env.test
 
 package-lock.json
+
+# Playwright
+playwright-report/
+test-results/

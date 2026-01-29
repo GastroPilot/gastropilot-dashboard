@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Image from "next/image";
 import { restaurantsApi, Restaurant } from "@/lib/api/restaurants";
 import {
   upsellPackagesApi,
@@ -394,10 +395,13 @@ export default function UpsellPackagesPage() {
                     </div>
 
                     {pkg.image_url && (
-                      <img
+                      <Image
                         src={pkg.image_url}
                         alt={pkg.name}
+                        width={400}
+                        height={128}
                         className="w-full h-32 object-cover rounded-lg mb-3"
+                        unoptimized
                       />
                     )}
 

@@ -74,24 +74,7 @@ export default function AuditLogsPage() {
     return map;
   }, [operators]);
 
-  useEffect(() => {
-    loadInitial();
-  }, []);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (actionMenuRef.current && !actionMenuRef.current.contains(event.target as Node)) {
-        setActionMenuOpen(false);
-      }
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
-        setUserMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const loadInitial = async () => {
+  const loadInitial = useCallback(async () => {
     try {
       setLoading(true);
       const [restaurants, ops] = await Promise.all([restaurantsApi.list(), authApi.listOperators()]);
@@ -113,7 +96,25 @@ export default function AuditLogsPage() {
     } finally {
       setLoading(false);
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [addToast]);
+
+  useEffect(() => {
+    loadInitial();
+  }, [loadInitial]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (actionMenuRef.current && !actionMenuRef.current.contains(event.target as Node)) {
+        setActionMenuOpen(false);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const friendlyAction = (value?: string) => {
     const normalized = (value || "").toLowerCase();

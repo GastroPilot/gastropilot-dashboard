@@ -59,11 +59,7 @@ export default function RestaurantManagePage() {
     []
   );
 
-  useEffect(() => {
-    loadRestaurant();
-  }, []);
-
-  const loadRestaurant = async () => {
+  const loadRestaurant = useCallback(async () => {
     try {
       setLoading(true);
       const restaurants = await restaurantsApi.list();
@@ -110,7 +106,11 @@ export default function RestaurantManagePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [addToast]);
+
+  useEffect(() => {
+    loadRestaurant();
+  }, [loadRestaurant]);
 
   const validateForm = (): boolean => {
     if (!formData.name.trim()) {
