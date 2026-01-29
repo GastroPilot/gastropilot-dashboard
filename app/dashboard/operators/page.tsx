@@ -69,7 +69,6 @@ export default function OperatorsPage() {
     []
   );
 
-
   const loadCurrentUser = async () => {
     try {
       const user = await authApi.getCurrentUser();
@@ -96,6 +95,12 @@ export default function OperatorsPage() {
       setLoading(false);
     }
   };
+
+  // Initial load - lädt Bediener und aktuellen User beim Mount
+  useEffect(() => {
+    loadCurrentUser();
+    loadOperators();
+  }, []);
 
   const handleOperatorNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, "").slice(0, 4);
