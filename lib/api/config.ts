@@ -23,6 +23,7 @@
  * - {subdomain}.gpilot.app → https://api-{subdomain}.gpilot.app
  *
  * Kann durch NEXT_PUBLIC_API_BASE_URL Environment-Variable überschrieben werden.
+ * Für SSR (Server-Side Rendering) wird SSR_API_BASE_URL verwendet.
  */
 export function getApiBaseUrl(): string {
   // Environment-Variable hat Vorrang (für manuelle Konfiguration)
@@ -32,9 +33,17 @@ export function getApiBaseUrl(): string {
     return envBaseUrl;
   }
 
-  // Server-Side Rendering: Fallback auf localhost
+  // Server-Side Rendering: Verwende SSR_API_BASE_URL oder leere URL (kein SSR-Fetch)
+  // WICHTIG: Im Docker-Container ist localhost nicht erreichbar!
+  // Bei leerem SSR_API_BASE_URL werden keine SSR-API-Calls gemacht (Client-only)
   if (typeof window === 'undefined') {
-    console.log('[API Config] SSR detected (window undefined), returning localhost');
+    const ssrApiUrl = process.env.SSR_API_BASE_URL;
+    if (ssrApiUrl) {
+      console.log(`[API Config] SSR using SSR_API_BASE_URL: ${ssrApiUrl}`);
+      return ssrApiUrl;
+    }
+    // Fallback für lokale Entwicklung (außerhalb Docker)
+    console.log('[API Config] SSR detected, no SSR_API_BASE_URL set, using localhost (dev only)');
     return 'http://localhost:8001';
   }
 
