@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 
 const APP_VERSION_RAW = (process.env.NEXT_PUBLIC_APP_VERSION ?? "0.0.0-dev").trim();
@@ -48,13 +48,19 @@ function getEnvironment(): string | null {
 
 export function SiteFooter() {
   const pathname = usePathname();
+  
+  // Environment wird erst nach dem Client-Mount gesetzt, um Hydration-Fehler zu vermeiden
+  // SSR und initial Client rendern beide null → keine Hydration-Differenz
+  const [environment, setEnvironment] = useState<string | null>(null);
+  
+  useEffect(() => {
+    setEnvironment(getEnvironment());
+  }, []);
 
   const hideFooter = useMemo(() => {
     if (!pathname) return false;
     return AUTH_PATHS.some((authPath) => pathname.startsWith(authPath));
   }, [pathname]);
-
-  const environment = useMemo(() => getEnvironment(), []);
 
   if (hideFooter) {
     return null;
