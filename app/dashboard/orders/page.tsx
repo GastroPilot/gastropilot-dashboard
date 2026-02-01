@@ -7,6 +7,7 @@ import { tablesApi, Table } from "@/lib/api/tables";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LoadingOverlay } from "@/components/loading-overlay";
+import { SkeletonOrderCard } from "@/components/skeletons";
 import { OrderDialog } from "@/components/order-dialog";
 import { OrderDetailDialog } from "@/components/order-detail-dialog";
 import { useUserSettings } from "@/lib/hooks/use-user-settings";
@@ -236,7 +237,21 @@ export default function OrdersPage() {
   };
 
   if (isLoading && !restaurant) {
-    return <LoadingOverlay />;
+    return (
+      <div className="h-full flex flex-col bg-gray-900 text-gray-100 overflow-hidden">
+        {/* Header Skeleton */}
+        <div className="shrink-0 border-b border-gray-700 bg-gray-800 shadow-sm">
+          <div className="px-4 py-3 h-28" />
+        </div>
+
+        {/* Content Skeleton */}
+        <div className="flex-1 overflow-auto p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <SkeletonOrderCard count={12} />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
