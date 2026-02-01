@@ -27,6 +27,7 @@ import { OrderDialog } from "@/components/order-dialog";
 import { CreateTempTableDialog } from "@/components/create-temp-table-dialog";
 import { BlockTableDialog } from "@/components/block-table-dialog";
 import { LoadingOverlay } from "@/components/loading-overlay";
+import { SkeletonTableCard } from "@/components/skeletons";
 import { Button } from "@/components/ui/button";
 import { useUserSettings } from "@/lib/hooks/use-user-settings";
 import { useDashboardComputations } from "@/lib/hooks/use-dashboard-computations";
@@ -1286,7 +1287,35 @@ export default function DashboardPage() {
 
   // Restaurant-Daten werden geladen
   if (isInitialLoading) {
-    return <LoadingOverlay />;
+    return (
+      <div className="h-full flex flex-col bg-gray-900 overflow-hidden">
+        {/* Header Skeleton */}
+        <div className="bg-gray-800 border-b border-gray-700 shadow-sm shrink-0">
+          <div className="px-4 py-3 h-20" />
+        </div>
+
+        {/* Content with Skeleton */}
+        <div className="flex-1 overflow-hidden min-h-0">
+          <div className="h-full relative overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800 flex">
+            {/* Sidebar Skeleton */}
+            <div className="w-80 bg-gray-800 border-r border-gray-700" />
+
+            {/* Table Plan Skeleton */}
+            <div className="flex-1 relative p-8">
+              <div
+                className="grid gap-6 justify-items-center"
+                style={{
+                  gridTemplateColumns: "repeat(auto-fill, 120px)",
+                  gridAutoRows: "120px"
+                }}
+              >
+                <SkeletonTableCard count={16} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Fallback falls restaurant Daten nicht geladen werden konnten

@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { ReservationDialog } from "@/components/reservation-dialog";
 import { BlockTableDialog } from "@/components/block-table-dialog";
 import { LoadingOverlay } from "@/components/loading-overlay";
+import { SkeletonReservationCard } from "@/components/skeletons";
 import { format, parseISO, startOfDay, endOfDay, isToday } from "date-fns";
 import { de } from "date-fns/locale";
 import { Ban, Calendar, Check, CheckCircle, ChevronDown, Clock, Filter, LayoutGrid, Mail, Phone, Users, XCircle, ChevronLeft, ChevronRight, Plus } from "lucide-react";
@@ -413,7 +414,21 @@ export default function ReservationsPage() {
   };
 
   if (isInitialLoading) {
-    return <LoadingOverlay />;
+    return (
+      <div className="h-screen flex flex-col bg-gray-900 text-white">
+        {/* Header Skeleton */}
+        <div className="bg-gray-800 border-b border-gray-700 px-4 py-3 shadow-sm">
+          <div className="h-24" />
+        </div>
+
+        {/* Content Skeleton */}
+        <div className="flex-1 overflow-auto p-6">
+          <div className="max-w-7xl mx-auto space-y-4">
+            <SkeletonReservationCard count={10} />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (!restaurant) {
