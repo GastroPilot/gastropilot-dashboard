@@ -492,9 +492,9 @@ export default function UpsellPackagesPage() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
+          <div className="space-y-4 px-4 md:px-6 pb-4">
             {error && (
-              <div className="bg-red-900/30 border border-red-500 rounded-lg p-3 text-red-200 text-sm">
+              <div className="p-3 text-sm text-red-300 bg-red-900/30 border border-red-700 rounded-md">
                 {error}
               </div>
             )}
@@ -508,7 +508,6 @@ export default function UpsellPackagesPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="z.B. Premium-Menü"
-                  className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
                 />
               </div>
 
@@ -523,7 +522,6 @@ export default function UpsellPackagesPage() {
                   value={price}
                   onChange={(e) => setPrice(parseFloat(e.target.value) || 0)}
                   placeholder="0.00"
-                  className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
                 />
               </div>
             </div>
@@ -536,7 +534,7 @@ export default function UpsellPackagesPage() {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Beschreibung des Pakets..."
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white placeholder-gray-400"
+                className="w-full px-3 py-2 rounded-md border border-gray-600 bg-gray-800 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400"
                 rows={3}
               />
             </div>
@@ -550,7 +548,6 @@ export default function UpsellPackagesPage() {
                   type="date"
                   value={availableFromDate}
                   onChange={(e) => setAvailableFromDate(e.target.value)}
-                  className="bg-gray-700 border-gray-600 text-white"
                 />
               </div>
 
@@ -562,7 +559,6 @@ export default function UpsellPackagesPage() {
                   type="date"
                   value={availableUntilDate}
                   onChange={(e) => setAvailableUntilDate(e.target.value)}
-                  className="bg-gray-700 border-gray-600 text-white"
                 />
               </div>
             </div>
@@ -580,7 +576,6 @@ export default function UpsellPackagesPage() {
                     setMinPartySize(e.target.value ? parseInt(e.target.value) : null)
                   }
                   placeholder="Kein Minimum"
-                  className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
                 />
               </div>
 
@@ -596,7 +591,6 @@ export default function UpsellPackagesPage() {
                     setMaxPartySize(e.target.value ? parseInt(e.target.value) : null)
                   }
                   placeholder="Kein Maximum"
-                  className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
                 />
               </div>
             </div>
@@ -613,8 +607,8 @@ export default function UpsellPackagesPage() {
                     onClick={() => toggleWeekday(day.value)}
                     className={`px-3 py-1 rounded-lg text-sm border transition-colors ${
                       availableWeekdays.includes(day.value)
-                        ? "bg-purple-500 text-white border-purple-500"
-                        : "bg-gray-700 text-gray-300 border-gray-600 hover:border-purple-400"
+                        ? "bg-blue-600 text-white border-blue-500"
+                        : "bg-gray-800 text-gray-300 border-gray-600 hover:border-blue-400"
                     }`}
                   >
                     {day.label}
@@ -628,7 +622,7 @@ export default function UpsellPackagesPage() {
 
             {availableWeekdays.length > 0 && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-300 mb-1">
                   Verfügbare Zeiten pro Wochentag (optional)
                 </label>
                 <div className="space-y-3 mt-2">
@@ -653,7 +647,7 @@ export default function UpsellPackagesPage() {
                             onChange={(e) =>
                               setNewTimes((prev) => ({ ...prev, [weekday]: e.target.value }))
                             }
-                            className="flex-1 bg-gray-700 border-gray-600 text-white"
+                            className="flex-1"
                             placeholder="HH:MM"
                           />
                           <Button
@@ -664,7 +658,6 @@ export default function UpsellPackagesPage() {
                                 addTimeForWeekday(weekday, newTime);
                               }
                             }}
-                            className="bg-purple-600 hover:bg-purple-700 text-white"
                           >
                             Hinzufügen
                           </Button>
@@ -704,7 +697,6 @@ export default function UpsellPackagesPage() {
                   value={imageUrl}
                   onChange={(e) => setImageUrl(e.target.value)}
                   placeholder="https://..."
-                  className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
                 />
               </div>
 
@@ -718,7 +710,6 @@ export default function UpsellPackagesPage() {
                   value={displayOrder}
                   onChange={(e) => setDisplayOrder(parseInt(e.target.value) || 0)}
                   placeholder="0"
-                  className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   Niedrigere Zahlen werden zuerst angezeigt
@@ -726,16 +717,19 @@ export default function UpsellPackagesPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="isActive"
-                checked={isActive}
-                onChange={(e) => setIsActive(e.target.checked)}
-                className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-purple-500 focus:ring-purple-500"
-              />
+            <div className="flex items-center justify-between">
               <label htmlFor="isActive" className="text-sm font-medium text-gray-300">
                 Paket ist aktiv
+              </label>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  id="isActive"
+                  checked={isActive}
+                  onChange={(e) => setIsActive(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
               </label>
             </div>
           </div>
@@ -745,7 +739,7 @@ export default function UpsellPackagesPage() {
               variant="outline"
               onClick={() => setDialogOpen(false)}
               disabled={loading}
-              className="border-gray-600 text-gray-200 hover:bg-gray-700"
+              className="gap-2"
             >
               <X className="w-4 h-4 mr-1" />
               Abbrechen
@@ -753,7 +747,7 @@ export default function UpsellPackagesPage() {
             <Button
               onClick={handleSave}
               disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="gap-2"
             >
               <Save className="w-4 h-4 mr-1" />
               {loading ? "Speichern..." : "Speichern"}

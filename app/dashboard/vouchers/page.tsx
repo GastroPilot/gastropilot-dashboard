@@ -400,9 +400,9 @@ export default function VouchersPage() {
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4">
+          <div className="space-y-4 px-4 md:px-6 pb-4">
             {error && (
-              <div className="bg-red-900/30 border border-red-500 rounded-lg p-3 text-red-200 text-sm">
+              <div className="p-3 text-sm text-red-300 bg-red-900/30 border border-red-700 rounded-md">
                 {error}
               </div>
             )}
@@ -417,7 +417,7 @@ export default function VouchersPage() {
                   onChange={(e) => setCode(e.target.value.toUpperCase())}
                   placeholder="z.B. WELCOME2024"
                   disabled={!!editingVoucher}
-                  className="font-mono bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                  className="font-mono"
                 />
                 {editingVoucher && (
                   <p className="text-xs text-gray-500 mt-1">Code kann nicht geändert werden</p>
@@ -432,7 +432,6 @@ export default function VouchersPage() {
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="z.B. Willkommens-Gutschein"
-                  className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
                 />
               </div>
             </div>
@@ -445,7 +444,7 @@ export default function VouchersPage() {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Beschreibung des Gutscheins..."
-                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent text-white placeholder-gray-400"
+                className="w-full px-3 py-2 rounded-md border border-gray-600 bg-gray-800 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400"
                 rows={3}
               />
             </div>
@@ -458,7 +457,7 @@ export default function VouchersPage() {
                 <select
                   value={type}
                   onChange={(e) => setType(e.target.value as "fixed" | "percentage")}
-                  className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-orange-500 text-white"
+                  className="w-full px-3 py-2 rounded-md border border-gray-600 bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="fixed">Fester Betrag (€)</option>
                   <option value="percentage">Prozentual (%)</option>
@@ -477,7 +476,6 @@ export default function VouchersPage() {
                   value={value}
                   onChange={(e) => setValue(parseFloat(e.target.value) || 0)}
                   placeholder={type === "fixed" ? "10.00" : "10"}
-                  className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   {type === "fixed" ? "Betrag in EUR" : "Prozent (0-100)"}
@@ -494,7 +492,6 @@ export default function VouchersPage() {
                   type="date"
                   value={validFrom}
                   onChange={(e) => setValidFrom(e.target.value)}
-                  className="bg-gray-700 border-gray-600 text-white"
                 />
               </div>
 
@@ -506,7 +503,6 @@ export default function VouchersPage() {
                   type="date"
                   value={validUntil}
                   onChange={(e) => setValidUntil(e.target.value)}
-                  className="bg-gray-700 border-gray-600 text-white"
                 />
               </div>
             </div>
@@ -522,7 +518,6 @@ export default function VouchersPage() {
                   value={maxUses || ""}
                   onChange={(e) => setMaxUses(e.target.value ? parseInt(e.target.value) : null)}
                   placeholder="Unbegrenzt"
-                  className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
                 />
               </div>
 
@@ -539,21 +534,23 @@ export default function VouchersPage() {
                     setMinOrderValue(e.target.value ? parseFloat(e.target.value) : null)
                   }
                   placeholder="Kein Minimum"
-                  className="bg-gray-700 border-gray-600 text-white placeholder-gray-400"
                 />
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="isActive"
-                checked={isActive}
-                onChange={(e) => setIsActive(e.target.checked)}
-                className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-orange-500 focus:ring-orange-500"
-              />
+            <div className="flex items-center justify-between">
               <label htmlFor="isActive" className="text-sm font-medium text-gray-300">
                 Gutschein ist aktiv
+              </label>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  id="isActive"
+                  checked={isActive}
+                  onChange={(e) => setIsActive(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
               </label>
             </div>
           </div>
@@ -563,7 +560,7 @@ export default function VouchersPage() {
               variant="outline"
               onClick={() => setDialogOpen(false)}
               disabled={loading}
-              className="border-gray-600 text-gray-200 hover:bg-gray-700"
+              className="gap-2"
             >
               <X className="w-4 h-4 mr-1" />
               Abbrechen
@@ -571,7 +568,7 @@ export default function VouchersPage() {
             <Button
               onClick={handleSave}
               disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="gap-2"
             >
               <Save className="w-4 h-4 mr-1" />
               {loading ? "Speichern..." : "Speichern"}

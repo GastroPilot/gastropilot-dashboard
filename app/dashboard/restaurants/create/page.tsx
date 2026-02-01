@@ -64,13 +64,13 @@ export default function CreateRestaurantPage() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-md">
+              <div className="p-3 text-sm text-red-300 bg-red-900/30 border border-red-700 rounded-md">
                 {error}
               </div>
             )}
 
             <div>
-              <label htmlFor="name" className="block text-sm font-medium mb-1">
+              <label htmlFor="name" className="block text-sm font-medium mb-1 text-gray-300">
                 Restaurantname <span className="text-red-500">*</span>
               </label>
               <Input
@@ -88,7 +88,7 @@ export default function CreateRestaurantPage() {
             </div>
 
             <div>
-              <label htmlFor="address" className="block text-sm font-medium mb-1">
+              <label htmlFor="address" className="block text-sm font-medium mb-1 text-gray-300">
                 Adresse
               </label>
               <Input
@@ -104,7 +104,7 @@ export default function CreateRestaurantPage() {
             </div>
 
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium mb-1">
+              <label htmlFor="phone" className="block text-sm font-medium mb-1 text-gray-300">
                 Telefonnummer
               </label>
               <Input
@@ -120,7 +120,7 @@ export default function CreateRestaurantPage() {
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-1">
+              <label htmlFor="email" className="block text-sm font-medium mb-1 text-gray-300">
                 E-Mail
               </label>
               <Input
@@ -136,7 +136,7 @@ export default function CreateRestaurantPage() {
             </div>
 
             <div>
-              <label htmlFor="description" className="block text-sm font-medium mb-1">
+              <label htmlFor="description" className="block text-sm font-medium mb-1 text-gray-300">
                 Beschreibung
               </label>
               <textarea
@@ -147,7 +147,7 @@ export default function CreateRestaurantPage() {
                 }
                 placeholder="Beschreibung des Restaurants..."
                 rows={4}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 rounded-md border border-gray-600 bg-gray-800 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400"
               />
             </div>
 
