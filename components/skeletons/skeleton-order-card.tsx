@@ -18,7 +18,7 @@ export function SkeletonOrderCard({
         <div
           key={i}
           className={cn(
-            "rounded-lg bg-gray-900 p-4 border border-gray-800 animate-pulse",
+            "rounded-lg bg-card p-4 border border-border animate-pulse",
             className
           )}
           role="status"
@@ -44,7 +44,7 @@ export function SkeletonOrderCard({
           </div>
 
           {/* Footer - Total amount */}
-          <div className="pt-3 border-t border-gray-800 flex justify-between items-center">
+          <div className="pt-3 border-t border-border flex justify-between items-center">
             <SkeletonBase width="60px" height="18px" rounded="sm" />
             <SkeletonBase width="80px" height="24px" rounded="sm" />
           </div>

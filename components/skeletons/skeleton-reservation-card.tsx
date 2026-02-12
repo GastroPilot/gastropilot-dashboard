@@ -18,7 +18,7 @@ export function SkeletonReservationCard({
         <div
           key={i}
           className={cn(
-            "rounded-lg bg-gray-900 p-4 border border-gray-800 animate-pulse",
+            "rounded-lg bg-card p-4 border border-border animate-pulse",
             className
           )}
           role="status"

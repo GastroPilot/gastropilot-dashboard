@@ -285,7 +285,7 @@ export default function RestaurantManagePage() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-gray-900 overflow-hidden">
+    <div className="h-full flex flex-col bg-background overflow-hidden">
       {/* Toasts */}
       {toasts.length > 0 && (
         <div className="fixed bottom-4 right-4 z-[200] space-y-3">
@@ -307,18 +307,18 @@ export default function RestaurantManagePage() {
       )}
 
       {/* Header */}
-      <div className="bg-gray-800 border-b border-gray-700 shadow-sm shrink-0">
+      <div className="bg-card border-b border-border shadow-sm shrink-0">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-500 via-cyan-400 to-emerald-400 flex items-center justify-center shadow-lg shadow-blue-500/25">
-                <Building2 className="w-5 h-5 text-white" />
+              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-[#F95100] via-cyan-400 to-emerald-400 flex items-center justify-center shadow-lg shadow-[#F95100]/25">
+                <Building2 className="w-5 h-5 text-foreground" />
               </div>
               <div>
-                <h1 className="text-xl md:text-2xl font-bold text-white">
+                <h1 className="text-xl md:text-2xl font-bold text-foreground">
                   Restaurant verwalten
                 </h1>
-                <p className="text-xs md:text-sm text-gray-400 mt-0.5">
+                <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
                   {restaurant ? "Verwalten Sie Ihre Restaurantinformationen" : "Erstellen Sie ein neues Restaurant"}
                 </p>
               </div>
@@ -339,10 +339,10 @@ export default function RestaurantManagePage() {
       {/* Content */}
       <div className="flex-1 overflow-y-auto min-h-0">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
-          <Card className="border-gray-700 bg-gray-800/50 backdrop-blur-sm">
-            <CardHeader className="border-b border-gray-700">
-              <CardTitle className="flex items-center gap-2 text-white">
-                <Building2 className="w-5 h-5 text-blue-400" />
+          <Card className="border-border bg-card/50 backdrop-blur-sm">
+            <CardHeader className="border-b border-border">
+              <CardTitle className="flex items-center gap-2 text-foreground">
+                <Building2 className="w-5 h-5 text-primary" />
                 {restaurant 
                   ? (isEditing ? "Restaurant bearbeiten" : "Restaurant-Informationen")
                   : "Neues Restaurant anlegen"}
@@ -372,33 +372,33 @@ export default function RestaurantManagePage() {
                   <div className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-1.5">
-                        <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
+                        <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                           <Building2 className="w-4 h-4" />
                   Restaurantname
                 </label>
-                <p className="text-lg font-semibold text-white">{restaurant.name}</p>
+                <p className="text-lg font-semibold text-foreground">{restaurant.name}</p>
               </div>
 
               {restaurant.address && (
                         <div className="space-y-1.5">
-                          <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
+                          <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                             <MapPin className="w-4 h-4" />
                     Adresse
                   </label>
-                  <p className="text-gray-300">{restaurant.address}</p>
+                  <p className="text-muted-foreground">{restaurant.address}</p>
                 </div>
               )}
 
               {restaurant.phone && (
                         <div className="space-y-1.5">
-                          <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
+                          <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                             <Phone className="w-4 h-4" />
                     Telefonnummer
                   </label>
-                          <p className="text-gray-300">
+                          <p className="text-muted-foreground">
                             <a 
                               href={`tel:${restaurant.phone}`}
-                              className="hover:text-blue-400 transition-colors"
+                              className="hover:text-primary transition-colors"
                             >
                               {restaurant.phone}
                             </a>
@@ -408,14 +408,14 @@ export default function RestaurantManagePage() {
 
               {restaurant.email && (
                         <div className="space-y-1.5">
-                          <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
+                          <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                             <Mail className="w-4 h-4" />
                     E-Mail
                   </label>
-                          <p className="text-gray-300">
+                          <p className="text-muted-foreground">
                             <a 
                               href={`mailto:${restaurant.email}`}
-                              className="hover:text-blue-400 transition-colors"
+                              className="hover:text-primary transition-colors"
                             >
                               {restaurant.email}
                             </a>
@@ -425,16 +425,16 @@ export default function RestaurantManagePage() {
 
                       {extendedData.website && (
                         <div className="space-y-1.5">
-                          <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
+                          <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                             <Globe className="w-4 h-4" />
                             Website
                           </label>
-                          <p className="text-gray-300">
+                          <p className="text-muted-foreground">
                             <a 
                               href={extendedData.website.startsWith('http') ? extendedData.website : `https://${extendedData.website}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="hover:text-blue-400 transition-colors"
+                              className="hover:text-primary transition-colors"
                             >
                               {extendedData.website}
                             </a>
@@ -444,87 +444,87 @@ export default function RestaurantManagePage() {
                     </div>
 
                     {descriptionText && (
-                      <div className="space-y-1.5 pt-2 border-t border-gray-700">
-                        <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
+                      <div className="space-y-1.5 pt-2 border-t border-border">
+                        <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                           <FileText className="w-4 h-4" />
                     Beschreibung
                   </label>
-                        <p className="whitespace-pre-wrap text-gray-300 leading-relaxed">
+                        <p className="whitespace-pre-wrap text-muted-foreground leading-relaxed">
                           {descriptionText}
                         </p>
                       </div>
                     )}
 
                     {hasExtendedData && (
-                      <div className="pt-4 border-t border-gray-700 space-y-4">
-                        <div className="flex items-center gap-2 text-sm font-semibold text-gray-300">
-                          <Settings className="w-5 h-5 text-blue-400" />
+                      <div className="pt-4 border-t border-border space-y-4">
+                        <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+                          <Settings className="w-5 h-5 text-primary" />
                           Erweiterte Einstellungen
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           {extendedData.openingHours && (
                             <div className="space-y-1.5">
-                              <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
+                              <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                                 <Clock className="w-4 h-4" />
                                 Öffnungszeiten
                               </label>
-                              <p className="text-gray-300 whitespace-pre-wrap">{extendedData.openingHours}</p>
+                              <p className="text-muted-foreground whitespace-pre-wrap">{extendedData.openingHours}</p>
                             </div>
                           )}
 
                           {extendedData.currency && (
                             <div className="space-y-1.5">
-                              <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
+                              <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                                 <Euro className="w-4 h-4" />
                                 Währung
                               </label>
-                              <p className="text-gray-300">{extendedData.currency}</p>
+                              <p className="text-muted-foreground">{extendedData.currency}</p>
                             </div>
                           )}
 
                           {extendedData.timezone && (
                             <div className="space-y-1.5">
-                              <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
+                              <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                                 <Clock className="w-4 h-4" />
                                 Zeitzone
                               </label>
-                              <p className="text-gray-300">{extendedData.timezone}</p>
+                              <p className="text-muted-foreground">{extendedData.timezone}</p>
                             </div>
                           )}
 
                           {extendedData.minReservationDuration && (
                             <div className="space-y-1.5">
-                              <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
+                              <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                                 <Calendar className="w-4 h-4" />
                                 Mindestaufenthaltsdauer
                               </label>
-                              <p className="text-gray-300">{extendedData.minReservationDuration} Minuten</p>
+                              <p className="text-muted-foreground">{extendedData.minReservationDuration} Minuten</p>
                             </div>
                           )}
                         </div>
 
                         {extendedData.cancellationPolicy && (
                           <div className="space-y-1.5 pt-2">
-                            <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
+                            <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                               <Info className="w-4 h-4" />
                               Stornierungsrichtlinie
                             </label>
-                            <p className="text-gray-300 whitespace-pre-wrap">{extendedData.cancellationPolicy}</p>
+                            <p className="text-muted-foreground whitespace-pre-wrap">{extendedData.cancellationPolicy}</p>
                           </div>
                         )}
                       </div>
                     )}
 
                     {/* Online-Reservierungen Anzeige */}
-                    <div className="pt-4 border-t border-gray-700 space-y-4">
-                      <div className="flex items-center gap-2 text-sm font-semibold text-gray-300">
+                    <div className="pt-4 border-t border-border space-y-4">
+                      <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
                         <Globe className="w-5 h-5 text-emerald-400" />
                         Online-Reservierungen
                       </div>
                       
-                      <div className="flex items-center gap-3 p-3 bg-gray-800/50 rounded-lg">
-                        <div className={`w-3 h-3 rounded-full ${restaurant.public_booking_enabled ? 'bg-emerald-500' : 'bg-gray-500'}`} />
-                        <span className="text-gray-300">
+                      <div className="flex items-center gap-3 p-3 bg-card/50 rounded-lg">
+                        <div className={`w-3 h-3 rounded-full ${restaurant.public_booking_enabled ? 'bg-emerald-500' : 'bg-muted-foreground'}`} />
+                        <span className="text-muted-foreground">
                           {restaurant.public_booking_enabled ? 'Aktiviert' : 'Deaktiviert'}
                         </span>
                       </div>
@@ -532,54 +532,54 @@ export default function RestaurantManagePage() {
                       {restaurant.public_booking_enabled && restaurant.slug && (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-1.5">
-                            <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
+                            <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                               <Link className="w-4 h-4" />
                               URL-Slug
                             </label>
                             <div className="flex items-center gap-2">
-                              <code className="bg-gray-800 px-2 py-1 rounded text-emerald-400">{restaurant.slug}</code>
+                              <code className="bg-card px-2 py-1 rounded text-emerald-400">{restaurant.slug}</code>
                               <button
                                 type="button"
                                 onClick={() => {
                                   navigator.clipboard.writeText(`${window.location.origin}/reservierung/${restaurant.slug}`);
                                 }}
-                                className="p-1 hover:bg-gray-700 rounded transition-colors"
+                                className="p-1 hover:bg-accent rounded transition-colors"
                                 title="URL kopieren"
                               >
-                                <Copy className="w-4 h-4 text-gray-400" />
+                                <Copy className="w-4 h-4 text-muted-foreground" />
                               </button>
                             </div>
                           </div>
 
                           <div className="space-y-1.5">
-                            <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
+                            <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                               <Clock className="w-4 h-4" />
                               Vorlaufzeit
                             </label>
-                            <p className="text-gray-300">{restaurant.booking_lead_time_hours} Stunden</p>
+                            <p className="text-muted-foreground">{restaurant.booking_lead_time_hours} Stunden</p>
                           </div>
 
                           <div className="space-y-1.5">
-                            <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
+                            <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                               <Users className="w-4 h-4" />
                               Max. Personenzahl
                             </label>
-                            <p className="text-gray-300">{restaurant.booking_max_party_size} Personen</p>
+                            <p className="text-muted-foreground">{restaurant.booking_max_party_size} Personen</p>
                           </div>
 
                           <div className="space-y-1.5">
-                            <label className="flex items-center gap-2 text-sm font-medium text-gray-400">
+                            <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                               <Calendar className="w-4 h-4" />
                               Standard-Dauer
                             </label>
-                            <p className="text-gray-300">{restaurant.booking_default_duration} Minuten</p>
+                            <p className="text-muted-foreground">{restaurant.booking_default_duration} Minuten</p>
                           </div>
                         </div>
                       )}
                     </div>
 
                     {!restaurant.address && !restaurant.phone && !restaurant.email && !descriptionText && !hasExtendedData && !restaurant.public_booking_enabled && (
-                      <div className="text-center py-8 text-gray-400">
+                      <div className="text-center py-8 text-muted-foreground">
                         <AlertCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
                         <p>Noch keine zusätzlichen Informationen vorhanden.</p>
                         <p className="text-sm mt-1">Klicken Sie auf "Bearbeiten", um Informationen hinzuzufügen.</p>
@@ -602,9 +602,9 @@ export default function RestaurantManagePage() {
                   <div className="space-y-2">
                     <label 
                       htmlFor="name" 
-                      className="flex items-center gap-2 text-sm font-medium text-gray-300"
+                      className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
                     >
-                      <Building2 className="w-4 h-4 text-blue-400" />
+                      <Building2 className="w-4 h-4 text-primary" />
                   Restaurantname <span className="text-red-400">*</span>
                 </label>
                 <Input
@@ -618,7 +618,7 @@ export default function RestaurantManagePage() {
                   required
                   minLength={1}
                   maxLength={200}
-                      className="bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-500 focus:border-blue-500"
+                      className="bg-card/50 border-input text-foreground placeholder:text-muted-foreground focus:border-primary"
                 />
               </div>
 
@@ -626,9 +626,9 @@ export default function RestaurantManagePage() {
                     <div className="space-y-2">
                       <label 
                         htmlFor="address" 
-                        className="flex items-center gap-2 text-sm font-medium text-gray-300"
+                        className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
                       >
-                        <MapPin className="w-4 h-4 text-blue-400" />
+                        <MapPin className="w-4 h-4 text-primary" />
                   Adresse
                 </label>
                 <Input
@@ -640,16 +640,16 @@ export default function RestaurantManagePage() {
                   }
                   placeholder="Musterstraße 123, 12345 Musterstadt"
                   maxLength={500}
-                        className="bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-500 focus:border-blue-500"
+                        className="bg-card/50 border-input text-foreground placeholder:text-muted-foreground focus:border-primary"
                 />
               </div>
 
                     <div className="space-y-2">
                       <label 
                         htmlFor="phone" 
-                        className="flex items-center gap-2 text-sm font-medium text-gray-300"
+                        className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
                       >
-                        <Phone className="w-4 h-4 text-blue-400" />
+                        <Phone className="w-4 h-4 text-primary" />
                   Telefonnummer
                 </label>
                 <Input
@@ -661,7 +661,7 @@ export default function RestaurantManagePage() {
                   }
                   placeholder="+49 123 456789"
                   maxLength={50}
-                        className="bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-500 focus:border-blue-500"
+                        className="bg-card/50 border-input text-foreground placeholder:text-muted-foreground focus:border-primary"
                 />
                     </div>
               </div>
@@ -669,9 +669,9 @@ export default function RestaurantManagePage() {
                   <div className="space-y-2">
                     <label 
                       htmlFor="email" 
-                      className="flex items-center gap-2 text-sm font-medium text-gray-300"
+                      className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
                     >
-                      <Mail className="w-4 h-4 text-blue-400" />
+                      <Mail className="w-4 h-4 text-primary" />
                   E-Mail
                 </label>
                 <Input
@@ -683,16 +683,16 @@ export default function RestaurantManagePage() {
                   }
                   placeholder="info@restaurant.de"
                   maxLength={255}
-                      className="bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-500 focus:border-blue-500"
+                      className="bg-card/50 border-input text-foreground placeholder:text-muted-foreground focus:border-primary"
                 />
               </div>
 
                   <div className="space-y-2">
                     <label 
                       htmlFor="description" 
-                      className="flex items-center gap-2 text-sm font-medium text-gray-300"
+                      className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
                     >
-                      <FileText className="w-4 h-4 text-blue-400" />
+                      <FileText className="w-4 h-4 text-primary" />
                   Beschreibung
                 </label>
                 <textarea
@@ -703,14 +703,14 @@ export default function RestaurantManagePage() {
                   }
                   placeholder="Beschreibung des Restaurants..."
                       rows={5}
-                      className="w-full px-3 py-2 border border-gray-600 bg-gray-800/50 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500 resize-y"
+                      className="w-full px-3 py-2 border border-input bg-card/50 text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary placeholder:text-muted-foreground resize-y"
                     />
                   </div>
 
                   {/* Erweiterte Einstellungen */}
-                  <div className="pt-6 border-t border-gray-700 space-y-6">
-                    <div className="flex items-center gap-2 text-sm font-semibold text-gray-300">
-                      <Settings className="w-5 h-5 text-blue-400" />
+                  <div className="pt-6 border-t border-border space-y-6">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+                      <Settings className="w-5 h-5 text-primary" />
                       Erweiterte Einstellungen
                     </div>
 
@@ -718,9 +718,9 @@ export default function RestaurantManagePage() {
                       <div className="space-y-2">
                         <label 
                           htmlFor="website" 
-                          className="flex items-center gap-2 text-sm font-medium text-gray-300"
+                          className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
                         >
-                          <Globe className="w-4 h-4 text-blue-400" />
+                          <Globe className="w-4 h-4 text-primary" />
                           Website
                         </label>
                         <Input
@@ -732,16 +732,16 @@ export default function RestaurantManagePage() {
                           }
                           placeholder="https://www.restaurant.de"
                           maxLength={500}
-                          className="bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-500 focus:border-blue-500"
+                          className="bg-card/50 border-input text-foreground placeholder:text-muted-foreground focus:border-primary"
                         />
                       </div>
 
                       <div className="space-y-2">
                         <label 
                           htmlFor="currency" 
-                          className="flex items-center gap-2 text-sm font-medium text-gray-300"
+                          className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
                         >
-                          <Euro className="w-4 h-4 text-blue-400" />
+                          <Euro className="w-4 h-4 text-primary" />
                           Währung
                         </label>
                         <select
@@ -750,7 +750,7 @@ export default function RestaurantManagePage() {
                           onChange={(e) =>
                             setFormData({ ...formData, currency: e.target.value || null })
                           }
-                          className="w-full px-3 py-2 border border-gray-600 bg-gray-800/50 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-3 py-2 border border-input bg-card/50 text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary"
                         >
                           <option value="EUR">EUR (€)</option>
                           <option value="USD">USD ($)</option>
@@ -764,9 +764,9 @@ export default function RestaurantManagePage() {
                       <div className="space-y-2">
                         <label 
                           htmlFor="timezone" 
-                          className="flex items-center gap-2 text-sm font-medium text-gray-300"
+                          className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
                         >
-                          <Clock className="w-4 h-4 text-blue-400" />
+                          <Clock className="w-4 h-4 text-primary" />
                           Zeitzone
                         </label>
                         <select
@@ -775,7 +775,7 @@ export default function RestaurantManagePage() {
                           onChange={(e) =>
                             setFormData({ ...formData, timezone: e.target.value || null })
                           }
-                          className="w-full px-3 py-2 border border-gray-600 bg-gray-800/50 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          className="w-full px-3 py-2 border border-input bg-card/50 text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary"
                         >
                           <option value="Europe/Berlin">Europa/Berlin (MEZ/MESZ)</option>
                           <option value="Europe/Vienna">Europa/Wien</option>
@@ -790,9 +790,9 @@ export default function RestaurantManagePage() {
                       <div className="space-y-2">
                         <label 
                           htmlFor="minReservationDuration" 
-                          className="flex items-center gap-2 text-sm font-medium text-gray-300"
+                          className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
                         >
-                          <Calendar className="w-4 h-4 text-blue-400" />
+                          <Calendar className="w-4 h-4 text-primary" />
                           Mindestaufenthaltsdauer (Minuten)
                         </label>
                         <Input
@@ -805,18 +805,18 @@ export default function RestaurantManagePage() {
                           onChange={(e) =>
                             setFormData({ ...formData, minReservationDuration: parseInt(e.target.value) || 60 })
                           }
-                          className="bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-500 focus:border-blue-500"
+                          className="bg-card/50 border-input text-foreground placeholder:text-muted-foreground focus:border-primary"
                         />
-                        <p className="text-xs text-gray-500">Standard: 60 Minuten</p>
+                        <p className="text-xs text-muted-foreground">Standard: 60 Minuten</p>
                       </div>
                     </div>
 
                     <div className="space-y-2">
                       <label 
                         htmlFor="openingHours" 
-                        className="flex items-center gap-2 text-sm font-medium text-gray-300"
+                        className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
                       >
-                        <Clock className="w-4 h-4 text-blue-400" />
+                        <Clock className="w-4 h-4 text-primary" />
                         Öffnungszeiten
                       </label>
                       <textarea
@@ -827,16 +827,16 @@ export default function RestaurantManagePage() {
                         }
                         placeholder="z.B. Mo-Fr: 11:00-22:00, Sa-So: 12:00-23:00"
                         rows={3}
-                        className="w-full px-3 py-2 border border-gray-600 bg-gray-800/50 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500 resize-y"
+                        className="w-full px-3 py-2 border border-input bg-card/50 text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary placeholder:text-muted-foreground resize-y"
                 />
               </div>
 
                     <div className="space-y-2">
                       <label 
                         htmlFor="cancellationPolicy" 
-                        className="flex items-center gap-2 text-sm font-medium text-gray-300"
+                        className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
                       >
-                        <Info className="w-4 h-4 text-blue-400" />
+                        <Info className="w-4 h-4 text-primary" />
                         Stornierungsrichtlinie
                       </label>
                       <textarea
@@ -847,25 +847,25 @@ export default function RestaurantManagePage() {
                         }
                         placeholder="z.B. Stornierungen bis 24 Stunden vor Reservierung kostenfrei"
                         rows={2}
-                        className="w-full px-3 py-2 border border-gray-600 bg-gray-800/50 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 placeholder:text-gray-500 resize-y"
+                        className="w-full px-3 py-2 border border-input bg-card/50 text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-primary placeholder:text-muted-foreground resize-y"
                       />
                     </div>
                   </div>
 
                   {/* SumUp Integration */}
-                  <div className="pt-6 border-t border-gray-700 space-y-6">
-                    <div className="flex items-center gap-2 text-sm font-semibold text-gray-300">
-                      <Nfc className="w-5 h-5 text-blue-400" />
+                  <div className="pt-6 border-t border-border space-y-6">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+                      <Nfc className="w-5 h-5 text-primary" />
                       SumUp Zahlungsintegration
                     </div>
 
                     {/* Aktivieren/Deaktivieren */}
-                    <div className="flex items-center justify-between p-4 bg-gray-800/80 rounded-lg border border-gray-700">
+                    <div className="flex items-center justify-between p-4 bg-accent rounded-lg border border-border">
                       <div className="space-y-1">
-                        <label htmlFor="sumup_enabled" className="text-sm font-medium text-white cursor-pointer">
+                        <label htmlFor="sumup_enabled" className="text-sm font-medium text-foreground cursor-pointer">
                           SumUp aktivieren
                         </label>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-muted-foreground">
                           Ermöglicht Zahlungen über SumUp Kartenterminals. Die SumUp-Konfiguration (API Key, Merchant Code) erfolgt serverseitig.
                         </p>
                       </div>
@@ -879,7 +879,7 @@ export default function RestaurantManagePage() {
                           }
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                        <div className="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
                       </label>
                     </div>
 
@@ -887,9 +887,9 @@ export default function RestaurantManagePage() {
                     {formData.sumup_enabled && (
                       <div className="p-4 bg-blue-900/20 border border-blue-700/50 rounded-lg">
                         <div className="flex items-start gap-2">
-                          <Info className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
-                          <div className="space-y-1 text-sm text-gray-300">
-                            <p className="font-medium text-white">SumUp-Konfiguration</p>
+                          <Info className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+                          <div className="space-y-1 text-sm text-muted-foreground">
+                            <p className="font-medium text-foreground">SumUp-Konfiguration</p>
                             <p className="text-xs">
                               Die SumUp-Konfiguration (API Key, Merchant Code) wird serverseitig über Environment Variables verwaltet.
                               Kontaktieren Sie Ihren Administrator, um SumUp zu konfigurieren.
@@ -904,9 +904,9 @@ export default function RestaurantManagePage() {
                       <div className="space-y-2">
                         <label 
                           htmlFor="sumup_default_reader_id" 
-                          className="flex items-center gap-2 text-sm font-medium text-gray-300"
+                          className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
                         >
-                          <Nfc className="w-4 h-4 text-blue-400" />
+                          <Nfc className="w-4 h-4 text-primary" />
                           Standard Terminal (Reader ID)
                         </label>
                         <Input
@@ -918,9 +918,9 @@ export default function RestaurantManagePage() {
                           }
                           placeholder="z.B. rdr_3MSAFM23CK82VSTT4BN6RWSQ65"
                           maxLength={64}
-                          className="bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-500 focus:border-blue-500"
+                          className="bg-card/50 border-input text-foreground placeholder:text-muted-foreground focus:border-primary"
                         />
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-muted-foreground">
                           Optional: Standard-Terminal für automatische Auswahl bei Zahlungen
                         </p>
                       </div>
@@ -928,19 +928,19 @@ export default function RestaurantManagePage() {
                   </div>
 
                   {/* Online-Reservierungen */}
-                  <div className="pt-6 border-t border-gray-700 space-y-6">
-                    <div className="flex items-center gap-2 text-sm font-semibold text-gray-300">
+                  <div className="pt-6 border-t border-border space-y-6">
+                    <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
                       <Globe className="w-5 h-5 text-emerald-400" />
                       Online-Reservierungen
                     </div>
 
                     {/* Aktivieren/Deaktivieren */}
-                    <div className="flex items-center justify-between p-4 bg-gray-800/80 rounded-lg border border-gray-700">
+                    <div className="flex items-center justify-between p-4 bg-accent rounded-lg border border-border">
                       <div className="space-y-1">
-                        <label htmlFor="public_booking_enabled" className="text-sm font-medium text-white cursor-pointer">
+                        <label htmlFor="public_booking_enabled" className="text-sm font-medium text-foreground cursor-pointer">
                           Öffentliche Reservierungen aktivieren
                         </label>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-xs text-muted-foreground">
                           Ermöglicht Gästen, online über das Reservierungs-Widget zu buchen
                         </p>
                       </div>
@@ -954,7 +954,7 @@ export default function RestaurantManagePage() {
                           }
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                        <div className="w-11 h-6 bg-muted peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-emerald-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-border after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
                       </label>
                     </div>
 
@@ -962,7 +962,7 @@ export default function RestaurantManagePage() {
                     <div className="space-y-2">
                       <label 
                         htmlFor="slug" 
-                        className="flex items-center gap-2 text-sm font-medium text-gray-300"
+                        className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
                       >
                         <Link className="w-4 h-4 text-emerald-400" />
                         URL-Slug
@@ -979,7 +979,7 @@ export default function RestaurantManagePage() {
                           }}
                           placeholder="mein-restaurant"
                           maxLength={100}
-                          className="bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-500 focus:border-emerald-500"
+                          className="bg-card/50 border-input text-foreground placeholder:text-muted-foreground focus:border-emerald-500"
                         />
                         <Button
                           type="button"
@@ -1002,9 +1002,9 @@ export default function RestaurantManagePage() {
                         </Button>
                       </div>
                       {formData.slug && (
-                        <p className="text-xs text-gray-400 flex items-center gap-1">
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
                           <ExternalLink className="w-3 h-3" />
-                          Widget-URL: <code className="bg-gray-800 px-1 rounded">/reservierung/{formData.slug}</code>
+                          Widget-URL: <code className="bg-card px-1 rounded">/reservierung/{formData.slug}</code>
                         </p>
                       )}
                     </div>
@@ -1014,7 +1014,7 @@ export default function RestaurantManagePage() {
                       <div className="space-y-2">
                         <label 
                           htmlFor="booking_lead_time_hours" 
-                          className="flex items-center gap-2 text-sm font-medium text-gray-300"
+                          className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
                         >
                           <Clock className="w-4 h-4 text-emerald-400" />
                           Vorlaufzeit (Stunden)
@@ -1028,16 +1028,16 @@ export default function RestaurantManagePage() {
                           onChange={(e) =>
                             setFormData({ ...formData, booking_lead_time_hours: parseInt(e.target.value) || 2 })
                           }
-                          className="bg-gray-800/50 border-gray-600 text-white focus:border-emerald-500"
+                          className="bg-card/50 border-input text-foreground focus:border-emerald-500"
                         />
-                        <p className="text-xs text-gray-500">Mindestens X Stunden im Voraus</p>
+                        <p className="text-xs text-muted-foreground">Mindestens X Stunden im Voraus</p>
                       </div>
 
                       {/* Maximale Personenzahl */}
                       <div className="space-y-2">
                         <label 
                           htmlFor="booking_max_party_size" 
-                          className="flex items-center gap-2 text-sm font-medium text-gray-300"
+                          className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
                         >
                           <Users className="w-4 h-4 text-emerald-400" />
                           Max. Personenzahl
@@ -1051,16 +1051,16 @@ export default function RestaurantManagePage() {
                           onChange={(e) =>
                             setFormData({ ...formData, booking_max_party_size: parseInt(e.target.value) || 12 })
                           }
-                          className="bg-gray-800/50 border-gray-600 text-white focus:border-emerald-500"
+                          className="bg-card/50 border-input text-foreground focus:border-emerald-500"
                         />
-                        <p className="text-xs text-gray-500">Pro Online-Reservierung</p>
+                        <p className="text-xs text-muted-foreground">Pro Online-Reservierung</p>
                       </div>
 
                       {/* Standard-Reservierungsdauer */}
                       <div className="space-y-2">
                         <label 
                           htmlFor="booking_default_duration" 
-                          className="flex items-center gap-2 text-sm font-medium text-gray-300"
+                          className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
                         >
                           <Calendar className="w-4 h-4 text-emerald-400" />
                           Reservierungsdauer (Min.)
@@ -1075,14 +1075,14 @@ export default function RestaurantManagePage() {
                           onChange={(e) =>
                             setFormData({ ...formData, booking_default_duration: parseInt(e.target.value) || 120 })
                           }
-                          className="bg-gray-800/50 border-gray-600 text-white focus:border-emerald-500"
+                          className="bg-card/50 border-input text-foreground focus:border-emerald-500"
                         />
-                        <p className="text-xs text-gray-500">Standard: 120 Minuten</p>
+                        <p className="text-xs text-muted-foreground">Standard: 120 Minuten</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-700">
+                  <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-border">
                     <Button 
                       type="submit" 
                       className="flex-1 gap-2 touch-manipulation min-h-[44px]" 

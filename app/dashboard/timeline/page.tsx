@@ -444,14 +444,14 @@ export default function TimelinePage() {
 
   if (!restaurant) {
     return (
-      <div className="p-6 bg-gray-900 min-h-screen text-white">
+      <div className="p-6 bg-background min-h-screen text-foreground">
         Kein Restaurant gefunden. Bitte zuerst ein Restaurant anlegen.
       </div>
     );
   }
 
   return (
-    <div className="h-full flex flex-col bg-gray-900 overflow-hidden">
+    <div className="h-full flex flex-col bg-background overflow-hidden">
       {toasts.length > 0 && (
         <div className="fixed bottom-4 right-4 z-[200] space-y-3">
           {toasts.map((toast) => (
@@ -470,22 +470,22 @@ export default function TimelinePage() {
           ))}
         </div>
       )}
-      <div className="bg-gray-800 border-b border-gray-700 px-4 py-3 shadow-sm shrink-0">
+      <div className="bg-card border-b border-border px-4 py-3 shadow-sm shrink-0">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2 min-w-0 shrink-0">
-            <div className="inline-flex items-center rounded-lg border border-gray-700/70 bg-gray-800/90 p-0.5 backdrop-blur-sm min-h-[32px] md:min-h-[36px]">
+            <div className="inline-flex items-center rounded-lg border border-border/70 bg-card/90 p-0.5 backdrop-blur-sm min-h-[32px] md:min-h-[36px]">
               <Link
                 href="/dashboard"
                 aria-label="Tischplan"
                 title="Tischplan"
-                className="inline-flex items-center justify-center px-3 py-1 rounded-md text-gray-200 border border-transparent hover:bg-gray-700 min-h-[32px] md:min-h-[36px]"
+                className="inline-flex items-center justify-center px-3 py-1 rounded-md text-foreground border border-transparent hover:bg-accent min-h-[32px] md:min-h-[36px]"
               >
                 <LayoutGrid className="w-4 h-4" />
               </Link>
               <button
                 type="button"
                 aria-current="page"
-                className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-blue-600 text-white text-sm md:text-base font-semibold border border-blue-500/80 shadow-inner min-h-[32px] md:min-h-[36px]"
+                className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-primary text-foreground text-sm md:text-base font-semibold border border-primary/80 shadow-inner min-h-[32px] md:min-h-[36px]"
               >
                 <Clock className="w-4 h-4" />
                 Zeitplan
@@ -494,24 +494,24 @@ export default function TimelinePage() {
                 href="/dashboard/reservations"
                 aria-label="Reservierungen"
                 title="Reservierungen"
-                className="inline-flex items-center justify-center px-3 py-1 rounded-md text-gray-200 border border-transparent hover:bg-gray-700 min-h-[32px] md:min-h-[36px]"
+                className="inline-flex items-center justify-center px-3 py-1 rounded-md text-foreground border border-transparent hover:bg-accent min-h-[32px] md:min-h-[36px]"
               >
                 <Calendar className="w-4 h-4" />
               </Link>
             </div>
-            <div className="text-left ml-2 md:ml-4 border-l border-gray-600 pl-2 md:pl-4">
-              <div className="text-xs md:text-sm font-semibold text-white whitespace-nowrap">
+            <div className="text-left ml-2 md:ml-4 border-l border-input pl-2 md:pl-4">
+              <div className="text-xs md:text-sm font-semibold text-foreground whitespace-nowrap">
                 {format(now, "EEEE, d. MMMM yyyy", { locale: de })}
               </div>
-              <div className="text-base md:text-lg lg:text-xl font-bold text-blue-300 tracking-tight whitespace-nowrap">
+              <div className="text-base md:text-lg lg:text-xl font-bold text-primary tracking-tight whitespace-nowrap">
                 {format(now, "HH:mm:ss")}
               </div>
             </div>
           </div>
           <div className="flex items-center gap-2 min-w-0 shrink-0 justify-end">
             <div className="text-right leading-tight">
-              <div className="text-[10px] uppercase tracking-wide text-gray-400">Ausgewählter Tag</div>
-              <div className="text-xs font-semibold text-white whitespace-nowrap">
+              <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Ausgewählter Tag</div>
+              <div className="text-xs font-semibold text-foreground whitespace-nowrap">
                 {format(selectedDate, "EEE, d.M.yyyy", { locale: de })}
               </div>
             </div>
@@ -529,10 +529,10 @@ export default function TimelinePage() {
                 <button
                   type="button"
                   onClick={() => setStatusMenuOpen((prev) => !prev)}
-                  className="inline-flex items-center justify-between gap-2 min-w-[140px] rounded-lg border border-gray-700 bg-gray-800 text-white px-3 py-2 text-sm shadow-inner hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="inline-flex items-center justify-between gap-2 min-w-[140px] rounded-lg border border-border bg-card text-foreground px-3 py-2 text-sm shadow-inner hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring"
                 >
                   <span className="flex items-center gap-2 truncate">
-                    <Filter className="w-4 h-4 text-gray-300" />
+                    <Filter className="w-4 h-4 text-muted-foreground" />
                     {selectedStatuses.length === ALL_FILTERS.length || selectedStatuses.length === 0
                       ? "Alle Status"
                       : selectedStatuses.map((s) => getStatusLabel(s)).join(", ")}
@@ -540,7 +540,7 @@ export default function TimelinePage() {
                   <ChevronDown className={`w-4 h-4 transition-transform ${statusMenuOpen ? "rotate-180" : ""}`} />
                 </button>
                 {statusMenuOpen && (
-                  <div className="absolute right-0 mt-1 w-64 rounded-lg border border-gray-700 bg-gray-900 shadow-xl z-[60] max-h-[70vh] overflow-auto">
+                  <div className="absolute right-0 mt-1 w-64 rounded-lg border border-border bg-background shadow-xl z-[60] max-h-[70vh] overflow-auto">
                     <button
                       type="button"
                       onClick={() => {
@@ -550,8 +550,8 @@ export default function TimelinePage() {
                       }}
                       className={`w-full px-3 py-3 text-sm flex items-center justify-between transition-colors ${
                         selectedStatuses.length === ALL_FILTERS.length || selectedStatuses.length === 0
-                          ? "font-semibold text-white border-l-2 border-blue-500 bg-gray-800/80"
-                          : "text-gray-200 hover:bg-gray-800"
+                          ? "font-semibold text-foreground border-l-2 border-primary bg-accent"
+                          : "text-foreground hover:bg-card"
                       }`}
                     >
                       <span className="flex items-center gap-2">
@@ -564,11 +564,11 @@ export default function TimelinePage() {
                         className={`inline-flex items-center justify-center w-6 h-6 rounded-full border ${
                           selectedStatuses.length === ALL_FILTERS.length || selectedStatuses.length === 0
                             ? "border-white/60 bg-white/10"
-                            : "border-gray-700 bg-gray-800"
+                            : "border-border bg-card"
                         }`}
                       >
                         {(selectedStatuses.length === ALL_FILTERS.length || selectedStatuses.length === 0) && (
-                          <Check className="w-4 h-4 text-blue-300" />
+                          <Check className="w-4 h-4 text-primary" />
                         )}
                       </span>
                     </button>
@@ -596,14 +596,14 @@ export default function TimelinePage() {
                           }
                           className={`w-full px-3 py-3 text-sm flex items-center justify-between transition-colors ${
                             active
-                              ? "font-semibold text-white border-l-2 border-blue-500 bg-gray-800/80 hover:bg-gray-700/80"
-                              : "text-gray-200 hover:bg-gray-800"
+                              ? "font-semibold text-foreground border-l-2 border-primary bg-accent hover:bg-accent"
+                              : "text-foreground hover:bg-card"
                           }`}
                         >
                           <span className="flex items-center gap-2">
                             <span
                               className={`inline-flex items-center justify-center w-8 h-8 rounded-md border shrink-0 ${
-                                active ? tone : "border-white/10 bg-black/10 text-gray-200"
+                                active ? tone : "border-white/10 bg-black/10 text-foreground"
                               }`}
                             >
                               <Icon className="w-4 h-4" />
@@ -611,13 +611,13 @@ export default function TimelinePage() {
                             <span className="capitalize">{label}</span>
                           </span>
                           <div className="flex items-center gap-2">
-                            <span className="px-2 py-1 rounded-full text-xs bg-gray-800">{count}</span>
+                            <span className="px-2 py-1 rounded-full text-xs bg-card">{count}</span>
                             <span
                               className={`inline-flex items-center justify-center w-6 h-6 rounded-full border ${
-                                active ? "border-white/60 bg-white/10" : "border-gray-700 bg-gray-800"
+                                active ? "border-white/60 bg-white/10" : "border-border bg-card"
                               }`}
                             >
-                              {active && <Check className="w-4 h-4 text-blue-300" />}
+                              {active && <Check className="w-4 h-4 text-primary" />}
                             </span>
                           </div>
                         </button>
@@ -630,16 +630,16 @@ export default function TimelinePage() {
                 <button
                   type="button"
                   onClick={() => setSlotMenuOpen((prev) => !prev)}
-                  className="inline-flex items-center justify-between gap-2 min-w-[120px] rounded-lg border border-gray-700 bg-gray-800 text-white px-3 py-2 text-sm shadow-inner hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="inline-flex items-center justify-between gap-2 min-w-[120px] rounded-lg border border-border bg-card text-foreground px-3 py-2 text-sm shadow-inner hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring"
                 >
                   <span className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-gray-300" />
+                    <Clock className="w-4 h-4 text-muted-foreground" />
                     {slotMinutes} Min
                   </span>
                   <ChevronDown className={`w-4 h-4 transition-transform ${slotMenuOpen ? "rotate-180" : ""}`} />
                 </button>
                 {slotMenuOpen && (
-                  <div className="absolute right-0 mt-1 w-44 rounded-lg border border-gray-700 bg-gray-900 shadow-xl z-[60] overflow-hidden">
+                  <div className="absolute right-0 mt-1 w-44 rounded-lg border border-border bg-background shadow-xl z-[60] overflow-hidden">
                     {[15, 30, 60].map((value) => (
                       <button
                         key={value}
@@ -651,15 +651,15 @@ export default function TimelinePage() {
                         }}
                         className={`w-full px-3 py-3 text-sm flex items-center justify-between transition-colors ${
                           slotMinutes === value
-                            ? "font-semibold text-white border-l-2 border-blue-500 bg-gray-800/80"
-                            : "text-gray-200 hover:bg-gray-800"
+                            ? "font-semibold text-foreground border-l-2 border-primary bg-accent"
+                            : "text-foreground hover:bg-accent"
                         }`}
                       >
                         <span className="flex items-center gap-2">
-                          <Clock className="w-4 h-4 text-gray-300" />
+                          <Clock className="w-4 h-4 text-muted-foreground" />
                           {value} Minuten
                         </span>
-                        {slotMinutes === value && <Check className="w-4 h-4 text-blue-300" />}
+                        {slotMinutes === value && <Check className="w-4 h-4 text-primary" />}
                       </button>
                     ))}
                   </div>
@@ -699,7 +699,7 @@ export default function TimelinePage() {
 
       <div className="flex-1 overflow-auto px-4 pb-6 pt-4 min-h-0">
         {areaOrder.length === 0 ? (
-          <div className="text-center text-gray-400 mt-12">Keine Bereiche oder Tische gefunden.</div>
+          <div className="text-center text-muted-foreground mt-12">Keine Bereiche oder Tische gefunden.</div>
         ) : (
           <div className="space-y-6">
             {areaOrder.map((areaId) => {
@@ -713,43 +713,43 @@ export default function TimelinePage() {
                   : areas.find((a) => a.id === areaId)?.name ?? "Bereich";
 
               return (
-                <div key={String(areaId)} className="border border-gray-700 rounded-xl bg-gray-800/70 shadow-lg shadow-black/30">
-                  <div className="px-4 py-3 border-b border-gray-700 flex items-center justify-between">
+                <div key={String(areaId)} className="border border-border rounded-xl bg-card/70 shadow-lg shadow-black/30">
+                  <div className="px-4 py-3 border-b border-border flex items-center justify-between">
                     <div>
-                      <div className="text-sm font-semibold text-white">{areaName}</div>
-                      <div className="text-xs text-gray-400">{areaTables.length} Tische</div>
+                      <div className="text-sm font-semibold text-foreground">{areaName}</div>
+                      <div className="text-xs text-muted-foreground">{areaTables.length} Tische</div>
                     </div>
-                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-gray-900 border border-gray-700 text-xs text-gray-200">
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-background border border-border text-xs text-foreground">
                       <Calendar className="w-3.5 h-3.5" />
                       {areaReservationCount}/{totalReservations || 0} Reservierungen
                     </div>
                   </div>
 
                   <div className="grid grid-cols-[200px_minmax(0,1fr)]">
-                    <div className="border-r border-gray-700">
-                      <div className="h-12 px-3 flex items-center text-xs text-gray-300 border-b border-gray-700">
+                    <div className="border-r border-border">
+                      <div className="h-12 px-3 flex items-center text-xs text-muted-foreground border-b border-border">
                         Zeit
                       </div>
                       {areaTables.map((table) => (
                         <div
                           key={table.id}
-                          className="h-16 px-3 border-b border-gray-800 last:border-b-0 flex items-center"
+                          className="h-16 px-3 border-b border-card last:border-b-0 flex items-center"
                         >
-                          <div className="text-sm font-semibold text-white">{table.number}</div>
-                          <div className="text-xs text-gray-400 ml-2">{table.capacity ?? "-"} Pers.</div>
+                          <div className="text-sm font-semibold text-foreground">{table.number}</div>
+                          <div className="text-xs text-muted-foreground ml-2">{table.capacity ?? "-"} Pers.</div>
                         </div>
                       ))}
                     </div>
                     <div className="overflow-x-auto">
                       <div className="min-w-full" style={{ minWidth: timelineWidth }}>
-                        <div className="relative h-12 border-b border-gray-700">
+                        <div className="relative h-12 border-b border-border">
                           <div
                             className="absolute inset-0"
                             style={{
                               backgroundImage: `repeating-linear-gradient(to right, rgba(75,85,99,0.35) 0, rgba(75,85,99,0.35) 1px, transparent 1px, transparent ${slotWidth}px)`,
                             }}
                           />
-                          <div className="flex h-full text-[11px] text-gray-300">
+                          <div className="flex h-full text-[11px] text-muted-foreground">
                             {timeSlots.map((slot, idx) => (
                               <div
                                 key={idx}
@@ -767,7 +767,7 @@ export default function TimelinePage() {
                           return (
                             <div
                               key={table.id}
-                              className="relative h-16 border-b border-gray-800 last:border-b-0"
+                              className="relative h-16 border-b border-card last:border-b-0"
                               style={{
                                 backgroundImage: `repeating-linear-gradient(to right, rgba(75,85,99,0.2) 0, rgba(75,85,99,0.2) 1px, transparent 1px, transparent ${slotWidth}px)`,
                               }}
@@ -784,36 +784,36 @@ export default function TimelinePage() {
               );
             })}
             {unassignedReservations.length > 0 && (
-              <div className="border border-gray-700 rounded-xl bg-gray-800/70 shadow-lg shadow-black/30">
-                <div className="px-4 py-3 border-b border-gray-700 flex items-center justify-between">
+              <div className="border border-border rounded-xl bg-card/70 shadow-lg shadow-black/30">
+                <div className="px-4 py-3 border-b border-border flex items-center justify-between">
                   <div>
-                    <div className="text-sm font-semibold text-white">Ohne Tisch</div>
-                    <div className="text-xs text-gray-400">Unzugeordnete Reservierungen</div>
+                    <div className="text-sm font-semibold text-foreground">Ohne Tisch</div>
+                    <div className="text-xs text-muted-foreground">Unzugeordnete Reservierungen</div>
                   </div>
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-gray-900 border border-gray-700 text-xs text-gray-200">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-background border border-border text-xs text-foreground">
                     <Calendar className="w-3.5 h-3.5" />
                     {unassignedReservations.length}/{totalReservations || 0} Reservierungen
                   </div>
                 </div>
                 <div className="grid grid-cols-[200px_minmax(0,1fr)]">
-                  <div className="border-r border-gray-700">
-                    <div className="h-12 px-3 flex items-center text-xs text-gray-300 border-b border-gray-700">
+                  <div className="border-r border-border">
+                    <div className="h-12 px-3 flex items-center text-xs text-muted-foreground border-b border-border">
                       Zeit
                     </div>
-                    <div className="h-16 px-3 flex items-center border-b border-gray-800 last:border-b-0">
-                      <div className="text-sm font-semibold text-white">Ohne Tisch</div>
+                    <div className="h-16 px-3 flex items-center border-b border-card last:border-b-0">
+                      <div className="text-sm font-semibold text-foreground">Ohne Tisch</div>
                     </div>
                   </div>
                   <div className="overflow-x-auto">
                     <div className="min-w-full" style={{ minWidth: timelineWidth }}>
-                      <div className="relative h-12 border-b border-gray-700">
+                      <div className="relative h-12 border-b border-border">
                         <div
                           className="absolute inset-0"
                           style={{
                             backgroundImage: `repeating-linear-gradient(to right, rgba(75,85,99,0.35) 0, rgba(75,85,99,0.35) 1px, transparent 1px, transparent ${slotWidth}px)`,
                           }}
                         />
-                        <div className="flex h-full text-[11px] text-gray-300">
+                        <div className="flex h-full text-[11px] text-muted-foreground">
                           {timeSlots.map((slot, idx) => (
                             <div
                               key={idx}
@@ -826,7 +826,7 @@ export default function TimelinePage() {
                         </div>
                       </div>
                       <div
-                        className="relative border-b border-gray-800"
+                        className="relative border-b border-card"
                         style={{
                           height: Math.max(64, unassignedLanes.laneCount * LANE_HEIGHT + 16),
                           backgroundImage: `repeating-linear-gradient(to right, rgba(75,85,99,0.2) 0, rgba(75,85,99,0.2) 1px, transparent 1px, transparent ${slotWidth}px)`,

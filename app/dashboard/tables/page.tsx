@@ -462,11 +462,11 @@ export default function TableManagementPage() {
 
   if (!restaurant) {
     return (
-      <div className="p-6 bg-gray-900 min-h-screen">
-        <p className="text-gray-400">Kein Restaurant gefunden. Bitte erstelle zuerst ein Restaurant.</p>
+      <div className="p-6 bg-background min-h-screen">
+        <p className="text-muted-foreground">Kein Restaurant gefunden. Bitte erstelle zuerst ein Restaurant.</p>
         <Link
           href="/dashboard/restaurants"
-          className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+          className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-md bg-primary text-foreground hover:bg-primary/90"
         >
           <MoveLeft className="w-4 h-4" />
           Zum Restaurant
@@ -476,7 +476,7 @@ export default function TableManagementPage() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-gray-900 overflow-hidden">
+    <div className="h-full flex flex-col bg-background overflow-hidden">
       {toasts.length > 0 && (
         <div className="fixed bottom-4 right-4 z-[200] space-y-3">
           {toasts.map((toast) => (
@@ -495,19 +495,19 @@ export default function TableManagementPage() {
           ))}
         </div>
       )}
-      <div className="bg-gray-800 border-b border-gray-700 shadow-sm">
+      <div className="bg-card border-b border-border shadow-sm">
         <div className="px-4 py-3 flex flex-col gap-3">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div className="flex items-start gap-3">
-              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-500 via-cyan-400 to-emerald-400 flex items-center justify-center shadow-lg shadow-blue-500/25">
-                <LayoutGrid className="w-5 h-5 text-white" />
+              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-[#F95100] to-[#E04800] flex items-center justify-center shadow-lg shadow-[#F95100]/25">
+                <LayoutGrid className="w-5 h-5 text-foreground" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-white">Tische verwalten</h1>
-                <p className="text-xs md:text-sm text-gray-400 mt-0.5">
+                <h1 className="text-2xl font-bold text-foreground">Tische verwalten</h1>
+                <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
                   Ziehe Tische oder Hindernisse, um ihre Position zu verändern. Änderungen werden automatisch gespeichert.
                 </p>
-                {isRefreshing && <div className="text-xs text-blue-400 mt-0.5">Aktualisiere...</div>}
+                {isRefreshing && <div className="text-xs text-primary mt-0.5">Aktualisiere...</div>}
               </div>
             </div>
             <div className="flex items-center gap-2 pt-1.5 md:pt-2">
@@ -540,11 +540,11 @@ export default function TableManagementPage() {
 
           <div className="flex flex-wrap items-center gap-3 relative">
             <div className="flex items-center gap-2" ref={areaMenuRef}>
-              <span className="text-xs text-gray-400 uppercase tracking-wide">Bereich</span>
+              <span className="text-xs text-muted-foreground uppercase tracking-wide">Bereich</span>
               <button
                 type="button"
                 onClick={() => setAreaMenuOpen((prev) => !prev)}
-                className="inline-flex items-center justify-between gap-2 px-3 py-2 rounded-md border border-gray-600 bg-gray-800 text-sm text-white shadow-inner hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[180px] disabled:opacity-60 disabled:cursor-not-allowed"
+                className="inline-flex items-center justify-between gap-2 px-3 py-2 rounded-md border border-input bg-card text-sm text-foreground shadow-inner hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring min-w-[180px] disabled:opacity-60 disabled:cursor-not-allowed"
                 disabled={areas.length === 0}
               >
                 <span className="truncate">
@@ -555,8 +555,8 @@ export default function TableManagementPage() {
                 <ChevronDown className={`w-4 h-4 transition-transform ${areaMenuOpen ? "rotate-180" : ""}`} />
               </button>
               {areaMenuOpen && (
-                <div className="absolute mt-1 w-64 rounded-lg border border-gray-700 bg-gray-900 shadow-xl z-40 overflow-hidden">
-                  <div className="divide-y divide-gray-800">
+                <div className="absolute mt-1 w-64 rounded-lg border border-border bg-background shadow-xl z-40 overflow-hidden">
+                  <div className="divide-y divide-border">
                     {areas.map((area) => {
                       const active = selectedAreaId === area.id;
                       return (
@@ -570,8 +570,8 @@ export default function TableManagementPage() {
                           }}
                           className={`w-full px-3 py-2 text-left flex items-center justify-between gap-2 text-sm transition-colors ${
                             active
-                              ? "bg-gray-800 text-white font-semibold cursor-default"
-                              : "text-gray-200 hover:bg-gray-800/70"
+                              ? "bg-card text-foreground font-semibold cursor-default"
+                              : "text-foreground hover:bg-accent"
                           }`}
                           disabled={active}
                         >
@@ -580,7 +580,7 @@ export default function TableManagementPage() {
                       );
                     })}
                     {areas.length === 0 && (
-                      <div className="px-3 py-3 text-sm text-gray-400">
+                      <div className="px-3 py-3 text-sm text-muted-foreground">
                         Keine Area vorhanden.
                       </div>
                     )}
@@ -622,7 +622,7 @@ export default function TableManagementPage() {
               </span>
             )}
             {selectedAreaId === null && areas.length > 0 && (
-              <span className="text-xs text-gray-300">
+              <span className="text-xs text-muted-foreground">
                 Wähle eine Area, um neue Tische oder Hindernisse anzulegen.
               </span>
             )}
@@ -632,7 +632,7 @@ export default function TableManagementPage() {
       </div>
       <div
         ref={tablePlanRef}
-        className="flex-1 relative overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800"
+        className="flex-1 relative overflow-hidden bg-gradient-to-br from-background to-card"
         style={{
           touchAction: 'none',
           userSelect: 'none',
@@ -866,8 +866,8 @@ export default function TableManagementPage() {
           {tables.length === 0 && (
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center space-y-3">
-                <p className="text-gray-400 text-lg">Noch keine Tische vorhanden</p>
-                <p className="text-gray-500 text-sm">Lege hier neue Tische an oder verschiebe bestehende.</p>
+                <p className="text-muted-foreground text-lg">Noch keine Tische vorhanden</p>
+                <p className="text-muted-foreground text-sm">Lege hier neue Tische an oder verschiebe bestehende.</p>
                 {(currentUser?.role === "servecta" || currentUser?.role === "restaurantinhaber" || currentUser?.role === "schichtleiter") && (
                   <Button
                     onClick={() => setCreateTableOpen(true)}
@@ -887,7 +887,7 @@ export default function TableManagementPage() {
               onClick={handleZoomIn}
               size="sm"
               variant="outline"
-              className="bg-gray-800/90 backdrop-blur-sm border-gray-600 hover:bg-gray-700 min-h-[36px] min-w-[36px] p-0"
+              className="bg-accent backdrop-blur-sm border-input hover:bg-accent min-h-[36px] min-w-[36px] p-0"
               title="Heranzoomen"
             >
               <ZoomIn className="w-4 h-4" />
@@ -896,7 +896,7 @@ export default function TableManagementPage() {
               onClick={handleZoomOut}
               size="sm"
               variant="outline"
-              className="bg-gray-800/90 backdrop-blur-sm border-gray-600 hover:bg-gray-700 min-h-[36px] min-w-[36px] p-0"
+              className="bg-accent backdrop-blur-sm border-input hover:bg-accent min-h-[36px] min-w-[36px] p-0"
               title="Herauszoomen"
             >
               <ZoomOut className="w-4 h-4" />
@@ -905,12 +905,12 @@ export default function TableManagementPage() {
               onClick={handleZoomReset}
               size="sm"
               variant="outline"
-              className="bg-gray-800/90 backdrop-blur-sm border-gray-600 hover:bg-gray-700 min-h-[36px] min-w-[36px] p-0"
+              className="bg-accent backdrop-blur-sm border-input hover:bg-accent min-h-[36px] min-w-[36px] p-0"
               title="Zoom zurücksetzen"
             >
               <Maximize2 className="w-4 h-4" />
             </Button>
-            <div className="text-xs text-gray-300 bg-gray-800/90 backdrop-blur-sm border border-gray-600 rounded px-2 py-1 text-center mt-1">
+            <div className="text-xs text-muted-foreground bg-accent backdrop-blur-sm border border-input rounded px-2 py-1 text-center mt-1">
               {Math.round(zoomLevel * 100)}%
             </div>
           </div>
@@ -1018,7 +1018,7 @@ export default function TableManagementPage() {
               </div>
             )}
             <div className="space-y-1">
-              <label className="text-sm text-gray-300">Name</label>
+              <label className="text-sm text-muted-foreground">Name</label>
               <Input
                 value={areaName}
                 onChange={(e) => {

@@ -45,7 +45,7 @@ export function ObstacleCard({ obstacle, onClick, isDragging }: ObstacleCardProp
       onClick={onClick}
       data-dnd-draggable="true"
       className={`
-        group rounded-md border border-gray-700/70 shadow-[0_10px_24px_rgba(0,0,0,0.35)]
+        group rounded-md border border-border shadow-[0_10px_24px_rgba(0,0,0,0.35)]
         flex items-center justify-center text-xs font-semibold text-white cursor-grab
         hover:shadow-[0_12px_30px_rgba(0,0,0,0.45)] hover:-translate-y-0.5 transition-all
         ${isDragging ? "opacity-60" : ""}

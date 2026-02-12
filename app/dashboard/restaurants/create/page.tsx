@@ -70,7 +70,7 @@ export default function CreateRestaurantPage() {
             )}
 
             <div>
-              <label htmlFor="name" className="block text-sm font-medium mb-1 text-gray-300">
+              <label htmlFor="name" className="block text-sm font-medium mb-1 text-muted-foreground">
                 Restaurantname <span className="text-red-500">*</span>
               </label>
               <Input
@@ -88,7 +88,7 @@ export default function CreateRestaurantPage() {
             </div>
 
             <div>
-              <label htmlFor="address" className="block text-sm font-medium mb-1 text-gray-300">
+              <label htmlFor="address" className="block text-sm font-medium mb-1 text-muted-foreground">
                 Adresse
               </label>
               <Input
@@ -104,7 +104,7 @@ export default function CreateRestaurantPage() {
             </div>
 
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium mb-1 text-gray-300">
+              <label htmlFor="phone" className="block text-sm font-medium mb-1 text-muted-foreground">
                 Telefonnummer
               </label>
               <Input
@@ -120,7 +120,7 @@ export default function CreateRestaurantPage() {
             </div>
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-1 text-gray-300">
+              <label htmlFor="email" className="block text-sm font-medium mb-1 text-muted-foreground">
                 E-Mail
               </label>
               <Input
@@ -136,7 +136,7 @@ export default function CreateRestaurantPage() {
             </div>
 
             <div>
-              <label htmlFor="description" className="block text-sm font-medium mb-1 text-gray-300">
+              <label htmlFor="description" className="block text-sm font-medium mb-1 text-muted-foreground">
                 Beschreibung
               </label>
               <textarea
@@ -147,7 +147,7 @@ export default function CreateRestaurantPage() {
                 }
                 placeholder="Beschreibung des Restaurants..."
                 rows={4}
-                className="w-full px-3 py-2 rounded-md border border-gray-600 bg-gray-800 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400"
+                className="w-full px-3 py-2 rounded-md border border-input bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
               />
             </div>
 

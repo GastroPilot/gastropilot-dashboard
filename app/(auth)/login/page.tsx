@@ -9,14 +9,14 @@ import { ApiError } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { 
-  LogIn, 
-  Key, 
-  User, 
-  CreditCard, 
-  AlertCircle, 
+import { Logo } from "@/components/logo";
+import {
+  LogIn,
+  Key,
+  User,
+  CreditCard,
+  AlertCircle,
   Loader2,
-  Shield,
   ArrowRight
 } from "lucide-react";
 
@@ -68,30 +68,30 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    
+
     if (operatorNumber.length !== 4) {
       const errorMsg = "Bedienernummer muss 4 Ziffern lang sein";
       setError(errorMsg);
       addToast(errorMsg, "error");
       return;
     }
-    
+
     if (pin.length < 6 || pin.length > 8) {
       const errorMsg = "PIN muss 6-8 Ziffern lang sein";
       setError(errorMsg);
       addToast(errorMsg, "error");
       return;
     }
-    
+
     setLoading(true);
 
     try {
       await authApi.login({ operator_number: operatorNumber, pin });
-      
-      const token = typeof window !== "undefined" 
-        ? localStorage.getItem("access_token") 
+
+      const token = typeof window !== "undefined"
+        ? localStorage.getItem("access_token")
         : null;
-      
+
       if (!token) {
         const errorMsg = "Token konnte nicht gespeichert werden";
         setError(errorMsg);
@@ -99,7 +99,7 @@ export default function LoginPage() {
         setLoading(false);
         return;
       }
-      
+
       addToast("Erfolgreich angemeldet", "success");
       // Small delay to show success toast
       setTimeout(() => {
@@ -121,19 +121,19 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted to-background p-4">
       {/* Toasts */}
       {toasts.length > 0 && (
         <div className="fixed top-4 right-4 z-[200] space-y-3">
           {toasts.map((toast) => (
             <div
               key={toast.id}
-              className={`min-w-[260px] rounded-lg border px-4 py-3 shadow-[0_14px_32px_rgba(0,0,0,0.35)] text-sm ${
+              className={`min-w-[260px] rounded-lg border px-4 py-3 shadow-lg text-sm ${
                 toast.variant === "error"
                   ? "bg-red-900/80 border-red-500 text-red-50"
                   : toast.variant === "success"
                   ? "bg-green-900/80 border-green-500 text-green-50"
-                  : "bg-slate-800/90 border-slate-600 text-slate-100"
+                  : "bg-card border-border text-foreground"
               }`}
             >
               {toast.message}
@@ -145,19 +145,19 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         {/* Logo/Branding */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-500 via-cyan-400 to-emerald-400 shadow-lg shadow-blue-500/25 mb-4">
-            <Shield className="w-8 h-8 text-white" />
+          <div className="inline-flex items-center justify-center mb-4">
+            <Logo size="lg" />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">
+          <h1 className="text-3xl font-bold text-foreground mb-2">
             {restaurantName}
           </h1>
-          <p className="text-gray-400 text-sm">Reservierungsmanagement</p>
+          <p className="text-muted-foreground text-sm">Restaurantmanagement</p>
         </div>
 
-        <Card className="border-gray-700 bg-gray-800/50 backdrop-blur-sm shadow-2xl">
-          <CardHeader className="border-b border-gray-700">
-            <CardTitle className="flex items-center gap-2 text-white text-xl">
-              <LogIn className="w-5 h-5 text-blue-400" />
+        <Card className="backdrop-blur-sm shadow-2xl">
+          <CardHeader className="border-b border-border">
+            <CardTitle className="flex items-center gap-2 text-xl">
+              <LogIn className="w-5 h-5 text-primary" />
               Anmelden
             </CardTitle>
           </CardHeader>
@@ -174,11 +174,11 @@ export default function LoginPage() {
               )}
 
               <div className="space-y-2">
-                <label 
-                  htmlFor="operatorNumber" 
-                  className="flex items-center gap-2 text-sm font-medium text-gray-300"
+                <label
+                  htmlFor="operatorNumber"
+                  className="flex items-center gap-2 text-sm font-medium text-foreground"
                 >
-                  <User className="w-4 h-4 text-blue-400" />
+                  <User className="w-4 h-4 text-primary" />
                   Bedienernummer (4 Ziffern)
                 </label>
                 <Input
@@ -192,16 +192,16 @@ export default function LoginPage() {
                   maxLength={4}
                   required
                   autoFocus
-                  className="text-center text-2xl tracking-widest font-mono bg-gray-800/50 border-gray-600 text-white focus:border-blue-500"
+                  className="text-center text-2xl tracking-widest font-mono"
                 />
               </div>
 
               <div className="space-y-2">
-                <label 
-                  htmlFor="pin" 
-                  className="flex items-center gap-2 text-sm font-medium text-gray-300"
+                <label
+                  htmlFor="pin"
+                  className="flex items-center gap-2 text-sm font-medium text-foreground"
                 >
-                  <Key className="w-4 h-4 text-blue-400" />
+                  <Key className="w-4 h-4 text-primary" />
                   PIN (6-8 Ziffern)
                 </label>
                 <Input
@@ -214,13 +214,13 @@ export default function LoginPage() {
                   placeholder="••••••"
                   maxLength={8}
                   required
-                  className="text-center text-xl tracking-widest font-mono bg-gray-800/50 border-gray-600 text-white focus:border-blue-500"
+                  className="text-center text-xl tracking-widest font-mono"
                 />
               </div>
 
-              <Button 
-                type="submit" 
-                className="w-full gap-2 touch-manipulation min-h-[48px] text-base font-semibold" 
+              <Button
+                type="submit"
+                className="w-full gap-2 touch-manipulation min-h-[48px] text-base font-semibold"
                 disabled={loading}
               >
                 {loading ? (
@@ -237,10 +237,10 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            <div className="mt-6 pt-6 border-t border-gray-700">
-              <Link 
+            <div className="mt-6 pt-6 border-t border-border">
+              <Link
                 href="/login-nfc"
-                className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-gray-600 bg-gray-800/50 text-gray-300 hover:bg-gray-800 hover:text-white transition-colors touch-manipulation min-h-[44px]"
+                className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-border bg-card text-muted-foreground hover:bg-accent hover:text-foreground transition-colors touch-manipulation min-h-[44px]"
               >
                 <CreditCard className="w-5 h-5" />
                 <span>Mit NFC-Transponder anmelden</span>
@@ -251,7 +251,7 @@ export default function LoginPage() {
         </Card>
 
         <div className="mt-6 text-center">
-          <p className="text-xs text-gray-500">
+          <p className="text-xs text-muted-foreground">
             © {new Date().getFullYear()} Servecta • GastroPilot
           </p>
         </div>

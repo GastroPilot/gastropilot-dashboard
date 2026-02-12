@@ -106,7 +106,7 @@ export function CreateTempTableDialog({
             )}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label htmlFor="temp-number" className="text-sm font-medium text-gray-300">
+                <label htmlFor="temp-number" className="text-sm font-medium text-foreground">
                   Tischnummer <span className="text-red-400">*</span>
                 </label>
                 <Input
@@ -120,7 +120,7 @@ export function CreateTempTableDialog({
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="temp-capacity" className="text-sm font-medium text-gray-300">
+                <label htmlFor="temp-capacity" className="text-sm font-medium text-foreground">
                   Kapazität <span className="text-red-400">*</span>
                 </label>
                 <Input
@@ -136,13 +136,13 @@ export function CreateTempTableDialog({
             </div>
 
             <div className="space-y-2">
-              <label htmlFor="temp-notes" className="text-sm font-medium text-gray-300">Notizen</label>
+              <label htmlFor="temp-notes" className="text-sm font-medium text-foreground">Notizen</label>
               <textarea
                 id="temp-notes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 disabled={loading}
-                className="w-full h-20 px-3 py-2 rounded-md border border-gray-600 bg-gray-800 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                className="w-full h-20 px-3 py-2 rounded-md border border-input bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring resize-none"
                 placeholder="Optionale Notizen..."
               />
             </div>

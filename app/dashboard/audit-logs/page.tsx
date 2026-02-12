@@ -164,7 +164,7 @@ export default function AuditLogsPage() {
       case "patch":
         return "bg-orange-900/40 text-orange-200 border-orange-700";
       default:
-        return "bg-gray-800 text-gray-200 border-gray-700";
+        return "bg-card text-foreground border-border";
     }
   };
 
@@ -180,7 +180,7 @@ export default function AuditLogsPage() {
       case "patch":
         return "text-orange-300 border-orange-600 bg-orange-900/30";
       default:
-        return "text-gray-300 border-gray-600 bg-gray-900/50";
+        return "text-muted-foreground border-input bg-background/50";
     }
   };
 
@@ -202,11 +202,11 @@ export default function AuditLogsPage() {
       case "servecta":
         return "text-purple-300 border-purple-500/60 bg-purple-900/40";
       case "restaurantinhaber":
-        return "text-blue-300 border-blue-500/60 bg-blue-900/40";
+        return "text-primary border-primary/60 bg-primary/20";
       case "schichtleiter":
         return "text-amber-300 border-amber-500/60 bg-amber-900/40";
       default:
-        return "text-gray-300 border-gray-500/60 bg-gray-900/50";
+        return "text-muted-foreground border-border/60 bg-background/50";
     }
   };
 
@@ -378,13 +378,13 @@ export default function AuditLogsPage() {
 
   const renderDetails = (details?: Record<string, any> | string | null) => {
     if (!details) {
-      return <span className="text-gray-500 text-sm">—</span>;
+      return <span className="text-muted-foreground text-sm">—</span>;
     }
 
     const isString = typeof details === "string";
     const hasContent = isString ? details.trim().length > 0 : Object.keys(details).length > 0;
     if (!hasContent) {
-      return <span className="text-gray-500 text-sm">—</span>;
+      return <span className="text-muted-foreground text-sm">—</span>;
     }
 
     let pretty = "";
@@ -399,7 +399,7 @@ export default function AuditLogsPage() {
     }
 
     return (
-      <pre className="bg-gray-900/70 text-xs text-gray-100 rounded-md px-3 py-2 max-w-md whitespace-pre-wrap break-words border border-gray-800 shadow-inner font-mono">
+      <pre className="bg-background/70 text-xs text-foreground rounded-md px-3 py-2 max-w-md whitespace-pre-wrap break-words border border-card shadow-inner font-mono">
         {pretty}
       </pre>
     );
@@ -411,22 +411,22 @@ export default function AuditLogsPage() {
 
   if (!restaurant) {
     return (
-      <div className="h-full flex flex-col bg-gray-900 overflow-hidden">
+      <div className="h-full flex flex-col bg-background overflow-hidden">
         <div className="flex-1 overflow-y-auto min-h-0">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <Link 
-              href="/dashboard" 
-              className="inline-flex items-center gap-2 text-blue-400 hover:text-blue-300 mb-6"
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-2 text-primary hover:text-primary/80 mb-6"
             >
               <ArrowLeft className="w-4 h-4" />
               Zurück zum Dashboard
             </Link>
-            <Card className="border-gray-700 bg-gray-800/50 backdrop-blur-sm">
+            <Card className="border-border bg-card/50 backdrop-blur-sm">
               <CardContent className="pt-6">
                 <div className="text-center py-8">
-                  <AlertCircle className="w-16 h-16 mx-auto mb-4 text-gray-400 opacity-50" />
-                  <p className="text-gray-300 text-lg mb-2">Kein Restaurant gefunden</p>
-                  <p className="text-gray-400 text-sm">
+                  <AlertCircle className="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-50" />
+                  <p className="text-foreground text-lg mb-2">Kein Restaurant gefunden</p>
+                  <p className="text-muted-foreground text-sm">
                     Bitte lege zuerst ein Restaurant an, um Audit-Logs anzuzeigen.
                   </p>
                 </div>
@@ -439,7 +439,7 @@ export default function AuditLogsPage() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-gray-900 overflow-hidden">
+    <div className="h-full flex flex-col bg-background overflow-hidden">
       {/* Toasts */}
       {toasts.length > 0 && (
         <div className="fixed bottom-4 right-4 z-[200] space-y-3">
@@ -461,18 +461,18 @@ export default function AuditLogsPage() {
       )}
 
       {/* Header */}
-      <div className="bg-gray-800 border-b border-gray-700 shadow-sm shrink-0">
+      <div className="bg-card border-b border-border shadow-sm shrink-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-500 via-cyan-400 to-emerald-400 flex items-center justify-center shadow-lg shadow-blue-500/25">
-                <FileText className="w-5 h-5 text-white" />
+              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-[#F95100] to-[#E04800] flex items-center justify-center shadow-lg shadow-[#F95100]/25">
+                <FileText className="w-5 h-5 text-foreground" />
               </div>
               <div>
-                <h1 className="text-xl md:text-2xl font-bold text-white">
+                <h1 className="text-xl md:text-2xl font-bold text-foreground">
                   Audit-Logs
                 </h1>
-                <p className="text-xs md:text-sm text-gray-400 mt-0.5">
+                <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
                   {restaurant.name} • {displayTotal} Einträge
                 </p>
               </div>
@@ -481,7 +481,7 @@ export default function AuditLogsPage() {
               <Button
                 variant="default"
                 size="sm"
-                className="gap-2 touch-manipulation min-h-[36px] md:min-h-[40px] bg-blue-600 hover:bg-blue-500 text-white border border-blue-500 shadow-lg shadow-blue-500/25"
+                className="gap-2 touch-manipulation min-h-[36px] md:min-h-[40px] bg-primary hover:bg-primary/90 text-foreground border border-primary shadow-lg shadow-[#F95100]/25"
                 onClick={() => loadLogs(restaurant.id, offset)}
                 disabled={isRefreshing}
               >
@@ -497,10 +497,10 @@ export default function AuditLogsPage() {
       <div className="flex-1 overflow-y-auto min-h-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 space-y-6">
           {/* Filter */}
-          <Card className="relative z-30 border-gray-700 bg-gray-800/50 backdrop-blur-sm overflow-visible">
-            <CardHeader className="border-b border-gray-700">
-              <CardTitle className="flex items-center gap-2 text-white">
-                <Filter className="w-5 h-5 text-blue-400" />
+          <Card className="relative z-30 border-border bg-card/50 backdrop-blur-sm overflow-visible">
+            <CardHeader className="border-b border-border">
+              <CardTitle className="flex items-center gap-2 text-foreground">
+                <Filter className="w-5 h-5 text-primary" />
                 Filter
               </CardTitle>
             </CardHeader>
@@ -518,15 +518,15 @@ export default function AuditLogsPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div className="space-y-2">
-                    <label className="flex items-center gap-2 text-sm font-medium text-gray-300">
-                      <Activity className="w-4 h-4 text-blue-400" />
+                    <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                      <Activity className="w-4 h-4 text-primary" />
                       Aktion
                     </label>
                     <div className="relative z-[60]" ref={actionMenuRef}>
                       <button
                         type="button"
                         onClick={() => setActionMenuOpen((prev) => !prev)}
-                        className="w-full inline-flex items-center justify-between gap-2 px-3 py-2 rounded-md border border-gray-600 bg-gray-800/50 text-sm text-white shadow-inner hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[40px]"
+                        className="w-full inline-flex items-center justify-between gap-2 px-3 py-2 rounded-md border border-input bg-card/50 text-sm text-foreground shadow-inner hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring min-h-[40px]"
                       >
                         {(() => {
                           const Icon = action ? getActionIcon(action) : Activity;
@@ -542,7 +542,7 @@ export default function AuditLogsPage() {
                         <ChevronDown className={`w-4 h-4 transition-transform ${actionMenuOpen ? "rotate-180" : ""}`} />
                       </button>
                       {actionMenuOpen && (
-                        <div className="absolute mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 shadow-xl z-[80] overflow-hidden">
+                        <div className="absolute mt-1 w-full rounded-lg border border-border bg-background shadow-xl z-[80] overflow-hidden">
                           {[
                             { value: "", label: "Alle Aktionen" },
                             { value: "create", label: "Erstellt" },
@@ -561,8 +561,8 @@ export default function AuditLogsPage() {
                                 }}
                                 className={`w-full px-3 py-2 text-left flex items-center justify-between gap-2 text-sm transition-colors ${
                                   active
-                                    ? "bg-gray-800 text-white font-semibold"
-                                    : "text-gray-200 hover:bg-gray-800/70"
+                                    ? "bg-card text-foreground font-semibold"
+                                    : "text-foreground hover:bg-accent"
                                 }`}
                               >
                                 <span className="flex items-center gap-2 truncate">
@@ -571,7 +571,7 @@ export default function AuditLogsPage() {
                                   </span>
                                   <span className="truncate">{item.label}</span>
                                 </span>
-                                {active && <Check className="w-4 h-4 text-blue-300" />}
+                                {active && <Check className="w-4 h-4 text-primary" />}
                               </button>
                             );
                           })}
@@ -581,15 +581,15 @@ export default function AuditLogsPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="flex items-center gap-2 text-sm font-medium text-gray-300">
-                      <UserIcon className="w-4 h-4 text-blue-400" />
+                    <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                      <UserIcon className="w-4 h-4 text-primary" />
                       Benutzer
                     </label>
                     <div className="relative z-[60]" ref={userMenuRef}>
                       <button
                         type="button"
                         onClick={() => setUserMenuOpen((prev) => !prev)}
-                        className="w-full inline-flex items-center justify-between gap-2 px-3 py-2 rounded-md border border-gray-600 bg-gray-800/50 text-sm text-white shadow-inner hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[40px]"
+                        className="w-full inline-flex items-center justify-between gap-2 px-3 py-2 rounded-md border border-input bg-card/50 text-sm text-foreground shadow-inner hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring min-h-[40px]"
                       >
                         <span className="truncate">
                           {userId ? (() => {
@@ -601,8 +601,8 @@ export default function AuditLogsPage() {
                         <ChevronDown className={`w-4 h-4 transition-transform ${userMenuOpen ? "rotate-180" : ""}`} />
                       </button>
                       {userMenuOpen && (
-                        <div className="absolute mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 shadow-xl z-[80]">
-                          <div 
+                        <div className="absolute mt-1 w-full rounded-lg border border-border bg-background shadow-xl z-[80]">
+                          <div
                             className="max-h-64 overflow-y-scroll overflow-x-hidden"
                             style={{ 
                               WebkitOverflowScrolling: 'touch',
@@ -618,12 +618,12 @@ export default function AuditLogsPage() {
                               }}
                               className={`w-full px-3 py-2 text-left flex items-center justify-between gap-2 text-sm transition-colors whitespace-nowrap ${
                                 userId === ""
-                                  ? "bg-gray-800 text-white font-semibold"
-                                  : "text-gray-200 hover:bg-gray-800/70"
+                                  ? "bg-card text-foreground font-semibold"
+                                  : "text-foreground hover:bg-accent"
                               }`}
                             >
                               <span className="truncate">Alle Benutzer</span>
-                              {userId === "" && <Check className="w-4 h-4 text-blue-300 flex-shrink-0" />}
+                              {userId === "" && <Check className="w-4 h-4 text-primary flex-shrink-0" />}
                             </button>
                             {operators.map((op) => {
                               const active = userId === String(op.id);
@@ -637,12 +637,12 @@ export default function AuditLogsPage() {
                                   }}
                                 className={`w-full px-3 py-2 text-left flex items-center justify-between gap-2 text-sm transition-colors whitespace-nowrap ${
                                   active
-                                    ? "bg-gray-800 text-white font-semibold"
-                                    : "text-gray-200 hover:bg-gray-800/70"
+                                    ? "bg-card text-foreground font-semibold"
+                                    : "text-foreground hover:bg-accent"
                                 }`}
                               >
                                   <span className="flex items-center gap-2 truncate">
-                                  <span className={`inline-flex items-center justify-center w-6 h-6 rounded-md border bg-gray-900/70 ${getRoleTone(op.role)}`}>
+                                  <span className={`inline-flex items-center justify-center w-6 h-6 rounded-md border bg-background/70 ${getRoleTone(op.role)}`}>
                                     {(() => {
                                       const RoleIcon = getRoleIcon(op.role);
                                       return <RoleIcon className="w-3.5 h-3.5" />;
@@ -652,7 +652,7 @@ export default function AuditLogsPage() {
                                       {op.first_name} {op.last_name} (#{op.operator_number})
                                     </span>
                                   </span>
-                                  {active && <Check className="w-4 h-4 text-blue-300 flex-shrink-0" />}
+                                  {active && <Check className="w-4 h-4 text-primary flex-shrink-0" />}
                                 </button>
                               );
                             })}
@@ -663,42 +663,42 @@ export default function AuditLogsPage() {
                   </div>
 
                   <div className="space-y-2">
-                    <label className="flex items-center gap-2 text-sm font-medium text-gray-300">
-                      <Calendar className="w-4 h-4 text-blue-400" />
+                    <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                      <Calendar className="w-4 h-4 text-primary" />
                       Datum von
                     </label>
                     <Input
                       type="datetime-local"
                       value={dateFrom}
                       onChange={(e) => setDateFrom(e.target.value)}
-                      className="bg-gray-800/50 border-gray-600 text-white focus:border-blue-500"
+                      className="bg-card/50 border-input text-foreground focus:border-primary"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="flex items-center gap-2 text-sm font-medium text-gray-300">
-                      <Calendar className="w-4 h-4 text-blue-400" />
+                    <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                      <Calendar className="w-4 h-4 text-primary" />
                       Datum bis
                     </label>
                     <Input
                       type="datetime-local"
                       value={dateTo}
                       onChange={(e) => setDateTo(e.target.value)}
-                      className="bg-gray-800/50 border-gray-600 text-white focus:border-blue-500"
+                      className="bg-card/50 border-input text-foreground focus:border-primary"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-sm font-medium text-gray-300">
-                    <Search className="w-4 h-4 text-blue-400" />
+                  <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                    <Search className="w-4 h-4 text-primary" />
                     Freitext-Suche
                   </label>
                   <Input
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Suche in allen Spalten (z.B. Name, Aktion, ID, IP)..."
-                    className="bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-500 focus:border-blue-500"
+                    className="bg-card/50 border-input text-foreground placeholder:text-muted-foreground focus:border-primary"
                   />
                 </div>
 
@@ -726,17 +726,17 @@ export default function AuditLogsPage() {
           </Card>
 
           {/* Logs Table */}
-          <Card className="border-gray-700 bg-gray-800/50 backdrop-blur-sm">
-            <CardHeader className="border-b border-gray-700">
-              <CardTitle className="flex items-center gap-2 text-white">
-                <FileText className="w-5 h-5 text-blue-400" />
+          <Card className="border-border bg-card/50 backdrop-blur-sm">
+            <CardHeader className="border-b border-border">
+              <CardTitle className="flex items-center gap-2 text-foreground">
+                <FileText className="w-5 h-5 text-primary" />
                 Log-Einträge
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 {logs.length === 0 ? (
-                  <div className="text-center py-12 text-gray-400">
+                  <div className="text-center py-12 text-muted-foreground">
                     <FileText className="w-16 h-16 mx-auto mb-4 opacity-50" />
                     <p className="text-lg font-medium">
                       Keine Audit-Logs gefunden
@@ -750,14 +750,14 @@ export default function AuditLogsPage() {
                 ) : (
                   <table className="w-full">
                     <thead>
-                      <tr className="border-b border-gray-700 bg-gray-900/50">
-                        <th className="text-left text-xs uppercase tracking-wide text-gray-400 px-4 py-3">Zeitpunkt</th>
-                        <th className="text-left text-xs uppercase tracking-wide text-gray-400 px-4 py-3">User</th>
-                        <th className="text-left text-xs uppercase tracking-wide text-gray-400 px-4 py-3">Entity</th>
-                        <th className="text-left text-xs uppercase tracking-wide text-gray-400 px-4 py-3">Aktion</th>
-                        <th className="text-left text-xs uppercase tracking-wide text-gray-400 px-4 py-3">Beschreibung</th>
-                        <th className="text-left text-xs uppercase tracking-wide text-gray-400 px-4 py-3">Details</th>
-                        <th className="text-left text-xs uppercase tracking-wide text-gray-400 px-4 py-3">IP</th>
+                      <tr className="border-b border-border bg-background/50">
+                        <th className="text-left text-xs uppercase tracking-wide text-muted-foreground px-4 py-3">Zeitpunkt</th>
+                        <th className="text-left text-xs uppercase tracking-wide text-muted-foreground px-4 py-3">User</th>
+                        <th className="text-left text-xs uppercase tracking-wide text-muted-foreground px-4 py-3">Entity</th>
+                        <th className="text-left text-xs uppercase tracking-wide text-muted-foreground px-4 py-3">Aktion</th>
+                        <th className="text-left text-xs uppercase tracking-wide text-muted-foreground px-4 py-3">Beschreibung</th>
+                        <th className="text-left text-xs uppercase tracking-wide text-muted-foreground px-4 py-3">Details</th>
+                        <th className="text-left text-xs uppercase tracking-wide text-muted-foreground px-4 py-3">IP</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -768,15 +768,15 @@ export default function AuditLogsPage() {
                         return (
                           <tr 
                             key={log.id} 
-                            className="border-b border-gray-700/50 hover:bg-gray-800/30 transition-colors"
+                            className="border-b border-border/50 hover:bg-accent transition-colors"
                           >
-                            <td className="px-4 py-3 text-gray-200 whitespace-nowrap text-sm">
+                            <td className="px-4 py-3 text-foreground whitespace-nowrap text-sm">
                               <div className="flex items-center gap-2">
-                                <Clock className="w-3.5 h-3.5 text-gray-400" />
+                                <Clock className="w-3.5 h-3.5 text-muted-foreground" />
                                 {formatDate(log.created_at_utc)}
                               </div>
                             </td>
-                            <td className="px-4 py-3 text-gray-200">
+                            <td className="px-4 py-3 text-foreground">
                               {user ? (
                                 <div className="flex items-center gap-2">
                                   {(() => {
@@ -789,20 +789,20 @@ export default function AuditLogsPage() {
                                   })()}
                                   <div className="flex flex-col leading-tight">
                                     <span className="text-sm">{user.first_name} {user.last_name}</span>
-                                    <span className="text-xs text-gray-400 font-mono">#{user.operator_number}</span>
+                                    <span className="text-xs text-muted-foreground font-mono">#{user.operator_number}</span>
                                   </div>
                                 </div>
                               ) : log.user_id ? (
-                                <span className="text-gray-400 text-sm">User ID {log.user_id}</span>
+                                <span className="text-muted-foreground text-sm">User ID {log.user_id}</span>
                               ) : (
-                                <span className="text-gray-500 text-sm">-</span>
+                                <span className="text-muted-foreground text-sm">-</span>
                               )}
                             </td>
-                            <td className="px-4 py-3 text-gray-200">
+                            <td className="px-4 py-3 text-foreground">
                               <div className="flex flex-col leading-tight">
                                 <span className="font-semibold text-sm">{log.entity_type || "—"}</span>
                                 {log.entity_id !== null && log.entity_id !== undefined && (
-                                  <span className="text-xs text-gray-400">ID: {log.entity_id}</span>
+                                  <span className="text-xs text-muted-foreground">ID: {log.entity_id}</span>
                                 )}
                               </div>
                             </td>
@@ -814,11 +814,11 @@ export default function AuditLogsPage() {
                                 {friendlyAction(log.action)}
                               </span>
                             </td>
-                            <td className="px-4 py-3 text-gray-200 max-w-md">
+                            <td className="px-4 py-3 text-foreground max-w-md">
                               {log.description ? (
-                                <span className="block text-sm leading-snug text-gray-100">{log.description}</span>
+                                <span className="block text-sm leading-snug text-foreground">{log.description}</span>
                               ) : (
-                                <span className="text-gray-500 text-sm">—</span>
+                                <span className="text-muted-foreground text-sm">—</span>
                               )}
                             </td>
                             <td className="px-4 py-3 align-top">
@@ -829,11 +829,11 @@ export default function AuditLogsPage() {
                                     ? normalized.trim().length > 0
                                     : normalized && Object.keys(normalized).length > 0;
                                 if (!hasContent) {
-                                  return <span className="text-gray-500 text-sm">—</span>;
+                                  return <span className="text-muted-foreground text-sm">—</span>;
                                 }
                                 return (
                                   <details className="group">
-                                    <summary className="cursor-pointer text-sm text-blue-300 hover:text-blue-200 flex items-center gap-2 list-none">
+                                    <summary className="cursor-pointer text-sm text-primary hover:text-primary/80 flex items-center gap-2 list-none">
                                       <Info className="w-3.5 h-3.5" />
                                       <span className="group-open:hidden">Mehr anzeigen</span>
                                       <span className="hidden group-open:inline">Weniger anzeigen</span>
@@ -845,14 +845,14 @@ export default function AuditLogsPage() {
                                 );
                               })()}
                             </td>
-                            <td className="px-4 py-3 text-gray-300">
+                            <td className="px-4 py-3 text-muted-foreground">
                               {log.ip_address ? (
                                 <div className="flex items-center gap-1.5 text-sm">
-                                  <Globe className="w-3.5 h-3.5 text-gray-400" />
+                                  <Globe className="w-3.5 h-3.5 text-muted-foreground" />
                                   {log.ip_address}
                                 </div>
                               ) : (
-                                <span className="text-gray-500 text-sm">—</span>
+                                <span className="text-muted-foreground text-sm">—</span>
                               )}
                             </td>
                           </tr>
@@ -865,8 +865,8 @@ export default function AuditLogsPage() {
 
               {/* Pagination */}
               {logs.length > 0 && (
-                <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-gray-900/60 border-t border-gray-700">
-                  <div className="text-sm text-gray-400">
+                <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-background/60 border-t border-border">
+                  <div className="text-sm text-muted-foreground">
                     Zeigt {showingFrom}-{showingTo} von {displayTotal} Einträgen
                   </div>
                   <div className="flex items-center gap-2 flex-wrap justify-end">
@@ -894,7 +894,7 @@ export default function AuditLogsPage() {
                             {page}
                           </Button>
                         ) : (
-                          <span key={page} className="px-2 text-gray-500 select-none">
+                          <span key={page} className="px-2 text-muted-foreground select-none">
                             ...
                           </span>
                         )

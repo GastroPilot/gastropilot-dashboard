@@ -415,9 +415,9 @@ export default function ReservationsPage() {
 
   if (isInitialLoading) {
     return (
-      <div className="h-screen flex flex-col bg-gray-900 text-white">
+      <div className="h-screen flex flex-col bg-background text-foreground">
         {/* Header Skeleton */}
-        <div className="bg-gray-800 border-b border-gray-700 px-4 py-3 shadow-sm">
+        <div className="bg-card border-b border-border px-4 py-3 shadow-sm">
           <div className="h-24" />
         </div>
 
@@ -434,13 +434,13 @@ export default function ReservationsPage() {
   if (!restaurant) {
     return (
       <div className="p-6">
-        <p className="text-gray-500">Kein Restaurant gefunden.</p>
+        <p className="text-muted-foreground">Kein Restaurant gefunden.</p>
       </div>
     );
   }
 
   return (
-    <div className="h-screen flex flex-col bg-gray-900 text-white">
+    <div className="h-screen flex flex-col bg-background text-foreground">
       {toasts.length > 0 && (
         <div className="fixed bottom-4 right-4 z-[200] space-y-3">
           {toasts.map((toast) => (
@@ -459,15 +459,15 @@ export default function ReservationsPage() {
           ))}
         </div>
       )}
-      <div className="bg-gray-800 border-b border-gray-700 px-4 py-3 shadow-sm">
+      <div className="bg-card border-b border-border px-4 py-3 shadow-sm">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2 min-w-0 shrink-0">
-            <div className="inline-flex items-center rounded-lg border border-gray-700/70 bg-gray-800/90 p-0.5 backdrop-blur-sm min-h-[32px] md:min-h-[36px]">
+            <div className="inline-flex items-center rounded-lg border border-border/70 bg-card/90 p-0.5 backdrop-blur-sm min-h-[32px] md:min-h-[36px]">
               <Link
                 href="/dashboard"
                 aria-label="Tischplan"
                 title="Tischplan"
-                className="inline-flex items-center justify-center px-3 py-1 rounded-md text-gray-200 border border-transparent hover:bg-gray-700 min-h-[32px] md:min-h-[36px]"
+                className="inline-flex items-center justify-center px-3 py-1 rounded-md text-foreground border border-transparent hover:bg-muted min-h-[32px] md:min-h-[36px]"
               >
                 <LayoutGrid className="w-4 h-4" />
               </Link>
@@ -475,32 +475,32 @@ export default function ReservationsPage() {
                 href="/dashboard/timeline"
                 aria-label="Zeitplan"
                 title="Zeitplan"
-                className="inline-flex items-center justify-center px-3 py-1 rounded-md text-gray-200 border border-transparent hover:bg-gray-700 min-h-[32px] md:min-h-[36px]"
+                className="inline-flex items-center justify-center px-3 py-1 rounded-md text-foreground border border-transparent hover:bg-muted min-h-[32px] md:min-h-[36px]"
               >
                 <Clock className="w-4 h-4" />
               </Link>
               <button
                 type="button"
                 aria-current="page"
-                className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-blue-600 text-white text-sm md:text-base font-semibold border border-blue-500/80 shadow-inner min-h-[32px] md:min-h-[36px]"
+                className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-primary text-foreground text-sm md:text-base font-semibold border border-primary/80 shadow-inner min-h-[32px] md:min-h-[36px]"
               >
                 <Calendar className="w-4 h-4" />
                 Reservierungen
               </button>
             </div>
-            <div className="text-left ml-2 md:ml-4 border-l border-gray-600 pl-2 md:pl-4">
-              <div className="text-xs md:text-sm font-semibold text-white whitespace-nowrap">
+            <div className="text-left ml-2 md:ml-4 border-l border-input pl-2 md:pl-4">
+              <div className="text-xs md:text-sm font-semibold text-foreground whitespace-nowrap">
                 {format(now, "EEEE, d. MMMM yyyy", { locale: de })}
               </div>
-              <div className="text-base md:text-lg lg:text-xl font-bold text-blue-300 tracking-tight whitespace-nowrap">
+              <div className="text-base md:text-lg lg:text-xl font-bold text-primary tracking-tight whitespace-nowrap">
                 {format(now, "HH:mm:ss")}
               </div>
             </div>
           </div>
           <div className="flex items-center gap-2 min-w-0 shrink-0 justify-end">
             <div className="text-right leading-tight">
-            <div className="text-[10px] uppercase tracking-wide text-gray-400">Ausgewählter Tag</div>
-              <div className="text-xs font-semibold text-white whitespace-nowrap">
+            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Ausgewählter Tag</div>
+              <div className="text-xs font-semibold text-foreground whitespace-nowrap">
                 {format(selectedDate, "EEE, d.M.yyyy", { locale: de })}
               </div>
             </div>
@@ -553,17 +553,17 @@ export default function ReservationsPage() {
               placeholder="Suche nach Name, E-Mail, Telefon..."
               value={reservationSearchQuery}
               onChange={(e) => setReservationSearchQuery(e.target.value)}
-              className="pl-3 bg-gray-900 border-gray-700 text-white"
+              className="pl-3 bg-background border-border text-foreground"
             />
           </div>
           <div className="relative" ref={tableMenuRef}>
             <button
               type="button"
               onClick={() => setTableMenuOpen((prev) => !prev)}
-              className="w-full rounded-lg border border-gray-700 bg-gray-800 text-white px-3 py-2 text-sm shadow-inner flex items-center justify-between gap-2 hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[40px] touch-manipulation"
+              className="w-full rounded-lg border border-border bg-card text-foreground px-3 py-2 text-sm shadow-inner flex items-center justify-between gap-2 hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring min-h-[40px] touch-manipulation"
             >
               <div className="flex items-center gap-2 min-w-0">
-                <LayoutGrid className="w-4 h-4 text-gray-300" />
+                <LayoutGrid className="w-4 h-4 text-muted-foreground" />
                 <span className="truncate">
                   {selectedTableId ? `${getTableName(selectedTableId)}` : "Alle Tische"}
                 </span>
@@ -571,7 +571,7 @@ export default function ReservationsPage() {
               <ChevronDown className={`w-4 h-4 transition-transform ${tableMenuOpen ? "rotate-180" : ""}`} />
             </button>
             {tableMenuOpen && (
-              <div className="absolute right-0 mt-1 w-64 rounded-lg border border-gray-700 bg-gray-900 shadow-xl z-[50] max-h-[70vh] overflow-auto">
+              <div className="absolute right-0 mt-1 w-64 rounded-lg border border-border bg-background shadow-xl z-[50] max-h-[70vh] overflow-auto">
                 <button
                   type="button"
                   onClick={() => {
@@ -580,12 +580,12 @@ export default function ReservationsPage() {
                   }}
                   className={`w-full px-3 py-3 text-sm flex items-center justify-between transition-colors ${
                     !selectedTableId
-                      ? "font-semibold text-white border-l-2 border-blue-500 bg-gray-800/80"
-                      : "text-gray-200 hover:bg-gray-800"
+                      ? "font-semibold text-foreground border-l-2 border-primary bg-accent"
+                      : "text-foreground hover:bg-card"
                   }`}
                 >
                   Alle Tische
-                  {!selectedTableId && <Check className="w-4 h-4 text-blue-300" />}
+                  {!selectedTableId && <Check className="w-4 h-4 text-primary" />}
                 </button>
                 {[...tables].sort((a, b) => a.number.localeCompare(b.number, undefined, { numeric: true })).map((table) => (
                   <button
@@ -597,12 +597,12 @@ export default function ReservationsPage() {
                     }}
                     className={`w-full px-3 py-3 text-sm flex items-center justify-between transition-colors ${
                       selectedTableId === table.id
-                        ? "font-semibold text-white border-l-2 border-blue-500 bg-gray-800/80"
-                        : "text-gray-200 hover:bg-gray-800"
+                        ? "font-semibold text-foreground border-l-2 border-primary bg-accent"
+                        : "text-foreground hover:bg-card"
                     }`}
                   >
                     {table.number}
-                    {selectedTableId === table.id && <Check className="w-4 h-4 text-blue-300" />}
+                    {selectedTableId === table.id && <Check className="w-4 h-4 text-primary" />}
                   </button>
                 ))}
               </div>
@@ -612,23 +612,23 @@ export default function ReservationsPage() {
             <button
               type="button"
               onClick={() => setStatusMenuOpen((prev) => !prev)}
-              className="w-full rounded-lg border border-gray-700 bg-gray-800 text-white px-3 py-2 text-sm shadow-inner flex items-center justify-between gap-2 hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[40px] touch-manipulation"
+              className="w-full rounded-lg border border-border bg-card text-foreground px-3 py-2 text-sm shadow-inner flex items-center justify-between gap-2 hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring min-h-[40px] touch-manipulation"
             >
               <div className="flex items-center gap-2 min-w-0">
-                <Filter className="w-4 h-4 text-gray-300" />
+                <Filter className="w-4 h-4 text-muted-foreground" />
                 <span className="truncate">
                   {selectedStatuses.length === ALL_FILTERS.length || selectedStatuses.length === 0
                     ? "Alle Status"
                     : selectedStatuses.map((s) => getStatusLabel(s)).join(", ")}
                 </span>
               </div>
-              <div className="flex items-center gap-2 text-gray-300">
-                <span className="px-2 py-1 rounded-md bg-gray-700 text-xs">{combinedItems.length}</span>
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <span className="px-2 py-1 rounded-md bg-muted text-xs">{combinedItems.length}</span>
                 <ChevronDown className={`w-4 h-4 transition-transform ${statusMenuOpen ? "rotate-180" : ""}`} />
               </div>
             </button>
             {statusMenuOpen && (
-              <div className="absolute right-0 mt-1 w-64 rounded-lg border border-gray-700 bg-gray-900 shadow-xl z-[50] max-h-[70vh] overflow-auto">
+              <div className="absolute right-0 mt-1 w-64 rounded-lg border border-border bg-background shadow-xl z-[50] max-h-[70vh] overflow-auto">
                 <button
                   type="button"
                   onClick={() => {
@@ -638,8 +638,8 @@ export default function ReservationsPage() {
                   }}
                   className={`w-full px-3 py-3 text-sm flex items-center justify-between transition-colors ${
                     selectedStatuses.length === ALL_FILTERS.length || selectedStatuses.length === 0
-                      ? "font-semibold text-white border-l-2 border-blue-500 bg-gray-800/80"
-                      : "text-gray-200 hover:bg-gray-800"
+                      ? "font-semibold text-foreground border-l-2 border-primary bg-accent"
+                      : "text-foreground hover:bg-card"
                   }`}
                 >
                   <span className="flex items-center gap-2">
@@ -649,16 +649,16 @@ export default function ReservationsPage() {
                     Alle Status
                   </span>
                   <div className="flex items-center gap-2">
-                    <span className="px-2 py-1 rounded-full text-xs bg-gray-800">{reservations.length + blocksForDayAll.length}</span>
+                    <span className="px-2 py-1 rounded-full text-xs bg-card">{reservations.length + blocksForDayAll.length}</span>
                     <span
                       className={`inline-flex items-center justify-center w-6 h-6 rounded-full border ${
                         selectedStatuses.length === ALL_FILTERS.length || selectedStatuses.length === 0
                           ? "border-white/60 bg-white/10"
-                          : "border-gray-700 bg-gray-800"
+                          : "border-border bg-card"
                       }`}
                     >
                       {(selectedStatuses.length === ALL_FILTERS.length || selectedStatuses.length === 0) && (
-                        <Check className="w-4 h-4 text-blue-300" />
+                        <Check className="w-4 h-4 text-primary" />
                       )}
                     </span>
                   </div>
@@ -687,14 +687,14 @@ export default function ReservationsPage() {
                       }}
                       className={`w-full px-3 py-3 text-sm flex items-center justify-between transition-colors ${
                         active
-                          ? "font-semibold text-white border-l-2 border-blue-500 bg-gray-800/80 hover:bg-gray-700/80"
-                          : "text-gray-200 hover:bg-gray-800"
+                          ? "font-semibold text-foreground border-l-2 border-primary bg-accent hover:bg-muted/80"
+                          : "text-foreground hover:bg-card"
                       }`}
                     >
                       <span className="flex items-center gap-2">
                         <span
                           className={`inline-flex items-center justify-center w-8 h-8 rounded-md border shrink-0 ${
-                            active ? tone : "border-white/10 bg-black/10 text-gray-200"
+                            active ? tone : "border-white/10 bg-black/10 text-foreground"
                           }`}
                         >
                           <Icon className="w-4 h-4" />
@@ -702,13 +702,13 @@ export default function ReservationsPage() {
                         <span className="capitalize">{label}</span>
                       </span>
                       <div className="flex items-center gap-2">
-                        <span className="px-2 py-1 rounded-full text-xs bg-gray-800">{count}</span>
+                        <span className="px-2 py-1 rounded-full text-xs bg-card">{count}</span>
                         <span
                           className={`inline-flex items-center justify-center w-6 h-6 rounded-full border ${
-                            active ? "border-white/60 bg-white/10" : "border-gray-700 bg-gray-800"
+                            active ? "border-white/60 bg-white/10" : "border-border bg-card"
                           }`}
                         >
-                          {active && <Check className="w-4 h-4 text-blue-300" />}
+                          {active && <Check className="w-4 h-4 text-primary" />}
                         </span>
                       </div>
                     </button>
@@ -720,11 +720,11 @@ export default function ReservationsPage() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto bg-gray-900">
+      <div className="flex-1 overflow-y-auto bg-background">
         <div className="p-4 space-y-4">
           {combinedItems.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <Calendar className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+            <div className="text-center py-12 text-muted-foreground">
+              <Calendar className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
               <p className="text-lg">
                 Keine Einträge für den {format(selectedDate, "d. MMMM yyyy", { locale: de })}
               </p>
@@ -740,23 +740,23 @@ export default function ReservationsPage() {
                 return (
                   <div
                     key={entry.id}
-                    className="bg-gray-800 rounded-xl shadow-sm border border-rose-600/40 p-4 hover:shadow-md hover:bg-gray-750 transition-all cursor-pointer"
+                    className="bg-card rounded-xl shadow-sm border border-rose-600/40 p-4 hover:shadow-md hover:bg-gray-750 transition-all cursor-pointer"
                     onClick={() => handleBlockClick(block)}
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-2">
-                          <div className="text-lg font-semibold text-white">
+                          <div className="text-lg font-semibold text-foreground">
                             {format(startDate, "HH:mm")}–{format(endDate, "HH:mm")} Uhr
                           </div>
                           <div className={`inline-flex items-center justify-center w-8 h-8 rounded-md border ${status.tone}`}>
                             <status.Icon className="w-4 h-4" />
                           </div>
-                          <div className="text-sm text-gray-400">{getBlockTableLabel(block.id)}</div>
+                          <div className="text-sm text-muted-foreground">{getBlockTableLabel(block.id)}</div>
                         </div>
                         <div className="space-y-1">
                           <div className="flex items-center gap-2">
-                            <span className="font-semibold text-lg text-white">{label}</span>
+                            <span className="font-semibold text-lg text-foreground">{label}</span>
                           </div>
                         </div>
                       </div>
@@ -771,29 +771,29 @@ export default function ReservationsPage() {
               return (
                 <div
                   key={entry.id}
-                  className="bg-gray-800 rounded-xl shadow-sm border border-gray-700 p-4 hover:shadow-md hover:bg-gray-750 transition-all cursor-pointer"
+                  className="bg-card rounded-xl shadow-sm border border-border p-4 hover:shadow-md hover:bg-gray-750 transition-all cursor-pointer"
                   onClick={() => handleReservationClick(reservation)}
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-2">
-                        <div className="text-lg font-semibold text-white">{format(startDate, "HH:mm")} Uhr</div>
+                        <div className="text-lg font-semibold text-foreground">{format(startDate, "HH:mm")} Uhr</div>
                         <div className={status.className} title={status.label} aria-label={status.label}>
                           {status.icon}
                         </div>
-                        <div className="text-sm text-gray-400">{getTableName(reservation.table_id)}</div>
+                        <div className="text-sm text-muted-foreground">{getTableName(reservation.table_id)}</div>
                       </div>
 
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <Users className="w-4 h-4 text-gray-400" />
-                          <span className="font-semibold text-lg text-white">
+                          <Users className="w-4 h-4 text-muted-foreground" />
+                          <span className="font-semibold text-lg text-foreground">
                             {reservation.guest_name || "Unbekannt"}
                           </span>
-                          <span className="text-gray-400">· {reservation.party_size} {reservation.party_size === 1 ? "Person" : "Personen"}</span>
+                          <span className="text-muted-foreground">· {reservation.party_size} {reservation.party_size === 1 ? "Person" : "Personen"}</span>
                         </div>
 
-                        <div className="flex items-center gap-4 text-sm text-gray-300 mt-2">
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
                           {reservation.guest_phone && (
                             <div className="flex items-center gap-1">
                               <Phone className="w-4 h-4" />
@@ -809,7 +809,7 @@ export default function ReservationsPage() {
                         </div>
 
                         {reservation.notes && (
-                          <p className="text-sm text-gray-300 mt-2 italic">{reservation.notes}</p>
+                          <p className="text-sm text-muted-foreground mt-2 italic">{reservation.notes}</p>
                         )}
                       </div>
                     </div>

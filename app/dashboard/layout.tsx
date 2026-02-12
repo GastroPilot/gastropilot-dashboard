@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { confirmAction } from "@/lib/utils";
 import { LogOut, Menu, X } from "lucide-react";
 import { LoadingOverlay } from "@/components/loading-overlay";
+import { Logo } from "@/components/logo";
 
 export default function DashboardLayout({
   children,
@@ -138,7 +139,7 @@ export default function DashboardLayout({
     const canManageTables = user && (user.role === "servecta" || user.role === "restaurantinhaber" || user.role === "schichtleiter");
     const isOwner = user && (user.role === "servecta" || user.role === "restaurantinhaber");
     const canViewAuditLogs = user && (user.role === "servecta" || user.role === "restaurantinhaber" || user.role === "schichtleiter");
-    
+
     // Prüfe License Features
     const reservationsEnabled = features?.reservations_module ?? true; // Default: enabled
     const ordersEnabled = features?.orders_module ?? true; // Default: enabled
@@ -298,8 +299,8 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="h-screen flex flex-col bg-gray-900 overflow-hidden">
-      <nav className="relative bg-gray-800 border-b border-gray-700 shrink-0">
+    <div className="h-screen flex flex-col bg-background overflow-hidden">
+      <nav className="relative bg-card border-b border-border shrink-0">
         <div className="relative w-full px-3 sm:px-4 md:px-5">
           <div className="h-14 md:h-16 flex items-center justify-center">
             <div className="absolute inset-y-0 left-3 sm:left-4 md:left-6 flex items-center">
@@ -307,16 +308,12 @@ export default function DashboardLayout({
                 href="/dashboard"
                 className="flex-shrink-0 flex items-center space-x-3 md:space-x-4"
               >
-                <div className="h-8 w-8 md:h-10 md:w-10 rounded-xl bg-gradient-to-br from-blue-500 via-cyan-400 to-emerald-400 flex items-center justify-center shadow-lg shadow-blue-500/25 ring-1 ring-white/10">
-                  <span className="text-xs md:text-sm font-extrabold text-white tracking-tight">
-                    GP
-                  </span>
-                </div>
+                <Logo size="md" />
                 <div className="leading-tight">
-                  <div className="text-sm md:text-base font-semibold text-white">
+                  <div className="text-sm md:text-base font-semibold text-foreground">
                     {restaurantName}
                   </div>
-                  <div className="text-xs text-gray-400">
+                  <div className="text-xs text-muted-foreground">
                     Restaurantmanagement
                   </div>
                 </div>
@@ -325,7 +322,7 @@ export default function DashboardLayout({
             <div className="absolute inset-y-0 right-3 sm:right-4 md:right-6 flex items-center space-x-3 md:space-x-4">
               <button
                 type="button"
-                className="sm:hidden inline-flex items-center justify-center rounded-md border border-gray-700 bg-gray-800/90 p-2 text-gray-200 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="sm:hidden inline-flex items-center justify-center rounded-md border border-border bg-card p-2 text-foreground hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring"
                 aria-label={isNavOpen ? "Navigation schliessen" : "Navigation öffnen"}
                 aria-expanded={isNavOpen}
                 onClick={() => setIsNavOpen((prev) => !prev)}
@@ -345,8 +342,8 @@ export default function DashboardLayout({
                 <button
                   type="button"
                   onClick={() => setIsProfileMenuOpen((prev) => !prev)}
-                  className={`inline-flex items-center justify-center h-10 w-10 rounded-full border border-white/80 bg-gradient-to-br from-blue-600/80 via-cyan-500/80 to-emerald-500/80 text-white shadow-md shadow-blue-500/30 transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-white/80 focus:ring-offset-2 focus:ring-offset-gray-900 hover:scale-[1.04] hover:-translate-y-[1px] hover:shadow-lg hover:shadow-white/25 ${
-                    isProfileMenuOpen ? "shadow-lg shadow-white/30 ring-2 ring-white/70" : ""
+                  className={`inline-flex items-center justify-center h-10 w-10 rounded-full border border-primary/30 bg-gradient-to-br from-[#F95100] to-[#E04800] text-white shadow-md shadow-[#F95100]/20 transition-all duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background hover:scale-[1.04] hover:-translate-y-[1px] hover:shadow-lg ${
+                    isProfileMenuOpen ? "shadow-lg ring-2 ring-ring" : ""
                   }`}
                   aria-haspopup="menu"
                   aria-expanded={isProfileMenuOpen}
@@ -354,19 +351,19 @@ export default function DashboardLayout({
                   <span className="text-sm font-semibold">{userInitials}</span>
                 </button>
                 {isProfileMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-72 rounded-lg border border-gray-700 bg-gray-900 shadow-xl shadow-black/30 z-50">
-                    <div className="px-4 py-3 border-b border-gray-800">
-                      <div className="text-sm font-semibold text-white">
+                  <div className="absolute right-0 mt-2 w-72 rounded-lg border border-border bg-card shadow-xl z-50">
+                    <div className="px-4 py-3 border-b border-border">
+                      <div className="text-sm font-semibold text-foreground">
                         {user ? `${user.first_name} ${user.last_name}` : "Profil"}
                       </div>
                       {user && (
-                        <div className="text-xs text-gray-400">#{user.operator_number} • {user.role}</div>
+                        <div className="text-xs text-muted-foreground">#{user.operator_number} • {user.role}</div>
                       )}
                     </div>
                     <div className="py-3 space-y-3">
                       {groupedNav.map((group) => (
                         <div key={group.title} className="px-3">
-                          <div className="text-[11px] uppercase tracking-wide text-gray-400 px-1 mb-1">
+                          <div className="text-[11px] uppercase tracking-wide text-muted-foreground px-1 mb-1">
                             {group.title}
                           </div>
                           <div className="space-y-1">
@@ -376,12 +373,12 @@ export default function DashboardLayout({
                                 href={link.href}
                                 className={`flex items-center justify-between px-3 py-2 rounded-md text-sm transition-all ${
                                   link.active
-                                    ? "bg-blue-900/30 text-white border border-blue-600/60 shadow-[0_10px_24px_rgba(37,99,235,0.25)]"
-                                    : "text-gray-200 hover:bg-gray-800/70 border border-transparent"
+                                    ? "bg-primary/10 text-foreground border border-primary/60 shadow-sm"
+                                    : "text-foreground hover:bg-accent border border-transparent"
                                 }`}
                               >
                                 <span className="flex items-center gap-2">
-                                  <span className={`h-2 w-2 rounded-full ${link.active ? "bg-blue-400 shadow-[0_0_0_3px_rgba(59,130,246,0.25)]" : "bg-gray-500/60"}`} />
+                                  <span className={`h-2 w-2 rounded-full ${link.active ? "bg-[#F95100] shadow-[0_0_0_3px_rgba(249,81,0,0.25)]" : "bg-muted-foreground/40"}`} />
                                   <span>{link.label}</span>
                                 </span>
                               </Link>
@@ -404,7 +401,7 @@ export default function DashboardLayout({
               onClick={() => setIsNavOpen(false)}
               aria-hidden="true"
             />
-            <div className="sm:hidden absolute top-full left-0 w-full z-40 bg-gray-900 border-b border-gray-700 shadow-lg shadow-black/30">
+            <div className="sm:hidden absolute top-full left-0 w-full z-40 bg-card border-b border-border shadow-lg">
               <div className="px-4 py-3 space-y-1">
                 {navLinks.map((link) => (
                   <Link
@@ -412,12 +409,12 @@ export default function DashboardLayout({
                     href={link.href}
                     className={`flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors ${
                       link.active
-                        ? "bg-gray-800 text-white border border-blue-600"
-                        : "text-gray-200 hover:bg-gray-800/80 border border-transparent"
+                        ? "bg-accent text-foreground border border-primary"
+                        : "text-foreground hover:bg-accent border border-transparent"
                     }`}
                   >
                     <span>{link.label}</span>
-                    {link.active && <span className="text-xs text-blue-200">aktiv</span>}
+                    {link.active && <span className="text-xs text-primary">aktiv</span>}
                   </Link>
                 ))}
                 <div className="pt-2">

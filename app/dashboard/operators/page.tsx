@@ -359,7 +359,7 @@ export default function OperatorsPage() {
   }
 
   return (
-    <div className="h-full flex flex-col bg-gray-900 overflow-hidden">
+    <div className="h-full flex flex-col bg-background overflow-hidden">
       {/* Toasts */}
       {toasts.length > 0 && (
         <div className="fixed bottom-4 right-4 z-[200] space-y-3">
@@ -381,18 +381,18 @@ export default function OperatorsPage() {
       )}
 
       {/* Header */}
-      <div className="bg-gray-800 border-b border-gray-700 shadow-sm shrink-0">
+      <div className="bg-card border-b border-border shadow-sm shrink-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-500 via-cyan-400 to-emerald-400 flex items-center justify-center shadow-lg shadow-blue-500/25">
-                <Users className="w-5 h-5 text-white" />
+              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-[#F95100] via-cyan-400 to-emerald-400 flex items-center justify-center shadow-lg shadow-[#F95100]/25">
+                <Users className="w-5 h-5 text-foreground" />
               </div>
               <div>
-                <h1 className="text-xl md:text-2xl font-bold text-white">
+                <h1 className="text-xl md:text-2xl font-bold text-foreground">
                   Bedienerverwaltung
                 </h1>
-                <p className="text-xs md:text-sm text-gray-400 mt-0.5">
+                <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
                   {operators.length} {operators.length === 1 ? "Bediener" : "Bediener"} insgesamt
                 </p>
               </div>
@@ -415,18 +415,18 @@ export default function OperatorsPage() {
       <div className="flex-1 overflow-y-auto min-h-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
           {showCreateForm && (
-            <Card className="mb-6 border-gray-700 bg-gray-800/50 backdrop-blur-sm">
-              <CardHeader className="border-b border-gray-700">
+            <Card className="mb-6 border-border bg-card/50 backdrop-blur-sm">
+              <CardHeader className="border-b border-border">
                 <div className="flex justify-between items-center">
-                  <CardTitle className="flex items-center gap-2 text-white">
-                    <UserIcon className="w-5 h-5 text-blue-400" />
+                  <CardTitle className="flex items-center gap-2 text-foreground">
+                    <UserIcon className="w-5 h-5 text-primary" />
                     {editingOperator ? "Bediener bearbeiten" : "Neuen Bediener anlegen"}
                   </CardTitle>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={handleCancel}
-                    className="text-gray-400 hover:text-white"
+                    className="text-muted-foreground hover:text-foreground"
                   >
                     <X className="w-4 h-4" />
                   </Button>
@@ -448,9 +448,9 @@ export default function OperatorsPage() {
                     <div className="space-y-2">
                       <label 
                         htmlFor="operator_number" 
-                        className="flex items-center gap-2 text-sm font-medium text-gray-300"
+                        className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
                       >
-                        <Key className="w-4 h-4 text-blue-400" />
+                        <Key className="w-4 h-4 text-primary" />
                         Bedienernummer (4 Ziffern)
                       </label>
                       <Input
@@ -464,16 +464,16 @@ export default function OperatorsPage() {
                         maxLength={4}
                         required={!editingOperator}
                         disabled={editingOperator !== null}
-                        className="text-center text-2xl tracking-widest font-mono bg-gray-800/50 border-gray-600 text-white focus:border-blue-500"
+                        className="text-center text-2xl tracking-widest font-mono bg-card/50 border-input text-foreground focus:border-primary"
                       />
                     </div>
 
                     <div className="space-y-2">
                       <label 
                         htmlFor="pin" 
-                        className="flex items-center gap-2 text-sm font-medium text-gray-300"
+                        className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
                       >
-                        <Key className="w-4 h-4 text-blue-400" />
+                        <Key className="w-4 h-4 text-primary" />
                         PIN (6-8 Ziffern)
                       </label>
                       <Input
@@ -486,10 +486,10 @@ export default function OperatorsPage() {
                         placeholder={editingOperator ? "Leer lassen, um nicht zu ändern" : "••••••"}
                         maxLength={8}
                         required={!editingOperator}
-                        className="text-center text-xl tracking-widest font-mono bg-gray-800/50 border-gray-600 text-white focus:border-blue-500"
+                        className="text-center text-xl tracking-widest font-mono bg-card/50 border-input text-foreground focus:border-primary"
                       />
                       {editingOperator && (
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-muted-foreground">
                           Leer lassen, um PIN nicht zu ändern
                         </p>
                       )}
@@ -500,9 +500,9 @@ export default function OperatorsPage() {
                     <div className="space-y-2">
                       <label 
                         htmlFor="first_name" 
-                        className="flex items-center gap-2 text-sm font-medium text-gray-300"
+                        className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
                       >
-                        <UserIcon className="w-4 h-4 text-blue-400" />
+                        <UserIcon className="w-4 h-4 text-primary" />
                         Vorname
                       </label>
                       <Input
@@ -516,16 +516,16 @@ export default function OperatorsPage() {
                         required
                         minLength={2}
                         maxLength={120}
-                        className="bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-500 focus:border-blue-500"
+                        className="bg-card/50 border-input text-foreground placeholder:text-muted-foreground focus:border-primary"
                       />
                     </div>
 
                     <div className="space-y-2">
                       <label 
                         htmlFor="last_name" 
-                        className="flex items-center gap-2 text-sm font-medium text-gray-300"
+                        className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
                       >
-                        <UserIcon className="w-4 h-4 text-blue-400" />
+                        <UserIcon className="w-4 h-4 text-primary" />
                         Nachname
                       </label>
                       <Input
@@ -539,7 +539,7 @@ export default function OperatorsPage() {
                         required
                         minLength={2}
                         maxLength={120}
-                        className="bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-500 focus:border-blue-500"
+                        className="bg-card/50 border-input text-foreground placeholder:text-muted-foreground focus:border-primary"
                       />
                     </div>
                   </div>
@@ -547,9 +547,9 @@ export default function OperatorsPage() {
                   <div className="space-y-2">
                     <label 
                       htmlFor="nfc_tag_id" 
-                      className="flex items-center gap-2 text-sm font-medium text-gray-300"
+                      className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
                     >
-                      <CreditCard className="w-4 h-4 text-blue-400" />
+                      <CreditCard className="w-4 h-4 text-primary" />
                       NFC Tag-ID (optional)
                     </label>
                     <Input
@@ -561,9 +561,9 @@ export default function OperatorsPage() {
                       }
                       placeholder="04A1B2C3D4E5F6"
                       maxLength={64}
-                      className="font-mono bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-500 focus:border-blue-500"
+                      className="font-mono bg-card/50 border-input text-foreground placeholder:text-muted-foreground focus:border-primary"
                     />
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted-foreground">
                       Die Tag-ID des NFC-Transponders für Login ohne PIN. Wird automatisch in Großbuchstaben konvertiert.
                     </p>
                   </div>
@@ -571,26 +571,26 @@ export default function OperatorsPage() {
                   <div className="space-y-2">
                     <label 
                       htmlFor="role" 
-                      className="flex items-center gap-2 text-sm font-medium text-gray-300"
+                      className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
                     >
-                      <Shield className="w-4 h-4 text-blue-400" />
+                      <Shield className="w-4 h-4 text-primary" />
                       Rolle
                     </label>
                     <div className="relative" ref={formRoleMenuRef}>
                       <button
                         type="button"
                         onClick={() => setFormRoleMenuOpen((prev) => !prev)}
-                        className="inline-flex items-center justify-between w-full gap-2 rounded-md border border-gray-600 bg-gray-800/70 px-3 py-2 text-sm text-white shadow-inner hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+                        className="inline-flex items-center justify-between w-full gap-2 rounded-md border border-input bg-accent/70 px-3 py-2 text-sm text-foreground shadow-inner hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
                       >
                         <span className="flex items-center gap-2">
-                          <FormRoleIcon className="w-4 h-4 text-gray-200" />
+                          <FormRoleIcon className="w-4 h-4 text-foreground" />
                           {getRoleLabel(formData.role)}
                         </span>
                         <ChevronDown className={`w-4 h-4 transition-transform ${formRoleMenuOpen ? "rotate-180" : ""}`} />
                       </button>
                       {formRoleMenuOpen && (
-                        <div className="absolute mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 shadow-xl z-40 overflow-hidden">
-                          <div className="divide-y divide-gray-800/80">
+                        <div className="absolute mt-1 w-full rounded-lg border border-border bg-background shadow-xl z-40 overflow-hidden">
+                          <div className="divide-y divide-border/80">
                             {currentUser?.role === "servecta" && (
                               <button
                                 type="button"
@@ -600,8 +600,8 @@ export default function OperatorsPage() {
                                 }}
                                 className={`w-full px-3 py-2 text-left text-sm transition-colors ${
                                   formData.role === "servecta"
-                                ? "bg-gray-800 text-white font-semibold"
-                                : "text-gray-200 hover:bg-gray-800/70"
+                                ? "bg-card text-foreground font-semibold"
+                                : "text-foreground hover:bg-accent/70"
                             }`}
                               >
                                 <span className="flex items-center gap-2">
@@ -618,8 +618,8 @@ export default function OperatorsPage() {
                               }}
                               className={`w-full px-3 py-2 text-left text-sm transition-colors ${
                                 formData.role === "restaurantinhaber"
-                                ? "bg-gray-800 text-white font-semibold"
-                                : "text-gray-200 hover:bg-gray-800/70"
+                                ? "bg-card text-foreground font-semibold"
+                                : "text-foreground hover:bg-accent/70"
                             }`}
                               >
                                 <span className="flex items-center gap-2">
@@ -635,8 +635,8 @@ export default function OperatorsPage() {
                               }}
                               className={`w-full px-3 py-2 text-left text-sm transition-colors ${
                                 formData.role === "schichtleiter"
-                                ? "bg-gray-800 text-white font-semibold"
-                                : "text-gray-200 hover:bg-gray-800/70"
+                                ? "bg-card text-foreground font-semibold"
+                                : "text-foreground hover:bg-accent/70"
                             }`}
                               >
                                 <span className="flex items-center gap-2">
@@ -652,12 +652,12 @@ export default function OperatorsPage() {
                               }}
                               className={`w-full px-3 py-2 text-left text-sm transition-colors ${
                                 formData.role === "mitarbeiter"
-                                ? "bg-gray-800 text-white font-semibold"
-                                : "text-gray-200 hover:bg-gray-800/70"
+                                ? "bg-card text-foreground font-semibold"
+                                : "text-foreground hover:bg-accent/70"
                             }`}
                               >
                                 <span className="flex items-center gap-2">
-                                  <UserIcon className="w-4 h-4 text-gray-200" />
+                                  <UserIcon className="w-4 h-4 text-foreground" />
                                   Mitarbeiter
                                 </span>
                               </button>
@@ -665,7 +665,7 @@ export default function OperatorsPage() {
                         </div>
                       )}
                     </div>
-                    <div className="text-xs text-gray-500 space-y-1">
+                    <div className="text-xs text-muted-foreground space-y-1">
                       {formData.role === "servecta" && (
                         <p className="text-red-400 font-semibold">
                           ⚠️ Warnung: Servecta-Rolle gibt alle Berechtigungen!
@@ -687,16 +687,16 @@ export default function OperatorsPage() {
                     <div className="space-y-2">
                       <label 
                         htmlFor="is_active" 
-                        className="flex items-center gap-2 text-sm font-medium text-gray-300"
+                        className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
                       >
-                        <UserCheck className="w-4 h-4 text-blue-400" />
+                        <UserCheck className="w-4 h-4 text-primary" />
                         Status
                       </label>
                       <div className="relative" ref={statusMenuRef}>
                         <button
                           type="button"
                           onClick={() => setStatusMenuOpen((prev) => !prev)}
-                          className="inline-flex items-center justify-between w-full gap-2 rounded-md border border-gray-600 bg-gray-800/70 px-3 py-2 text-sm text-white shadow-inner hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+                          className="inline-flex items-center justify-between w-full gap-2 rounded-md border border-input bg-accent/70 px-3 py-2 text-sm text-foreground shadow-inner hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
                         >
                           <span className="flex items-center gap-2">
                             {formData.is_active ? (
@@ -709,8 +709,8 @@ export default function OperatorsPage() {
                           <ChevronDown className={`w-4 h-4 transition-transform ${statusMenuOpen ? "rotate-180" : ""}`} />
                         </button>
                         {statusMenuOpen && (
-                          <div className="absolute mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 shadow-xl z-40 overflow-hidden">
-                            <div className="divide-y divide-gray-800/80">
+                          <div className="absolute mt-1 w-full rounded-lg border border-border bg-background shadow-xl z-40 overflow-hidden">
+                            <div className="divide-y divide-border/80">
                               <button
                                 type="button"
                                 onClick={() => {
@@ -719,8 +719,8 @@ export default function OperatorsPage() {
                                 }}
                                 className={`w-full px-3 py-2 text-left text-sm transition-colors ${
                                   formData.is_active
-                                    ? "bg-gray-800 text-white font-semibold"
-                                    : "text-gray-200 hover:bg-gray-800/70"
+                                    ? "bg-card text-foreground font-semibold"
+                                    : "text-foreground hover:bg-accent/70"
                                 }`}
                               >
                                 <span className="flex items-center gap-2">
@@ -736,8 +736,8 @@ export default function OperatorsPage() {
                                 }}
                                 className={`w-full px-3 py-2 text-left text-sm transition-colors ${
                                   formData.is_active === false
-                                    ? "bg-gray-800 text-white font-semibold"
-                                    : "text-gray-200 hover:bg-gray-800/70"
+                                    ? "bg-card text-foreground font-semibold"
+                                    : "text-foreground hover:bg-accent/70"
                                 }`}
                               >
                                 <span className="flex items-center gap-2">
@@ -749,13 +749,13 @@ export default function OperatorsPage() {
                           </div>
                         )}
                       </div>
-                      <p className="text-xs text-gray-500">
+                      <p className="text-xs text-muted-foreground">
                         Inaktive Bediener können sich nicht anmelden, bleiben aber in der Historie erhalten.
                       </p>
                     </div>
                   )}
 
-                  <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-700">
+                  <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-border">
                     <Button 
                       type="submit" 
                       className="flex-1 gap-2 touch-manipulation min-h-[44px]" 
@@ -791,32 +791,32 @@ export default function OperatorsPage() {
             </Card>
           )}
 
-          <Card className="border-gray-700 bg-gray-800/50 backdrop-blur-sm">
-            <CardHeader className="border-b border-gray-700">
+          <Card className="border-border bg-card/50 backdrop-blur-sm">
+            <CardHeader className="border-b border-border">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <CardTitle className="flex items-center gap-2 text-white">
-                  <Users className="w-5 h-5 text-blue-400" />
+                <CardTitle className="flex items-center gap-2 text-foreground">
+                  <Users className="w-5 h-5 text-primary" />
                   Bedienerliste ({filteredOperators.length})
                 </CardTitle>
                 <div className="flex flex-col sm:flex-row gap-3">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       type="text"
                       placeholder="Suchen..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-10 bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-500 focus:border-blue-500 w-full sm:w-64"
+                      className="pl-10 bg-card/50 border-input text-foreground placeholder:text-muted-foreground focus:border-primary w-full sm:w-64"
                     />
                   </div>
                   <div className="relative" ref={roleMenuRef}>
                     <button
                       type="button"
                       onClick={() => setRoleMenuOpen((prev) => !prev)}
-                      className="inline-flex items-center justify-between w-full sm:w-56 gap-2 rounded-md border border-gray-600 bg-gray-800/70 px-3 py-2 text-sm text-white shadow-inner hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+                      className="inline-flex items-center justify-between w-full sm:w-56 gap-2 rounded-md border border-input bg-accent/70 px-3 py-2 text-sm text-foreground shadow-inner hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
                     >
                       <span className="flex items-center gap-2">
-                        <Users className="w-4 h-4 text-gray-300" />
+                        <Users className="w-4 h-4 text-muted-foreground" />
                         {roleFilter === "all"
                           ? "Alle Rollen"
                           : roleFilter === "servecta"
@@ -830,8 +830,8 @@ export default function OperatorsPage() {
                       <ChevronDown className={`w-4 h-4 transition-transform ${roleMenuOpen ? "rotate-180" : ""}`} />
                     </button>
                     {roleMenuOpen && (
-                      <div className="absolute mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 shadow-xl z-40 overflow-hidden">
-                        <div className="divide-y divide-gray-800/80">
+                      <div className="absolute mt-1 w-full rounded-lg border border-border bg-background shadow-xl z-40 overflow-hidden">
+                        <div className="divide-y divide-border/80">
                           <button
                             type="button"
                             onClick={() => {
@@ -840,12 +840,12 @@ export default function OperatorsPage() {
                             }}
                             className={`w-full px-3 py-2 text-left text-sm transition-colors ${
                               roleFilter === "all"
-                                ? "bg-gray-800 text-white font-semibold"
-                                : "text-gray-200 hover:bg-gray-800/70"
+                                ? "bg-card text-foreground font-semibold"
+                                : "text-foreground hover:bg-accent/70"
                             }`}
                           >
                             <span className="flex items-center gap-2">
-                              <Users className="w-4 h-4 text-gray-300" />
+                              <Users className="w-4 h-4 text-muted-foreground" />
                               Alle Rollen
                             </span>
                           </button>
@@ -858,8 +858,8 @@ export default function OperatorsPage() {
                               }}
                               className={`w-full px-3 py-2 text-left text-sm transition-colors ${
                                 roleFilter === "servecta"
-                                ? "bg-gray-800 text-white font-semibold"
-                                : "text-gray-200 hover:bg-gray-800/70"
+                                ? "bg-card text-foreground font-semibold"
+                                : "text-foreground hover:bg-accent/70"
                             }`}
                           >
                             <span className="flex items-center gap-2">
@@ -876,8 +876,8 @@ export default function OperatorsPage() {
                             }}
                             className={`w-full px-3 py-2 text-left text-sm transition-colors ${
                               roleFilter === "restaurantinhaber"
-                                ? "bg-gray-800 text-white font-semibold"
-                                : "text-gray-200 hover:bg-gray-800/70"
+                                ? "bg-card text-foreground font-semibold"
+                                : "text-foreground hover:bg-accent/70"
                             }`}
                           >
                             <span className="flex items-center gap-2">
@@ -893,8 +893,8 @@ export default function OperatorsPage() {
                             }}
                             className={`w-full px-3 py-2 text-left text-sm transition-colors ${
                               roleFilter === "schichtleiter"
-                                ? "bg-gray-800 text-white font-semibold"
-                                : "text-gray-200 hover:bg-gray-800/70"
+                                ? "bg-card text-foreground font-semibold"
+                                : "text-foreground hover:bg-accent/70"
                             }`}
                           >
                             <span className="flex items-center gap-2">
@@ -910,12 +910,12 @@ export default function OperatorsPage() {
                             }}
                             className={`w-full px-3 py-2 text-left text-sm transition-colors ${
                               roleFilter === "mitarbeiter"
-                                ? "bg-gray-800 text-white font-semibold"
-                                : "text-gray-200 hover:bg-gray-800/70"
+                                ? "bg-card text-foreground font-semibold"
+                                : "text-foreground hover:bg-accent/70"
                             }`}
                           >
                             <span className="flex items-center gap-2">
-                              <UserIcon className="w-4 h-4 text-gray-200" />
+                              <UserIcon className="w-4 h-4 text-foreground" />
                               Mitarbeiter
                             </span>
                           </button>
@@ -928,7 +928,7 @@ export default function OperatorsPage() {
             </CardHeader>
             <CardContent className="pt-6">
               {filteredOperators.length === 0 ? (
-                <div className="text-center py-12 text-gray-400">
+                <div className="text-center py-12 text-muted-foreground">
                   <Users className="w-16 h-16 mx-auto mb-4 opacity-50" />
                   <p className="text-lg font-medium">
                     {operators.length === 0 
@@ -945,14 +945,14 @@ export default function OperatorsPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead>
-                      <tr className="border-b border-gray-700">
-                        <th className="text-left py-3 px-4 font-medium text-gray-300">Bedienernummer</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-300">Name</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-300">NFC Tag-ID</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-300">Rolle</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-300">Letzter Login</th>
-                        <th className="text-left py-3 px-4 font-medium text-gray-300">Status</th>
-                        <th className="text-right py-3 px-4 font-medium text-gray-300">Aktionen</th>
+                      <tr className="border-b border-border">
+                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">Bedienernummer</th>
+                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">Name</th>
+                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">NFC Tag-ID</th>
+                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">Rolle</th>
+                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">Letzter Login</th>
+                        <th className="text-left py-3 px-4 font-medium text-muted-foreground">Status</th>
+                        <th className="text-right py-3 px-4 font-medium text-muted-foreground">Aktionen</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -961,14 +961,14 @@ export default function OperatorsPage() {
                         return (
                           <tr 
                             key={operator.id} 
-                            className="border-b border-gray-700 hover:bg-gray-800/30 transition-colors"
+                            className="border-b border-border hover:bg-accent/30 transition-colors"
                           >
-                            <td className="py-3 px-4 font-mono font-semibold text-white">
+                            <td className="py-3 px-4 font-mono font-semibold text-foreground">
                               {operator.operator_number}
                             </td>
-                            <td className="py-3 px-4 text-gray-300">
+                            <td className="py-3 px-4 text-muted-foreground">
                               <div className="flex items-center gap-2">
-                                <UserIcon className="w-4 h-4 text-gray-400" />
+                                <UserIcon className="w-4 h-4 text-muted-foreground" />
                                 <span>
                                   {operator.first_name} {operator.last_name}
                                 </span>
@@ -976,12 +976,12 @@ export default function OperatorsPage() {
                             </td>
                             <td className="py-3 px-4">
                               {operator.nfc_tag_id ? (
-                                <span className="font-mono text-sm text-blue-400 flex items-center gap-1">
+                                <span className="font-mono text-sm text-primary flex items-center gap-1">
                                   <CreditCard className="w-3.5 h-3.5" />
                                   {operator.nfc_tag_id}
                                 </span>
                               ) : (
-                                <span className="text-gray-500 text-sm">—</span>
+                                <span className="text-muted-foreground text-sm">—</span>
                               )}
                             </td>
                             <td className="py-3 px-4">
@@ -993,16 +993,16 @@ export default function OperatorsPage() {
                                     ? "bg-blue-900/50 text-blue-300 border border-blue-700/50"
                                     : operator.role === "schichtleiter"
                                     ? "bg-yellow-900/50 text-yellow-300 border border-yellow-700/50"
-                                    : "bg-gray-700/50 text-gray-300 border border-gray-600/50"
+                                    : "bg-muted/50 text-muted-foreground border border-input/50"
                                 }`}
                               >
                                 <RoleIcon className="w-3.5 h-3.5" />
                                 {getRoleLabel(operator.role)}
                               </span>
                             </td>
-                            <td className="py-3 px-4 text-gray-300">
+                            <td className="py-3 px-4 text-muted-foreground">
                               <div className="flex items-center gap-1.5 text-sm">
-                                <Clock className="w-3.5 h-3.5 text-gray-400" />
+                                <Clock className="w-3.5 h-3.5 text-muted-foreground" />
                                 {formatLastLogin(operator.last_login_at_utc)}
                               </div>
                             </td>

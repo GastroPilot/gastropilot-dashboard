@@ -239,14 +239,14 @@ export function BlockTableDialog({
               </div>
             )}
             {(block ? assignedTables.length > 0 : tables.length > 0) && (
-              <div className="text-xs text-gray-400">
+              <div className="text-xs text-muted-foreground">
                 {block
                   ? `Zugewiesene Tische: ${assignedTables.map((item) => item.number).join(", ")}`
                   : `Ausgewählte Tische: ${tables.map((item) => item.number).join(", ")}`}
               </div>
             )}
             <div>
-              <label htmlFor="block-reason" className="block text-sm font-medium mb-1.5 md:mb-2 text-gray-300">
+              <label htmlFor="block-reason" className="block text-sm font-medium mb-1.5 md:mb-2 text-foreground">
                 Name (optional)
               </label>
               <Input
@@ -259,7 +259,7 @@ export function BlockTableDialog({
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="sm:col-span-3">
-                <label htmlFor="block-date" className="block text-sm font-medium mb-1.5 md:mb-2 text-gray-300">
+                <label htmlFor="block-date" className="block text-sm font-medium mb-1.5 md:mb-2 text-foreground">
                   Datum *
                 </label>
                 <Input
@@ -272,7 +272,7 @@ export function BlockTableDialog({
                 />
               </div>
               <div>
-                <label htmlFor="block-start" className="block text-sm font-medium mb-1.5 md:mb-2 text-gray-300">
+                <label htmlFor="block-start" className="block text-sm font-medium mb-1.5 md:mb-2 text-foreground">
                   Startzeit *
                 </label>
                 <Input
@@ -285,7 +285,7 @@ export function BlockTableDialog({
                 />
               </div>
               <div>
-                <label htmlFor="block-end" className="block text-sm font-medium mb-1.5 md:mb-2 text-gray-300">
+                <label htmlFor="block-end" className="block text-sm font-medium mb-1.5 md:mb-2 text-foreground">
                   Endzeit *
                 </label>
                 <Input

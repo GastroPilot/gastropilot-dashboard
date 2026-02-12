@@ -436,14 +436,14 @@ export function ReservationDialog({
               : `Erstelle eine neue Reservierung für ${format(selectedDate, "d. MMMM yyyy", { locale: de })}`}
           </DialogDescription>
           {!reservation && (
-            <div className="mt-3 inline-flex items-center rounded-lg border border-gray-700/70 bg-gray-800/90 p-0.5 backdrop-blur-sm min-h-[32px] md:min-h-[36px]">
+            <div className="mt-3 inline-flex items-center rounded-lg border border-border bg-card/90 p-0.5 backdrop-blur-sm min-h-[32px] md:min-h-[36px]">
               <button
                 type="button"
                 onClick={() => setFormMode("reservation")}
                 className={`px-3 py-1 rounded-md text-sm md:text-base font-semibold transition-colors min-h-[32px] md:min-h-[36px] ${
                   formMode === "reservation"
-                    ? "bg-blue-600 text-white border border-blue-500/80 shadow-inner"
-                    : "text-gray-200 border border-transparent hover:bg-gray-700"
+                    ? "bg-primary text-primary-foreground border border-primary/80 shadow-inner"
+                    : "text-foreground border border-transparent hover:bg-muted"
                 }`}
               >
                 Reservierung
@@ -453,8 +453,8 @@ export function ReservationDialog({
                 onClick={() => setFormMode("block")}
                 className={`px-3 py-1 rounded-md text-sm md:text-base font-semibold transition-colors min-h-[32px] md:min-h-[36px] ${
                   formMode === "block"
-                    ? "bg-blue-600 text-white border border-blue-500/80 shadow-inner"
-                    : "text-gray-200 border border-transparent hover:bg-gray-700"
+                    ? "bg-primary text-primary-foreground border border-primary/80 shadow-inner"
+                    : "text-foreground border border-transparent hover:bg-muted"
                 }`}
               >
                 Block
@@ -480,7 +480,7 @@ export function ReservationDialog({
             {isBlockMode ? (
               <div className="pb-2 space-y-3 md:space-y-4">
                 <div>
-                  <label htmlFor="blockReason" className="block text-sm font-medium mb-1.5 md:mb-2 text-gray-300">
+                  <label htmlFor="blockReason" className="block text-sm font-medium mb-1.5 md:mb-2 text-foreground">
                     Name (optional)
                   </label>
                   <Input
@@ -493,7 +493,7 @@ export function ReservationDialog({
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                   <div>
-                    <label htmlFor="blockDate" className="block text-sm font-medium mb-1.5 md:mb-2 text-gray-300">
+                    <label htmlFor="blockDate" className="block text-sm font-medium mb-1.5 md:mb-2 text-foreground">
                       Datum *
                     </label>
                     <Input
@@ -506,7 +506,7 @@ export function ReservationDialog({
                     />
                   </div>
                   <div>
-                    <label htmlFor="blockStartTime" className="block text-sm font-medium mb-1.5 md:mb-2 text-gray-300">
+                    <label htmlFor="blockStartTime" className="block text-sm font-medium mb-1.5 md:mb-2 text-foreground">
                       Startzeit *
                     </label>
                     <Input
@@ -519,7 +519,7 @@ export function ReservationDialog({
                     />
                   </div>
                   <div>
-                    <label htmlFor="blockEndTime" className="block text-sm font-medium mb-1.5 md:mb-2 text-gray-300">
+                    <label htmlFor="blockEndTime" className="block text-sm font-medium mb-1.5 md:mb-2 text-foreground">
                       Endzeit *
                     </label>
                     <Input
@@ -539,7 +539,7 @@ export function ReservationDialog({
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                       <div>
-                        <label htmlFor="guestName" className="block text-sm font-medium mb-1.5 md:mb-2 text-gray-300">
+                        <label htmlFor="guestName" className="block text-sm font-medium mb-1.5 md:mb-2 text-foreground">
                           Gästename
                         </label>
                         <Input
@@ -551,7 +551,7 @@ export function ReservationDialog({
                         />
                       </div>
                       <div>
-                        <label htmlFor="partySize" className="block text-sm font-medium mb-1.5 md:mb-2 text-gray-300">
+                        <label htmlFor="partySize" className="block text-sm font-medium mb-1.5 md:mb-2 text-foreground">
                           Personen *
                         </label>
                         <Input
@@ -565,7 +565,7 @@ export function ReservationDialog({
                           disabled={isMitarbeiterLocked}
                         />
                         {table && (
-                          <p className="text-xs md:text-sm text-gray-400 mt-1 md:mt-2">
+                          <p className="text-xs md:text-sm text-muted-foreground mt-1 md:mt-2">
                             Max. Kapazität: {table.capacity} Personen
                           </p>
                         )}
@@ -574,7 +574,7 @@ export function ReservationDialog({
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                       <div>
-                        <label htmlFor="guestEmail" className="block text-sm font-medium mb-1.5 md:mb-2 text-gray-300">
+                        <label htmlFor="guestEmail" className="block text-sm font-medium mb-1.5 md:mb-2 text-foreground">
                           E-Mail
                         </label>
                         <Input
@@ -587,7 +587,7 @@ export function ReservationDialog({
                         />
                       </div>
                       <div>
-                        <label htmlFor="guestPhone" className="block text-sm font-medium mb-1.5 md:mb-2 text-gray-300">
+                        <label htmlFor="guestPhone" className="block text-sm font-medium mb-1.5 md:mb-2 text-foreground">
                           Telefon
                         </label>
                         <Input
@@ -603,7 +603,7 @@ export function ReservationDialog({
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                       <div>
-                        <label htmlFor="reservationDate" className="block text-sm font-medium mb-1.5 md:mb-2 text-gray-300">
+                        <label htmlFor="reservationDate" className="block text-sm font-medium mb-1.5 md:mb-2 text-foreground">
                           Datum *
                         </label>
                         <Input
@@ -616,7 +616,7 @@ export function ReservationDialog({
                         />
                       </div>
                       <div>
-                        <label htmlFor="startTime" className="block text-sm font-medium mb-1.5 md:mb-2 text-gray-300">
+                        <label htmlFor="startTime" className="block text-sm font-medium mb-1.5 md:mb-2 text-foreground">
                           Startzeit *
                         </label>
                         <Input
@@ -629,7 +629,7 @@ export function ReservationDialog({
                         />
                       </div>
                       <div>
-                        <label htmlFor="endTime" className="block text-sm font-medium mb-1.5 md:mb-2 text-gray-300">
+                        <label htmlFor="endTime" className="block text-sm font-medium mb-1.5 md:mb-2 text-foreground">
                           Endzeit *
                         </label>
                         <Input
@@ -647,11 +647,11 @@ export function ReservationDialog({
 
                 {reservation && (
                   <div ref={statusDropdownRef} className="relative">
-                    <label className="block text-sm font-medium mb-1.5 md:mb-2 text-gray-300">Status</label>
+                    <label className="block text-sm font-medium mb-1.5 md:mb-2 text-foreground">Status</label>
                     <button
                       type="button"
                       onClick={() => setStatusOpen((prev) => !prev)}
-                      className="w-full rounded-lg border border-gray-600 bg-gray-800 text-white px-3 py-2 text-sm flex items-center justify-between gap-2 focus:outline-none focus:ring-2 focus:ring-blue-500 touch-manipulation min-h-[40px]"
+                      className="w-full rounded-lg border border-input bg-card text-foreground px-3 py-2 text-sm flex items-center justify-between gap-2 focus:outline-none focus:ring-2 focus:ring-ring touch-manipulation min-h-[40px]"
                     >
                       <div className="flex items-center gap-2 min-w-0">
                         {(() => {
@@ -680,7 +680,7 @@ export function ReservationDialog({
                       </svg>
                     </button>
                     {statusOpen && (
-                      <div className="absolute z-[110] mt-1 w-full rounded-lg border border-gray-700 bg-gray-900/95 shadow-xl backdrop-blur-sm">
+                      <div className="absolute z-[110] mt-1 w-full rounded-lg border border-border bg-card shadow-xl backdrop-blur-sm">
                         {statusOptions.map((value) => {
                           const entry = STATUS_ICON_MAP[value] || STATUS_ICON_MAP.pending;
                           const Icon = entry.Icon;
@@ -694,7 +694,7 @@ export function ReservationDialog({
                                 setStatusOpen(false);
                               }}
                               className={`w-full px-3 py-3 text-sm transition-colors flex items-center justify-between ${
-                                isActive ? "bg-gray-800/80 text-white font-semibold border-l-2 border-blue-500" : "text-gray-100 hover:bg-gray-800/60"
+                                isActive ? "bg-card/80 text-foreground font-semibold border-l-2 border-primary" : "text-foreground hover:bg-accent"
                               }`}
                             >
                               <span className="flex items-center gap-3 min-w-0">
@@ -706,7 +706,7 @@ export function ReservationDialog({
                                 <span className="truncate">{entry.label}</span>
                               </span>
                               {isActive && (
-                                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-white/60 bg-white/10 text-blue-200">
+                                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-white/60 bg-white/10 text-primary">
                                   ✓
                                 </span>
                               )}
@@ -719,11 +719,11 @@ export function ReservationDialog({
                 )}
 
                 <div ref={tagsDropdownRef} className="relative">
-                  <label className="block text-sm font-medium mb-1.5 md:mb-2 text-gray-300">Tags</label>
+                  <label className="block text-sm font-medium mb-1.5 md:mb-2 text-foreground">Tags</label>
                   <button
                     type="button"
                     onClick={() => setTagsOpen((prev) => !prev)}
-                    className="w-full rounded-lg border border-gray-600 bg-gray-800 text-white px-3 py-2 text-sm flex items-center justify-between gap-2 focus:outline-none focus:ring-2 focus:ring-blue-500 touch-manipulation min-h-[40px]"
+                    className="w-full rounded-lg border border-input bg-card text-foreground px-3 py-2 text-sm flex items-center justify-between gap-2 focus:outline-none focus:ring-2 focus:ring-ring touch-manipulation min-h-[40px]"
                   >
                     <span className="flex-1 min-w-0">
                       {tags.length > 0 ? (
@@ -734,7 +734,7 @@ export function ReservationDialog({
                             return (
                               <span
                                 key={tag}
-                                className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-gray-700/80 border border-gray-600 text-xs text-white"
+                                className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-muted/80 border border-input text-xs text-foreground"
                               >
                                 {TagIcon && <TagIcon className="w-3.5 h-3.5" />}
                                 <span className="truncate">{tagMeta?.label ?? tag}</span>
@@ -743,7 +743,7 @@ export function ReservationDialog({
                           })}
                         </div>
                       ) : (
-                        <span className="text-gray-400 block text-left">Keine Tags</span>
+                        <span className="text-muted-foreground block text-left">Keine Tags</span>
                       )}
                     </span>
                     <svg
@@ -757,7 +757,7 @@ export function ReservationDialog({
                     </svg>
                   </button>
                   {tagsOpen && (
-                    <div className="absolute z-[110] mt-1 w-full rounded-lg border border-gray-700 bg-gray-900/95 shadow-xl backdrop-blur-sm">
+                    <div className="absolute z-[110] mt-1 w-full rounded-lg border border-border bg-card shadow-xl backdrop-blur-sm">
                       {TAG_OPTIONS.map((item) => {
                         const active = tags.includes(item.value);
                         const TagIcon = item.Icon;
@@ -774,18 +774,18 @@ export function ReservationDialog({
                               setTagsOpen(false);
                             }}
                             className={`w-full px-3 py-3 text-sm transition-colors flex items-center justify-between ${
-                              active ? "bg-gray-800/80 text-white font-semibold border-l-2 border-blue-500" : "text-gray-100 hover:bg-gray-800/60"
+                              active ? "bg-card/80 text-foreground font-semibold border-l-2 border-primary" : "text-foreground hover:bg-accent"
                             }`}
                           >
                             <span className="flex items-center gap-2 truncate">
                               {TagIcon && (
-                                <span className="inline-flex items-center justify-center w-8 h-8 rounded-md border border-gray-700 bg-gray-800/80 shrink-0">
+                                <span className="inline-flex items-center justify-center w-8 h-8 rounded-md border border-border bg-card/80 shrink-0">
                                   <TagIcon className="w-4 h-4" />
                                 </span>
                               )}
                               <span className="truncate">{item.label}</span>
                             </span>
-                            {active && <Check className="w-4 h-4 text-blue-200" />}
+                            {active && <Check className="w-4 h-4 text-primary" />}
                           </button>
                         );
                       })}
@@ -794,14 +794,14 @@ export function ReservationDialog({
                 </div>
                 {(!reservation || currentUser?.role !== "mitarbeiter") && (
                   <div>
-                    <label htmlFor="notes" className="block text-sm font-medium mb-1.5 md:mb-2 text-gray-300">
+                    <label htmlFor="notes" className="block text-sm font-medium mb-1.5 md:mb-2 text-foreground">
                       Notizen
                     </label>
                     <textarea
                       id="notes"
                       value={notes}
                       onChange={(e) => setNotes(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-600 bg-gray-800 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-500 text-sm touch-manipulation min-h-[100px]"
+                      className="w-full px-3 py-2 border border-input bg-card text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground text-sm touch-manipulation min-h-[100px]"
                       rows={3}
                       placeholder="Besondere Wünsche oder Anmerkungen..."
                       disabled={isMitarbeiterLocked}
@@ -812,24 +812,24 @@ export function ReservationDialog({
                 {/* Upsell-Pakete anzeigen (nur bei bestehenden Reservierungen) */}
                 {(loadedReservation || reservation) && (loadedReservation || reservation)?.upsell_packages && (loadedReservation || reservation)!.upsell_packages!.length > 0 && (
                   <div>
-                    <label className="block text-sm font-medium mb-1.5 md:mb-2 text-gray-300 flex items-center gap-2">
+                    <label className="block text-sm font-medium mb-1.5 md:mb-2 text-foreground flex items-center gap-2">
                       <Package className="w-4 h-4" />
                       Zusatzpakete
                     </label>
-                    <div className="space-y-2 bg-gray-800/50 rounded-md p-3 border border-gray-700">
+                    <div className="space-y-2 bg-card/50 rounded-md p-3 border border-border">
                       {(loadedReservation || reservation)!.upsell_packages!.map((pkg) => (
                         <div key={pkg.id} className="flex items-start justify-between gap-3">
                           <div className="flex-1">
-                            <div className="font-medium text-white">{pkg.name}</div>
+                            <div className="font-medium text-foreground">{pkg.name}</div>
                             {pkg.description && (
-                              <div className="text-sm text-gray-400 mt-0.5">{pkg.description}</div>
+                              <div className="text-sm text-muted-foreground mt-0.5">{pkg.description}</div>
                             )}
                           </div>
                           <div className="font-semibold text-purple-400">{pkg.price.toFixed(2)} €</div>
                         </div>
                       ))}
-                      <div className="pt-2 mt-2 border-t border-gray-700 flex items-center justify-between">
-                        <span className="font-medium text-gray-300">Gesamt</span>
+                      <div className="pt-2 mt-2 border-t border-border flex items-center justify-between">
+                        <span className="font-medium text-foreground">Gesamt</span>
                         <span className="font-bold text-purple-400">
                           {(loadedReservation || reservation)!.upsell_packages!.reduce((sum, pkg) => sum + pkg.price, 0).toFixed(2)} €
                         </span>

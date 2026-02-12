@@ -296,7 +296,7 @@ export function OrderDialog({
               <button
                 type="button"
                 onClick={() => setError("")}
-                className="text-red-200 hover:text-white"
+                className="text-red-200 hover:text-foreground"
               >
                 ×
               </button>
@@ -326,14 +326,14 @@ export function OrderDialog({
             {/* Grundinformationen */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div ref={tableMenuRef} className="relative">
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
                   <TableIcon className="w-4 h-4 inline mr-1" />
                   Tisch
                 </label>
                 <button
                   type="button"
                   onClick={() => setTableMenuOpen((prev) => !prev)}
-                  className="w-full rounded-lg border border-gray-600 bg-gray-800 text-white px-3 py-2 text-sm flex items-center justify-between gap-2 focus:outline-none focus:ring-2 focus:ring-blue-500 touch-manipulation min-h-[40px]"
+                  className="w-full rounded-lg border border-input bg-card text-foreground px-3 py-2 text-sm flex items-center justify-between gap-2 focus:outline-none focus:ring-2 focus:ring-ring touch-manipulation min-h-[40px]"
                   disabled={loading}
                 >
                   <span className="truncate">
@@ -352,7 +352,7 @@ export function OrderDialog({
                   </svg>
                 </button>
                 {tableMenuOpen && (
-                  <div className="absolute z-[110] mt-1 w-full rounded-lg border border-gray-700 bg-gray-900/95 shadow-xl backdrop-blur-sm max-h-[60vh] overflow-auto">
+                  <div className="absolute z-[110] mt-1 w-full rounded-lg border border-border bg-card shadow-xl backdrop-blur-sm max-h-[60vh] overflow-auto">
                     <button
                       type="button"
                       onClick={() => {
@@ -361,12 +361,12 @@ export function OrderDialog({
                       }}
                       className={`w-full px-3 py-3 text-sm transition-colors flex items-center justify-between ${
                         !selectedTableId
-                          ? "bg-gray-800/80 text-white font-semibold border-l-2 border-blue-500"
-                          : "text-gray-100 hover:bg-gray-800/60"
+                          ? "bg-accent text-foreground font-semibold border-l-2 border-primary"
+                          : "text-foreground hover:bg-accent"
                       }`}
                     >
                       <span className="truncate">Kein Tisch</span>
-                      {!selectedTableId && <Check className="w-4 h-4 text-blue-300 flex-shrink-0" />}
+                      {!selectedTableId && <Check className="w-4 h-4 text-primary flex-shrink-0" />}
                     </button>
                     {[...availableTables]
                       .sort((a, b) => a.number.localeCompare(b.number, undefined, { numeric: true }))
@@ -385,14 +385,14 @@ export function OrderDialog({
                             }}
                             className={`w-full px-3 py-3 text-sm transition-colors flex items-center justify-between ${
                               isActive
-                                ? "bg-gray-800/80 text-white font-semibold border-l-2 border-blue-500"
-                                : "text-gray-100 hover:bg-gray-800/60"
+                                ? "bg-accent text-foreground font-semibold border-l-2 border-primary"
+                                : "text-foreground hover:bg-accent"
                             }`}
                           >
                             <span className="truncate">
                               {t.number} · {t.capacity} Pers.
                             </span>
-                            {isActive && <Check className="w-4 h-4 text-blue-300 flex-shrink-0" />}
+                            {isActive && <Check className="w-4 h-4 text-primary flex-shrink-0" />}
                           </button>
                         );
                       })}
@@ -401,7 +401,7 @@ export function OrderDialog({
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
                   <Users className="w-4 h-4 inline mr-1" />
                   Personenanzahl
                 </label>
@@ -413,7 +413,7 @@ export function OrderDialog({
                     setPartySize(e.target.value ? parseInt(e.target.value) : null)
                   }
                   placeholder="z.B. 4"
-                  className="bg-gray-800 border-gray-600 text-white"
+                  className="bg-card border-input text-foreground"
                   disabled={loading}
                 />
               </div>
@@ -423,13 +423,13 @@ export function OrderDialog({
             {order && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-muted-foreground mb-2">
                     Status
                   </label>
                   <select
                     value={status}
                     onChange={(e) => setStatus(e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-card border border-input rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                     disabled={loading}
                   >
                     <option value="open">Offen</option>
@@ -443,13 +443,13 @@ export function OrderDialog({
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-muted-foreground mb-2">
                     Zahlungsmethode
                   </label>
                   <select
                     value={paymentMethod}
                     onChange={(e) => setPaymentMethod(e.target.value)}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 bg-card border border-input rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                     disabled={loading}
                   >
                     <option value="">Nicht ausgewählt</option>
@@ -465,7 +465,7 @@ export function OrderDialog({
             {/* Bestellpositionen */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <label className="block text-sm font-medium text-gray-300">
+                <label className="block text-sm font-medium text-muted-foreground">
                   <ShoppingCart className="w-4 h-4 inline mr-1" />
                   Bestellpositionen
                 </label>
@@ -485,16 +485,16 @@ export function OrderDialog({
 
               {/* Menü-Auswahl */}
               {!order && showMenuSelection && (
-                <div className="mb-4 p-4 bg-gray-800/50 border border-gray-700 rounded-md">
+                <div className="mb-4 p-4 bg-card/50 border border-border rounded-md">
                   <div className="mb-3">
                     <div className="relative mb-2">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input
                         type="text"
                         placeholder="Artikel suchen..."
                         value={menuSearchQuery}
                         onChange={(e) => setMenuSearchQuery(e.target.value)}
-                        className="pl-10 bg-gray-800 border-gray-600 text-white"
+                        className="pl-10 bg-card border-input text-foreground"
                       />
                     </div>
                     <div className="flex gap-2 flex-wrap">
@@ -503,8 +503,8 @@ export function OrderDialog({
                         onClick={() => setSelectedCategoryId(null)}
                         className={`px-3 py-1 rounded text-sm ${
                           selectedCategoryId === null
-                            ? "bg-blue-600 text-white"
-                            : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                            ? "bg-primary text-primary-foreground"
+                            : "bg-muted text-muted-foreground hover:bg-accent"
                         }`}
                       >
                         Alle
@@ -518,8 +518,8 @@ export function OrderDialog({
                             onClick={() => setSelectedCategoryId(category.id)}
                             className={`px-3 py-1 rounded text-sm ${
                               selectedCategoryId === category.id
-                                ? "bg-blue-600 text-white"
-                                : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted text-muted-foreground hover:bg-accent"
                             }`}
                           >
                             {category.name}
@@ -529,7 +529,7 @@ export function OrderDialog({
                   </div>
                   <div className="max-h-64 overflow-y-auto space-y-2">
                     {filteredMenuItems.length === 0 ? (
-                      <div className="text-center py-4 text-gray-400">
+                      <div className="text-center py-4 text-muted-foreground">
                         {menuSearchQuery
                           ? "Keine Artikel gefunden"
                           : "Keine verfügbaren Artikel"}
@@ -540,22 +540,22 @@ export function OrderDialog({
                           key={menuItem.id}
                           type="button"
                           onClick={() => handleAddMenuItem(menuItem)}
-                          className="w-full text-left p-3 bg-gray-700 hover:bg-gray-600 rounded-md border border-gray-600 hover:border-blue-500 transition-colors"
+                          className="w-full text-left p-3 bg-muted hover:bg-accent rounded-md border border-input hover:border-primary transition-colors"
                         >
                           <div className="flex justify-between items-start">
                             <div className="flex-1">
-                              <div className="font-medium text-white">{menuItem.name}</div>
+                              <div className="font-medium text-foreground">{menuItem.name}</div>
                               {menuItem.description && (
-                                <div className="text-sm text-gray-400 mt-1">
+                                <div className="text-sm text-muted-foreground mt-1">
                                   {menuItem.description}
                                 </div>
                               )}
                             </div>
                             <div className="ml-4 text-right">
-                              <div className="font-semibold text-white">
+                              <div className="font-semibold text-foreground">
                                 {formatCurrency(menuItem.price)}
                               </div>
-                              <div className="text-xs text-gray-400 mt-1">
+                              <div className="text-xs text-muted-foreground mt-1">
                                 <Plus className="w-3 h-3 inline" /> Hinzufügen
                               </div>
                             </div>
@@ -569,7 +569,7 @@ export function OrderDialog({
 
               {/* Bestellte Positionen */}
               {items.length === 0 ? (
-                <div className="text-center py-8 text-gray-400 border border-gray-700 rounded-md">
+                <div className="text-center py-8 text-muted-foreground border border-border rounded-md">
                   Noch keine Positionen vorhanden
                   {!order && !showMenuSelection && (
                     <div className="mt-2 text-sm">
@@ -578,21 +578,21 @@ export function OrderDialog({
                   )}
                 </div>
               ) : (
-                <div className="space-y-3 border border-gray-700 rounded-md p-4">
+                <div className="space-y-3 border border-border rounded-md p-4">
                   {items.map((item, index) => (
                     <div
                       key={item.id || index}
-                      className="bg-gray-700/50 rounded-md p-3"
+                      className="bg-muted/50 rounded-md p-3"
                     >
                       <div className="grid grid-cols-1 md:grid-cols-12 gap-2 items-center">
                         <div className="md:col-span-9">
-                          <div className="font-medium text-white">{item.item_name}</div>
+                          <div className="font-medium text-foreground">{item.item_name}</div>
                           {item.item_description && (
-                            <div className="text-sm text-gray-400">{item.item_description}</div>
+                            <div className="text-sm text-muted-foreground">{item.item_description}</div>
                           )}
                         </div>
                         <div className="md:col-span-2 flex items-center justify-center">
-                          <span className="text-white font-medium">
+                          <span className="text-foreground font-medium">
                             {formatCurrency(item.total_price)}
                           </span>
                         </div>
@@ -619,17 +619,17 @@ export function OrderDialog({
 
               {/* Zusammenfassung */}
               {items.length > 0 && (
-                <div className="mt-4 p-4 bg-gray-800/50 border border-gray-700 rounded-md">
+                <div className="mt-4 p-4 bg-card/50 border border-border rounded-md">
                   <div className="space-y-2 text-sm">
-                    <div className="flex justify-between text-gray-300">
+                    <div className="flex justify-between text-muted-foreground">
                       <span>Zwischensumme:</span>
                       <span>{formatCurrency(subtotal)}</span>
                     </div>
-                    <div className="flex justify-between text-gray-300">
+                    <div className="flex justify-between text-muted-foreground">
                       <span>MwSt. (inkl.):</span>
                       <span>{formatCurrency(tax)}</span>
                     </div>
-                    <div className="flex justify-between text-lg font-bold text-white border-t border-gray-700 pt-2 mt-2">
+                    <div className="flex justify-between text-lg font-bold text-foreground border-t border-border pt-2 mt-2">
                       <span>Gesamt:</span>
                       <span>{formatCurrency(total)}</span>
                     </div>
@@ -640,14 +640,14 @@ export function OrderDialog({
 
             {/* Notizen */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-muted-foreground mb-2">
                 <FileText className="w-4 h-4 inline mr-1" />
                 Notizen
               </label>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-card border border-input rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 rows={2}
                 placeholder="z.B. Allergien, Wünsche, Hinweise"
                 disabled={loading}
@@ -656,13 +656,13 @@ export function OrderDialog({
 
             {/* Besondere Wünsche */}
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-2">
+              <label className="block text-sm font-medium text-muted-foreground mb-2">
                 Besondere Wünsche
               </label>
               <textarea
                 value={specialRequests}
                 onChange={(e) => setSpecialRequests(e.target.value)}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 bg-card border border-input rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 rows={2}
                 placeholder="z.B. extra Besteck, besondere Wünsche"
                 disabled={loading}

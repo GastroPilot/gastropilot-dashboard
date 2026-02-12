@@ -260,7 +260,7 @@ export function WaitlistSidebar({
       ref={setNodeRef}
       className={`
         w-full
-        bg-gray-800 border-r border-gray-700 flex flex-col
+        bg-card border-r border-border flex flex-col
         ${isOver ? "bg-yellow-900/30 border-yellow-500 border-2" : ""}
         transition-colors
         relative z-[30]
@@ -280,7 +280,7 @@ export function WaitlistSidebar({
         {onToggle && (
           <button
             onClick={onToggle}
-            className="bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded-lg p-2 text-white shadow-lg transition-colors touch-manipulation min-h-[36px] md:min-h-[40px] min-w-[36px] md:min-w-[40px] flex items-center justify-center"
+            className="bg-muted hover:bg-accent border border-border rounded-lg p-2 text-foreground shadow-lg transition-colors touch-manipulation min-h-[36px] md:min-h-[40px] min-w-[36px] md:min-w-[40px] flex items-center justify-center"
             aria-label="Sidebar ausklappen"
           >
             <PanelLeft className="w-4 h-4 md:w-5 md:h-5" />
@@ -292,13 +292,13 @@ export function WaitlistSidebar({
           showCollapsed ? "opacity-0 pointer-events-none" : "opacity-100"
         }`}
       >
-      <div className="p-3 md:p-4 border-b border-gray-700 shrink-0">
+      <div className="p-3 md:p-4 border-b border-border shrink-0">
         <div className="flex items-center justify-between gap-2">
-          <h2 className="text-base md:text-lg font-semibold text-white">Reservierungsübersicht</h2>
+          <h2 className="text-base md:text-lg font-semibold text-foreground">Reservierungsübersicht</h2>
           {onToggle && (
             <button
               onClick={onToggle}
-              className="bg-gray-700 hover:bg-gray-600 border border-gray-600 rounded-lg p-1.5 text-white transition-colors touch-manipulation min-h-[32px] min-w-[32px] flex items-center justify-center shrink-0"
+              className="bg-muted hover:bg-accent border border-border rounded-lg p-1.5 text-foreground transition-colors touch-manipulation min-h-[32px] min-w-[32px] flex items-center justify-center shrink-0"
               aria-label="Sidebar einklappen"
             >
               <PanelRight className="w-4 h-4" />
@@ -309,7 +309,7 @@ export function WaitlistSidebar({
           <button
             type="button"
             onClick={() => setFilterOpen((prev) => !prev)}
-            className="w-full rounded-lg border border-gray-700 bg-gray-900/80 text-gray-50 px-2 md:px-3 py-2 text-sm shadow-inner focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 flex items-center justify-between gap-2 touch-manipulation min-h-[40px]"
+            className="w-full rounded-lg border border-border bg-background text-foreground px-2 md:px-3 py-2 text-sm shadow-inner focus:outline-none focus:ring-2 focus:ring-ring focus:border-ring flex items-center justify-between gap-2 touch-manipulation min-h-[40px]"
           >
             <div className="flex items-center gap-2 min-w-0">
               <span className="inline-flex items-center justify-center w-8 h-8 rounded-md border border-white/10 bg-black/10 shrink-0">
@@ -317,11 +317,11 @@ export function WaitlistSidebar({
               </span>
               <span className="truncate">{activeLabel}</span>
             </div>
-            <div className="flex items-center gap-2 text-gray-300 shrink-0">
-              <span className="px-2 py-1 rounded-full text-xs font-semibold bg-gray-800">
+            <div className="flex items-center gap-2 text-muted-foreground shrink-0">
+              <span className="px-2 py-1 rounded-full text-xs font-semibold bg-muted">
                 {activeItemCount}
               </span>
-              <span className="text-[11px] px-2 py-1 rounded-md bg-gray-800 text-gray-300">
+              <span className="text-[11px] px-2 py-1 rounded-md bg-muted text-muted-foreground">
                 {activeFilters.length === 0 || activeFilters.length === allFilterKeys.length
                   ? "alle"
                   : `${activeFilters.length}/${allFilterKeys.length}`}
@@ -338,7 +338,7 @@ export function WaitlistSidebar({
             </div>
           </button>
           {filterOpen && (
-            <div className="absolute z-[50] mt-1 left-0 right-0 max-h-[70vh] overflow-auto overscroll-contain rounded-lg border border-gray-700 bg-gray-900/95 shadow-xl backdrop-blur-sm">
+            <div className="absolute z-[50] mt-1 left-0 right-0 max-h-[70vh] overflow-auto overscroll-contain rounded-lg border border-border bg-card shadow-xl backdrop-blur-sm">
               <button
                 type="button"
                   onClick={() =>
@@ -350,23 +350,23 @@ export function WaitlistSidebar({
                   }
                 className={`w-full px-3 py-3 flex items-center justify-between gap-3 text-sm transition-colors ${
                   activeFilters.length === allFilterKeys.length
-                    ? "bg-gray-800/80 text-white font-semibold border-l-2 border-blue-500"
-                    : "text-gray-100 hover:bg-gray-800/60"
+                    ? "bg-accent text-foreground font-semibold border-l-2 border-primary"
+                    : "text-foreground hover:bg-accent"
                 }`}
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <span className="inline-flex items-center justify-center w-9 h-9 rounded-md border border-white/10 bg-black/10 shrink-0">
+                  <span className="inline-flex items-center justify-center w-9 h-9 rounded-md border border-border bg-muted shrink-0">
                     <Filter className="w-4 h-4" />
                   </span>
                   <span className="truncate">Alle Status</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="px-2 py-1 rounded-full text-xs font-semibold bg-gray-800">
+                  <span className="px-2 py-1 rounded-full text-xs font-semibold bg-muted">
                     {reservations.length + blocks.length}
                   </span>
                   <span
                     className={`inline-flex items-center justify-center w-6 h-6 rounded-full border ${
-                      activeFilters.length === allFilterKeys.length ? "border-white/60 bg-white/10" : "border-gray-700 bg-gray-800"
+                      activeFilters.length === allFilterKeys.length ? "border-primary/60 bg-primary/10" : "border-border bg-muted"
                     }`}
                   >
                     {activeFilters.length === allFilterKeys.length && <Check className="w-4 h-4" />}
@@ -399,14 +399,14 @@ export function WaitlistSidebar({
                     }}
                     className={`w-full px-3 py-3 flex items-center justify-between gap-3 text-sm transition-colors ${
                       isActive
-                        ? "bg-gray-800/80 text-white font-semibold border-l-2 border-blue-500"
-                        : "text-gray-100 hover:bg-gray-800/60"
+                        ? "bg-accent text-foreground font-semibold border-l-2 border-primary"
+                        : "text-foreground hover:bg-accent"
                     }`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <span
                         className={`inline-flex items-center justify-center w-9 h-9 rounded-md border shrink-0 ${
-                          isActive ? filter.tone : "border-white/10 bg-black/10 text-gray-200"
+                          isActive ? filter.tone : "border-border bg-muted text-muted-foreground"
                         }`}
                       >
                         <Icon className="w-4 h-4" />
@@ -416,14 +416,14 @@ export function WaitlistSidebar({
                     <div className="flex items-center gap-2">
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                          isActive ? "bg-gray-800 text-white" : "bg-gray-800 text-gray-100"
+                          isActive ? "bg-muted text-foreground" : "bg-muted text-foreground"
                         }`}
                       >
                         {count}
                       </span>
                       <span
                         className={`inline-flex items-center justify-center w-6 h-6 rounded-full border ${
-                          isActive ? "border-white/60 bg-white/10" : "border-gray-700 bg-gray-800"
+                          isActive ? "border-primary/60 bg-primary/10" : "border-border bg-muted"
                         }`}
                       >
                         {isActive && <Check className="w-4 h-4" />}
@@ -437,7 +437,7 @@ export function WaitlistSidebar({
         </div>
         {/* Suchleiste */}
         <div className="mt-2 md:mt-3 relative">
-          <Search className="absolute left-2 md:left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-2 md:left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             type="text"
             placeholder="Suche..."
@@ -449,8 +449,8 @@ export function WaitlistSidebar({
       </div>
       <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 md:p-4 space-y-2 md:space-y-3 min-h-0">
         {filteredReservations.length === 0 && filteredBlocks.length === 0 ? (
-          <div className="text-center text-gray-400 py-6 md:py-8">
-            <Clock className="w-10 h-10 md:w-12 md:h-12 mx-auto mb-2 text-gray-600" />
+          <div className="text-center text-muted-foreground py-6 md:py-8">
+            <Clock className="w-10 h-10 md:w-12 md:h-12 mx-auto mb-2 text-muted-foreground/50" />
             <p className="text-sm">
               {searchQuery.trim() ? "Keine Reservierungen gefunden" : "Keine Reservierungen in der Warteliste"}
             </p>
@@ -491,7 +491,7 @@ export function WaitlistSidebar({
         )}
       </div>
       {onNewReservation && (
-        <div className="p-3 md:p-4 border-t border-gray-700 bg-gray-850/60 shrink-0">
+        <div className="p-3 md:p-4 border-t border-border bg-card shrink-0">
           <Button
             onClick={onNewReservation}
             className="w-full touch-manipulation min-h-[40px] text-sm"

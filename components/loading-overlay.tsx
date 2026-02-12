@@ -9,7 +9,7 @@ export function LoadingOverlay({ message = "Wird geladen...", variant = "dark" }
   const isDark = variant === "dark";
   return (
     <div
-      className={`fixed inset-0 flex items-center justify-center ${isDark ? "bg-gray-900 text-white" : "bg-white text-gray-900"}`}
+      className={`fixed inset-0 flex items-center justify-center ${isDark ? "bg-background text-foreground" : "bg-white text-foreground"}`}
       style={{ zIndex: 200 }}
     >
       <div className="flex items-center gap-3 text-lg font-semibold">

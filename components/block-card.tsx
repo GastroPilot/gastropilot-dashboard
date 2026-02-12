@@ -52,9 +52,9 @@ export function BlockCard({ block, isDragging, tableLabels, onClick }: BlockCard
       {...listeners}
       {...attributes}
       className={`
-        bg-gray-800 rounded-lg shadow-md border border-gray-700 p-2 md:p-3
+        bg-card rounded-lg shadow-md border border-border p-2 md:p-3
         cursor-grab active:cursor-grabbing
-        hover:shadow-lg hover:bg-gray-750 transition-all
+        hover:shadow-lg hover:bg-accent transition-all
         ${isDragging ? "opacity-50" : ""}
         touch-manipulation
         select-none
@@ -62,9 +62,9 @@ export function BlockCard({ block, isDragging, tableLabels, onClick }: BlockCard
       `}
     >
       <div className="flex items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-2 text-sm text-gray-200">
-          <Clock className="w-3 h-3 md:w-4 md:h-4 text-gray-400" />
-          <span className="font-semibold text-white">
+        <div className="flex flex-wrap items-center gap-2 text-sm text-foreground">
+          <Clock className="w-3 h-3 md:w-4 md:h-4 text-muted-foreground" />
+          <span className="font-semibold text-foreground">
             {format(startDate, "HH:mm")} – {format(endDate, "HH:mm")} Uhr
           </span>
         </div>
@@ -77,8 +77,8 @@ export function BlockCard({ block, isDragging, tableLabels, onClick }: BlockCard
         </span>
       </div>
 
-      <div className="mt-2 flex items-center justify-between text-sm text-gray-300">
-        <span className="font-medium text-white">{label}</span>
+      <div className="mt-2 flex items-center justify-between text-sm text-foreground">
+        <span className="font-medium text-foreground">{label}</span>
         {tableLabelText && (
           <span className="text-xs text-rose-200 font-medium">
             {tableLabelText}

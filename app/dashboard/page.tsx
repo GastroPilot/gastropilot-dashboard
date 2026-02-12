@@ -1267,15 +1267,15 @@ export default function DashboardPage() {
   // Kein Restaurant gefunden - zeige Hinweis mit Link zur Verwaltung
   if (!restaurantId) {
     return (
-      <div className="p-6 bg-gray-900 min-h-screen flex items-center justify-center">
+      <div className="p-6 bg-background min-h-screen flex items-center justify-center">
         <div className="text-center max-w-md">
-          <h2 className="text-xl font-semibold text-white mb-4">Kein Restaurant gefunden</h2>
-          <p className="text-gray-400 mb-6">
+          <h2 className="text-xl font-semibold text-foreground mb-4">Kein Restaurant gefunden</h2>
+          <p className="text-muted-foreground mb-6">
             Bitte erstelle zuerst ein Restaurant, um das Dashboard nutzen zu können.
           </p>
           <Link
             href="/dashboard/restaurants/create"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
           >
             <Plus className="w-4 h-4" />
             Restaurant erstellen
@@ -1288,17 +1288,17 @@ export default function DashboardPage() {
   // Restaurant-Daten werden geladen
   if (isInitialLoading) {
     return (
-      <div className="h-full flex flex-col bg-gray-900 overflow-hidden">
+      <div className="h-full flex flex-col bg-background overflow-hidden">
         {/* Header Skeleton */}
-        <div className="bg-gray-800 border-b border-gray-700 shadow-sm shrink-0">
+        <div className="bg-card border-b border-border shadow-sm shrink-0">
           <div className="px-4 py-3 h-20" />
         </div>
 
         {/* Content with Skeleton */}
         <div className="flex-1 overflow-hidden min-h-0">
-          <div className="h-full relative overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800 flex">
+          <div className="h-full relative overflow-hidden bg-background flex">
             {/* Sidebar Skeleton */}
-            <div className="w-80 bg-gray-800 border-r border-gray-700" />
+            <div className="w-80 bg-card border-r border-border" />
 
             {/* Table Plan Skeleton */}
             <div className="flex-1 relative p-8">
@@ -1321,26 +1321,26 @@ export default function DashboardPage() {
   // Fallback falls restaurant Daten nicht geladen werden konnten
   if (!restaurant) {
     return (
-      <div className="p-6 bg-gray-900 min-h-screen">
-        <p className="text-gray-400">Fehler beim Laden des Restaurants. Bitte versuche es erneut.</p>
+      <div className="p-6 bg-background min-h-screen">
+        <p className="text-muted-foreground">Fehler beim Laden des Restaurants. Bitte versuche es erneut.</p>
       </div>
     );
   }
 
   return (
-    <div className="h-full flex flex-col bg-gray-900 overflow-hidden">
+    <div className="h-full flex flex-col bg-background overflow-hidden">
       {/* Toasts */}
       {toasts.length > 0 && (
         <div className="fixed bottom-4 right-4 z-[200] space-y-3">
           {toasts.map((toast) => (
             <div
               key={toast.id}
-              className={`min-w-[260px] rounded-lg border px-4 py-3 shadow-[0_14px_32px_rgba(0,0,0,0.35)] text-sm ${
+              className={`min-w-[260px] rounded-lg border px-4 py-3 shadow-lg text-sm ${
                 toast.variant === "error"
                   ? "bg-red-900/80 border-red-500 text-red-50"
                   : toast.variant === "success"
                   ? "bg-green-900/80 border-green-500 text-green-50"
-                  : "bg-slate-800/90 border-slate-600 text-slate-100"
+                  : "bg-card border-border text-foreground"
               }`}
             >
               {toast.message}
@@ -1350,15 +1350,15 @@ export default function DashboardPage() {
       )}
 
       {/* Header */}
-      <div className="bg-gray-800 border-b border-gray-700 shadow-sm shrink-0">
+      <div className="bg-card border-b border-border shadow-sm shrink-0">
         <div className="relative px-3 md:px-4 py-2 md:py-3">
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-2 min-w-0 shrink-0">
-              <div className="inline-flex items-center rounded-lg border border-gray-700/70 bg-gray-800/90 p-0.5 backdrop-blur-sm min-h-[32px] md:min-h-[36px]">
+              <div className="inline-flex items-center rounded-lg border border-border bg-card p-0.5 backdrop-blur-sm min-h-[32px] md:min-h-[36px]">
                 <button
                   type="button"
                   aria-current="page"
-                  className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-blue-600 text-white text-sm md:text-base font-semibold border border-blue-500/80 shadow-inner min-h-[32px] md:min-h-[36px]"
+                  className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-primary text-primary-foreground text-sm md:text-base font-semibold border border-primary/80 shadow-inner min-h-[32px] md:min-h-[36px]"
                 >
                   <LayoutGrid className="w-4 h-4" />
                   Tischplan
@@ -1367,7 +1367,7 @@ export default function DashboardPage() {
                   href="/dashboard/timeline"
                   aria-label="Zeitplan"
                   title="Zeitplan"
-                  className="inline-flex items-center justify-center px-3 py-1 rounded-md text-gray-200 border border-transparent hover:bg-gray-700 min-h-[32px] md:min-h-[36px]"
+                  className="inline-flex items-center justify-center px-3 py-1 rounded-md text-foreground border border-transparent hover:bg-accent min-h-[32px] md:min-h-[36px]"
                 >
                   <Clock className="w-4 h-4" />
                 </Link>
@@ -1375,24 +1375,24 @@ export default function DashboardPage() {
                   href="/dashboard/reservations"
                   aria-label="Reservierungen"
                   title="Reservierungen"
-                  className="inline-flex items-center justify-center px-3 py-1 rounded-md text-gray-200 border border-transparent hover:bg-gray-700 min-h-[32px] md:min-h-[36px]"
+                  className="inline-flex items-center justify-center px-3 py-1 rounded-md text-foreground border border-transparent hover:bg-accent min-h-[32px] md:min-h-[36px]"
                 >
                   <Calendar className="w-4 h-4" />
                 </Link>
               </div>
-              <div className="text-left ml-2 md:ml-4 border-l border-gray-600 pl-2 md:pl-4">
-                <div className="text-xs md:text-sm font-semibold text-white whitespace-nowrap">
+              <div className="text-left ml-2 md:ml-4 border-l border-input pl-2 md:pl-4">
+                <div className="text-xs md:text-sm font-semibold text-foreground whitespace-nowrap">
                   {format(now, "EEEE, d. MMMM yyyy", { locale: de })}
                 </div>
-                <div className="text-base md:text-lg lg:text-xl font-bold text-blue-300 tracking-tight whitespace-nowrap">
+                <div className="text-base md:text-lg lg:text-xl font-bold text-primary tracking-tight whitespace-nowrap">
                   {format(now, "HH:mm")}
                 </div>
               </div>
             </div>
             <div className="flex items-center gap-2 min-w-0 shrink-0 justify-end">
               <div className="text-right leading-tight">
-                <div className="text-[10px] uppercase tracking-wide text-gray-400">Ausgewählter Tag</div>
-                <div className="text-xs font-semibold text-white whitespace-nowrap">
+                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Ausgewählter Tag</div>
+                <div className="text-xs font-semibold text-foreground whitespace-nowrap">
                   {format(selectedDate, "EEE, d.M.yyyy", { locale: de })}
                 </div>
               </div>
@@ -1453,7 +1453,7 @@ export default function DashboardPage() {
                           <ChevronDown className={`w-3.5 h-3.5 ml-2 transition-transform ${actionsMenuOpen ? "rotate-180" : ""}`} />
                         </Button>
                         {actionsMenuOpen && (
-                          <div className="absolute right-0 mt-2 w-64 rounded-lg border border-gray-700 bg-gray-900 shadow-xl z-40 overflow-hidden">
+                          <div className="absolute right-0 mt-2 w-64 rounded-lg border border-border bg-card shadow-xl z-40 overflow-hidden">
                             <button
                               type="button"
                               onClick={() => {
@@ -1463,8 +1463,8 @@ export default function DashboardPage() {
                               disabled={!selectedAreaId || areas.length === 0}
                               className={`w-full px-3 py-2 text-left text-sm flex items-center gap-2 transition-colors ${
                                 !selectedAreaId || areas.length === 0
-                                  ? "text-gray-500 cursor-not-allowed bg-gray-900"
-                                  : "text-gray-100 hover:bg-gray-800/70"
+                                  ? "text-muted-foreground cursor-not-allowed bg-background"
+                                  : "text-foreground hover:bg-accent"
                               }`}
                             >
                               <Plus className="w-4 h-4" />
@@ -1476,7 +1476,7 @@ export default function DashboardPage() {
                                 setActionsMenuOpen(false);
                                 setSelectionMode(true);
                               }}
-                              className="w-full px-3 py-2 text-left text-sm flex items-center gap-2 text-gray-100 hover:bg-gray-800/70 transition-colors"
+                              className="w-full px-3 py-2 text-left text-sm flex items-center gap-2 text-foreground hover:bg-accent transition-colors"
                             >
                               <Check className="w-4 h-4" />
                               <span>Tische zusammenführen</span>
@@ -1487,7 +1487,7 @@ export default function DashboardPage() {
                                 setActionsMenuOpen(false);
                                 handleResetTablesForDate();
                               }}
-                              className="w-full px-3 py-2 text-left text-sm flex items-center gap-2 text-gray-100 hover:bg-gray-800/70 transition-colors"
+                              className="w-full px-3 py-2 text-left text-sm flex items-center gap-2 text-foreground hover:bg-accent transition-colors"
                             >
                               <RotateCcw className="w-4 h-4" />
                               <span>Zurücksetzen</span>
@@ -1539,7 +1539,7 @@ export default function DashboardPage() {
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
-          <div className="h-full relative overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800 flex">
+          <div className="h-full relative overflow-hidden bg-background flex">
             {/* Warteliste Sidebar */}
             <div
               className={`
@@ -1768,7 +1768,7 @@ export default function DashboardPage() {
                     <button
                       type="button"
                       onClick={() => setAreaMenuOpen((prev) => !prev)}
-                      className="h-10 min-w-[180px] rounded-md border border-gray-600 bg-gray-900 text-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 flex items-center justify-between"
+                      className="h-10 min-w-[180px] rounded-md border border-input bg-background text-foreground px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring flex items-center justify-between"
                     >
                       <span className="truncate">
                         {selectedAreaId
@@ -1778,7 +1778,7 @@ export default function DashboardPage() {
                       <ChevronDown className={`h-4 w-4 transition-transform ${areaMenuOpen ? "rotate-180" : ""}`} />
                     </button>
                     {areaMenuOpen && (
-                      <div className="absolute bottom-full mb-2 w-full rounded-lg border border-gray-700 bg-gray-900 shadow-xl max-h-60 overflow-auto">
+                      <div className="absolute bottom-full mb-2 w-full rounded-lg border border-border bg-card shadow-xl max-h-60 overflow-auto">
                         {areas.map((area) => (
                           <button
                             key={area.id}
@@ -1790,7 +1790,7 @@ export default function DashboardPage() {
                             className={`w-full px-3 py-2 text-left text-sm ${
                               selectedAreaId === area.id
                                 ? "font-semibold text-white"
-                                : "text-gray-200 hover:bg-gray-800/70"
+                                : "text-foreground hover:bg-accent"
                             }`}
                           >
                             {area.name}
@@ -1808,7 +1808,7 @@ export default function DashboardPage() {
                   onClick={handleZoomIn}
                   size="sm"
                   variant="outline"
-                  className="bg-gray-800/90 backdrop-blur-sm border-gray-600 hover:bg-gray-700 min-h-[36px] min-w-[36px] p-0"
+                  className="bg-card/90 backdrop-blur-sm border-input hover:bg-accent min-h-[36px] min-w-[36px] p-0"
                   title="Heranzoomen"
                 >
                   <ZoomIn className="w-4 h-4" />
@@ -1817,7 +1817,7 @@ export default function DashboardPage() {
                   onClick={handleZoomOut}
                   size="sm"
                   variant="outline"
-                  className="bg-gray-800/90 backdrop-blur-sm border-gray-600 hover:bg-gray-700 min-h-[36px] min-w-[36px] p-0"
+                  className="bg-card/90 backdrop-blur-sm border-input hover:bg-accent min-h-[36px] min-w-[36px] p-0"
                   title="Herauszoomen"
                 >
                   <ZoomOut className="w-4 h-4" />
@@ -1826,12 +1826,12 @@ export default function DashboardPage() {
                   onClick={handleZoomReset}
                   size="sm"
                   variant="outline"
-                  className="bg-gray-800/90 backdrop-blur-sm border-gray-600 hover:bg-gray-700 min-h-[36px] min-w-[36px] p-0"
+                  className="bg-card/90 backdrop-blur-sm border-input hover:bg-accent min-h-[36px] min-w-[36px] p-0"
                   title="Zoom zurücksetzen"
                 >
                   <Maximize2 className="w-4 h-4" />
                 </Button>
-                <div className="text-xs text-gray-300 bg-gray-800/90 backdrop-blur-sm border border-gray-600 rounded px-2 py-1 text-center mt-1">
+                <div className="text-xs text-foreground bg-card/90 backdrop-blur-sm border border-input rounded px-2 py-1 text-center mt-1">
                   {Math.round(zoomLevel * 100)}%
                 </div>
               </div>
@@ -1854,7 +1854,7 @@ export default function DashboardPage() {
                 {obstacles.map((obstacle) => (
                   <div
                     key={obstacle.id}
-                    className="absolute rounded-md border border-gray-700/80 bg-gray-700/70 text-gray-100 text-xs shadow-[0_10px_24px_rgba(0,0,0,0.3)] flex items-center justify-center px-2 pointer-events-auto"
+                    className="absolute rounded-md border border-border bg-muted text-foreground text-xs shadow-[0_10px_24px_rgba(0,0,0,0.3)] flex items-center justify-center px-2 pointer-events-auto"
                     style={{
                       left: obstacle.x,
                       top: obstacle.y,
@@ -1931,10 +1931,10 @@ export default function DashboardPage() {
               {tables.length === 0 && (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center">
-                    <p className="text-gray-400 text-lg mb-4">Noch keine Tische vorhanden</p>
+                    <p className="text-muted-foreground text-lg mb-4">Noch keine Tische vorhanden</p>
                     <Link
                       href="/dashboard/tables"
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700 transition-colors touch-manipulation min-h-[48px]"
+                      className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors touch-manipulation min-h-[48px]"
                     >
                       <MoveRight className="w-4 h-4" />
                       Tische verwalten

@@ -28,7 +28,7 @@ const STATUS_OPTIONS: { value: ReservationStatus | "all"; label: string; Icon: a
 ];
 
 function Sparkline({ values, colorClass = "text-blue-400" }: { values: number[]; colorClass?: string }) {
-  if (!values.length) return <div className="h-12 text-xs text-gray-400">Keine Daten</div>;
+  if (!values.length) return <div className="h-12 text-xs text-muted-foreground">Keine Daten</div>;
   const maxValue = Math.max(...values, 1);
   const step = values.length > 1 ? 100 / (values.length - 1) : 100;
   const points = values
@@ -236,7 +236,7 @@ export default function OwnerInsightsPage() {
   const prevKpis = useMemo(() => computeKpis(prevFilteredReservations, prevRange), [prevFilteredReservations, prevRange, computeKpis]);
 
   const renderDelta = (value: number, isPercent = false) => {
-    if (!isFinite(value) || value === 0) return <span className="text-xs text-gray-400">±0</span>;
+    if (!isFinite(value) || value === 0) return <span className="text-xs text-muted-foreground">±0</span>;
     const positive = value > 0;
     const Icon = positive ? ArrowUpRight : ArrowDownRight;
     const formatted = Math.abs(value).toFixed(isPercent ? 1 : 2);
@@ -442,9 +442,9 @@ export default function OwnerInsightsPage() {
       title: "Reservierungen",
       value: numberFormatter.format(kpis.total),
       sub: `${numberFormatter.format(kpis.covers)} Gäste`,
-      accent: "text-blue-300",
+      accent: "text-primary",
       spark: dailySeries.map((d) => d.count),
-      icon: <Users className="h-5 w-5 text-blue-300" />,
+      icon: <Users className="h-5 w-5 text-primary" />,
       delta: kpis.total - prevKpis.total,
       deltaIsPercent: false,
       rows: [
@@ -505,19 +505,19 @@ export default function OwnerInsightsPage() {
   ];
 
   return (
-    <div className="h-full min-h-screen overflow-auto bg-gray-900 text-gray-100">
-      <div className="bg-gray-800 border-b border-gray-700 shadow-sm">
+    <div className="h-full min-h-screen overflow-auto bg-background text-foreground">
+      <div className="bg-card border-b border-border shadow-sm">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-start gap-3">
-            <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-500 via-cyan-400 to-emerald-400 flex items-center justify-center shadow-lg shadow-blue-500/25">
-              <BarChart3 className="w-5 h-5 text-white" />
+            <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-[#F95100] via-cyan-400 to-emerald-400 flex items-center justify-center shadow-lg shadow-[#F95100]/25">
+              <BarChart3 className="w-5 h-5 text-foreground" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-white">Kennzahlen</h1>
-              <p className="text-sm text-gray-400">
+              <h1 className="text-2xl font-bold text-foreground">Kennzahlen</h1>
+              <p className="text-sm text-muted-foreground">
                 {restaurant ? `für ${restaurant.name}` : "Übersicht der wichtigsten Metriken"}
               </p>
-              <div className="flex items-center gap-2 text-xs text-gray-500 mt-1">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
                 <span>Kennzahlen aus Reservierungen, Gästen, Kanälen, Status-Pipeline und aktiven Tischen.</span>
               </div>
             </div>
@@ -538,14 +538,14 @@ export default function OwnerInsightsPage() {
       </div>
 
       <div id="owner-insights-content" className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-24 space-y-6">
-        <Card className="border-gray-800 bg-gray-900/80" data-print-exclude>
+        <Card className="border-border bg-background/80" data-print-exclude>
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between gap-2">
-              <CardTitle className="text-base text-white flex items-center gap-2">
-                <Filter className="h-4 w-4 text-blue-300" />
+              <CardTitle className="text-base text-foreground flex items-center gap-2">
+                <Filter className="h-4 w-4 text-primary" />
                 Zeitraum & Filter
               </CardTitle>
-              <span className="text-xs text-gray-400">
+              <span className="text-xs text-muted-foreground">
                 {format(range.from, "dd.MM.yyyy", { locale: de })} – {format(range.to, "dd.MM.yyyy", { locale: de })}
               </span>
             </div>
@@ -553,11 +553,11 @@ export default function OwnerInsightsPage() {
           <CardContent className="pt-0">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
               <div className="relative col-span-1" ref={rangeMenuRef}>
-                <label className="text-xs text-gray-400 mb-1 block">Zeitraum</label>
+                <label className="text-xs text-muted-foreground mb-1 block">Zeitraum</label>
                 <button
                   type="button"
                   onClick={() => setRangeMenuOpen((prev) => !prev)}
-                  className="w-full inline-flex items-center justify-between rounded-md border border-gray-700 bg-gray-800/70 px-3 py-2 text-sm text-white shadow-inner hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+                  className="w-full inline-flex items-center justify-between rounded-md border border-border bg-accent/70 px-3 py-2 text-sm text-foreground shadow-inner hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
                 >
                   <span>
                     {rangePreset === "today"
@@ -573,8 +573,8 @@ export default function OwnerInsightsPage() {
                   <ChevronDown className={`w-4 h-4 transition-transform ${rangeMenuOpen ? "rotate-180" : ""}`} />
                 </button>
                 {rangeMenuOpen && (
-                  <div className="absolute mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 shadow-xl z-40 overflow-hidden">
-                    <div className="divide-y divide-gray-800/80">
+                  <div className="absolute mt-1 w-full rounded-lg border border-border bg-background shadow-xl z-40 overflow-hidden">
+                    <div className="divide-y divide-border/80">
                       {[
                         { value: "today", label: "Heute" },
                         { value: "7d", label: "Letzte 7 Tage" },
@@ -591,8 +591,8 @@ export default function OwnerInsightsPage() {
                           }}
                           className={`w-full px-3 py-2 text-left text-sm transition-colors ${
                             rangePreset === opt.value
-                              ? "bg-gray-800 text-white font-semibold"
-                              : "text-gray-200 hover:bg-gray-800/70"
+                              ? "bg-card text-foreground font-semibold"
+                              : "text-foreground hover:bg-accent/70"
                           }`}
                         >
                           {opt.label}
@@ -603,36 +603,36 @@ export default function OwnerInsightsPage() {
                 )}
               </div>
               <div className="col-span-1">
-                <label className="text-xs text-gray-400 mb-1 block flex items-center gap-1">
-                  <Calendar className="h-4 w-4 text-gray-400" /> Von
+                <label className="text-xs text-muted-foreground mb-1 block flex items-center gap-1">
+                  <Calendar className="h-4 w-4 text-muted-foreground" /> Von
                 </label>
                 <Input
                   type="date"
                   value={customFrom}
                   onChange={(e) => setCustomFrom(e.target.value)}
                   disabled={rangePreset !== "custom"}
-                  className="bg-gray-800 border-gray-700 text-sm"
+                  className="bg-card border-border text-sm"
                 />
               </div>
               <div className="col-span-1">
-                <label className="text-xs text-gray-400 mb-1 block flex items-center gap-1">
-                  <Calendar className="h-4 w-4 text-gray-400" /> Bis
+                <label className="text-xs text-muted-foreground mb-1 block flex items-center gap-1">
+                  <Calendar className="h-4 w-4 text-muted-foreground" /> Bis
                 </label>
                 <Input
                   type="date"
                   value={customTo}
                   onChange={(e) => setCustomTo(e.target.value)}
                   disabled={rangePreset !== "custom"}
-                  className="bg-gray-800 border-gray-700 text-sm"
+                  className="bg-card border-border text-sm"
                 />
               </div>
 
               <div className="relative col-span-1" ref={statusMenuRef}>
-                <label className="text-xs text-gray-400 mb-1 block">Status</label>
+                <label className="text-xs text-muted-foreground mb-1 block">Status</label>
                 <button
                   type="button"
                   onClick={() => setStatusMenuOpen((prev) => !prev)}
-                  className="w-full inline-flex items-center justify-between rounded-md border border-gray-700 bg-gray-800/70 px-3 py-2 text-sm text-white shadow-inner hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+                  className="w-full inline-flex items-center justify-between rounded-md border border-border bg-accent/70 px-3 py-2 text-sm text-foreground shadow-inner hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
                 >
                   {(() => {
                     const selected = STATUS_OPTIONS.find((opt) => opt.value === statusFilter);
@@ -640,8 +640,8 @@ export default function OwnerInsightsPage() {
                     return (
                       <span className="flex items-center gap-2 truncate">
                         {SelectedIcon && (
-                          <span className="inline-flex items-center justify-center w-6 h-6 rounded-md border border-gray-600 bg-gray-900/70">
-                            <SelectedIcon className={`w-3.5 h-3.5 ${selected?.tone ?? "text-gray-300"}`} />
+                          <span className="inline-flex items-center justify-center w-6 h-6 rounded-md border border-input bg-background/70">
+                            <SelectedIcon className={`w-3.5 h-3.5 ${selected?.tone ?? "text-muted-foreground"}`} />
                           </span>
                         )}
                         <span className="truncate">{selected?.label ?? "Alle"}</span>
@@ -651,8 +651,8 @@ export default function OwnerInsightsPage() {
                   <ChevronDown className={`w-4 h-4 transition-transform ${statusMenuOpen ? "rotate-180" : ""}`} />
                 </button>
                 {statusMenuOpen && (
-                  <div className="absolute mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 shadow-xl z-40 overflow-hidden">
-                    <div className="divide-y divide-gray-800/80">
+                  <div className="absolute mt-1 w-full rounded-lg border border-border bg-background shadow-xl z-40 overflow-hidden">
+                    <div className="divide-y divide-border/80">
                       {STATUS_OPTIONS.map((opt) => (
                         <button
                           key={opt.value}
@@ -663,14 +663,14 @@ export default function OwnerInsightsPage() {
                           }}
                           className={`w-full px-3 py-2 text-left text-sm transition-colors ${
                             statusFilter === opt.value
-                              ? "bg-gray-800 text-white font-semibold"
-                              : "text-gray-200 hover:bg-gray-800/70"
+                              ? "bg-card text-foreground font-semibold"
+                              : "text-foreground hover:bg-accent/70"
                           }`}
                         >
                           <span className="flex items-center gap-2">
                             {opt.Icon && (
-                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-md border border-gray-700 bg-gray-900/70">
-                                <opt.Icon className={`w-3.5 h-3.5 ${opt.tone ?? "text-gray-300"}`} />
+                              <span className="inline-flex items-center justify-center w-6 h-6 rounded-md border border-border bg-background/70">
+                                <opt.Icon className={`w-3.5 h-3.5 ${opt.tone ?? "text-muted-foreground"}`} />
                               </span>
                             )}
                             <span className="truncate">{opt.label}</span>
@@ -691,31 +691,31 @@ export default function OwnerInsightsPage() {
         </Card>
 
         {loading ? (
-          <div className="text-gray-400 py-12 text-center">Lade Kennzahlen...</div>
+          <div className="text-muted-foreground py-12 text-center">Lade Kennzahlen...</div>
         ) : (
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
               {kpiCards.map((card) => (
                 <Card
                   key={card.title}
-                  className="border-gray-800 bg-gradient-to-br from-gray-900 via-gray-900 to-slate-900 cursor-pointer hover:border-blue-500/40 transition-colors"
+                  className="border-border bg-gradient-to-br from-background via-background to-background cursor-pointer hover:border-primary/40 transition-colors"
                   onClick={() => {
                     setDetail({ title: card.title, rows: card.rows });
                     setDetailOpen(true);
                   }}
                 >
                   <CardHeader className="pb-1">
-                    <CardTitle className="text-sm text-gray-300 flex items-center gap-2">
+                    <CardTitle className="text-sm text-muted-foreground flex items-center gap-2">
                       <span className={`p-1.5 rounded-lg bg-white/5 border border-white/5 ${card.accent}`}>{card.icon}</span>
                       {card.title}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="pt-0">
                     <div className="flex items-baseline gap-2">
-                      <div className="text-3xl font-bold text-white">{card.value}</div>
+                      <div className="text-3xl font-bold text-foreground">{card.value}</div>
                       {typeof card.delta !== "undefined" && renderDelta(card.delta, card.deltaIsPercent)}
                     </div>
-                    <div className="text-sm text-gray-400">{card.sub}</div>
+                    <div className="text-sm text-muted-foreground">{card.sub}</div>
                     {card.spark.length > 0 && <Sparkline values={card.spark} colorClass={card.accent} />}
                   </CardContent>
                 </Card>
@@ -724,7 +724,7 @@ export default function OwnerInsightsPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <Card
-                className="border-gray-800 bg-gray-900/80 lg:col-span-2 cursor-pointer hover:border-blue-500/40 transition-colors"
+                className="border-border bg-background/80 lg:col-span-2 cursor-pointer hover:border-primary/40 transition-colors"
                 onClick={() => {
                   setDetail({
                     title: "Verlauf (pro Tag)",
@@ -737,8 +737,8 @@ export default function OwnerInsightsPage() {
                 }}
               >
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base text-white flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-blue-300" />
+                  <CardTitle className="text-base text-foreground flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-primary" />
                     Verlauf (pro Tag)
                   </CardTitle>
                 </CardHeader>
@@ -746,32 +746,32 @@ export default function OwnerInsightsPage() {
                   {dailySeries.length ? (
                     dailySeries.map((day) => (
                       <div key={day.date} className="flex items-center gap-3 rounded-lg bg-white/5 border border-white/5 px-3 py-2">
-                        <div className="w-28 text-sm text-gray-300">
+                        <div className="w-28 text-sm text-muted-foreground">
                           {format(parseISO(day.date), "dd.MM.", { locale: de })}
                         </div>
                         <div className="flex-1">
-                          <div className="h-2 rounded-full bg-gray-800 overflow-hidden">
+                          <div className="h-2 rounded-full bg-card overflow-hidden">
                             <div
-                              className="h-full bg-gradient-to-r from-blue-500 to-emerald-400"
+                              className="h-full bg-gradient-to-r from-[#F95100] to-emerald-400"
                               style={{
                                 width: `${Math.min(100, (day.count / Math.max(...dailySeries.map((d) => d.count), 1)) * 100)}%`,
                               }}
                             />
                           </div>
                         </div>
-                        <div className="w-28 text-right text-sm text-gray-200">
+                        <div className="w-28 text-right text-sm text-foreground">
                           {day.count} Res · {day.covers} Gäste
                         </div>
                       </div>
                     ))
                   ) : (
-                    <div className="text-sm text-gray-400 py-4">Keine Reservierungen im Zeitraum.</div>
+                    <div className="text-sm text-muted-foreground py-4">Keine Reservierungen im Zeitraum.</div>
                   )}
                 </CardContent>
               </Card>
 
               <Card
-                className="border-gray-800 bg-gray-900/80 cursor-pointer hover:border-blue-500/40 transition-colors"
+                className="border-border bg-background/80 cursor-pointer hover:border-primary/40 transition-colors"
                 onClick={() => {
                   setDetail({
                     title: "Status-Pipeline",
@@ -793,7 +793,7 @@ export default function OwnerInsightsPage() {
                 }}
               >
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base text-white flex items-center gap-2">
+                  <CardTitle className="text-base text-foreground flex items-center gap-2">
                     <BarChart3 className="h-4 w-4 text-indigo-300" />
                     Status-Pipeline
                   </CardTitle>
@@ -812,19 +812,19 @@ export default function OwnerInsightsPage() {
                     };
                     return (
                       <div key={status}>
-                        <div className="flex items-center justify-between text-sm text-gray-300">
+                        <div className="flex items-center justify-between text-sm text-muted-foreground">
                           <span>{label[status] || status}</span>
-                          <span className="text-gray-400">
+                          <span className="text-muted-foreground">
                             {count} · {percentFormatter.format(share)}%
                           </span>
                         </div>
-                        <div className="h-2 rounded-full bg-gray-800 overflow-hidden">
-                          <div className="h-full bg-gradient-to-r from-blue-500 via-indigo-500 to-emerald-400" style={{ width: `${share}%` }} />
+                        <div className="h-2 rounded-full bg-card overflow-hidden">
+                          <div className="h-full bg-gradient-to-r from-[#F95100] via-indigo-500 to-emerald-400" style={{ width: `${share}%` }} />
                         </div>
                       </div>
                     );
                   })}
-                  <div className="text-xs text-gray-400 pt-2 border-t border-gray-800">
+                  <div className="text-xs text-muted-foreground pt-2 border-t border-border">
                     Tischzuordnung {percentFormatter.format(kpis.tableAssignmentRate)}% · Ø Dauer {kpis.avgDuration.toFixed(0)} Min.
                   </div>
                 </CardContent>
@@ -833,7 +833,7 @@ export default function OwnerInsightsPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <Card
-                className="border-gray-800 bg-gray-900/80 cursor-pointer hover:border-blue-500/40 transition-colors"
+                className="border-border bg-background/80 cursor-pointer hover:border-primary/40 transition-colors"
                 onClick={() => {
                   setDetail({
                     title: "Kanäle",
@@ -846,7 +846,7 @@ export default function OwnerInsightsPage() {
                 }}
               >
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base text-white flex items-center gap-2">
+                  <CardTitle className="text-base text-foreground flex items-center gap-2">
                     <Users className="h-4 w-4 text-emerald-300" />
                     Kanäle
                   </CardTitle>
@@ -857,29 +857,29 @@ export default function OwnerInsightsPage() {
                       const share = filteredReservations.length ? (count / filteredReservations.length) * 100 : 0;
                       return (
                         <div key={channel}>
-                          <div className="flex items-center justify-between text-sm text-gray-300">
+                          <div className="flex items-center justify-between text-sm text-muted-foreground">
                             <span>{channel}</span>
-                            <span className="text-gray-400">
+                            <span className="text-muted-foreground">
                               {count} · {percentFormatter.format(share)}%
                             </span>
                           </div>
-                          <div className="h-2 rounded-full bg-gray-800 overflow-hidden">
+                          <div className="h-2 rounded-full bg-card overflow-hidden">
                             <div className="h-full bg-gradient-to-r from-emerald-500 to-blue-500" style={{ width: `${share}%` }} />
                           </div>
                         </div>
                       );
                     })
                   ) : (
-                    <div className="text-sm text-gray-400 py-4">Keine Kanal-Daten.</div>
+                    <div className="text-sm text-muted-foreground py-4">Keine Kanal-Daten.</div>
                   )}
-                  <div className="text-xs text-gray-400 pt-2 border-t border-gray-800">
+                  <div className="text-xs text-muted-foreground pt-2 border-t border-border">
                     Bekannte Gäste: {guests.length} · Kapazität: {kpis.capacity} Plätze
                   </div>
                 </CardContent>
               </Card>
 
               <Card
-                className="border-gray-800 bg-gray-900/80 cursor-pointer hover:border-blue-500/40 transition-colors"
+                className="border-border bg-background/80 cursor-pointer hover:border-primary/40 transition-colors"
                 onClick={() => {
                   setDetail({
                     title: "Letzte Reservierungen",
@@ -892,8 +892,8 @@ export default function OwnerInsightsPage() {
                 }}
               >
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base text-white flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-blue-300" />
+                  <CardTitle className="text-base text-foreground flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-primary" />
                     Letzte Reservierungen
                   </CardTitle>
                 </CardHeader>
@@ -901,25 +901,25 @@ export default function OwnerInsightsPage() {
                   {latestReservations.length ? (
                     latestReservations.map((res) => (
                       <div key={res.id} className="p-3 rounded-lg bg-white/5 border border-white/5">
-                        <div className="text-sm text-white font-semibold">
+                        <div className="text-sm text-foreground font-semibold">
                           {res.guest_name || "Gast"} · {res.party_size} Pers.
                         </div>
-                        <div className="text-xs text-gray-400">
+                        <div className="text-xs text-muted-foreground">
                           {format(parseISO(res.start_at), "dd.MM.yyyy HH:mm", { locale: de })} · {res.channel || "Unbekannt"}
                         </div>
-                        <div className="text-xs text-gray-400">
+                        <div className="text-xs text-muted-foreground">
                           Status: {res.status} {res.table_id ? `· Tisch ${res.table_id}` : "· ohne Tisch"}
                         </div>
                       </div>
                     ))
                   ) : (
-                    <div className="text-sm text-gray-400 py-4">Keine Reservierungen im Zeitraum.</div>
+                    <div className="text-sm text-muted-foreground py-4">Keine Reservierungen im Zeitraum.</div>
                   )}
                 </CardContent>
               </Card>
 
               <Card
-                className="border-gray-800 bg-gray-900/80 cursor-pointer hover:border-blue-500/40 transition-colors"
+                className="border-border bg-background/80 cursor-pointer hover:border-primary/40 transition-colors"
                 onClick={() => {
                   setDetail({
                     title: "Stoßzeiten",
@@ -932,7 +932,7 @@ export default function OwnerInsightsPage() {
                 }}
               >
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base text-white flex items-center gap-2">
+                  <CardTitle className="text-base text-foreground flex items-center gap-2">
                     <Clock3 className="h-4 w-4 text-amber-300" />
                     Time Buckets
                   </CardTitle>
@@ -942,27 +942,27 @@ export default function OwnerInsightsPage() {
                     const share = filteredReservations.length ? (value / filteredReservations.length) * 100 : 0;
                     return (
                       <div key={label}>
-                        <div className="flex items-center justify-between text-sm text-gray-300">
+                        <div className="flex items-center justify-between text-sm text-muted-foreground">
                           <span>{label}</span>
-                          <span className="text-gray-400">
+                          <span className="text-muted-foreground">
                             {value} · {percentFormatter.format(share)}%
                           </span>
                         </div>
-                        <div className="h-2 rounded-full bg-gray-800 overflow-hidden">
+                        <div className="h-2 rounded-full bg-card overflow-hidden">
                           <div className="h-full bg-gradient-to-r from-amber-400 to-pink-500" style={{ width: `${share}%` }} />
                         </div>
                       </div>
                     );
                   })}
-                  <div className="text-xs text-gray-400 pt-2 border-t border-gray-800">
+                  <div className="text-xs text-muted-foreground pt-2 border-t border-border">
                     Ø Vorlaufzeit {kpis.avgLead.toFixed(1)}h · Ø Dauer {kpis.avgDuration.toFixed(0)} Min.
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="border-gray-800 bg-gray-900/80">
+              <Card className="border-border bg-background/80">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base text-white flex items-center gap-2">
+                  <CardTitle className="text-base text-foreground flex items-center gap-2">
                     <Clock3 className="h-4 w-4 text-amber-300" />
                     Top-Slots (30 Min)
                   </CardTitle>
@@ -970,15 +970,15 @@ export default function OwnerInsightsPage() {
                 <CardContent className="pt-1 space-y-2">
                   {slotBreakdown.length ? (
                     slotBreakdown.map((slot) => (
-                      <div key={slot.ts} className="flex items-center justify-between text-sm text-gray-300 py-1 border-b border-white/5 last:border-b-0">
+                      <div key={slot.ts} className="flex items-center justify-between text-sm text-muted-foreground py-1 border-b border-white/5 last:border-b-0">
                         <span>{slot.label}</span>
-                        <span className="text-gray-400">
+                        <span className="text-muted-foreground">
                           {slot.seats} Seats · {percentFormatter.format(slot.rate)}%
                         </span>
                       </div>
                     ))
                   ) : (
-                    <div className="text-xs text-gray-400">Keine Slot-Daten</div>
+                    <div className="text-xs text-muted-foreground">Keine Slot-Daten</div>
                   )}
                 </CardContent>
               </Card>
@@ -988,7 +988,7 @@ export default function OwnerInsightsPage() {
 
         <Dialog open={detailOpen && !!detail} onOpenChange={setDetailOpen}>
           {detail && (
-            <DialogContent className="bg-gray-900 border border-gray-700">
+            <DialogContent className="bg-background border border-border">
               <DialogHeader>
                 <DialogTitle>{detail.title}</DialogTitle>
                 <DialogDescription>
@@ -1000,10 +1000,10 @@ export default function OwnerInsightsPage() {
                 {detail.rows.map((row, idx) => (
                   <div
                     key={`${row.label}-${idx}`}
-                    className="flex items-center justify-between rounded-lg border border-gray-800 bg-white/5 px-3 py-2"
+                    className="flex items-center justify-between rounded-lg border border-border bg-white/5 px-3 py-2"
                   >
-                    <span className="text-sm text-gray-200">{row.label}</span>
-                    <span className="text-sm text-gray-100 font-medium">{row.value}</span>
+                    <span className="text-sm text-foreground">{row.label}</span>
+                    <span className="text-sm text-foreground font-medium">{row.value}</span>
                   </div>
                 ))}
               </div>

@@ -21,7 +21,7 @@ export function SkeletonBase({
   return (
     <div
       className={cn(
-        "bg-gray-800 animate-pulse",
+        "bg-muted animate-pulse",
         rounded === "sm" && "rounded-sm",
         rounded === "md" && "rounded-lg",
         rounded === "lg" && "rounded-xl",

@@ -95,17 +95,17 @@ export function AITableSuggestion({
   }
 
   return (
-    <div className="mb-4 rounded-lg border border-gray-700 bg-gray-800/50 overflow-hidden">
+    <div className="mb-4 rounded-lg border border-border bg-card/50 overflow-hidden">
       {/* Header */}
       <button
         type="button"
         onClick={() => setCollapsed(!collapsed)}
-        className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-gray-800/80 transition-colors"
+        className="w-full px-4 py-3 flex items-center justify-between text-left hover:bg-accent transition-colors"
         disabled={disabled}
       >
         <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-blue-400" />
-          <span className="text-sm font-medium text-gray-200">
+          <Sparkles className="w-4 h-4 text-primary" />
+          <span className="text-sm font-medium text-foreground">
             KI-Vorschläge für Tischzuordnung
           </span>
           {autoSelected && (
@@ -116,7 +116,7 @@ export function AITableSuggestion({
         </div>
         <ChevronDown
           className={cn(
-            "w-4 h-4 text-gray-400 transition-transform",
+            "w-4 h-4 text-muted-foreground transition-transform",
             collapsed && "-rotate-90"
           )}
         />
@@ -127,7 +127,7 @@ export function AITableSuggestion({
         <div className="px-4 pb-4">
           {/* Loading State */}
           {loading && (
-            <div className="flex items-center justify-center py-6 text-gray-400">
+            <div className="flex items-center justify-center py-6 text-muted-foreground">
               <Loader2 className="w-5 h-5 animate-spin mr-2" />
               <span className="text-sm">Analysiere Restaurant-Status...</span>
             </div>
@@ -160,40 +160,40 @@ export function AITableSuggestion({
                     className={cn(
                       "w-full text-left p-3 rounded-lg border transition-all",
                       isSelected
-                        ? "border-blue-500 bg-blue-900/30"
-                        : "border-gray-600 bg-gray-700/50 hover:border-gray-500 hover:bg-gray-700/80",
-                      isTopSuggestion && !isSelected && "border-blue-500/50"
+                        ? "border-primary bg-primary/10"
+                        : "border-input bg-muted/50 hover:border-muted-foreground hover:bg-muted/80",
+                      isTopSuggestion && !isSelected && "border-primary/50"
                     )}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           {isTopSuggestion && (
-                            <span className="text-blue-400 text-xs">TOP</span>
+                            <span className="text-primary text-xs">TOP</span>
                           )}
-                          <span className="font-medium text-white">
+                          <span className="font-medium text-foreground">
                             Tisch {suggestion.table_number}
                           </span>
                           {suggestion.guest_name && (
-                            <span className="text-gray-400">
+                            <span className="text-muted-foreground">
                               - {suggestion.guest_name}
                             </span>
                           )}
                           {isSelected && (
-                            <Check className="w-4 h-4 text-blue-400 flex-shrink-0" />
+                            <Check className="w-4 h-4 text-primary flex-shrink-0" />
                           )}
                         </div>
-                        <p className="text-sm text-gray-400 mt-1 line-clamp-2">
+                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                           {suggestion.reason}
                         </p>
                       </div>
 
                       {/* Confidence Bar */}
                       <div className="flex-shrink-0 w-20">
-                        <div className="text-right text-xs font-medium text-gray-300 mb-1">
+                        <div className="text-right text-xs font-medium text-foreground mb-1">
                           {formatConfidence(suggestion.confidence)}
                         </div>
-                        <div className="h-2 bg-gray-600 rounded-full overflow-hidden">
+                        <div className="h-2 bg-muted rounded-full overflow-hidden">
                           <div
                             className={cn(
                               "h-full rounded-full transition-all",
@@ -212,13 +212,13 @@ export function AITableSuggestion({
 
           {/* No Suggestions */}
           {!loading && !error && suggestions.length === 0 && (
-            <div className="py-4 text-center text-gray-400 text-sm">
+            <div className="py-4 text-center text-muted-foreground text-sm">
               Keine Vorschläge verfügbar. Bitte Tisch manuell auswählen.
             </div>
           )}
 
           {/* Manual Select Button */}
-          <div className="mt-3 pt-3 border-t border-gray-700">
+          <div className="mt-3 pt-3 border-t border-border">
             <Button
               type="button"
               variant="ghost"

@@ -349,7 +349,7 @@ export function TableCard({
         ${isDragging ? "opacity-50" : ""}
         ${isOver ? "ring-4 ring-yellow-400 ring-offset-2 scale-110" : ""}
         ${isInactive ? "opacity-80 saturate-75" : ""}
-        ${isSelected ? "ring-4 ring-blue-400 ring-offset-2" : ""}
+        ${isSelected ? "ring-4 ring-ring ring-offset-2" : ""}
         ${hasReadyOrders ? "outline outline-2 outline-emerald-400 outline-offset-2" : ""}
         ${selectionMode ? "cursor-pointer" : ""}
         group
@@ -361,8 +361,8 @@ export function TableCard({
         <div className="absolute top-2 left-2 z-30">
           <div className={`w-6 h-6 rounded-md border-2 flex items-center justify-center ${
             isSelected 
-              ? "bg-blue-500 border-blue-400" 
-              : "bg-gray-800/80 border-gray-600"
+              ? "bg-primary border-primary"
+              : "bg-card/80 border-input"
           }`}>
             {isSelected && <Check className="w-4 h-4 text-white" />}
           </div>
@@ -401,9 +401,9 @@ export function TableCard({
 
       {isInactive && (
         <>
-          <div className="pointer-events-none absolute inset-0 rounded-lg border-2 border-dashed border-gray-500/60" />
+          <div className="pointer-events-none absolute inset-0 rounded-lg border-2 border-dashed border-muted-foreground/60" />
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <div className="px-3 py-1 rounded-full text-[12px] font-semibold bg-gray-900/80 border border-gray-600 text-gray-200 shadow-[0_6px_18px_rgba(0,0,0,0.3)]">
+            <div className="px-3 py-1 rounded-full text-[12px] font-semibold bg-background/80 border border-input text-foreground shadow-[0_6px_18px_rgba(0,0,0,0.3)]">
               Deaktiviert
             </div>
           </div>

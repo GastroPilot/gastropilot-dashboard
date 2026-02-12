@@ -53,15 +53,15 @@ export function DialogContent({ children, className = "", onClose, showClose = t
   return (
     <div
       className={`
-        relative bg-gray-800 rounded-lg shadow-xl max-w-lg md:max-w-2xl w-full mx-4 md:mx-6
-        max-h-[90vh] overflow-y-auto z-[100] border border-gray-700
+        relative bg-card rounded-lg shadow-xl max-w-lg md:max-w-2xl w-full mx-4 md:mx-6
+        max-h-[90vh] overflow-y-auto z-[100] border border-border
         ${className}
       `}
       onClick={(e) => e.stopPropagation()}
     >
       {onClose && showClose && (
         <button
-          className="absolute top-2 right-2 text-gray-200 bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded-md text-xl font-bold leading-none touch-manipulation min-h-[36px] min-w-[36px] flex items-center justify-center"
+          className="absolute top-2 right-2 text-foreground bg-muted hover:bg-accent px-3 py-2 rounded-md text-xl font-bold leading-none touch-manipulation min-h-[36px] min-w-[36px] flex items-center justify-center"
           onClick={onClose}
           aria-label="Schließen"
         >
@@ -78,16 +78,16 @@ export function DialogHeader({ children }: DialogHeaderProps) {
 }
 
 export function DialogTitle({ children }: DialogTitleProps) {
-  return <h2 className="text-lg md:text-xl font-semibold text-white">{children}</h2>;
+  return <h2 className="text-lg md:text-xl font-semibold text-card-foreground">{children}</h2>;
 }
 
 export function DialogDescription({ children }: DialogDescriptionProps) {
-  return <p className="text-sm text-gray-400 mt-1">{children}</p>;
+  return <p className="text-sm text-muted-foreground mt-1">{children}</p>;
 }
 
 export function DialogFooter({ children, className = "" }: DialogFooterProps) {
   return (
-    <div className={`px-4 md:px-6 py-3 md:py-4 border-t border-gray-700 flex flex-col md:flex-row justify-end gap-2 md:gap-3 ${className}`}>
+    <div className={`px-4 md:px-6 py-3 md:py-4 border-t border-border flex flex-col md:flex-row justify-end gap-2 md:gap-3 ${className}`}>
       {children}
     </div>
   );

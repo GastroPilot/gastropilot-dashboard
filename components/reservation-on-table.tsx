@@ -43,25 +43,25 @@ export function ReservationOnTable({ reservation, onClick, onRemove, isDragging 
         onClick?.(e);
       }}
       className={`
-        mb-2 pb-2 border-b border-gray-700 last:border-0 
+        mb-2 pb-2 border-b border-border last:border-0
         cursor-grab active:cursor-grabbing
-        hover:bg-gray-800 rounded px-2 py-1
+        hover:bg-card rounded px-2 py-1
         ${isDragging ? "opacity-50" : ""}
         touch-manipulation
         relative z-[101]
       `}
     >
-      <div className="flex items-center gap-2 text-white">
+      <div className="flex items-center gap-2 text-foreground">
         <Clock className="w-3 h-3" />
         <span>
           {format(startDate, "HH:mm")} - {format(new Date(reservation.end_at), "HH:mm")}
         </span>
       </div>
-      <div className="mt-1 text-white">
+      <div className="mt-1 text-foreground">
         {reservation.guest_name || `Gast #${reservation.guest_id || "unbekannt"}`} -{" "}
         {reservation.party_size} {reservation.party_size === 1 ? "Person" : "Personen"}
       </div>
-      <div className="mt-1 text-gray-400 text-xs">Status: {reservation.status}</div>
+      <div className="mt-1 text-muted-foreground text-xs">Status: {reservation.status}</div>
       {onRemove && (
         <button
           onClick={(e) => {

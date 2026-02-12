@@ -10,10 +10,10 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
     return (
       <select
         className={cn(
-          "flex h-10 w-full rounded-md border border-gray-600 bg-gray-800 text-white px-3 py-2",
-          "text-sm ring-offset-gray-800",
+          "flex h-10 w-full rounded-md border border-input bg-card text-foreground px-3 py-2",
+          "text-sm ring-offset-background",
           "focus-visible:outline-none focus-visible:ring-2",
-          "focus-visible:ring-blue-500 focus-visible:ring-offset-2",
+          "focus-visible:ring-ring focus-visible:ring-offset-2",
           "disabled:cursor-not-allowed disabled:opacity-50",
           className
         )}
@@ -38,10 +38,10 @@ export function SelectTrigger({ children, className, ...props }: SelectTriggerPr
   return (
     <div
       className={cn(
-        "flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2",
+        "flex h-10 w-full rounded-md border border-input bg-card px-3 py-2",
         "text-sm items-center justify-between",
         "focus-within:outline-none focus-within:ring-2",
-        "focus-within:ring-blue-500 focus-within:ring-offset-2",
+        "focus-within:ring-ring focus-within:ring-offset-2",
         className
       )}
       {...props}
@@ -56,7 +56,7 @@ export interface SelectValueProps {
 }
 
 export function SelectValue({ placeholder }: SelectValueProps) {
-  return <span className="text-gray-500">{placeholder || "Auswählen..."}</span>;
+  return <span className="text-muted-foreground">{placeholder || "Auswählen..."}</span>;
 }
 
 export interface SelectContentProps {
@@ -79,4 +79,3 @@ export function SelectItem({ value, children, ...props }: SelectItemProps) {
     </option>
   );
 }
-

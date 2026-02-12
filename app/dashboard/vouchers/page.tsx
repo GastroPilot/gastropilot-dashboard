@@ -208,14 +208,14 @@ export default function VouchersPage() {
 
   if (!restaurant) {
     return (
-      <div className="h-full flex flex-col bg-gray-900 text-gray-100 items-center justify-center">
-        <p className="text-gray-400">Kein Restaurant gefunden</p>
+      <div className="h-full flex flex-col bg-background text-foreground items-center justify-center">
+        <p className="text-muted-foreground">Kein Restaurant gefunden</p>
       </div>
     );
   }
 
   return (
-    <div className="h-full flex flex-col bg-gray-900 text-gray-100 overflow-hidden">
+    <div className="h-full flex flex-col bg-background text-foreground overflow-hidden">
       {/* Toasts */}
       {toasts.length > 0 && (
         <div className="fixed bottom-4 right-4 z-[200] space-y-3">
@@ -237,16 +237,16 @@ export default function VouchersPage() {
       )}
 
       {/* Header */}
-      <div className="shrink-0 border-b border-gray-700 bg-gray-800 shadow-sm">
+      <div className="shrink-0 border-b border-border bg-card shadow-sm">
         <div className="px-4 py-3 flex flex-col gap-3">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div className="flex items-start gap-3">
               <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-orange-500 via-amber-500 to-yellow-500 flex items-center justify-center shadow-lg shadow-orange-500/25">
-                <Ticket className="w-5 h-5 text-white" />
+                <Ticket className="w-5 h-5 text-foreground" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-white">Gutschein-Verwaltung</h1>
-                <p className="text-xs md:text-sm text-gray-400 mt-0.5">
+                <h1 className="text-2xl font-bold text-foreground">Gutschein-Verwaltung</h1>
+                <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
                   {restaurant.name}
                 </p>
               </div>
@@ -254,7 +254,7 @@ export default function VouchersPage() {
             <div className="flex items-center gap-2 pt-1.5 md:pt-2">
               <Button
                 size="sm"
-                className="bg-blue-600 text-white shadow-none hover:bg-blue-600 hover:shadow-[0_12px_32px_rgba(37,99,235,0.35)]"
+                className="bg-primary text-foreground shadow-none hover:bg-primary hover:shadow-[0_12px_32px_rgba(37,99,235,0.35)]"
                 onClick={openCreateDialog}
               >
                 <Plus className="w-4 h-4 mr-2" />
@@ -270,11 +270,11 @@ export default function VouchersPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           {vouchers.length === 0 ? (
             <div className="text-center py-12">
-              <Ticket className="w-12 h-12 mx-auto mb-4 text-gray-500" />
-              <h2 className="text-xl font-semibold text-white mb-2">Noch keine Gutscheine vorhanden</h2>
-              <p className="text-gray-400 mb-4">Erstellen Sie Ihren ersten Gutschein</p>
+              <Ticket className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
+              <h2 className="text-xl font-semibold text-foreground mb-2">Noch keine Gutscheine vorhanden</h2>
+              <p className="text-muted-foreground mb-4">Erstellen Sie Ihren ersten Gutschein</p>
               <Button
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+                className="bg-primary hover:bg-primary/90 text-foreground"
                 onClick={openCreateDialog}
               >
                 <Plus className="w-4 h-4 mr-2" />
@@ -286,86 +286,86 @@ export default function VouchersPage() {
               {vouchers.map((voucher) => (
                 <div
                   key={voucher.id}
-                  className={`bg-gray-800 border rounded-lg p-4 transition-colors ${
+                  className={`bg-card border rounded-lg p-4 transition-colors ${
                     voucher.is_active
-                      ? "border-gray-700 hover:border-orange-500"
-                      : "border-gray-700 opacity-60"
+                      ? "border-border hover:border-orange-500"
+                      : "border-border opacity-60"
                   }`}
                 >
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <code className="text-lg font-bold text-white font-mono">{voucher.code}</code>
+                        <code className="text-lg font-bold text-foreground font-mono">{voucher.code}</code>
                         <button
                           onClick={() => copyCode(voucher.code)}
-                          className="text-gray-400 hover:text-orange-400 transition-colors"
+                          className="text-muted-foreground hover:text-orange-400 transition-colors"
                           title="Code kopieren"
                         >
                           <Copy className="w-4 h-4" />
                         </button>
                       </div>
                       {voucher.name && (
-                        <p className="text-sm font-medium text-gray-300 mt-1">{voucher.name}</p>
+                        <p className="text-sm font-medium text-muted-foreground mt-1">{voucher.name}</p>
                       )}
                     </div>
                     <div className="flex items-center gap-2">
                       {voucher.is_active ? (
                         <CheckCircle2 className="w-5 h-5 text-green-400" />
                       ) : (
-                        <XCircle className="w-5 h-5 text-gray-500" />
+                        <XCircle className="w-5 h-5 text-muted-foreground" />
                       )}
                     </div>
                   </div>
 
                   {voucher.description && (
-                    <p className="text-sm text-gray-400 mb-3 line-clamp-2">{voucher.description}</p>
+                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">{voucher.description}</p>
                   )}
 
                   <div className="space-y-1 text-sm mb-4">
                     <div className="flex justify-between">
-                      <span className="text-gray-400">Typ:</span>
-                      <span className="font-medium text-white">
+                      <span className="text-muted-foreground">Typ:</span>
+                      <span className="font-medium text-foreground">
                         {voucher.type === "fixed" ? `${voucher.value.toFixed(2)} €` : `${voucher.value}%`}
                       </span>
                     </div>
                     {voucher.valid_from && (
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Gültig ab:</span>
-                        <span className="text-gray-300">
+                        <span className="text-muted-foreground">Gültig ab:</span>
+                        <span className="text-muted-foreground">
                           {new Date(voucher.valid_from).toLocaleDateString("de-DE")}
                         </span>
                       </div>
                     )}
                     {voucher.valid_until && (
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Gültig bis:</span>
-                        <span className="text-gray-300">
+                        <span className="text-muted-foreground">Gültig bis:</span>
+                        <span className="text-muted-foreground">
                           {new Date(voucher.valid_until).toLocaleDateString("de-DE")}
                         </span>
                       </div>
                     )}
                     {voucher.max_uses && (
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Nutzungen:</span>
-                        <span className="text-gray-300">
+                        <span className="text-muted-foreground">Nutzungen:</span>
+                        <span className="text-muted-foreground">
                           {voucher.used_count} / {voucher.max_uses}
                         </span>
                       </div>
                     )}
                     {voucher.min_order_value && (
                       <div className="flex justify-between">
-                        <span className="text-gray-400">Mindestbestellwert:</span>
-                        <span className="text-gray-300">{voucher.min_order_value.toFixed(2)} €</span>
+                        <span className="text-muted-foreground">Mindestbestellwert:</span>
+                        <span className="text-muted-foreground">{voucher.min_order_value.toFixed(2)} €</span>
                       </div>
                     )}
                   </div>
 
-                  <div className="flex gap-2 pt-3 border-t border-gray-700">
+                  <div className="flex gap-2 pt-3 border-t border-border">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => openEditDialog(voucher)}
-                      className="flex-1 border-gray-600 text-gray-200 hover:bg-gray-700"
+                      className="flex-1 border-input text-foreground hover:bg-muted"
                     >
                       <Edit className="w-4 h-4 mr-1" />
                       Bearbeiten
@@ -388,7 +388,7 @@ export default function VouchersPage() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-gray-800 border-gray-700 text-gray-100">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card border-border text-foreground">
           <DialogHeader>
             <DialogTitle>
               {editingVoucher ? "Gutschein bearbeiten" : "Neuer Gutschein"}
@@ -409,7 +409,7 @@ export default function VouchersPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-muted-foreground mb-1">
                   Gutschein-Code *
                 </label>
                 <Input
@@ -420,12 +420,12 @@ export default function VouchersPage() {
                   className="font-mono"
                 />
                 {editingVoucher && (
-                  <p className="text-xs text-gray-500 mt-1">Code kann nicht geändert werden</p>
+                  <p className="text-xs text-muted-foreground mt-1">Code kann nicht geändert werden</p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-muted-foreground mb-1">
                   Name (optional)
                 </label>
                 <Input
@@ -437,27 +437,27 @@ export default function VouchersPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
+              <label className="block text-sm font-medium text-muted-foreground mb-1">
                 Beschreibung (optional)
               </label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Beschreibung des Gutscheins..."
-                className="w-full px-3 py-2 rounded-md border border-gray-600 bg-gray-800 text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400"
+                className="w-full px-3 py-2 rounded-md border border-input bg-card text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
                 rows={3}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-muted-foreground mb-1">
                   Typ *
                 </label>
                 <select
                   value={type}
                   onChange={(e) => setType(e.target.value as "fixed" | "percentage")}
-                  className="w-full px-3 py-2 rounded-md border border-gray-600 bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 rounded-md border border-input bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                 >
                   <option value="fixed">Fester Betrag (€)</option>
                   <option value="percentage">Prozentual (%)</option>
@@ -465,7 +465,7 @@ export default function VouchersPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-muted-foreground mb-1">
                   Wert *
                 </label>
                 <Input
@@ -477,7 +477,7 @@ export default function VouchersPage() {
                   onChange={(e) => setValue(parseFloat(e.target.value) || 0)}
                   placeholder={type === "fixed" ? "10.00" : "10"}
                 />
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-muted-foreground mt-1">
                   {type === "fixed" ? "Betrag in EUR" : "Prozent (0-100)"}
                 </p>
               </div>
@@ -485,7 +485,7 @@ export default function VouchersPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-muted-foreground mb-1">
                   Gültig ab (optional)
                 </label>
                 <Input
@@ -496,7 +496,7 @@ export default function VouchersPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-muted-foreground mb-1">
                   Gültig bis (optional)
                 </label>
                 <Input
@@ -509,7 +509,7 @@ export default function VouchersPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-muted-foreground mb-1">
                   Max. Nutzungen (optional)
                 </label>
                 <Input
@@ -522,7 +522,7 @@ export default function VouchersPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-muted-foreground mb-1">
                   Mindestbestellwert (optional)
                 </label>
                 <Input
@@ -539,7 +539,7 @@ export default function VouchersPage() {
             </div>
 
             <div className="flex items-center justify-between">
-              <label htmlFor="isActive" className="text-sm font-medium text-gray-300">
+              <label htmlFor="isActive" className="text-sm font-medium text-muted-foreground">
                 Gutschein ist aktiv
               </label>
               <label className="relative inline-flex items-center cursor-pointer">
@@ -550,12 +550,12 @@ export default function VouchersPage() {
                   onChange={(e) => setIsActive(e.target.checked)}
                   className="sr-only peer"
                 />
-                <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-blue-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-500"></div>
+                <div className="w-11 h-6 bg-gray-600 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-ring rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
               </label>
             </div>
           </div>
 
-          <DialogFooter className="border-t border-gray-700 pt-4">
+          <DialogFooter className="border-t border-border pt-4">
             <Button
               variant="outline"
               onClick={() => setDialogOpen(false)}

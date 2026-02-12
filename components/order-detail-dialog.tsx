@@ -817,7 +817,7 @@ export function OrderDetailDialog({
               size="sm"
               onClick={handleDownloadInvoice}
               variant="outline"
-              className="bg-gray-700 border-gray-600 text-gray-200 hover:bg-gray-600 min-h-[32px]"
+              className="bg-muted border-input text-foreground hover:bg-accent min-h-[32px]"
             >
               <Download className="w-4 h-4 mr-2" />
               Rechnung PDF
@@ -826,37 +826,37 @@ export function OrderDetailDialog({
         </DialogHeader>
 
         {loading && !order ? (
-          <div className="py-8 text-center text-gray-400">Lade Bestellung...</div>
+          <div className="py-8 text-center text-muted-foreground">Lade Bestellung...</div>
         ) : error ? (
           <div className="py-8 text-center text-red-400">{error}</div>
         ) : order ? (
           <div className="space-y-6 px-4 md:px-6">
             {/* Grundinformationen */}
             <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1.6fr] gap-4">
-              <div className="bg-gray-800/50 rounded-md p-3">
-                <div className="text-sm text-gray-400 mb-1">Tisch</div>
-                <div className="flex items-center gap-2 text-white">
+              <div className="bg-card/50 rounded-md p-3">
+                <div className="text-sm text-muted-foreground mb-1">Tisch</div>
+                <div className="flex items-center gap-2 text-foreground">
                   <TableIcon className="w-4 h-4" />
                   {table ? `${table.number}` : order.table_id ? `#${order.table_id}` : "Kein Tisch"}
                 </div>
               </div>
               {order.party_size && (
-                <div className="bg-gray-800/50 rounded-md p-3">
-                  <div className="text-sm text-gray-400 mb-1">Personen</div>
-                  <div className="flex items-center gap-2 text-white">
+                <div className="bg-card/50 rounded-md p-3">
+                  <div className="text-sm text-muted-foreground mb-1">Personen</div>
+                  <div className="flex items-center gap-2 text-foreground">
                     <Users className="w-4 h-4" />
                     {order.party_size}
                   </div>
                 </div>
               )}
-              <div className="bg-gray-800/50 rounded-md p-3">
-                <div className="text-sm text-gray-400 mb-1">Status</div>
+              <div className="bg-card/50 rounded-md p-3">
+                <div className="text-sm text-muted-foreground mb-1">Status</div>
                 <div className="relative w-full flex" ref={statusMenuRef}>
                   <button
                     type="button"
                     onClick={() => setStatusMenuOpen((prev) => !prev)}
                     disabled={loading}
-                    className="w-full rounded-md border border-gray-700 bg-gray-800 text-white px-3 py-1 text-sm shadow-inner flex items-center justify-between gap-3 hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[32px] touch-manipulation"
+                    className="w-full rounded-md border border-border bg-card text-foreground px-3 py-1 text-sm shadow-inner flex items-center justify-between gap-3 hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring min-h-[32px] touch-manipulation"
                   >
                     <div className="flex items-center gap-2 min-w-0">
                       <span
@@ -873,13 +873,13 @@ export function OrderDetailDialog({
                       <span className="truncate">{STATUS_META[order.status]?.label ?? order.status}</span>
                     </div>
                     <ChevronDown
-                      className={`w-3.5 h-3.5 text-gray-300 transition-transform ${
+                      className={`w-3.5 h-3.5 text-muted-foreground transition-transform ${
                         statusMenuOpen ? "rotate-180" : ""
                       }`}
                     />
                   </button>
                   {statusMenuOpen && (
-                    <div className="absolute right-0 mt-1 w-60 rounded-lg border border-gray-700 bg-gray-900 shadow-xl z-[50] max-h-[70vh] overflow-auto">
+                    <div className="absolute right-0 mt-1 w-60 rounded-lg border border-border bg-background shadow-xl z-[50] max-h-[70vh] overflow-auto">
                       {Object.entries(STATUS_META).map(([value, meta]) => {
                         const Icon = meta.Icon;
                         const active = order.status === value;
@@ -893,8 +893,8 @@ export function OrderDetailDialog({
                             }}
                             className={`w-full px-3 py-3 text-sm flex items-center justify-between transition-colors ${
                               active
-                                ? "font-semibold text-white border-l-2 border-blue-500 bg-gray-800/80"
-                                : "text-gray-200 hover:bg-gray-800"
+                                ? "font-semibold text-white border-l-2 border-primary bg-card/80"
+                                : "text-foreground hover:bg-accent"
                             }`}
                           >
                             <span className="flex items-center gap-2">
@@ -903,7 +903,7 @@ export function OrderDetailDialog({
                               </span>
                               {meta.label}
                             </span>
-                            {active && <Check className="w-4 h-4 text-blue-300" />}
+                            {active && <Check className="w-4 h-4 text-primary" />}
                           </button>
                         );
                       })}
@@ -916,7 +916,7 @@ export function OrderDetailDialog({
             {/* Bestellpositionen */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <h3 className="text-lg font-semibold text-foreground flex items-center gap-2">
                   <ShoppingCart className="w-5 h-5" />
                   Bestellpositionen
                 </h3>
@@ -935,16 +935,16 @@ export function OrderDetailDialog({
 
               {/* Menü-Auswahl */}
               {isAddingItem && order.status !== "paid" && order.status !== "canceled" && (
-                <div className="mb-4 p-4 bg-gray-800/50 border border-gray-700 rounded-md">
+                <div className="mb-4 p-4 bg-card/50 border border-border rounded-md">
                   <div className="mb-3">
                     <div className="relative mb-2">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input
                         type="text"
                         placeholder="Artikel suchen..."
                         value={menuSearchQuery}
                         onChange={(e) => setMenuSearchQuery(e.target.value)}
-                        className="pl-10 bg-gray-700 border-gray-600 text-white"
+                        className="pl-10 bg-muted border-input text-foreground"
                         disabled={loading}
                       />
                     </div>
@@ -954,8 +954,8 @@ export function OrderDetailDialog({
                         onClick={() => setSelectedCategoryId(null)}
                         className={`px-3 py-1 rounded text-sm ${
                           selectedCategoryId === null
-                            ? "bg-blue-600 text-white"
-                            : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                            ? "bg-primary text-white"
+                            : "bg-muted text-muted-foreground hover:bg-accent"
                         }`}
                         disabled={loading}
                       >
@@ -970,8 +970,8 @@ export function OrderDetailDialog({
                             onClick={() => setSelectedCategoryId(category.id)}
                             className={`px-3 py-1 rounded text-sm ${
                               selectedCategoryId === category.id
-                                ? "bg-blue-600 text-white"
-                                : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                                ? "bg-primary text-white"
+                                : "bg-muted text-muted-foreground hover:bg-accent"
                             }`}
                             disabled={loading}
                           >
@@ -982,7 +982,7 @@ export function OrderDetailDialog({
                   </div>
                   <div className="max-h-64 overflow-y-auto space-y-2">
                     {filteredMenuItems.length === 0 ? (
-                      <div className="text-center py-4 text-gray-400">
+                      <div className="text-center py-4 text-muted-foreground">
                         {menuSearchQuery
                           ? "Keine Artikel gefunden"
                           : "Keine verfügbaren Artikel"}
@@ -994,22 +994,22 @@ export function OrderDetailDialog({
                           type="button"
                           onClick={() => handleAddMenuItem(menuItem)}
                           disabled={loading}
-                          className="w-full text-left p-3 bg-gray-700 hover:bg-gray-600 rounded-md border border-gray-600 hover:border-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="w-full text-left p-3 bg-muted hover:bg-accent rounded-md border border-input hover:border-primary transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <div className="flex justify-between items-start">
                             <div className="flex-1">
-                              <div className="font-medium text-white">{menuItem.name}</div>
+                              <div className="font-medium text-foreground">{menuItem.name}</div>
                               {menuItem.description && (
-                                <div className="text-sm text-gray-400 mt-1">
+                                <div className="text-sm text-muted-foreground mt-1">
                                   {menuItem.description}
                                 </div>
                               )}
                             </div>
                             <div className="ml-4 text-right">
-                              <div className="font-semibold text-white">
+                              <div className="font-semibold text-foreground">
                                 {formatCurrency(menuItem.price)}
                               </div>
-                              <div className="text-xs text-gray-400 mt-1">
+                              <div className="text-xs text-muted-foreground mt-1">
                                 <Plus className="w-3 h-3 inline" /> Hinzufügen
                               </div>
                             </div>
@@ -1021,27 +1021,27 @@ export function OrderDetailDialog({
                 </div>
               )}
               {order.items.length === 0 ? (
-                <div className="text-center py-8 text-gray-400 border border-gray-700 rounded-md">
+                <div className="text-center py-8 text-muted-foreground border border-border rounded-md">
                   Keine Positionen vorhanden
                 </div>
               ) : (
-                <div className="space-y-2 border border-gray-700 rounded-md p-4">
+                <div className="space-y-2 border border-border rounded-md p-4">
                   {order.items.map((item) => (
                     <div
                       key={item.id}
-                      className="bg-gray-800/50 rounded-md p-3 flex items-center justify-between"
+                      className="bg-card/50 rounded-md p-3 flex items-center justify-between"
                     >
                       <div className="flex-1">
-                        <div className="font-medium text-white">{item.item_name}</div>
+                        <div className="font-medium text-foreground">{item.item_name}</div>
                         {item.item_description && (
-                          <div className="text-sm text-gray-400">{item.item_description}</div>
+                          <div className="text-sm text-muted-foreground">{item.item_description}</div>
                         )}
-                        <div className="text-sm text-gray-400 mt-1">
+                        <div className="text-sm text-muted-foreground mt-1">
                           {item.quantity} × {formatCurrency(item.unit_price)} = {formatCurrency(item.total_price)}
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
-                        <span className="text-white font-medium">
+                        <span className="text-foreground font-medium">
                           {formatCurrency(item.total_price)}
                         </span>
                         {order.status !== "paid" && order.status !== "canceled" && (
@@ -1065,14 +1065,14 @@ export function OrderDetailDialog({
 
             {/* Rabatt/Trinkgeld Bearbeitung */}
             {order.status === "served" && (
-              <div className="bg-gray-800/50 border border-gray-700 rounded-md p-4">
+              <div className="bg-card/50 border border-border rounded-md p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-lg font-semibold text-white">Rabatt & Trinkgeld</h3>
+                  <h3 className="text-lg font-semibold text-foreground">Rabatt & Trinkgeld</h3>
                 </div>
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs text-gray-400 mb-1">Rabatt (€)</label>
+                      <label className="block text-xs text-muted-foreground mb-1">Rabatt (€)</label>
                       <Input
                         type="number"
                         min="0"
@@ -1090,13 +1090,13 @@ export function OrderDetailDialog({
                           const nextPercent = (nextAmount / order.subtotal) * 100;
                           setDiscountPercentage(Number(nextPercent.toFixed(2)));
                         }}
-                        className="bg-gray-700 border-gray-600 text-white"
+                        className="bg-muted border-input text-foreground"
                         placeholder="0.00"
                         disabled={isPaymentLocked}
                       />
                     </div>
                     <div>
-                      <label className="block text-xs text-gray-400 mb-1">Rabatt (%)</label>
+                      <label className="block text-xs text-muted-foreground mb-1">Rabatt (%)</label>
                       <Input
                         type="number"
                         min="0"
@@ -1121,14 +1121,14 @@ export function OrderDetailDialog({
                           const nextAmount = (order.subtotal * nextPercent) / 100;
                           setDiscountAmount(Number(nextAmount.toFixed(2)));
                         }}
-                        className="bg-gray-700 border-gray-600 text-white"
+                        className="bg-muted border-input text-foreground"
                         placeholder="0"
                         disabled={isPaymentLocked}
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-400 mb-1">Trinkgeld (€)</label>
+                    <label className="block text-xs text-muted-foreground mb-1">Trinkgeld (€)</label>
                       <Input
                         type="number"
                         min="0"
@@ -1138,7 +1138,7 @@ export function OrderDetailDialog({
                           setTipAmount(parseFloat(e.target.value) || 0);
                           setPaymentDetailsDirty(true);
                         }}
-                        className="bg-gray-700 border-gray-600 text-white"
+                        className="bg-muted border-input text-foreground"
                         placeholder="0.00"
                         disabled={isPaymentLocked || paymentView === "split"}
                       />
@@ -1148,18 +1148,18 @@ export function OrderDetailDialog({
             )}
 
             {/* Zusammenfassung */}
-            <div className="bg-gray-800/50 border border-gray-700 rounded-md p-4">
+            <div className="bg-card/50 border border-border rounded-md p-4">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg font-semibold text-white">Zusammenfassung</h3>
+                <h3 className="text-lg font-semibold text-foreground">Zusammenfassung</h3>
               </div>
 
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between text-gray-300">
+                <div className="flex justify-between text-muted-foreground">
                   <span>Zwischensumme:</span>
                   <span>{formatCurrency(order.subtotal)}</span>
                 </div>
                 {order.discount_amount > 0 && (
-                  <div className="flex justify-between text-gray-300">
+                  <div className="flex justify-between text-muted-foreground">
                     <span className="text-red-400">
                       Rabatt
                       {order.discount_percentage ? ` (${order.discount_percentage}%)` : ""}:
@@ -1167,33 +1167,33 @@ export function OrderDetailDialog({
                     <span className="text-red-400">-{formatCurrency(order.discount_amount)}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-gray-300">
-                  <span className="text-blue-400">MwSt. (inkl.):</span>
-                  <span className="text-blue-200">{formatCurrency(order.tax_amount)}</span>
+                <div className="flex justify-between text-muted-foreground">
+                  <span className="text-primary">MwSt. (inkl.):</span>
+                  <span className="text-foreground">{formatCurrency(order.tax_amount)}</span>
                 </div>
                 {(paymentView === "split" ? totalSplitTip : tipAmount) > 0 && (
-                  <div className="flex justify-between text-gray-300">
+                  <div className="flex justify-between text-muted-foreground">
                     <span className="text-green-400">Trinkgeld:</span>
                     <span className="text-green-400">
                       +{formatCurrency(paymentView === "split" ? totalSplitTip : tipAmount)}
                     </span>
                   </div>
                 )}
-                <div className="space-y-1 border-t border-gray-700 pt-2 mt-2">
-                  <div className="flex justify-between text-lg font-bold text-white">
+                <div className="space-y-1 border-t border-border pt-2 mt-2">
+                  <div className="flex justify-between text-lg font-bold text-foreground">
                     <span>Gesamt inkl. Trinkgeld:</span>
                     <span>
                       {formatCurrency(order.total - (tipAmount || 0) + totalSplitTip)}
                     </span>
                   </div>
-                  <div className="flex justify-between text-sm text-gray-400">
+                  <div className="flex justify-between text-sm text-muted-foreground">
                     <span>Gesamt exkl. Trinkgeld:</span>
-                    <span className="text-gray-300">
+                    <span className="text-muted-foreground">
                       {formatCurrency(order.total - (tipAmount || 0))}
                     </span>
                   </div>
                 </div>
-                <div className="flex justify-between text-sm text-gray-400 mt-2 pt-2 border-t border-gray-700">
+                <div className="flex justify-between text-sm text-muted-foreground mt-2 pt-2 border-t border-border">
                   <span>Zahlungsstatus:</span>
                   <span
                     className={
@@ -1214,8 +1214,8 @@ export function OrderDetailDialog({
                 
                 {/* Fehlgeschlagene SumUp-Zahlungen */}
                 {restaurant?.sumup_enabled && sumupPayments.length > 0 && (
-                  <div className="mt-3 pt-3 border-t border-gray-700">
-                    <div className="text-xs text-gray-400 mb-2">SumUp Zahlungsverlauf</div>
+                  <div className="mt-3 pt-3 border-t border-border">
+                    <div className="text-xs text-muted-foreground mb-2">SumUp Zahlungsverlauf</div>
                     <div className="space-y-2">
                       {sumupPayments.map((payment) => {
                         const isFailed = payment.status === "failed" || payment.status === "canceled";
@@ -1232,7 +1232,7 @@ export function OrderDetailDialog({
                                 ? "bg-red-900/20 border-red-500/50"
                                 : isProcessing
                                 ? "bg-yellow-900/20 border-yellow-500/50"
-                                : "bg-gray-800/50 border-gray-600"
+                                : "bg-card/50 border-input"
                             }`}
                           >
                             <div className="flex items-start justify-between gap-2">
@@ -1255,22 +1255,22 @@ export function OrderDetailDialog({
                                       : "Erfolgreich"}
                                   </span>
                                 </div>
-                                <div className="text-xs text-gray-400">
+                                <div className="text-xs text-muted-foreground">
                                   {format(new Date(payment.initiated_at), "dd.MM.yyyy HH:mm", { locale: de })}
                                 </div>
                                 {payment.checkout_id && (
-                                  <div className="text-xs text-gray-500 mt-1">
+                                  <div className="text-xs text-muted-foreground mt-1">
                                     Checkout: {payment.checkout_id.substring(0, 20)}...
                                   </div>
                                 )}
                                 {payment.transaction_code && (
-                                  <div className="text-xs text-gray-500 mt-1">
+                                  <div className="text-xs text-muted-foreground mt-1">
                                     Transaction: {payment.transaction_code}
                                   </div>
                                 )}
                               </div>
                               <div className="text-right">
-                                <div className="text-sm font-semibold text-gray-200">
+                                <div className="text-sm font-semibold text-foreground">
                                   {new Intl.NumberFormat("de-DE", {
                                     style: "currency",
                                     currency: payment.currency || "EUR",
@@ -1287,10 +1287,10 @@ export function OrderDetailDialog({
                 
                 {/* Zahlungsdetails */}
                 {order.status === "served" && (
-                  <div className="border-t border-gray-700 pt-3 mt-3">
+                  <div className="border-t border-border pt-3 mt-3">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-gray-300">Zahlung</span>
-                      <div className="inline-flex items-center rounded-lg border border-gray-700/70 bg-gray-800/90 p-0.5">
+                      <span className="text-sm font-medium text-muted-foreground">Zahlung</span>
+                      <div className="inline-flex items-center rounded-lg border border-border/70 bg-card/90 p-0.5">
                         <button
                           type="button"
                           onClick={() => {
@@ -1304,8 +1304,8 @@ export function OrderDetailDialog({
                           }}
                           className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-sm border min-h-[30px] ${
                             paymentView === "total"
-                              ? "bg-blue-600 text-white border-blue-500/80 shadow-inner"
-                              : "text-gray-200 border-transparent hover:bg-gray-700"
+                              ? "bg-primary text-white border-primary/80 shadow-inner"
+                              : "text-foreground border-transparent hover:bg-accent"
                           }`}
                         >
                           <Euro className="w-4 h-4" />
@@ -1326,8 +1326,8 @@ export function OrderDetailDialog({
                           disabled={order.items.length <= 1}
                           className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-sm border min-h-[30px] ${
                             paymentView === "split"
-                              ? "bg-blue-600 text-white border-blue-500/80 shadow-inner"
-                              : "text-gray-200 border-transparent hover:bg-gray-700"
+                              ? "bg-primary text-white border-primary/80 shadow-inner"
+                              : "text-foreground border-transparent hover:bg-accent"
                           } disabled:opacity-60 disabled:cursor-not-allowed`}
                         >
                           <Users className="w-4 h-4" />
@@ -1338,9 +1338,9 @@ export function OrderDetailDialog({
 
                     {paymentView === "total" && (
                       <div className="space-y-3">
-                        <div className="flex items-center justify-between text-sm text-gray-300">
+                        <div className="flex items-center justify-between text-sm text-muted-foreground">
                           <span>Zahlungsart:</span>
-                          <div className="inline-flex items-center rounded-lg border border-gray-700/70 bg-gray-800/90 p-0.5">
+                          <div className="inline-flex items-center rounded-lg border border-border/70 bg-card/90 p-0.5">
                             <button
                               type="button"
                               onClick={() => {
@@ -1351,8 +1351,8 @@ export function OrderDetailDialog({
                               disabled={isPaymentLocked}
                               className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-sm border min-h-[30px] ${
                                 paymentMethod === "cash"
-                                  ? "bg-blue-600 text-white border-blue-500/80 shadow-inner"
-                                  : "text-gray-200 border-transparent hover:bg-gray-700"
+                                  ? "bg-primary text-white border-primary/80 shadow-inner"
+                                  : "text-foreground border-transparent hover:bg-accent"
                               } disabled:opacity-60 disabled:cursor-not-allowed`}
                             >
                               <Banknote className="w-4 h-4" />
@@ -1368,8 +1368,8 @@ export function OrderDetailDialog({
                               disabled={isPaymentLocked}
                               className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-sm border min-h-[30px] ${
                                 paymentMethod === "card"
-                                  ? "bg-blue-600 text-white border-blue-500/80 shadow-inner"
-                                  : "text-gray-200 border-transparent hover:bg-gray-700"
+                                  ? "bg-primary text-white border-primary/80 shadow-inner"
+                                  : "text-foreground border-transparent hover:bg-accent"
                               } disabled:opacity-60 disabled:cursor-not-allowed`}
                             >
                               <CreditCard className="w-4 h-4" />
@@ -1389,10 +1389,10 @@ export function OrderDetailDialog({
                               disabled={isPaymentLocked || !restaurant?.sumup_enabled}
                               className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-sm border min-h-[30px] ${
                                 paymentMethod === "sumup_card"
-                                  ? "bg-blue-600 text-white border-blue-500/80 shadow-inner"
+                                  ? "bg-primary text-white border-primary/80 shadow-inner"
                                   : restaurant?.sumup_enabled
-                                  ? "text-gray-200 border-transparent hover:bg-gray-700"
-                                  : "text-gray-500 border-transparent opacity-50 cursor-not-allowed"
+                                  ? "text-foreground border-transparent hover:bg-accent"
+                                  : "text-muted-foreground border-transparent opacity-50 cursor-not-allowed"
                               } disabled:opacity-60 disabled:cursor-not-allowed`}
                               title={!restaurant?.sumup_enabled ? "SumUp ist für dieses Restaurant nicht aktiviert" : ""}
                             >
@@ -1404,14 +1404,14 @@ export function OrderDetailDialog({
                         
                         {/* DEAKTIVIERT FÜR ENTWICKLUNGSZWECKE: Terminal-Auswahl ausgeblendet */}
                         {paymentMethod === "sumup_card" && restaurant?.sumup_enabled && (
-                          <div className="space-y-3 p-3 bg-gray-900/50 border border-gray-600 rounded-md">
+                          <div className="space-y-3 p-3 bg-background/50 border border-input rounded-md">
                             <div className="text-sm text-yellow-400 mb-2">
                               ⚠️ Entwicklungsmodus: Reader-Verwaltung deaktiviert
                             </div>
                             <Button
                               onClick={handleStartSumupPayment}
                               disabled={isStartingSumupPayment || isPaymentLocked || (order?.status !== "served" && order?.status !== "paid")}
-                              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                              className="w-full bg-primary hover:bg-primary/90 text-white"
                             >
                               {isStartingSumupPayment ? (
                                 <>
@@ -1431,25 +1431,25 @@ export function OrderDetailDialog({
                     )}
 
                     {paymentView === "split" && (
-                      <div className="space-y-3 p-3 bg-gray-900/50 border border-gray-600 rounded-md mb-3">
+                      <div className="space-y-3 p-3 bg-background/50 border border-input rounded-md mb-3">
                         {/* Split Payment */}
                           <div>
                             <div className="flex items-center justify-between mb-2">
-                              <label className="text-xs text-gray-400">Split Payment</label>
+                              <label className="text-xs text-muted-foreground">Split Payment</label>
                               <Button
                                 size="sm"
                                 variant="outline"
                                 onClick={handleAddSplitPayment}
                                 disabled={isPaymentLocked || (splitPaid.length > 0 && splitPaid.every(Boolean))}
-                                className="bg-blue-600 border-blue-500 text-white hover:bg-blue-600 text-xs shadow-none hover:shadow-[0_10px_24px_rgba(59,130,246,0.35)] disabled:opacity-60 disabled:cursor-not-allowed"
+                                className="bg-primary border-primary text-white hover:bg-primary text-xs shadow-none hover:shadow-[0_10px_24px_rgba(59,130,246,0.35)] disabled:opacity-60 disabled:cursor-not-allowed"
                               >
                                 <Plus className="w-3 h-3 mr-1" />
                                 Hinzufügen
                               </Button>
                             </div>
-                            <div className="flex items-center justify-between text-xs text-gray-400 mb-3">
+                            <div className="flex items-center justify-between text-xs text-muted-foreground mb-3">
                               <span>Gesamt (Splits):</span>
-                              <span className="text-gray-200">{formatCurrency(totalSplitWithExtras)}</span>
+                              <span className="text-foreground">{formatCurrency(totalSplitWithExtras)}</span>
                             </div>
                             {splitPayments.length > 0 && (
                               <div className="space-y-3">
@@ -1489,8 +1489,8 @@ export function OrderDetailDialog({
                                       key={index}
                                       className={`rounded-md border p-3 space-y-2 ${
                                         isPaid
-                                          ? "border-emerald-600/60 bg-emerald-900/10 text-gray-300"
-                                          : "border-amber-600/40 bg-amber-900/10 text-gray-200"
+                                          ? "border-emerald-600/60 bg-emerald-900/10 text-muted-foreground"
+                                          : "border-amber-600/40 bg-amber-900/10 text-foreground"
                                       }`}
                                     >
                                       <div className="space-y-2">
@@ -1543,16 +1543,16 @@ export function OrderDetailDialog({
                                                 }}
                                                 className={`w-full px-3 py-2 rounded text-sm min-h-[40px] flex items-center justify-between gap-2 transition-colors ${
                                                   active
-                                                    ? "bg-gray-700/80 text-white"
+                                                    ? "bg-muted/80 text-foreground"
                                                     : locked
                                                     ? "bg-emerald-900/20 text-emerald-200 border border-emerald-700/40 cursor-not-allowed"
-                                                    : "bg-gray-900/40 text-gray-300 hover:bg-gray-800/70"
+                                                    : "bg-background/40 text-muted-foreground hover:bg-accent/70"
                                                 }`}
                                               >
                                                 <span className="truncate">
                                                   {item.quantity}× {item.item_name}
                                                 </span>
-                                                <span className="text-gray-400">
+                                                <span className="text-muted-foreground">
                                                   {formatCurrency(item.total_price)}
                                                 </span>
                                                 <span
@@ -1565,7 +1565,7 @@ export function OrderDetailDialog({
                                                   Bezahlt
                                                 </span>
                                                 {active && (
-                                                  <Check className="w-3.5 h-3.5 text-blue-300 flex-shrink-0" />
+                                                  <Check className="w-3.5 h-3.5 text-primary flex-shrink-0" />
                                                 )}
                                               </button>
                                             );
@@ -1578,31 +1578,31 @@ export function OrderDetailDialog({
                                               splitMethodMenuRefs.current[index] = el;
                                             }}
                                           >
-                                            <div className="text-[11px] text-gray-400 mb-1">Zahlungsart</div>
+                                            <div className="text-[11px] text-muted-foreground mb-1">Zahlungsart</div>
                                             <button
                                               type="button"
                                               onClick={() =>
                                                 setSplitMethodMenuIndex((prev) => (prev === index ? null : index))
                                               }
                                             disabled={isPaymentLocked || !hasSelection || isPaid}
-                                            className="w-full flex items-center justify-between gap-2 px-2 py-1 bg-gray-700 border border-gray-600 rounded text-white text-sm hover:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[32px] disabled:opacity-60 disabled:cursor-not-allowed"
+                                            className="w-full flex items-center justify-between gap-2 px-2 py-1 bg-muted border border-input rounded text-foreground text-sm hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring min-h-[32px] disabled:opacity-60 disabled:cursor-not-allowed"
                                             >
                                               <span className="flex items-center gap-2">
                                                 {payment.method === "card" ? (
-                                                  <CreditCard className="w-4 h-4 text-gray-300" />
+                                                  <CreditCard className="w-4 h-4 text-muted-foreground" />
                                                 ) : (
-                                                  <Banknote className="w-4 h-4 text-gray-300" />
+                                                  <Banknote className="w-4 h-4 text-muted-foreground" />
                                                 )}
                                                 <span>{payment.method === "card" ? "Karte" : "Bar"}</span>
                                               </span>
                                               <ChevronDown
-                                                className={`w-4 h-4 text-gray-400 transition-transform ${
+                                                className={`w-4 h-4 text-muted-foreground transition-transform ${
                                                   splitMethodMenuIndex === index ? "rotate-180" : ""
                                                 }`}
                                               />
                                             </button>
                                             {hasSelection && splitMethodMenuIndex === index && (
-                                              <div className="absolute left-0 mt-1 w-full rounded-md border border-gray-700 bg-gray-900 shadow-xl z-[50] overflow-hidden">
+                                              <div className="absolute left-0 mt-1 w-full rounded-md border border-border bg-background shadow-xl z-[50] overflow-hidden">
                                                 <button
                                                   type="button"
                                                   onClick={() => {
@@ -1611,16 +1611,16 @@ export function OrderDetailDialog({
                                                   }}
                                                   className={`w-full px-3 py-2 text-sm flex items-center justify-between transition-colors ${
                                                     payment.method === "cash"
-                                                      ? "font-semibold text-white border-l-2 border-blue-500 bg-gray-800/80"
-                                                      : "text-gray-200 hover:bg-gray-800"
+                                                      ? "font-semibold text-white border-l-2 border-primary bg-card/80"
+                                                      : "text-foreground hover:bg-accent"
                                                   }`}
                                                 >
                                                   <span className="flex items-center gap-2">
-                                                    <Banknote className="w-4 h-4 text-gray-300" />
+                                                    <Banknote className="w-4 h-4 text-muted-foreground" />
                                                     Bar
                                                   </span>
                                                   {payment.method === "cash" && (
-                                                    <Check className="w-4 h-4 text-blue-300" />
+                                                    <Check className="w-4 h-4 text-primary" />
                                                   )}
                                                 </button>
                                                 <button
@@ -1631,16 +1631,16 @@ export function OrderDetailDialog({
                                                   }}
                                                   className={`w-full px-3 py-2 text-sm flex items-center justify-between transition-colors ${
                                                     payment.method === "card"
-                                                      ? "font-semibold text-white border-l-2 border-blue-500 bg-gray-800/80"
-                                                      : "text-gray-200 hover:bg-gray-800"
+                                                      ? "font-semibold text-white border-l-2 border-primary bg-card/80"
+                                                      : "text-foreground hover:bg-accent"
                                                   }`}
                                                 >
                                                   <span className="flex items-center gap-2">
-                                                    <CreditCard className="w-4 h-4 text-gray-300" />
+                                                    <CreditCard className="w-4 h-4 text-muted-foreground" />
                                                     Karte
                                                   </span>
                                                   {payment.method === "card" && (
-                                                    <Check className="w-4 h-4 text-blue-300" />
+                                                    <Check className="w-4 h-4 text-primary" />
                                                   )}
                                                 </button>
                                               </div>
@@ -1648,7 +1648,7 @@ export function OrderDetailDialog({
                                           </div>
                                         </div>
                                       <div>
-                                        <label className="block text-[11px] text-gray-400 mb-1">Trinkgeld (€)</label>
+                                        <label className="block text-[11px] text-muted-foreground mb-1">Trinkgeld (€)</label>
                                         <Input
                                           type="number"
                                             min="0"
@@ -1657,17 +1657,17 @@ export function OrderDetailDialog({
                                             onChange={(e) =>
                                               updateSplitTip(index, Number.parseFloat(e.target.value) || 0)
                                             }
-                                            className="bg-gray-700 border-gray-600 text-white h-8 text-sm"
+                                            className="bg-muted border-input text-foreground h-8 text-sm"
                                             placeholder="0.00"
                                           disabled={isPaymentLocked || !hasSelection || isPaid}
                                           />
                                         </div>
                                         {hasSelection ? (
                                           <>
-                                            <div className="space-y-1 text-xs text-gray-400">
+                                            <div className="space-y-1 text-xs text-muted-foreground">
                                             <div className="flex justify-between">
                                               <span>Preis:</span>
-                                              <span className="text-gray-200">{formatCurrency(computedAmount)}</span>
+                                              <span className="text-foreground">{formatCurrency(computedAmount)}</span>
                                             </div>
                                             {discountShare > 0 && (
                                               <div className="flex justify-between">
@@ -1678,21 +1678,21 @@ export function OrderDetailDialog({
                                               </div>
                                             )}
                                             <div className="flex justify-between">
-                                              <span className="text-blue-400">MwSt. (inkl.):</span>
-                                              <span className="text-blue-200">{formatCurrency(taxShare)}</span>
+                                              <span className="text-primary">MwSt. (inkl.):</span>
+                                              <span className="text-foreground">{formatCurrency(taxShare)}</span>
                                             </div>
                                             <div className="flex justify-between">
                                               <span className="text-green-400">Trinkgeld:</span>
                                               <span className="text-green-300">+{formatCurrency(tip)}</span>
                                             </div>
                                             </div>
-                                            <div className="flex justify-between text-sm font-semibold text-gray-100 border-t border-gray-700 pt-2">
+                                            <div className="flex justify-between text-sm font-semibold text-foreground border-t border-border pt-2">
                                               <span>Summe:</span>
                                               <span>{formatCurrency(splitTotal)}</span>
                                             </div>
                                           </>
                                         ) : (
-                                          <div className="text-xs text-gray-500 italic">
+                                          <div className="text-xs text-muted-foreground italic">
                                             Bitte zuerst Positionen auswahlen.
                                           </div>
                                         )}
@@ -1707,9 +1707,9 @@ export function OrderDetailDialog({
                     )}
 
                     {paymentView === "total" && (paymentMethod || order.payment_method) && !splitPayments.length && (
-                      <div className="flex justify-between text-sm text-gray-400">
+                      <div className="flex justify-between text-sm text-muted-foreground">
                         <span>Zahlungsmethode:</span>
-                        <span className="text-gray-300">
+                        <span className="text-muted-foreground">
                           {(paymentMethod || order.payment_method) === "cash"
                             ? "Bar"
                             : (paymentMethod || order.payment_method) === "card"
@@ -1731,21 +1731,21 @@ export function OrderDetailDialog({
               <div>
                 {order.notes && (
                   <div className="mb-3">
-                    <h4 className="text-sm font-medium text-gray-300 mb-1 flex items-center gap-2">
+                    <h4 className="text-sm font-medium text-muted-foreground mb-1 flex items-center gap-2">
                       <FileText className="w-4 h-4" />
                       Notizen
                     </h4>
-                    <div className="text-gray-400 text-sm bg-gray-800/50 rounded-md p-3">
+                    <div className="text-muted-foreground text-sm bg-card/50 rounded-md p-3">
                       {order.notes}
                     </div>
                   </div>
                 )}
                 {order.special_requests && (
                   <div>
-                    <h4 className="text-sm font-medium text-gray-300 mb-1">
+                    <h4 className="text-sm font-medium text-muted-foreground mb-1">
                       Besondere Wünsche
                     </h4>
-                    <div className="text-gray-400 text-sm bg-gray-800/50 rounded-md p-3">
+                    <div className="text-muted-foreground text-sm bg-card/50 rounded-md p-3">
                       {order.special_requests}
                     </div>
                   </div>
@@ -1753,7 +1753,7 @@ export function OrderDetailDialog({
               </div>
             )}
 
-            <div className="flex items-center justify-between pt-2 border-t border-gray-800">
+            <div className="flex items-center justify-between pt-2 border-t border-border">
               <Button
                 size="sm"
                 variant="destructive"
@@ -1838,7 +1838,7 @@ export function OrderDetailDialog({
             </div>
 
             {/* Zeitstempel */}
-            <div className="text-xs text-gray-500 border-t border-gray-700 pt-3">
+            <div className="text-xs text-muted-foreground border-t border-border pt-3">
               {order.paid_at ? (
                 <div className="mb-1">
                   Eröffnet: {format(parseISO(order.opened_at), "dd.MM.yyyy HH:mm", { locale: de })} - Bezahlt:{" "}

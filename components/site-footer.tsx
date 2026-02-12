@@ -69,24 +69,24 @@ export function SiteFooter() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-gray-800 border-t border-gray-700 px-4 py-2 flex items-center justify-between text-xs text-gray-300">
-      <div className="flex items-center gap-2 text-gray-400">
+    <footer className="bg-card border-t border-border px-4 py-2 flex items-center justify-between text-xs text-muted-foreground">
+      <div className="flex items-center gap-2 text-muted-foreground">
         <span>Version {APP_VERSION}</span>
         {environment && (
           <>
-            <span className="text-gray-600">|</span>
+            <span className="text-muted-foreground/50">|</span>
             <span className={`font-medium ${
-              environment === "Development" ? "text-blue-400" :
-              environment === "Test" ? "text-yellow-400" :
-              environment === "Staging" ? "text-orange-400" :
-              environment === "Demo" ? "text-purple-400" :
-              "text-gray-400"
+              environment === "Development" ? "text-[#F95100]" :
+              environment === "Test" ? "text-yellow-500" :
+              environment === "Staging" ? "text-orange-500" :
+              environment === "Demo" ? "text-purple-500" :
+              "text-muted-foreground"
             }`}>
               {environment}
             </span>
           </>
         )}
-        <span className="text-gray-600">|</span>
+        <span className="text-muted-foreground/50">|</span>
         <span className="font-semibold">Servecta @ {currentYear}</span>
       </div>
     </footer>

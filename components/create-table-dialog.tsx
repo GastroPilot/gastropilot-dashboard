@@ -147,7 +147,7 @@ export function CreateTableDialog({
           <div className="space-y-4 px-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="number" className="block text-sm font-medium mb-1 text-gray-300">
+                <label htmlFor="number" className="block text-sm font-medium mb-1 text-muted-foreground">
                   Tischnummer *
                 </label>
                 <Input
@@ -159,7 +159,7 @@ export function CreateTableDialog({
                 />
               </div>
               <div>
-                <label htmlFor="capacity" className="block text-sm font-medium mb-1 text-gray-300">
+                <label htmlFor="capacity" className="block text-sm font-medium mb-1 text-muted-foreground">
                   Kapazität (Personen) *
                 </label>
                 <Input
@@ -175,12 +175,12 @@ export function CreateTableDialog({
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-1 text-gray-300">Area *</label>
+              <label className="block text-sm font-medium mb-1 text-muted-foreground">Area *</label>
               <div className="relative" ref={areaMenuRef}>
                 <button
                   type="button"
                   onClick={() => setAreaMenuOpen((prev) => !prev)}
-                  className="flex h-10 w-full items-center justify-between rounded-md border border-gray-600 bg-gray-800 text-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-inner disabled:opacity-60"
+                  className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-card text-foreground px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring shadow-inner disabled:opacity-60"
                   disabled={!hasAreas}
                 >
                   <span className="truncate">
@@ -189,7 +189,7 @@ export function CreateTableDialog({
                   <ChevronDown className={`h-4 w-4 transition-transform ${areaMenuOpen ? "rotate-180" : ""}`} />
                 </button>
                 {areaMenuOpen && (
-                  <div className="absolute z-20 mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 shadow-xl max-h-60 overflow-auto">
+                  <div className="absolute z-20 mt-1 w-full rounded-lg border border-border bg-card shadow-xl max-h-60 overflow-auto">
                     {areas.map((area) => (
                       <button
                         key={area.id}
@@ -201,7 +201,7 @@ export function CreateTableDialog({
                         className={`w-full px-3 py-2 text-left text-sm ${
                           areaId === area.id
                             ? "font-semibold text-white"
-                            : "text-gray-200 hover:bg-gray-800/70"
+                            : "text-foreground hover:bg-accent"
                         }`}
                       >
                         {area.name}
@@ -218,11 +218,11 @@ export function CreateTableDialog({
             </div>
 
             <div className="space-y-1">
-              <p className="text-xs text-gray-400">Notizen</p>
+              <p className="text-xs text-muted-foreground">Notizen</p>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-600 bg-gray-800 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-500"
+                className="w-full px-3 py-2 border border-input bg-card text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
                 rows={2}
                 placeholder="Optional: Besonderheiten oder Hinweise..."
               />
@@ -232,14 +232,14 @@ export function CreateTableDialog({
             <div>
               <div className="flex items-center gap-3">
                 <div className="flex-1">
-                  <p className="text-xs text-gray-400 mb-1">Rotation ({rotation}°)</p>
+                  <p className="text-xs text-muted-foreground mb-1">Rotation ({rotation}°)</p>
                   <input
                     type="range"
                     min="0"
                     max="359"
                     value={rotation}
                     onChange={(e) => setRotation(parseInt(e.target.value) || 0)}
-                    className="w-full accent-blue-500"
+                    className="w-full accent-[#F95100]"
                   />
                 </div>
                 <div className="w-20">
@@ -259,14 +259,14 @@ export function CreateTableDialog({
 
             <label
               htmlFor="isActive"
-              className="inline-flex items-center gap-3 px-3 py-2 rounded-md border border-gray-700 bg-gray-800 text-sm text-gray-100 cursor-pointer hover:border-blue-500"
+              className="inline-flex items-center gap-3 px-3 py-2 rounded-md border border-border bg-card text-sm text-foreground cursor-pointer hover:border-primary"
             >
               <input
                 type="checkbox"
                 id="isActive"
                 checked={isActive}
                 onChange={(e) => setIsActive(e.target.checked)}
-                className="w-5 h-5 accent-blue-500"
+                className="w-5 h-5 accent-[#F95100]"
               />
               <span className="flex items-center gap-2">
                 <span

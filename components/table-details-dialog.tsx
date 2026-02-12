@@ -526,8 +526,8 @@ export function TableDetailsDialog({
           {typeof orders !== "undefined" && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <h3 className="text-base font-semibold text-white">Bestellung</h3>
-                <span className="text-xs text-gray-400">
+                <h3 className="text-base font-semibold text-foreground">Bestellung</h3>
+                <span className="text-xs text-muted-foreground">
                   {activeOrders && activeOrders.length > 0 ? `${activeOrders.length} aktiv` : "Keine aktiv"}
                 </span>
               </div>
@@ -543,9 +543,9 @@ export function TableDetailsDialog({
                       onViewOrder(primaryOrder.id);
                     }
                   }}
-                  className={`rounded-xl border bg-gray-900/60 px-4 py-3 text-white shadow-[0_12px_28px_rgba(0,0,0,0.18)] transition-colors ${
-                    ORDER_STATUS_META[primaryOrder.status]?.border ?? "border-gray-700"
-                  } ${onViewOrder ? "cursor-pointer hover:bg-gray-900/70 focus:outline-none focus:ring-2 focus:ring-blue-500/50" : ""}`}
+                  className={`rounded-xl border bg-background/60 px-4 py-3 text-foreground shadow-[0_12px_28px_rgba(0,0,0,0.18)] transition-colors ${
+                    ORDER_STATUS_META[primaryOrder.status]?.border ?? "border-border"
+                  } ${onViewOrder ? "cursor-pointer hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring/50" : ""}`}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
                     <span className="font-semibold">
@@ -562,12 +562,12 @@ export function TableDetailsDialog({
                 </div>
               ) : (
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-gray-400 text-sm">Keine aktive Bestellung.</p>
+                  <p className="text-muted-foreground text-sm">Keine aktive Bestellung.</p>
                   {onCreateOrder && (
                     <Button
                       type="button"
                       onClick={onCreateOrder}
-                      className="bg-blue-600 hover:bg-blue-700 text-white border border-blue-500 shadow-none hover:shadow-[0_12px_32px_rgba(59,130,246,0.45)] transition-[shadow,background-color]"
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground border border-primary shadow-none hover:shadow-[0_12px_32px_rgba(59,130,246,0.45)] transition-[shadow,background-color]"
                     >
                       Bestellung erstellen
                     </Button>
@@ -578,13 +578,13 @@ export function TableDetailsDialog({
           )}
 
           {allowTableManagement && (isEditing || forceEditMode) && (
-            <form ref={editFormRef} onSubmit={handleSubmit} className="space-y-3 rounded-xl border border-gray-700 bg-gray-800/80 p-4 shadow-[0_10px_30px_rgba(0,0,0,0.3)]">
+            <form ref={editFormRef} onSubmit={handleSubmit} className="space-y-3 rounded-xl border border-border bg-card/80 p-4 shadow-[0_10px_30px_rgba(0,0,0,0.3)]">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   {/* {allowTableManagement && ( }
-                    <p className="text-xs text-gray-400">Tischnummer</p>
+                    <p className="text-xs text-muted-foreground">Tischnummer</p>
                   )} */
-                  <p className="text-xs text-gray-400">Tischnummer</p>
+                  <p className="text-xs text-muted-foreground">Tischnummer</p>
                   }
                   <Input
                     placeholder="Tischnummer"
@@ -595,9 +595,9 @@ export function TableDetailsDialog({
                 </div>
                 <div className="space-y-1">
                   {/* {allowTableManagement && (
-                    <p className="text-xs text-gray-400">Max. Plätze</p>
+                    <p className="text-xs text-muted-foreground">Max. Plätze</p>
                   )} */
-                  <p className="text-xs text-gray-400">Max. Plätze</p>
+                  <p className="text-xs text-muted-foreground">Max. Plätze</p>
                   }
                   <Input
                     type="number"
@@ -612,12 +612,12 @@ export function TableDetailsDialog({
               </div>
               {allowTableManagement && areas.length > 0 && (
                 <div className="space-y-1">
-                  <p className="text-xs text-gray-400">Area</p>
+                  <p className="text-xs text-muted-foreground">Area</p>
                   <div className="relative" ref={areaMenuRef}>
                     <button
                       type="button"
                       onClick={() => setAreaMenuOpen((prev) => !prev)}
-                      className="flex h-10 w-full items-center justify-between rounded-md border border-gray-600 bg-gray-800 text-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-inner"
+                      className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-card text-foreground px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring shadow-inner"
                     >
                       <span className="truncate">
                         {areaId ? areas.find((a) => a.id === areaId)?.name || "Area auswählen" : "Area auswählen"}
@@ -625,7 +625,7 @@ export function TableDetailsDialog({
                       <ChevronDown className={`h-4 w-4 transition-transform ${areaMenuOpen ? "rotate-180" : ""}`} />
                     </button>
                     {areaMenuOpen && (
-                      <div className="absolute z-10 mt-1 w-full rounded-lg border border-gray-700 bg-gray-900 shadow-xl max-h-60 overflow-auto">
+                      <div className="absolute z-10 mt-1 w-full rounded-lg border border-border bg-background shadow-xl max-h-60 overflow-auto">
                         {areas.map((area) => (
                           <button
                             key={area.id}
@@ -636,8 +636,8 @@ export function TableDetailsDialog({
                             }}
                             className={`w-full px-3 py-2 text-left text-sm ${
                               areaId === area.id
-                                ? "font-semibold text-white"
-                                : "text-gray-200 hover:bg-gray-800/70"
+                                ? "font-semibold text-foreground"
+                                : "text-foreground hover:bg-accent"
                             }`}
                           >
                             {area.name}
@@ -652,11 +652,11 @@ export function TableDetailsDialog({
                 {/* {allowTableManagement && (
                   <p className="text-xs text-gray-400">Notizen</p>
                 )} */
-                <p className="text-xs text-gray-400">Notizen</p> }
+                <p className="text-xs text-muted-foreground">Notizen</p> }
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-600 bg-gray-800 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-500"
+                  className="w-full px-3 py-2 border border-input bg-card text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground"
                   rows={2}
                   placeholder="Notizen"
                 />
@@ -664,7 +664,7 @@ export function TableDetailsDialog({
             <div className="space-y-2">
               </div>
               <div>
-                <p className="text-xs text-gray-400 mb-1">Rotation ({rotation}°)</p>
+                <p className="text-xs text-muted-foreground mb-1">Rotation ({rotation}°)</p>
                 <div className="flex items-center gap-3">
                   <input
                     type="range"
@@ -672,7 +672,7 @@ export function TableDetailsDialog({
                     max="359"
                     value={rotation}
                     onChange={(e) => setRotation(parseInt(e.target.value) || 0)}
-                    className="w-full accent-blue-500"
+                    className="w-full accent-primary"
                   />
                   <div className="w-20">
                     <label className="sr-only" htmlFor="rotation-input">Rotation</label>
@@ -692,19 +692,19 @@ export function TableDetailsDialog({
               </div>
               <label
                 htmlFor="isActive"
-                className="inline-flex items-center gap-3 px-3 py-2 rounded-md border border-gray-700 bg-gray-800 text-sm text-gray-100 cursor-pointer hover:border-blue-500"
+                className="inline-flex items-center gap-3 px-3 py-2 rounded-md border border-border bg-card text-sm text-foreground cursor-pointer hover:border-primary"
               >
                 <input
                   type="checkbox"
                   id="isActive"
                   checked={isActive}
                   onChange={(e) => setIsActive(e.target.checked)}
-                  className="w-5 h-5 accent-blue-500"
+                  className="w-5 h-5 accent-primary"
                 />
                 <span className="flex items-center gap-2">
                   <span
                     className={`w-2.5 h-2.5 rounded-full ${
-                      isActive ? "bg-green-400" : "bg-gray-500"
+                      isActive ? "bg-green-400" : "bg-muted-foreground"
                     }`}
                   />
                   {isActive ? "Tisch aktiv" : "Tisch inaktiv"}
@@ -716,8 +716,8 @@ export function TableDetailsDialog({
           {showReservations && (
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <h3 className="text-base font-semibold text-white">Reservierungen</h3>
-                <span className="text-xs text-gray-400">{activeReservations.length} aktiv</span>
+                <h3 className="text-base font-semibold text-foreground">Reservierungen</h3>
+                <span className="text-xs text-muted-foreground">{activeReservations.length} aktiv</span>
               </div>
 
               {primaryReservation && (
@@ -731,18 +731,18 @@ export function TableDetailsDialog({
                       onReservationClick(primaryReservation);
                     }
                   }}
-                  className="rounded-xl border border-emerald-500/60 bg-gray-900/60 px-4 py-4 text-white shadow-[0_12px_28px_rgba(0,0,0,0.18)] hover:border-emerald-400/80 hover:bg-gray-900/70 transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500/60"
+                  className="rounded-xl border border-emerald-500/60 bg-background/60 px-4 py-4 text-foreground shadow-[0_12px_28px_rgba(0,0,0,0.18)] hover:border-emerald-400/80 hover:bg-accent transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-500/60"
                 >
-                  <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-gray-100">
+                  <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-foreground">
                     <div className="flex items-center gap-2">
-                      <Clock className="w-5 h-5 text-gray-200" />
-                      <span className="text-lg font-semibold text-white">
+                      <Clock className="w-5 h-5 text-foreground" />
+                      <span className="text-lg font-semibold text-foreground">
                         {format(new Date(primaryReservation.start_at), "HH:mm")} - {format(new Date(primaryReservation.end_at), "HH:mm")}
                       </span>
-                      <span className="text-white font-semibold">• {primaryReservation.party_size} Pers.</span>
+                      <span className="text-foreground font-semibold">• {primaryReservation.party_size} Pers.</span>
                     </div>
                     {heroRemainingLabel && (
-                      <span className="text-xs text-white font-semibold">
+                      <span className="text-xs text-foreground font-semibold">
                         {heroRemainingLabel}
                       </span>
                     )}
@@ -750,8 +750,8 @@ export function TableDetailsDialog({
                       Aktive Reservierung
                     </span>
                   </div>
-                  <div className="mt-3 flex flex-col gap-3 text-sm text-white">
-                    <div className="text-lg font-semibold text-white">
+                  <div className="mt-3 flex flex-col gap-3 text-sm text-foreground">
+                    <div className="text-lg font-semibold text-foreground">
                       {primaryReservation.guest_name || `Gast #${primaryReservation.guest_id || "unbekannt"}`}
                     </div>
                     <div className="flex flex-col gap-2">
@@ -787,7 +787,7 @@ export function TableDetailsDialog({
                             handleMarkSeated(primaryReservation);
                           }}
                           disabled={markingSeated === primaryReservation.id}
-                          className="h-full px-3 bg-blue-600 hover:bg-blue-700 text-white border border-blue-500 shadow-none hover:shadow-[0_12px_32px_rgba(59,130,246,0.45)] transition-[shadow,background-color] flex-1 order-last disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="h-full px-3 bg-primary hover:bg-primary/90 text-primary-foreground border border-primary shadow-none hover:shadow-[0_12px_32px_rgba(59,130,246,0.45)] transition-[shadow,background-color] flex-1 order-last disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <CheckCircle className="w-4 h-4 mr-2" />
                           Gäste da
@@ -805,7 +805,7 @@ export function TableDetailsDialog({
                             handleCancelReservation(primaryReservation);
                           }}
                           disabled={cancelingReservation === primaryReservation.id}
-                          className="h-full px-3 bg-transparent text-white border border-red-500 hover:bg-red-500/10 hover:text-white shadow-none transition-[shadow,background-color,color] flex-1 order-first disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="h-full px-3 bg-transparent text-foreground border border-red-500 hover:bg-red-500/10 hover:text-foreground shadow-none transition-[shadow,background-color,color] flex-1 order-first disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <XCircle className="w-4 h-4 mr-2" />
                           Stornieren
@@ -834,7 +834,7 @@ export function TableDetailsDialog({
               )}
 
               {activeReservations.length === 0 ? (
-                <p className="text-gray-400 text-sm">Keine Einträge</p>
+                <p className="text-muted-foreground text-sm">Keine Einträge</p>
               ) : (
                 <div className="space-y-2">
                   {otherReservations.map((reservation) => {
@@ -865,22 +865,22 @@ export function TableDetailsDialog({
                             onReservationClick(reservation);
                           }
                         }}
-                        className={`w-full text-left p-3 border rounded-lg hover:bg-gray-750 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 border-gray-700`}
+                        className={`w-full text-left p-3 border rounded-lg hover:bg-accent transition-colors focus:outline-none focus:ring-2 focus:ring-ring border-border`}
                       >
                         <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2 text-sm text-gray-200">
-                            <Clock className="w-4 h-4 text-gray-400" />
-                            <span className="font-semibold text-white">
+                          <div className="flex items-center gap-2 text-sm text-foreground">
+                            <Clock className="w-4 h-4 text-muted-foreground" />
+                            <span className="font-semibold text-foreground">
                               {format(new Date(reservation.start_at), "HH:mm")} - {format(new Date(reservation.end_at), "HH:mm")}
                             </span>
-                            <span className="text-gray-300">• {reservation.party_size} Pers.</span>
+                            <span className="text-foreground">• {reservation.party_size} Pers.</span>
                           </div>
                           {reservation.status === "seated" && remainingLabel && (
-                            <span className="text-xs text-gray-300">{remainingLabel}</span>
+                            <span className="text-xs text-foreground">{remainingLabel}</span>
                           )}
                         </div>
-                        <div className="mt-2 flex flex-col gap-2 text-sm text-gray-300">
-                          <span className="font-medium text-white">
+                        <div className="mt-2 flex flex-col gap-2 text-sm text-foreground">
+                          <span className="font-medium text-foreground">
                             {reservation.guest_name || `Gast #${reservation.guest_id || "unbekannt"}`}
                           </span>
                           <div className="flex w-full flex-row items-stretch gap-2 self-stretch">
@@ -892,7 +892,7 @@ export function TableDetailsDialog({
                                   handleMarkSeated(reservation);
                                 }}
                                 disabled={markingSeated === reservation.id || actionsDisabled}
-                                className="h-full min-h-[44px] px-3 bg-blue-600 hover:bg-blue-700 text-white border border-blue-500 shadow-none hover:shadow-[0_12px_32px_rgba(59,130,246,0.45)] transition-[shadow,background-color] flex-1 order-last disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="h-full min-h-[44px] px-3 bg-primary hover:bg-primary/90 text-primary-foreground border border-primary shadow-none hover:shadow-[0_12px_32px_rgba(59,130,246,0.45)] transition-[shadow,background-color] flex-1 order-last disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 <CheckCircle className="w-4 h-4 mr-2" />
                                 Gäste da
@@ -910,7 +910,7 @@ export function TableDetailsDialog({
                                   handleCancelReservation(reservation);
                                 }}
                                 disabled={cancelingReservation === reservation.id || actionsDisabled}
-                                className="h-full min-h-[44px] px-3 bg-transparent text-white border border-red-500 hover:bg-red-500/10 hover:text-white shadow-none transition-[shadow,background-color,color] flex-1 order-first disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="h-full min-h-[44px] px-3 bg-transparent text-foreground border border-red-500 hover:bg-red-500/10 hover:text-foreground shadow-none transition-[shadow,background-color,color] flex-1 order-first disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 <XCircle className="w-4 h-4 mr-2" />
                                 Stornieren
@@ -947,15 +947,15 @@ export function TableDetailsDialog({
 
         {table && blocks && (
           <div className="px-4 md:px-6 pb-5">
-            <div className="mt-4 border-t border-gray-700/60 pt-4">
+            <div className="mt-4 border-t border-border pt-4">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-white">Blockierungen</h3>
-                <span className="text-xs text-gray-400">
+                <h3 className="text-sm font-semibold text-foreground">Blockierungen</h3>
+                <span className="text-xs text-muted-foreground">
                   {blockAssignments.filter((assignment) => assignment.table_id === table.id).length} aktiv
                 </span>
               </div>
               {blockAssignments.filter((assignment) => assignment.table_id === table.id).length === 0 ? (
-                <div className="mt-2 text-sm text-gray-400">Keine Blockierungen für diesen Tisch.</div>
+                <div className="mt-2 text-sm text-muted-foreground">Keine Blockierungen für diesen Tisch.</div>
               ) : (
                 <div className="mt-3 space-y-2">
                   {blockAssignments
@@ -985,7 +985,7 @@ export function TableDetailsDialog({
                             setEditBlockDialogOpen(true);
                           }
                         }}
-                        className="flex items-center justify-between gap-3 rounded-lg border border-red-600/70 bg-gray-900/60 px-3 py-2.5 text-sm text-red-50 shadow-md hover:shadow-lg hover:bg-gray-900/70 transition-all cursor-pointer"
+                        className="flex items-center justify-between gap-3 rounded-lg border border-red-600/70 bg-background/60 px-3 py-2.5 text-sm text-red-50 shadow-md hover:shadow-lg hover:bg-accent transition-all cursor-pointer"
                       >
                         <div className="min-w-0">
                           {block.reason && (
@@ -993,7 +993,7 @@ export function TableDetailsDialog({
                               {block.reason}
                             </div>
                           )}
-                          <div className="text-sm font-medium text-white">
+                          <div className="text-sm font-medium text-foreground">
                             {format(new Date(block.start_at), "dd.MM.yyyy HH:mm")} –{" "}
                             {format(new Date(block.end_at), "HH:mm")}
                           </div>
