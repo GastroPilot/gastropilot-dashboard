@@ -11,6 +11,7 @@ import { confirmAction } from "@/lib/utils";
 import { LogOut, Menu, X } from "lucide-react";
 import { LoadingOverlay } from "@/components/loading-overlay";
 import { Logo } from "@/components/logo";
+import { ThemeSwitch } from "@/components/theme-switch";
 
 export default function DashboardLayout({
   children,
@@ -329,6 +330,7 @@ export default function DashboardLayout({
               >
                 {isNavOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
+              <ThemeSwitch />
               <Button
                 variant="outline"
                 size="sm"
