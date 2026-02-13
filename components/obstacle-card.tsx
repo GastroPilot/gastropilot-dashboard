@@ -16,7 +16,6 @@ export function ObstacleCard({ obstacle, onClick, isDragging }: ObstacleCardProp
   const dragTransform = transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : "";
   const baseTransform = `rotate(${obstacle.rotation || 0}deg)`;
   const combinedTransform = `${baseTransform} ${dragTransform}`.trim();
-  const bgColor = obstacle.color || "rgba(55,65,81,0.85)";
 
   const getTypeLabel = (type: string) => {
     switch (type) {
@@ -45,10 +44,12 @@ export function ObstacleCard({ obstacle, onClick, isDragging }: ObstacleCardProp
       onClick={onClick}
       data-dnd-draggable="true"
       className={`
-        group rounded-md border border-border shadow-[0_10px_24px_rgba(0,0,0,0.35)]
-        flex items-center justify-center text-xs font-semibold text-white cursor-grab
-        hover:shadow-[0_12px_30px_rgba(0,0,0,0.45)] hover:-translate-y-0.5 transition-all
-        ${isDragging ? "opacity-60" : ""}
+        group rounded-lg border border-border bg-card text-card-foreground
+        shadow-[0_10px_24px_rgba(0,0,0,0.35)] transition-all duration-200
+        flex items-center justify-center text-xs font-semibold cursor-grab
+        hover:shadow-[0_12px_30px_rgba(0,0,0,0.45)] hover:scale-105
+        ${obstacle.color ? "border-l-4" : "border-l-4 border-l-muted-foreground/50"}
+        ${isDragging ? "opacity-50" : ""}
       `}
       style={{
         left: obstacle.x,
@@ -57,7 +58,7 @@ export function ObstacleCard({ obstacle, onClick, isDragging }: ObstacleCardProp
         height: obstacle.height,
         position: "absolute",
         pointerEvents: "auto",
-        backgroundColor: bgColor,
+        ...(obstacle.color ? { borderLeftColor: obstacle.color } : {}),
         transform: combinedTransform || undefined,
         userSelect: 'none',
         WebkitUserSelect: 'none',
@@ -71,8 +72,8 @@ export function ObstacleCard({ obstacle, onClick, isDragging }: ObstacleCardProp
         if (e.detail > 1) e.preventDefault();
       }}
     >
-      <div className="flex items-center gap-1 px-2">
-        <ShieldAlert className="w-4 h-4 opacity-80" />
+      <div className="flex items-center gap-1 px-2 text-foreground">
+        <ShieldAlert className="w-4 h-4 opacity-80 text-muted-foreground" />
         <span className="truncate">{obstacle.name || getTypeLabel(obstacle.type)}</span>
       </div>
     </div>

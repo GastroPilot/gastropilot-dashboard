@@ -185,16 +185,17 @@ export function TableCard({
   const finishingSoon =
     typeof remainingMsCurrent === "number" && remainingMsCurrent > 0 && remainingMsCurrent <= 15 * 60 * 1000;
 
-  const statusVisual = (() => {
-    if (!table.is_active) return { bg: "#2D3748", text: "#A0AEC0" }; // frei (inaktiv)
-    if (blockStatus?.isBlocked) return { bg: "#C53030", text: "#FFFFFF" }; // blockiert
-    if (isOverdue) return { bg: "#C53030", text: "#FFFFFF" }; // überzogen
-    if (finishingSoon) return { bg: "#DD6B20", text: "#FFFFFF" }; // bald fertig
-    if (currentReservation) return { bg: "#3182CE", text: "#FFFFFF" }; // besetzt
+  // Status-Akzent für linken Rand (neues Design: Karte einheitlich, Status nur als Akzent)
+  const statusAccent = (() => {
+    if (!table.is_active) return "border-l-muted-foreground/50";
+    if (blockStatus?.isBlocked) return "border-l-destructive";
+    if (isOverdue) return "border-l-destructive";
+    if (finishingSoon) return "border-l-amber-500";
+    if (currentReservation) return "border-l-primary";
     const upcomingSoon =
       upcomingReservation && new Date(upcomingReservation.start_at).getTime() - nowTs <= 30 * 60 * 1000;
-    if (upcomingSoon) return { bg: "#38A169", text: "#FFFFFF" }; // reserviert, Gäste kommen gleich
-    return { bg: "#2D3748", text: "#A0AEC0" }; // frei
+    if (upcomingSoon) return "border-l-emerald-500";
+    return "border-l-muted-foreground/40";
   })();
 
   const tagSource = currentReservation || upcomingReservation;
@@ -333,8 +334,6 @@ export function TableCard({
         msUserSelect: 'none',
         touchAction: 'none',
         WebkitTouchCallout: 'none',
-        backgroundColor: statusVisual.bg,
-        color: statusVisual.text,
       }}
       {...(!isTableDraggingDisabled ? { ...listeners, ...attributes } : {})}
       onMouseDown={(e) => {
@@ -343,11 +342,13 @@ export function TableCard({
       }}
       onClick={onClick}
       className={`
-        rounded-lg shadow-lg transition-all duration-200
-        hover:scale-105 hover:shadow-xl
+        rounded-lg border border-border bg-card text-card-foreground
+        border-l-4 ${statusAccent}
+        shadow-[0_10px_24px_rgba(0,0,0,0.35)] transition-all duration-200
+        hover:scale-105 hover:shadow-[0_12px_30px_rgba(0,0,0,0.45)]
         flex flex-col items-center justify-center
         ${isDragging ? "opacity-50" : ""}
-        ${isOver ? "ring-4 ring-yellow-400 ring-offset-2 scale-110" : ""}
+        ${isOver ? "ring-4 ring-primary ring-offset-2 scale-110" : ""}
         ${isInactive ? "opacity-80 saturate-75" : ""}
         ${isSelected ? "ring-4 ring-ring ring-offset-2" : ""}
         ${hasReadyOrders ? "outline outline-2 outline-emerald-400 outline-offset-2" : ""}
@@ -378,21 +379,12 @@ export function TableCard({
           </div>
         </div>
       )}
-      <div className="pointer-events-none absolute top-0 left-0 right-0 px-0">
-        <div
-          className="flex items-center justify-between gap-3 px-3 py-2 rounded-2xl shadow-[0_10px_24px_rgba(0,0,0,0.28)] overflow-hidden whitespace-nowrap"
-          style={{
-            color: statusVisual.text,
-            backgroundColor: statusVisual.bg,
-            borderColor: statusVisual.bg,
-            borderWidth: "1px",
-            borderStyle: "solid",
-          }}
-        >
-          <span className="flex items-center gap-0.5 relative">
+      <div className="pointer-events-none absolute top-0 left-0 right-0 px-0 rounded-t-lg border-b border-border bg-muted/80">
+        <div className="flex items-center justify-between gap-3 px-3 py-2 overflow-hidden whitespace-nowrap">
+          <span className="flex items-center gap-0.5 relative text-foreground">
             <span className="text-sm font-semibold">{table.number}</span>
           </span>
-          <span className="inline-flex items-center gap-1 text-sm font-semibold">
+          <span className="inline-flex items-center gap-1 text-sm font-semibold text-foreground">
             <Users className="w-4 h-4" />
             {table.capacity}
           </span>
@@ -410,13 +402,13 @@ export function TableCard({
         </>
       )}
       {blockStatus?.isBlockedNow && (
-        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-1">
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-1 text-foreground">
           {blockStatus.reason && (
-            <span className="text-xs font-semibold opacity-90" style={{ color: statusVisual.text }}>
+            <span className="text-xs font-semibold opacity-90">
               {blockStatus.reason}
             </span>
           )}
-          <span className="inline-flex items-center gap-2 text-sm font-semibold tabular-nums opacity-90" style={{ color: statusVisual.text }}>
+          <span className="inline-flex items-center gap-2 text-sm font-semibold tabular-nums opacity-90">
             <Ban className="w-4 h-4" />
             {blockStatus.timeRange || "Blockiert"}
           </span>
@@ -424,7 +416,7 @@ export function TableCard({
       )}
       {remainingInfo && !blockStatus?.isBlockedNow && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <span className="inline-flex items-center gap-2 text-sm font-semibold tabular-nums opacity-85" style={{ color: statusVisual.text }}>
+          <span className="inline-flex items-center gap-2 text-sm font-semibold tabular-nums text-foreground opacity-85">
             <Clock className="w-4 h-4" />
             {remainingInfo.remainingLabel}
           </span>
@@ -432,7 +424,7 @@ export function TableCard({
       )}
       {!remainingInfo && !blockStatus?.isBlockedNow && upcomingDisplay && typeof upcomingDisplay.minutesUntil === "number" && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <span className="inline-flex items-center gap-2 text-sm font-semibold tabular-nums opacity-85" style={{ color: statusVisual.text }}>
+          <span className="inline-flex items-center gap-2 text-sm font-semibold tabular-nums text-foreground opacity-85">
             <Clock className="w-4 h-4" />
             in {upcomingDisplay.minutesUntil}min
           </span>
@@ -440,10 +432,7 @@ export function TableCard({
       )}
       {table.join_group_id && (
         <div className="pointer-events-none absolute -top-8 left-1/2 -translate-x-1/2">
-          <span
-            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white/10 border text-[10px] font-semibold shadow-[0_4px_12px_rgba(0,0,0,0.3)] whitespace-nowrap"
-            style={{ color: statusVisual.text, borderColor: statusVisual.text }}
-          >
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted border border-border text-[10px] font-semibold text-foreground shadow-sm whitespace-nowrap">
             <Link className="w-3 h-3" />
             Gruppe {table.join_group_id}
           </span>
@@ -451,13 +440,13 @@ export function TableCard({
       )}
       {remainingInfo && !blockStatus?.isBlockedNow && (
         <div className="absolute bottom-3 left-1/2 -translate-x-1/2 w-[90%] pointer-events-none flex flex-col gap-1">
-          <div className="h-1.5 w-full rounded-full bg-white/40 overflow-hidden">
+          <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
             <div
               className={`h-full rounded-full transition-[width] duration-500 ease-out ${remainingInfo.barColor}`}
               style={{ width: `${Math.round(remainingInfo.progress * 100)}%` }}
             />
           </div>
-          <div className="text-[10px] text-right opacity-80">
+          <div className="text-[10px] text-right text-muted-foreground">
             {remainingInfo.startLabel} – {remainingInfo.endLabel}
           </div>
         </div>
@@ -473,19 +462,19 @@ export function TableCard({
       )}
       {!remainingInfo && !blockStatus?.isBlockedNow && upcomingDisplay && (
         <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-[90%] pointer-events-none flex flex-col gap-1">
-          <div className="text-[10px] text-right opacity-80">
+          <div className="text-[10px] text-right text-muted-foreground">
             {upcomingDisplay.startLabel} – {upcomingDisplay.endLabel}
           </div>
         </div>
       )}
       {blockStatus?.isBlocked && !blockStatus.isBlockedNow && blockStatus.timeRange && (
-        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-1">
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center gap-1 text-foreground">
           {blockStatus.reason && (
-            <span className="text-xs font-semibold opacity-85" style={{ color: statusVisual.text }}>
+            <span className="text-xs font-semibold opacity-85">
               {blockStatus.reason}
             </span>
           )}
-          <span className="inline-flex items-center gap-2 text-sm font-semibold tabular-nums opacity-85" style={{ color: statusVisual.text }}>
+          <span className="inline-flex items-center gap-2 text-sm font-semibold tabular-nums opacity-85">
             <Ban className="w-4 h-4" />
             {blockStatus.timeRange}
           </span>
