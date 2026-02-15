@@ -242,7 +242,7 @@ export default function VouchersPage() {
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div className="flex items-start gap-3">
               <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-orange-500 via-amber-500 to-yellow-500 flex items-center justify-center shadow-lg shadow-orange-500/25">
-                <Ticket className="w-5 h-5 text-foreground" />
+                <Ticket className="w-5 h-5 text-white" />
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-foreground">Gutschein-Verwaltung</h1>
@@ -254,7 +254,7 @@ export default function VouchersPage() {
             <div className="flex items-center gap-2 pt-1.5 md:pt-2">
               <Button
                 size="sm"
-                className="bg-primary text-foreground shadow-none hover:bg-primary hover:shadow-[0_12px_32px_rgba(37,99,235,0.35)]"
+                className="bg-primary text-white dark:text-foreground shadow-none hover:bg-primary hover:text-white dark:hover:text-foreground hover:shadow-none"
                 onClick={openCreateDialog}
               >
                 <Plus className="w-4 h-4 mr-2" />

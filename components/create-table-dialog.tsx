@@ -200,7 +200,7 @@ export function CreateTableDialog({
                         }}
                         className={`w-full px-3 py-2 text-left text-sm ${
                           areaId === area.id
-                            ? "font-semibold text-white"
+                            ? "font-semibold text-foreground dark:text-white"
                             : "text-foreground hover:bg-accent"
                         }`}
                       >

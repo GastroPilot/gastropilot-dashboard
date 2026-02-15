@@ -328,8 +328,8 @@ export default function OrderHistoryPage() {
         <div className="px-4 py-3 flex flex-col gap-3">
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div className="flex items-start gap-3">
-              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-slate-500 via-blue-500 to-indigo-500 flex items-center justify-center shadow-lg shadow-[#F95100]/25">
-                <History className="w-5 h-5 text-foreground" />
+              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-[#F95100] to-[#E04800] flex items-center justify-center shadow-lg shadow-[#F95100]/25">
+                <History className="w-5 h-5 text-white" />
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-foreground">Bestellhistorie</h1>
@@ -344,7 +344,7 @@ export default function OrderHistoryPage() {
                 size="sm"
                 onClick={handleExportCSV}
                 disabled={filteredOrders.length === 0}
-                className="bg-muted border-input text-foreground shadow-none hover:text-blue-100 hover:border-primary hover:shadow-[0_12px_32px_rgba(37,99,235,0.25)]"
+                className="bg-muted border-input text-foreground shadow-none hover:bg-muted hover:text-foreground hover:border-input hover:shadow-none"
               >
                 <Download className="w-4 h-4 mr-2" />
                 CSV exportieren
@@ -542,7 +542,7 @@ export default function OrderHistoryPage() {
                                   active ? meta.tone : "border-white/10 bg-black/10 text-foreground"
                                 }`}
                               >
-                                <Icon className="w-4 h-4" />
+                                <Icon className={`w-4 h-4 ${active ? "text-foreground dark:text-current" : ""}`} />
                               </span>
                               <span className="capitalize">{meta.label}</span>
                             </span>

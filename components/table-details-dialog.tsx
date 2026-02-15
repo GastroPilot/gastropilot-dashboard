@@ -21,35 +21,39 @@ import { confirmAction } from "@/lib/utils";
 import { BlockTableDialog } from "@/components/block-table-dialog";
 
 const ORDER_STATUS_META: Record<OrderStatus, { label: string; tone: string; border: string }> = {
-  open: { label: "Offen", tone: "bg-blue-900/40 border-blue-600 text-blue-100", border: "border-blue-600/70" },
+  open: {
+    label: "Offen",
+    tone: "bg-blue-900/40 border-blue-600 text-foreground dark:text-blue-100",
+    border: "border-blue-600/70",
+  },
   sent_to_kitchen: {
     label: "An Küche gesendet",
-    tone: "bg-indigo-900/40 border-indigo-600 text-indigo-100",
+    tone: "bg-indigo-900/40 border-indigo-600 text-foreground dark:text-indigo-100",
     border: "border-indigo-600/70",
   },
   in_preparation: {
     label: "In Zubereitung",
-    tone: "bg-yellow-900/40 border-yellow-600 text-yellow-100",
+    tone: "bg-yellow-900/40 border-yellow-600 text-foreground dark:text-yellow-100",
     border: "border-yellow-600/70",
   },
   ready: {
     label: "Fertig",
-    tone: "bg-emerald-900/40 border-emerald-600 text-emerald-100",
+    tone: "bg-emerald-900/40 border-emerald-600 text-foreground dark:text-emerald-100",
     border: "border-emerald-600/70",
   },
   served: {
     label: "Serviert",
-    tone: "bg-green-900/40 border-green-600 text-green-100",
+    tone: "bg-green-900/40 border-green-600 text-foreground dark:text-green-100",
     border: "border-green-600/70",
   },
   paid: {
     label: "Bezahlt",
-    tone: "bg-amber-900/30 border-amber-600 text-amber-100",
+    tone: "bg-amber-900/30 border-amber-600 text-foreground dark:text-amber-100",
     border: "border-amber-600/70",
   },
   canceled: {
     label: "Storniert",
-    tone: "bg-red-900/30 border-red-600 text-red-100",
+    tone: "bg-red-900/30 border-red-600 text-foreground dark:text-red-100",
     border: "border-red-600/70",
   },
 };
@@ -461,7 +465,7 @@ export function TableDetailsDialog({
     return (
       <span
         key={tag}
-        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/5 border border-white/20 text-[11px] font-semibold text-white shadow-[0_6px_16px_rgba(0,0,0,0.25)]"
+        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/5 border border-white/20 text-[11px] font-semibold text-foreground dark:text-white shadow-[0_6px_16px_rgba(0,0,0,0.25)]"
       >
         {icon}
         <span className="truncate">{tag}</span>
@@ -545,7 +549,7 @@ export function TableDetailsDialog({
                   }}
                   className={`rounded-xl border bg-background/60 px-4 py-3 text-foreground shadow-[0_12px_28px_rgba(0,0,0,0.18)] transition-colors ${
                     ORDER_STATUS_META[primaryOrder.status]?.border ?? "border-border"
-                  } ${onViewOrder ? "cursor-pointer hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring/50" : ""}`}
+                  } ${onViewOrder ? "cursor-pointer hover:bg-background/70 focus:outline-none focus:ring-2 focus:ring-border/70" : ""}`}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
                     <span className="font-semibold">
@@ -553,7 +557,8 @@ export function TableDetailsDialog({
                     </span>
                     <span
                       className={`inline-flex items-center gap-2 rounded-md border px-2.5 py-1 text-xs font-semibold ${
-                        ORDER_STATUS_META[primaryOrder.status]?.tone ?? "border-white/10 bg-black/10 text-gray-200"
+                        ORDER_STATUS_META[primaryOrder.status]?.tone ??
+                        "border-white/10 bg-black/10 text-foreground dark:text-gray-200"
                       }`}
                     >
                       {ORDER_STATUS_META[primaryOrder.status]?.label ?? primaryOrder.status}
@@ -567,7 +572,7 @@ export function TableDetailsDialog({
                     <Button
                       type="button"
                       onClick={onCreateOrder}
-                      className="bg-primary hover:bg-primary/90 text-primary-foreground border border-primary shadow-none hover:shadow-[0_12px_32px_rgba(59,130,246,0.45)] transition-[shadow,background-color]"
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground border border-primary shadow-none hover:shadow-none transition-colors"
                     >
                       Bestellung erstellen
                     </Button>
@@ -746,7 +751,7 @@ export function TableDetailsDialog({
                         {heroRemainingLabel}
                       </span>
                     )}
-                    <span className="px-3 py-1 rounded-md border border-emerald-400/60 bg-emerald-500/20 text-emerald-50 text-xs font-bold uppercase tracking-wide">
+                    <span className="px-3 py-1 rounded-md border border-emerald-400/60 bg-emerald-500/20 text-foreground dark:text-emerald-50 text-xs font-bold uppercase tracking-wide">
                       Aktive Reservierung
                     </span>
                   </div>
@@ -756,25 +761,25 @@ export function TableDetailsDialog({
                     </div>
                     <div className="flex flex-col gap-2">
                       <div className="flex flex-col gap-1">
-                        <span className="text-xs uppercase tracking-wide text-white/70 font-semibold">Tags</span>
+                        <span className="text-xs uppercase tracking-wide text-foreground/70 dark:text-white/70 font-semibold">Tags</span>
                         {heroTags.length > 0 ? (
                           <div className="flex flex-wrap gap-2">
                             {heroTags.map((tag) => renderHeroTag(tag))}
                           </div>
                         ) : (
-                          <span className="text-sm text-white/70">Keine Tags</span>
+                          <span className="text-sm text-foreground/70 dark:text-white/70">Keine Tags</span>
                         )}
                       </div>
                       <div className="flex flex-col gap-1">
-                        <span className="text-xs uppercase tracking-wide text-white/70 font-semibold">Notizen</span>
+                        <span className="text-xs uppercase tracking-wide text-foreground/70 dark:text-white/70 font-semibold">Notizen</span>
                         {heroNotes ? (
                           <div className="rounded-lg border border-white/10 bg-white/5 px-3 py-2">
-                            <p className="text-sm text-white leading-relaxed">
+                            <p className="text-sm text-foreground dark:text-white leading-relaxed">
                               {heroNotes}
                             </p>
                           </div>
                         ) : (
-                          <span className="text-sm text-white/70">Keine Notizen</span>
+                          <span className="text-sm text-foreground/70 dark:text-white/70">Keine Notizen</span>
                         )}
                       </div>
                     </div>
@@ -787,7 +792,7 @@ export function TableDetailsDialog({
                             handleMarkSeated(primaryReservation);
                           }}
                           disabled={markingSeated === primaryReservation.id}
-                          className="h-full px-3 bg-primary hover:bg-primary/90 text-primary-foreground border border-primary shadow-none hover:shadow-[0_12px_32px_rgba(59,130,246,0.45)] transition-[shadow,background-color] flex-1 order-last disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="h-full px-3 bg-primary hover:bg-primary/90 text-primary-foreground border border-primary shadow-none hover:shadow-none transition-colors flex-1 order-last disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           <CheckCircle className="w-4 h-4 mr-2" />
                           Gäste da
@@ -892,7 +897,7 @@ export function TableDetailsDialog({
                                   handleMarkSeated(reservation);
                                 }}
                                 disabled={markingSeated === reservation.id || actionsDisabled}
-                                className="h-full min-h-[44px] px-3 bg-primary hover:bg-primary/90 text-primary-foreground border border-primary shadow-none hover:shadow-[0_12px_32px_rgba(59,130,246,0.45)] transition-[shadow,background-color] flex-1 order-last disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="h-full min-h-[44px] px-3 bg-primary hover:bg-primary/90 text-primary-foreground border border-primary shadow-none hover:shadow-none transition-colors flex-1 order-last disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 <CheckCircle className="w-4 h-4 mr-2" />
                                 Gäste da
@@ -1026,7 +1031,7 @@ export function TableDetailsDialog({
                 variant="destructive"
                 onClick={handleDelete}
                 disabled={loading}
-                className="shadow-none hover:shadow-[0_12px_32px_rgba(239,68,68,0.45)]"
+                className="min-w-[150px] whitespace-nowrap shadow-none hover:shadow-[0_12px_32px_rgba(239,68,68,0.45)]"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
                 Tisch löschen

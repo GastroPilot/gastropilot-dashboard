@@ -318,7 +318,7 @@ export default function MenuPage() {
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div className="flex items-start gap-3">
               <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-amber-500 via-orange-500 to-yellow-500 flex items-center justify-center shadow-lg shadow-orange-500/25">
-                <Tag className="w-5 h-5 text-foreground" />
+                <Tag className="w-5 h-5 text-white" />
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-foreground">Menü-Verwaltung</h1>
@@ -339,7 +339,7 @@ export default function MenuPage() {
               </Button>
               <Button
                 size="sm"
-                className="bg-primary text-foreground shadow-none hover:bg-primary hover:shadow-[0_12px_32px_rgba(37,99,235,0.35)]"
+                className="bg-primary text-white dark:text-foreground shadow-none hover:bg-primary/90 hover:shadow-none"
                 onClick={() => openItemDialog(null)}
               >
                 <Plus className="w-4 h-4 mr-2" />
@@ -369,7 +369,7 @@ export default function MenuPage() {
             onClick={() => setSelectedCategoryId(null)}
             className={`px-3 py-1 rounded text-sm transition-colors ${
               selectedCategoryId === null
-                ? "bg-primary text-foreground"
+                ? "bg-primary text-white dark:text-foreground"
                 : "bg-muted text-muted-foreground hover:bg-accent"
             }`}
           >
@@ -462,7 +462,7 @@ export default function MenuPage() {
                       <span
                         className={`text-xs px-2 py-1 rounded ${
                           item.is_available
-                            ? "bg-green-900/30 text-green-300"
+                            ? "bg-green-500/30 text-black dark:text-white"
                             : "bg-red-900/30 text-red-300"
                         }`}
                       >
@@ -629,7 +629,7 @@ export default function MenuPage() {
               <Button
                 onClick={handleSaveCategory}
                 disabled={loading || !categoryName.trim()}
-                className="bg-primary hover:bg-primary/90 text-foreground"
+                className="bg-primary hover:bg-primary/90 text-white dark:text-foreground"
               >
                 <Save className="w-4 h-4 mr-2" />
                 {loading ? "Speichern..." : "Speichern"}
@@ -871,7 +871,7 @@ export default function MenuPage() {
               <Button
                 onClick={handleSaveItem}
                 disabled={loading || !itemName.trim() || itemPrice <= 0}
-                className="bg-primary hover:bg-primary/90 text-foreground"
+                className="bg-primary hover:bg-primary/90 text-white dark:text-foreground"
               >
                 <Save className="w-4 h-4 mr-2" />
                 {loading ? "Speichern..." : "Speichern"}

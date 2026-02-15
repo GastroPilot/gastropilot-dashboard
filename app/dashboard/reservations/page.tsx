@@ -49,13 +49,13 @@ const normalizeStatusList = (values: any): ReservationFilter[] => {
 type StatusMeta = { Icon: typeof Clock; tone: string };
 
 const STATUS_ICON_MAP: Record<ReservationFilter, StatusMeta> = {
-  pending: { Icon: Clock, tone: "bg-blue-900/40 border-blue-600 text-blue-100" },
-  confirmed: { Icon: CheckCircle, tone: "bg-indigo-900/40 border-indigo-600 text-indigo-100" },
-  seated: { Icon: Users, tone: "bg-emerald-900/40 border-emerald-600 text-emerald-100" },
-  completed: { Icon: CheckCircle, tone: "bg-amber-900/30 border-amber-600 text-amber-100" },
-  canceled: { Icon: XCircle, tone: "bg-red-900/30 border-red-600 text-red-100" },
-  no_show: { Icon: XCircle, tone: "bg-orange-900/30 border-orange-600 text-orange-100" },
-  block: { Icon: Ban, tone: "bg-rose-900/40 border-rose-600 text-rose-100" },
+  pending: { Icon: Clock, tone: "bg-blue-900/40 border-blue-600 text-black dark:text-blue-100" },
+  confirmed: { Icon: CheckCircle, tone: "bg-indigo-900/40 border-indigo-600 text-black dark:text-indigo-100" },
+  seated: { Icon: Users, tone: "bg-emerald-900/40 border-emerald-600 text-black dark:text-emerald-100" },
+  completed: { Icon: CheckCircle, tone: "bg-amber-900/30 border-amber-600 text-black dark:text-amber-100" },
+  canceled: { Icon: XCircle, tone: "bg-red-900/30 border-red-600 text-black dark:text-red-100" },
+  no_show: { Icon: XCircle, tone: "bg-orange-900/30 border-orange-600 text-black dark:text-orange-100" },
+  block: { Icon: Ban, tone: "bg-rose-900/40 border-rose-600 text-black dark:text-rose-100" },
 };
 
 export default function ReservationsPage() {
@@ -482,7 +482,7 @@ export default function ReservationsPage() {
               <button
                 type="button"
                 aria-current="page"
-                className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-primary text-foreground text-sm md:text-base font-semibold border border-primary/80 shadow-inner min-h-[32px] md:min-h-[36px]"
+                className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-primary text-white dark:text-foreground text-sm md:text-base font-semibold border border-primary/80 shadow-inner min-h-[32px] md:min-h-[36px]"
               >
                 <Calendar className="w-4 h-4" />
                 Reservierungen
@@ -697,7 +697,7 @@ export default function ReservationsPage() {
                             active ? tone : "border-white/10 bg-black/10 text-foreground"
                           }`}
                         >
-                          <Icon className="w-4 h-4" />
+                          <Icon className={`w-4 h-4 ${active ? "text-foreground dark:text-current" : ""}`} />
                         </span>
                         <span className="capitalize">{label}</span>
                       </span>

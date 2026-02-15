@@ -386,7 +386,7 @@ export default function OperatorsPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-[#F95100] via-cyan-400 to-emerald-400 flex items-center justify-center shadow-lg shadow-[#F95100]/25">
-                <Users className="w-5 h-5 text-foreground" />
+                <Users className="w-5 h-5 text-white" />
               </div>
               <div>
                 <h1 className="text-xl md:text-2xl font-bold text-foreground">
@@ -988,12 +988,12 @@ export default function OperatorsPage() {
                               <span
                                 className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium ${
                                   operator.role === "servecta"
-                                    ? "bg-purple-900/50 text-purple-300 border border-purple-700/50"
+                                    ? "bg-purple-200 text-black border border-purple-300 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-700/50"
                                     : operator.role === "restaurantinhaber"
-                                    ? "bg-blue-900/50 text-blue-300 border border-blue-700/50"
+                                    ? "bg-blue-200 text-black border border-blue-300 dark:bg-blue-900/50 dark:text-blue-300 dark:border-blue-700/50"
                                     : operator.role === "schichtleiter"
-                                    ? "bg-yellow-900/50 text-yellow-300 border border-yellow-700/50"
-                                    : "bg-muted/50 text-muted-foreground border border-input/50"
+                                    ? "bg-yellow-200 text-black border border-yellow-300 dark:bg-yellow-900/50 dark:text-yellow-300 dark:border-yellow-700/50"
+                                    : "bg-muted/70 text-black border border-input/70 dark:bg-muted/50 dark:text-muted-foreground dark:border-input/50"
                                 }`}
                               >
                                 <RoleIcon className="w-3.5 h-3.5" />
@@ -1008,12 +1008,12 @@ export default function OperatorsPage() {
                             </td>
                             <td className="py-3 px-4">
                               {operator.is_active ? (
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-green-900/50 text-green-300 border border-green-700/50">
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-green-200 text-black border border-green-300 dark:bg-green-900/50 dark:text-green-300 dark:border-green-700/50">
                                   <UserCheck className="w-3.5 h-3.5" />
                                   Aktiv
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-red-900/50 text-red-300 border border-red-700/50">
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-red-200 text-black border border-red-300 dark:bg-red-900/50 dark:text-red-300 dark:border-red-700/50">
                                   <UserX className="w-3.5 h-3.5" />
                                   Inaktiv
                                 </span>

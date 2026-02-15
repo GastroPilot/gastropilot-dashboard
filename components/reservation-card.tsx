@@ -51,7 +51,7 @@ export function ReservationCard({
   const getStatusIcon = (status: Reservation["status"]) => {
     const entry = STATUS_ICON_MAP[status] || STATUS_ICON_MAP.pending;
     return {
-      icon: <entry.Icon className="w-4 h-4" />,
+      icon: <entry.Icon className="w-4 h-4 text-foreground dark:text-current" />,
       className: `inline-flex items-center justify-center w-8 h-8 rounded-md border ${entry.tone}`,
       label: entry.label,
     };

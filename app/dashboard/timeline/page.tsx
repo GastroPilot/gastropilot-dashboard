@@ -485,7 +485,7 @@ export default function TimelinePage() {
               <button
                 type="button"
                 aria-current="page"
-                className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-primary text-foreground text-sm md:text-base font-semibold border border-primary/80 shadow-inner min-h-[32px] md:min-h-[36px]"
+                className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-primary text-white dark:text-foreground text-sm md:text-base font-semibold border border-primary/80 shadow-inner min-h-[32px] md:min-h-[36px]"
               >
                 <Clock className="w-4 h-4" />
                 Zeitplan
@@ -606,7 +606,7 @@ export default function TimelinePage() {
                                 active ? tone : "border-white/10 bg-black/10 text-foreground"
                               }`}
                             >
-                              <Icon className="w-4 h-4" />
+                              <Icon className={`w-4 h-4 ${active ? "text-foreground dark:text-current" : ""}`} />
                             </span>
                             <span className="capitalize">{label}</span>
                           </span>

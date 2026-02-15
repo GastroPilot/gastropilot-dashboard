@@ -500,7 +500,7 @@ export default function TableManagementPage() {
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div className="flex items-start gap-3">
               <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-[#F95100] to-[#E04800] flex items-center justify-center shadow-lg shadow-[#F95100]/25">
-                <LayoutGrid className="w-5 h-5 text-foreground" />
+                <LayoutGrid className="w-5 h-5 text-white" />
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-foreground">Tische verwalten</h1>
@@ -599,7 +599,7 @@ export default function TableManagementPage() {
                   variant="outline"
                   onClick={openEditAreaDialog}
                   disabled={!selectedAreaId}
-                  className="min-h-[36px] shadow-none hover:shadow-[0_12px_32px_rgba(59,130,246,0.35)]"
+                  className="min-h-[36px] shadow-none hover:shadow-none"
                 >
                   <Pencil className="w-4 h-4 mr-2" />
                   Umbenennen

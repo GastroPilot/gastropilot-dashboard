@@ -105,7 +105,7 @@ export default function HilfecenterPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-[#F95100] via-cyan-400 to-emerald-400 flex items-center justify-center shadow-lg shadow-[#F95100]/25">
-              <BookOpen className="w-5 h-5 text-foreground" />
+              <BookOpen className="w-5 h-5 text-white" />
             </div>
             <div>
               <h1 className="text-xl md:text-2xl font-bold text-foreground">Hilfecenter</h1>

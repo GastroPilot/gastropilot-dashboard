@@ -18,13 +18,13 @@ type RangePreset = "today" | "7d" | "30d" | "90d" | "custom";
 const numberFormatter = new Intl.NumberFormat("de-DE");
 const percentFormatter = new Intl.NumberFormat("de-DE", { maximumFractionDigits: 1 });
 const STATUS_OPTIONS: { value: ReservationStatus | "all"; label: string; Icon: any; tone: string }[] = [
-  { value: "all", label: "Alle", Icon: EyeOff, tone: "text-gray-300" },
-  { value: "pending", label: "Ausstehend", Icon: Clock3, tone: "text-blue-300" },
-  { value: "confirmed", label: "Bestätigt", Icon: ShieldCheck, tone: "text-indigo-300" },
-  { value: "seated", label: "Platziert", Icon: Users, tone: "text-emerald-300" },
-  { value: "completed", label: "Abgeschlossen", Icon: CheckCircle, tone: "text-amber-300" },
-  { value: "canceled", label: "Storniert", Icon: XCircle, tone: "text-red-300" },
-  { value: "no_show", label: "No-Show", Icon: AlertCircle, tone: "text-orange-300" },
+  { value: "all", label: "Alle", Icon: EyeOff, tone: "text-foreground dark:text-gray-300" },
+  { value: "pending", label: "Ausstehend", Icon: Clock3, tone: "text-foreground dark:text-blue-300" },
+  { value: "confirmed", label: "Bestätigt", Icon: ShieldCheck, tone: "text-foreground dark:text-indigo-300" },
+  { value: "seated", label: "Platziert", Icon: Users, tone: "text-foreground dark:text-emerald-300" },
+  { value: "completed", label: "Abgeschlossen", Icon: CheckCircle, tone: "text-foreground dark:text-amber-300" },
+  { value: "canceled", label: "Storniert", Icon: XCircle, tone: "text-foreground dark:text-red-300" },
+  { value: "no_show", label: "No-Show", Icon: AlertCircle, tone: "text-foreground dark:text-orange-300" },
 ];
 
 function Sparkline({ values, colorClass = "text-blue-400" }: { values: number[]; colorClass?: string }) {
@@ -510,7 +510,7 @@ export default function OwnerInsightsPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-start gap-3">
             <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-[#F95100] via-cyan-400 to-emerald-400 flex items-center justify-center shadow-lg shadow-[#F95100]/25">
-              <BarChart3 className="w-5 h-5 text-foreground" />
+              <BarChart3 className="w-5 h-5 text-white" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-foreground">Kennzahlen</h1>

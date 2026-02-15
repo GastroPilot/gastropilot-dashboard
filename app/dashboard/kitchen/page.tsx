@@ -275,7 +275,7 @@ export default function KitchenPage() {
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div className="flex items-start gap-3">
               <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 flex items-center justify-center shadow-lg shadow-orange-500/25">
-                <ChefHat className="w-5 h-5 text-foreground" />
+                <ChefHat className="w-5 h-5 text-white" />
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-foreground">Küchen-Ansicht</h1>
@@ -303,7 +303,7 @@ export default function KitchenPage() {
                 onClick={() => setAutoRefresh(!autoRefresh)}
                 className={
                   autoRefresh
-                    ? "bg-green-900/30 border-green-600 text-green-200 shadow-none hover:bg-green-900/50 hover:text-green-100 hover:border-green-500 hover:shadow-[0_12px_32px_rgba(34,197,94,0.25)]"
+                    ? "bg-green-900/30 border-green-600 text-foreground dark:text-green-200 shadow-none hover:bg-green-900/50 hover:text-foreground dark:hover:text-green-100 hover:border-green-500 hover:shadow-[0_12px_32px_rgba(34,197,94,0.25)]"
                     : "bg-muted border-input text-foreground shadow-none hover:text-primary hover:border-primary hover:shadow-[0_12px_32px_rgba(249,81,0,0.25)]"
                 }
               >
@@ -330,7 +330,7 @@ export default function KitchenPage() {
                 }}
                 className={
                   soundEnabled
-                    ? "bg-primary/20 border-primary text-primary shadow-none hover:bg-primary/30 hover:text-primary hover:border-primary hover:shadow-[0_12px_32px_rgba(249,81,0,0.25)]"
+                    ? "bg-primary/20 border-primary text-foreground dark:text-primary shadow-none hover:bg-primary/30 hover:text-foreground dark:hover:text-primary hover:border-primary hover:shadow-[0_12px_32px_rgba(249,81,0,0.25)]"
                     : "bg-muted border-input text-foreground shadow-none hover:text-primary hover:border-primary hover:shadow-[0_12px_32px_rgba(249,81,0,0.25)]"
                 }
               >

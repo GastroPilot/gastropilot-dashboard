@@ -157,12 +157,12 @@ export default function AuditLogsPage() {
     switch (normalized) {
       case "create":
       case "post":
-        return "bg-emerald-900/40 text-emerald-200 border-emerald-700";
+        return "bg-emerald-200 text-black border-emerald-300 dark:bg-emerald-900/40 dark:text-emerald-200 dark:border-emerald-700";
       case "delete":
-        return "bg-red-900/40 text-red-200 border-red-700";
+        return "bg-red-200 text-black border-red-300 dark:bg-red-900/40 dark:text-red-200 dark:border-red-700";
       case "update":
       case "patch":
-        return "bg-orange-900/40 text-orange-200 border-orange-700";
+        return "bg-orange-200 text-black border-orange-300 dark:bg-orange-900/40 dark:text-orange-200 dark:border-orange-700";
       default:
         return "bg-card text-foreground border-border";
     }
@@ -466,7 +466,7 @@ export default function AuditLogsPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-[#F95100] to-[#E04800] flex items-center justify-center shadow-lg shadow-[#F95100]/25">
-                <FileText className="w-5 h-5 text-foreground" />
+                <FileText className="w-5 h-5 text-white" />
               </div>
               <div>
                 <h1 className="text-xl md:text-2xl font-bold text-foreground">
@@ -481,7 +481,7 @@ export default function AuditLogsPage() {
               <Button
                 variant="default"
                 size="sm"
-                className="gap-2 touch-manipulation min-h-[36px] md:min-h-[40px] bg-primary hover:bg-primary/90 text-foreground border border-primary shadow-lg shadow-[#F95100]/25"
+                className="gap-2 touch-manipulation min-h-[36px] md:min-h-[40px] bg-primary hover:bg-primary/90 text-white dark:text-foreground border border-primary shadow-lg shadow-[#F95100]/25"
                 onClick={() => loadLogs(restaurant.id, offset)}
                 disabled={isRefreshing}
               >

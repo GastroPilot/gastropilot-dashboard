@@ -312,7 +312,7 @@ export default function RestaurantManagePage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-[#F95100] via-cyan-400 to-emerald-400 flex items-center justify-center shadow-lg shadow-[#F95100]/25">
-                <Building2 className="w-5 h-5 text-foreground" />
+                <Building2 className="w-5 h-5 text-white" />
               </div>
               <div>
                 <h1 className="text-xl md:text-2xl font-bold text-foreground">

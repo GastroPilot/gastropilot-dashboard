@@ -350,8 +350,8 @@ export function WaitlistSidebar({
                   }
                 className={`w-full px-3 py-3 flex items-center justify-between gap-3 text-sm transition-colors ${
                   activeFilters.length === allFilterKeys.length
-                    ? "bg-accent text-foreground font-semibold border-l-2 border-primary"
-                    : "text-foreground hover:bg-accent"
+                    ? "bg-muted/80 text-foreground font-semibold border-l-2 border-foreground/40"
+                    : "bg-card text-muted-foreground hover:bg-accent/70 hover:text-foreground"
                 }`}
               >
                 <div className="flex items-center gap-3 min-w-0">
@@ -366,7 +366,9 @@ export function WaitlistSidebar({
                   </span>
                   <span
                     className={`inline-flex items-center justify-center w-6 h-6 rounded-full border ${
-                      activeFilters.length === allFilterKeys.length ? "border-primary/60 bg-primary/10" : "border-border bg-muted"
+                      activeFilters.length === allFilterKeys.length
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-background"
                     }`}
                   >
                     {activeFilters.length === allFilterKeys.length && <Check className="w-4 h-4" />}
@@ -399,31 +401,37 @@ export function WaitlistSidebar({
                     }}
                     className={`w-full px-3 py-3 flex items-center justify-between gap-3 text-sm transition-colors ${
                       isActive
-                        ? "bg-accent text-foreground font-semibold border-l-2 border-primary"
-                        : "text-foreground hover:bg-accent"
+                        ? "bg-muted/80 text-foreground font-semibold border-l-2 border-foreground/40"
+                        : "bg-card text-muted-foreground hover:bg-accent/70 hover:text-foreground"
                     }`}
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <span
                         className={`inline-flex items-center justify-center w-9 h-9 rounded-md border shrink-0 ${
-                          isActive ? filter.tone : "border-border bg-muted text-muted-foreground"
+                          isActive
+                            ? filter.tone
+                            : "border-border bg-muted text-muted-foreground"
                         }`}
                       >
-                        <Icon className="w-4 h-4" />
+                        <Icon className={`w-4 h-4 ${isActive ? "text-foreground dark:text-current" : ""}`} />
                       </span>
                       <span className="truncate">{filter.label}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                          isActive ? "bg-muted text-foreground" : "bg-muted text-foreground"
+                          isActive
+                            ? "bg-background text-foreground border border-foreground/30"
+                            : "bg-muted text-muted-foreground border border-border"
                         }`}
                       >
                         {count}
                       </span>
                       <span
                         className={`inline-flex items-center justify-center w-6 h-6 rounded-full border ${
-                          isActive ? "border-primary/60 bg-primary/10" : "border-border bg-muted"
+                          isActive
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border bg-background"
                         }`}
                       >
                         {isActive && <Check className="w-4 h-4" />}

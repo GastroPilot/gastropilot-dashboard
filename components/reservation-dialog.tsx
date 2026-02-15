@@ -661,7 +661,7 @@ export function ReservationDialog({
                             <span
                               className={`inline-flex items-center justify-center w-9 h-9 rounded-md border ${entry.tone} shrink-0`}
                             >
-                              <Icon className="w-4 h-4" />
+                              <Icon className="w-4 h-4 text-foreground dark:text-current" />
                             </span>
                           );
                         })()}
@@ -701,7 +701,7 @@ export function ReservationDialog({
                                 <span
                                   className={`inline-flex items-center justify-center w-9 h-9 rounded-md border ${entry.tone} shrink-0`}
                                 >
-                                  <Icon className="w-4 h-4" />
+                                  <Icon className={`w-4 h-4 ${isActive ? "text-foreground dark:text-current" : ""}`} />
                                 </span>
                                 <span className="truncate">{entry.label}</span>
                               </span>

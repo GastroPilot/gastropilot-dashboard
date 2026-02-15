@@ -867,7 +867,7 @@ export function OrderDetailDialog({
                         {(() => {
                           const meta = STATUS_META[order.status];
                           const StatusIcon = meta?.Icon ?? Clock;
-                          return <StatusIcon className="w-3.5 h-3.5" />;
+                          return <StatusIcon className="w-3.5 h-3.5 text-foreground dark:text-current" />;
                         })()}
                       </span>
                       <span className="truncate">{STATUS_META[order.status]?.label ?? order.status}</span>
@@ -893,13 +893,13 @@ export function OrderDetailDialog({
                             }}
                             className={`w-full px-3 py-3 text-sm flex items-center justify-between transition-colors ${
                               active
-                                ? "font-semibold text-white border-l-2 border-primary bg-card/80"
+                                ? "font-semibold text-foreground dark:text-white border-l-2 border-primary bg-card/80"
                                 : "text-foreground hover:bg-accent"
                             }`}
                           >
                             <span className="flex items-center gap-2">
                               <span className={`inline-flex items-center justify-center w-8 h-8 rounded-md border ${meta.tone}`}>
-                                <Icon className="w-4 h-4" />
+                                <Icon className={`w-4 h-4 ${active ? "text-foreground dark:text-current" : ""}`} />
                               </span>
                               {meta.label}
                             </span>

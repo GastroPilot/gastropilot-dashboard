@@ -1789,7 +1789,7 @@ export default function DashboardPage() {
                             }}
                             className={`w-full px-3 py-2 text-left text-sm ${
                               selectedAreaId === area.id
-                                ? "font-semibold text-white"
+                                ? "font-semibold text-foreground bg-accent"
                                 : "text-foreground hover:bg-accent"
                             }`}
                           >
