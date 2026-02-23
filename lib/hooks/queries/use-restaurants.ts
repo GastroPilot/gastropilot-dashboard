@@ -6,7 +6,7 @@ export const restaurantKeys = {
   lists: () => [...restaurantKeys.all, 'list'] as const,
   list: (filters?: Record<string, unknown>) => [...restaurantKeys.lists(), filters] as const,
   details: () => [...restaurantKeys.all, 'detail'] as const,
-  detail: (id: number) => [...restaurantKeys.details(), id] as const,
+  detail: (id: string) => [...restaurantKeys.details(), id] as const,
 };
 
 /**
@@ -22,7 +22,7 @@ export function useRestaurants() {
 /**
  * Hook to fetch a single restaurant by ID
  */
-export function useRestaurant(id: number | undefined) {
+export function useRestaurant(id: string | undefined) {
   return useQuery({
     queryKey: restaurantKeys.detail(id!),
     queryFn: () => restaurantsApi.get(id!),
@@ -51,7 +51,7 @@ export function useUpdateRestaurant() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: RestaurantUpdate }) =>
+    mutationFn: ({ id, data }: { id: string; data: RestaurantUpdate }) =>
       restaurantsApi.update(id, data),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: restaurantKeys.detail(id) });
@@ -67,7 +67,7 @@ export function useDeleteRestaurant() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: (id: number) => restaurantsApi.delete(id),
+    mutationFn: (id: string) => restaurantsApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: restaurantKeys.lists() });
     },

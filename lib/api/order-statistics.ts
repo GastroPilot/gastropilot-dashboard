@@ -31,7 +31,7 @@ export interface HourlyStatistics {
 
 export const orderStatisticsApi = {
   getRevenue: async (
-    restaurantId: number,
+    restaurantId: string,
     params?: { start_date?: string; end_date?: string }
   ): Promise<RevenueStatistics> => {
     const queryParams = new URLSearchParams();
@@ -45,7 +45,7 @@ export const orderStatisticsApi = {
   },
 
   getTopItems: async (
-    restaurantId: number,
+    restaurantId: string,
     params?: { start_date?: string; end_date?: string; limit?: number }
   ): Promise<TopItem[]> => {
     const queryParams = new URLSearchParams();
@@ -60,7 +60,7 @@ export const orderStatisticsApi = {
   },
 
   getCategoryStatistics: async (
-    restaurantId: number,
+    restaurantId: string,
     params?: { start_date?: string; end_date?: string }
   ): Promise<CategoryStatistics> => {
     const queryParams = new URLSearchParams();
@@ -74,7 +74,7 @@ export const orderStatisticsApi = {
   },
 
   getHourlyStatistics: async (
-    restaurantId: number,
+    restaurantId: string,
     params?: { start_date?: string; end_date?: string }
   ): Promise<HourlyStatistics> => {
     const queryParams = new URLSearchParams();

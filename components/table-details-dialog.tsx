@@ -92,7 +92,7 @@ function DraggableReservationItem({
 interface TableDetailsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  restaurantId: number;
+  restaurantId: string;
   table: Table | null;
   reservations: Reservation[];
   orders?: Order[];
@@ -111,8 +111,8 @@ interface TableDetailsDialogProps {
   tables?: Table[];
   blockAssignments?: BlockAssignment[];
   areas?: Area[];
-  selectedAreaId?: number | null;
-  onViewOrder?: (orderId: number) => void;
+  selectedAreaId?: string | null;
+  onViewOrder?: (orderId: string) => void;
   onCreateOrder?: () => void;
 }
 
@@ -149,14 +149,14 @@ export function TableDetailsDialog({
   const [color, setColor] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [rotation, setRotation] = useState(0);
-  const [areaId, setAreaId] = useState<number | null>(selectedAreaId ?? null);
+  const [areaId, setAreaId] = useState<string | null>(selectedAreaId ?? null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [isEditing, setIsEditing] = useState(allowTableManagement && forceEditMode);
-  const [markingSeated, setMarkingSeated] = useState<number | null>(null);
-  const [completingReservation, setCompletingReservation] = useState<number | null>(null);
-  const [cancelingReservation, setCancelingReservation] = useState<number | null>(null);
-  const [deletingBlockId, setDeletingBlockId] = useState<number | null>(null);
+  const [markingSeated, setMarkingSeated] = useState<string | null>(null);
+  const [completingReservation, setCompletingReservation] = useState<string | null>(null);
+  const [cancelingReservation, setCancelingReservation] = useState<string | null>(null);
+  const [deletingBlockId, setDeletingBlockId] = useState<string | null>(null);
   const [editingBlock, setEditingBlock] = useState<Block | null>(null);
   const [editBlockDialogOpen, setEditBlockDialogOpen] = useState(false);
   const [editingBlocks, setEditingBlocks] = useState<Block[]>([]);
@@ -286,7 +286,7 @@ export function TableDetailsDialog({
     setLoading(true);
 
     try {
-      const configId = Math.abs(table.id);
+      const configId = String(table.id).replace("temp-", "");
       if (reservations.length > 0) {
         for (const reservation of reservations) {
           await reservationsApi.update(restaurantId, reservation.id, {
@@ -317,7 +317,7 @@ export function TableDetailsDialog({
     }
   };
 
-  const handleDeleteBlock = async (assignmentId: number) => {
+  const handleDeleteBlock = async (assignmentId: string) => {
     if (!confirmAction("Blockierung wirklich entfernen?")) {
       return;
     }
@@ -1025,7 +1025,7 @@ export function TableDetailsDialog({
 
         <DialogFooter>
           <div className="flex flex-wrap items-center gap-2 mr-auto">
-            {allowTableManagement && (currentUser?.role === "servecta" || currentUser?.role === "restaurantinhaber" || currentUser?.role === "schichtleiter") && (
+            {allowTableManagement && (currentUser?.role === "platform_admin" || currentUser?.role === "owner" || currentUser?.role === "manager") && (
               <Button
                 type="button"
                 variant="destructive"
@@ -1058,8 +1058,8 @@ export function TableDetailsDialog({
               )}
             </Button>
           )}
-          {allowDaySpecificActions && table && (currentUser?.role === "servecta" || currentUser?.role === "restaurantinhaber" || currentUser?.role === "schichtleiter") && (
-            table.id < 0 ? (
+          {allowDaySpecificActions && table && (currentUser?.role === "platform_admin" || currentUser?.role === "owner" || currentUser?.role === "manager") && (
+            String(table.id).startsWith("temp-") ? (
               <Button
                 type="button"
                 variant="destructive"
@@ -1073,7 +1073,7 @@ export function TableDetailsDialog({
             ) : null
           )}
           <div className="w-full flex flex-wrap items-center gap-2">
-            {allowDaySpecificActions && table && table.id > 0 && onHideTable && (currentUser?.role === "servecta" || currentUser?.role === "restaurantinhaber" || currentUser?.role === "schichtleiter") && (
+            {allowDaySpecificActions && table && !String(table.id).startsWith("temp-") && onHideTable && (currentUser?.role === "platform_admin" || currentUser?.role === "owner" || currentUser?.role === "manager") && (
               <Button
                 type="button"
                 variant="outline"
@@ -1106,7 +1106,7 @@ export function TableDetailsDialog({
             </div>
           </div>
         </DialogFooter>
-        {table && table.id > 0 && (
+        {table && !String(table.id).startsWith("temp-") && (
           <BlockTableDialog
             open={editBlockDialogOpen}
             onOpenChange={(open) => {

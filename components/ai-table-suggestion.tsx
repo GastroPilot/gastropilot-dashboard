@@ -7,10 +7,10 @@ import { Sparkles, Check, AlertCircle, Loader2, ChevronDown } from "lucide-react
 import { cn } from "@/lib/utils";
 
 interface AITableSuggestionProps {
-  restaurantId: number;
-  onSelectTable: (tableId: number) => void;
+  restaurantId: string;
+  onSelectTable: (tableId: string) => void;
   onManualSelect: () => void;
-  selectedTableId: number | null;
+  selectedTableId: string | null;
   disabled?: boolean;
   autoSelectThreshold?: number; // Confidence threshold for auto-select (default 0.9)
 }

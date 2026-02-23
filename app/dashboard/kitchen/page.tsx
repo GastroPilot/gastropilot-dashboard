@@ -215,7 +215,7 @@ export default function KitchenPage() {
     };
   }, [autoRefresh, loadData]);
 
-  const handleStatusChange = async (orderId: number, newStatus: KitchenStatus) => {
+  const handleStatusChange = async (orderId: string, newStatus: KitchenStatus) => {
     if (!restaurant) return;
 
     try {
@@ -496,7 +496,7 @@ export default function KitchenPage() {
 
 interface OrderCardProps {
   order: KitchenOrder;
-  onStatusChange: (orderId: number, status: KitchenStatus) => void;
+  onStatusChange: (orderId: string, status: KitchenStatus) => void;
   canChangeTo: KitchenStatus[];
 }
 

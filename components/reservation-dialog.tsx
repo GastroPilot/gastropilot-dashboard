@@ -25,7 +25,7 @@ import { confirmAction } from "@/lib/utils";
 interface ReservationDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  restaurantId: number;
+  restaurantId: string;
   table: Table | null;
   selectedDate: Date;
   reservation?: Reservation | null;
@@ -67,18 +67,18 @@ export function ReservationDialog({
   const [notes, setNotes] = useState("");
   const [blockReason, setBlockReason] = useState("");
   const [formMode, setFormMode] = useState<"reservation" | "block">("reservation");
-  const [selectedTableId, setSelectedTableId] = useState<number | null>(null);
+  const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
   const [status, setStatus] = useState<Reservation["status"]>("pending");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [tags, setTags] = useState<string[]>([]);
   const [currentUser, setCurrentUser] = useState<{ role: string } | null>(null);
-  const isMitarbeiter = currentUser?.role === "mitarbeiter";
+  const isMitarbeiter = currentUser?.role === "staff";
   const isMitarbeiterLocked = !!reservation && isMitarbeiter;
   const defaultGuestName = "Gast";
   const wasOpen = useRef(false);
-  const lastReservationId = useRef<number | null>(null);
-  const lastTableId = useRef<number | null>(null);
+  const lastReservationId = useRef<string | null>(null);
+  const lastTableId = useRef<string | null>(null);
   const [statusOpen, setStatusOpen] = useState(false);
   const statusDropdownRef = useRef<HTMLDivElement | null>(null);
   const [tagsOpen, setTagsOpen] = useState(false);
@@ -104,9 +104,9 @@ export function ReservationDialog({
   const statusOptions = useMemo(() => {
     const base = ["pending", "confirmed", "seated", "completed", "no_show"] as Reservation["status"][];
     const extra =
-      currentUser?.role === "servecta" ||
-      currentUser?.role === "restaurantinhaber" ||
-      currentUser?.role === "schichtleiter"
+      currentUser?.role === "platform_admin" ||
+      currentUser?.role === "owner" ||
+      currentUser?.role === "manager"
         ? ["canceled" as const]
         : [];
     return [...base, ...extra];
@@ -275,7 +275,7 @@ export function ReservationDialog({
         return;
       }
 
-      if (selectedTableId && selectedTableId > 0) {
+      if (selectedTableId && !String(selectedTableId).startsWith("temp-")) {
         let blocks = [];
         let assignments = [];
         try {
@@ -306,7 +306,7 @@ export function ReservationDialog({
 
       if (reservation) {
         // Mitarbeiter können nur den Status ändern
-        if (currentUser?.role === "mitarbeiter") {
+        if (currentUser?.role === "staff") {
           const updateData: ReservationUpdate = {
             status: status,
           };
@@ -535,7 +535,7 @@ export function ReservationDialog({
               </div>
             ) : (
               <>
-                {(!reservation || currentUser?.role !== "mitarbeiter") && (
+                {(!reservation || currentUser?.role !== "staff") && (
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                       <div>
@@ -792,7 +792,7 @@ export function ReservationDialog({
                     </div>
                   )}
                 </div>
-                {(!reservation || currentUser?.role !== "mitarbeiter") && (
+                {(!reservation || currentUser?.role !== "staff") && (
                   <div>
                     <label htmlFor="notes" className="block text-sm font-medium mb-1.5 md:mb-2 text-foreground">
                       Notizen
@@ -842,9 +842,9 @@ export function ReservationDialog({
           </div>
           <DialogFooter>
             {(loadedReservation || reservation) && (loadedReservation || reservation)!.status !== "canceled" && (
-              currentUser?.role === "schichtleiter" || 
-              currentUser?.role === "restaurantinhaber" || 
-              currentUser?.role === "servecta"
+              currentUser?.role === "manager" || 
+              currentUser?.role === "owner" || 
+              currentUser?.role === "platform_admin"
             ) && (
               <Button
                 type="button"
@@ -857,7 +857,7 @@ export function ReservationDialog({
                 Stornieren
               </Button>
             )}
-            {(loadedReservation || reservation) && (currentUser?.role === "servecta" || currentUser?.role === "restaurantinhaber") && (
+            {(loadedReservation || reservation) && (currentUser?.role === "platform_admin" || currentUser?.role === "owner") && (
               <Button
                 type="button"
                 variant="destructive"

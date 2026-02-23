@@ -2,7 +2,7 @@ import { api } from "./client";
 import { getApiBaseUrl, API_PREFIX, buildApiUrl } from "./config";
 
 export interface Restaurant {
-  id: number;
+  id: string;
   name: string;
   address: string | null;
   phone: string | null;
@@ -48,7 +48,7 @@ export const restaurantsApi = {
     return api.get<Restaurant[]>("/restaurants/");
   },
 
-  get: async (id: number): Promise<Restaurant> => {
+  get: async (id: string): Promise<Restaurant> => {
     return api.get<Restaurant>(`/restaurants/${id}`);
   },
 
@@ -57,38 +57,35 @@ export const restaurantsApi = {
     return api.post<Restaurant>("/restaurants/", data);
   },
 
-  update: async (id: number, data: Partial<RestaurantCreate>): Promise<Restaurant> => {
+  update: async (id: string, data: Partial<RestaurantCreate>): Promise<Restaurant> => {
     return api.patch<Restaurant>(`/restaurants/${id}`, data);
   },
 
-  delete: async (id: number): Promise<void> => {
+  delete: async (id: string): Promise<void> => {
     return api.delete(`/restaurants/${id}`);
   },
 
   /**
    * Holt den Restaurantnamen öffentlich (ohne Authentifizierung).
-   * Wird z.B. auf der Loginseite verwendet.
+   * Optional: slug → gibt den Namen des spezifischen Restaurants zurück.
+   * Gibt { name, found } zurück.
    */
-  getPublicName: async (): Promise<string> => {
+  getPublicName: async (slug?: string): Promise<{ name: string; found: boolean }> => {
     try {
-      const url = buildApiUrl(getApiBaseUrl(), API_PREFIX, "/restaurants/public/name");
+      const path = slug
+        ? `/restaurants/public/name?slug=${encodeURIComponent(slug)}`
+        : "/restaurants/public/name";
+      const url = buildApiUrl(getApiBaseUrl(), API_PREFIX, path);
       const response = await fetch(url, {
         method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: 'include', // Wichtig für CORS mit credentials (auch für public endpoints)
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
       });
-      
-      if (!response.ok) {
-        return "GastroPilot";
-      }
-      
+      if (!response.ok) return { name: "GastroPilot", found: false };
       const data = await response.json();
-      return data.name || "GastroPilot";
-    } catch (error) {
-      console.error("Fehler beim Laden des Restaurantnamens:", error);
-      return "GastroPilot";
+      return { name: data.name || "GastroPilot", found: data.found ?? false };
+    } catch {
+      return { name: "GastroPilot", found: false };
     }
   },
 };

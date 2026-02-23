@@ -15,7 +15,7 @@ interface UseDashboardComputationsProps {
   tables: Table[];
   orders: Order[];
   selectedDate: Date;
-  reservationToTempTableMap: Map<number, number>;
+  reservationToTempTableMap: Map<string, string>;
 }
 
 /**
@@ -52,7 +52,7 @@ export function useDashboardComputations({
   
   // Block assignments grouped by table
   const blockAssignmentsByTable = useMemo(() => {
-    const map = new Map<number, BlockAssignment[]>();
+    const map = new Map<string, BlockAssignment[]>();
     
     for (const assignment of blockAssignments) {
       if (!assignment.table_id) continue;
@@ -70,7 +70,7 @@ export function useDashboardComputations({
   
   // Block assignments grouped by block
   const blockAssignmentsByBlock = useMemo(() => {
-    const map = new Map<number, BlockAssignment[]>();
+    const map = new Map<string, BlockAssignment[]>();
     
     for (const assignment of blockAssignments) {
       const existing = map.get(assignment.block_id);
@@ -86,7 +86,7 @@ export function useDashboardComputations({
   
   // Reservations grouped by table
   const reservationsByTable = useMemo(() => {
-    const map = new Map<number, Reservation[]>();
+    const map = new Map<string, Reservation[]>();
     const { dayStart, dayEnd } = dateBoundaries;
     
     for (const reservation of reservations) {
@@ -126,7 +126,7 @@ export function useDashboardComputations({
   
   // Orders grouped by table
   const ordersByTable = useMemo(() => {
-    const map = new Map<number, Order[]>();
+    const map = new Map<string, Order[]>();
     
     for (const order of orders) {
       if (!order.table_id) continue;
@@ -177,17 +177,17 @@ export function useDashboardComputations({
   }, [blocks, dateBoundaries]);
   
   // Function to get reservations for a specific table
-  const getTableReservations = useCallback((tableId: number): Reservation[] => {
+  const getTableReservations = useCallback((tableId: string): Reservation[] => {
     return reservationsByTable.get(tableId) || [];
   }, [reservationsByTable]);
   
   // Function to get orders for a specific table
-  const getTableOrders = useCallback((tableId: number): Order[] => {
+  const getTableOrders = useCallback((tableId: string): Order[] => {
     return ordersByTable.get(tableId) || [];
   }, [ordersByTable]);
   
   // Function to check if table has time conflict
-  const hasTimeConflict = useCallback((reservation: Reservation, tableId: number): boolean => {
+  const hasTimeConflict = useCallback((reservation: Reservation, tableId: string): boolean => {
     const start = parseISO(reservation.start_at);
     const end = parseISO(reservation.end_at);
     const existing = getTableReservations(tableId).filter(r => r.id !== reservation.id);
@@ -200,8 +200,8 @@ export function useDashboardComputations({
   }, [getTableReservations]);
   
   // Function to check if table has block conflict
-  const hasBlockConflict = useCallback((tableId: number, startAt: string, endAt: string): boolean => {
-    if (tableId <= 0) return false;
+  const hasBlockConflict = useCallback((tableId: string, startAt: string, endAt: string): boolean => {
+    if (!tableId) return false;
     
     const start = parseISO(startAt);
     const end = parseISO(endAt);
@@ -218,13 +218,13 @@ export function useDashboardComputations({
   }, [blockAssignmentsByTable, blockMap]);
   
   // Function to get block status for a table
-  const getBlockStatus = useCallback((tableId: number): {
+  const getBlockStatus = useCallback((tableId: string): {
     isBlockedNow: boolean;
     isBlocked: boolean;
     timeRange: string;
     reason?: string;
   } | null => {
-    if (tableId <= 0) return null;
+    if (!tableId) return null;
     
     const { dayStart, dayEnd, isToday } = dateBoundaries;
     const today = new Date();
@@ -297,7 +297,7 @@ export function useDashboardComputations({
   }, [blockAssignmentsByTable, blockMap, dateBoundaries, selectedDate]);
   
   // Function to get table name
-  const getTableName = useCallback((tableId: number | null): string => {
+  const getTableName = useCallback((tableId: string | null): string => {
     if (!tableId) return 'Kein Tisch';
     const table = tableMap.get(tableId);
     return table ? table.number : 'Unbekannt';

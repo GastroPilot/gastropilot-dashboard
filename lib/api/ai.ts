@@ -4,12 +4,12 @@ import { api } from "./client";
  * Tischvorschlag von der KI mit Confidence-Score.
  */
 export interface TableSuggestion {
-  table_id: number;
+  table_id: string;
   table_number: string;
   confidence: number; // 0.0 - 1.0
   reason: string;
   guest_name: string | null;
-  reservation_id: number | null;
+  reservation_id: string | null;
 }
 
 /**
@@ -50,7 +50,7 @@ export const aiApi = {
    * @returns Top-3 Tischvorschläge mit Confidence-Score
    */
   suggestTable: async (
-    restaurantId: number,
+    restaurantId: string,
     request?: SuggestTableRequest
   ): Promise<SuggestTableResponse> => {
     return api.post<SuggestTableResponse>(
@@ -65,7 +65,7 @@ export const aiApi = {
    * @param restaurantId - ID des Restaurants
    * @returns AI Status mit verfügbaren Features
    */
-  getStatus: async (restaurantId: number): Promise<AIStatusResponse> => {
+  getStatus: async (restaurantId: string): Promise<AIStatusResponse> => {
     return api.get<AIStatusResponse>(`/restaurants/${restaurantId}/ai/status`);
   },
 };

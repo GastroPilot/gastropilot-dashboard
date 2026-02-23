@@ -57,8 +57,8 @@ const STATUS_META: Record<OrderStatus, StatusMeta> = {
 interface OrderDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  restaurantId: number;
-  orderId: number | null;
+  restaurantId: string;
+  orderId: string | null;
   onOrderUpdated?: () => void;
   onNotify?: (message: string, variant?: "info" | "success" | "error") => void;
 }
@@ -78,14 +78,14 @@ export function OrderDetailDialog({
   const [isAddingItem, setIsAddingItem] = useState(false);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [menuCategories, setMenuCategories] = useState<MenuCategory[]>([]);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [menuSearchQuery, setMenuSearchQuery] = useState("");
   const [discountAmount, setDiscountAmount] = useState<number>(0);
   const [discountPercentage, setDiscountPercentage] = useState<number | null>(null);
   const [tipAmount, setTipAmount] = useState<number>(0);
   const [paymentMethod, setPaymentMethod] = useState<string>("");
   const [splitPayments, setSplitPayments] = useState<Array<{ method: string; amount: number }>>([]);
-  const [splitAssignments, setSplitAssignments] = useState<number[][]>([]);
+  const [splitAssignments, setSplitAssignments] = useState<string[][]>([]);
   const [splitTips, setSplitTips] = useState<number[]>([]);
   const [splitPaid, setSplitPaid] = useState<boolean[]>([]);
   const [deleting, setDeleting] = useState(false);
@@ -583,7 +583,7 @@ export function OrderDetailDialog({
     }
   };
 
-  const handleDeleteItem = async (itemId: number) => {
+  const handleDeleteItem = async (itemId: string) => {
     if (!order) return;
 
     const confirmed = confirmAction("Möchten Sie diese Position wirklich löschen?");
@@ -705,7 +705,7 @@ export function OrderDetailDialog({
     setSplitDetailsDirty(true);
   };
 
-  const toggleSplitItem = (paymentIndex: number, itemId: number) => {
+  const toggleSplitItem = (paymentIndex: number, itemId: string) => {
     setSplitAssignments((prev) => {
       const next = prev.map((list) => list.filter((id) => id !== itemId));
       const alreadyAssigned = (prev[paymentIndex] || []).includes(itemId);

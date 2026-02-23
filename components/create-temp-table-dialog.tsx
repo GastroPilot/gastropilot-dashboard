@@ -11,7 +11,7 @@ import { format } from "date-fns";
 interface CreateTempTableDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  restaurantId: number;
+  restaurantId: string;
   selectedDate: Date;
   onTableCreated: () => void;
   initialPosition?: { x: number; y: number };

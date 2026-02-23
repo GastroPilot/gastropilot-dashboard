@@ -4,8 +4,8 @@
 import { api } from "./client";
 
 export interface Voucher {
-  id: number;
-  restaurant_id: number;
+  id: string;
+  restaurant_id: string;
   code: string;
   name: string | null;
   description: string | null;
@@ -22,7 +22,7 @@ export interface Voucher {
 }
 
 export interface VoucherCreate {
-  restaurant_id: number;
+  restaurant_id: string;
   code: string;
   name?: string | null;
   description?: string | null;
@@ -55,30 +55,30 @@ export interface VoucherValidateResponse {
 }
 
 class VouchersApi {
-  async list(restaurantId: number, includeInactive: boolean = false): Promise<Voucher[]> {
+  async list(restaurantId: string, includeInactive: boolean = false): Promise<Voucher[]> {
     return api.get<Voucher[]>(
       `/restaurants/${restaurantId}/vouchers/?include_inactive=${includeInactive}`
     );
   }
 
-  async get(restaurantId: number, voucherId: number): Promise<Voucher> {
+  async get(restaurantId: string, voucherId: string): Promise<Voucher> {
     return api.get<Voucher>(`/restaurants/${restaurantId}/vouchers/${voucherId}`);
   }
 
-  async create(restaurantId: number, data: VoucherCreate): Promise<Voucher> {
+  async create(restaurantId: string, data: VoucherCreate): Promise<Voucher> {
     return api.post<Voucher>(`/restaurants/${restaurantId}/vouchers`, data);
   }
 
-  async update(restaurantId: number, voucherId: number, data: VoucherUpdate): Promise<Voucher> {
+  async update(restaurantId: string, voucherId: string, data: VoucherUpdate): Promise<Voucher> {
     return api.put<Voucher>(`/restaurants/${restaurantId}/vouchers/${voucherId}`, data);
   }
 
-  async delete(restaurantId: number, voucherId: number): Promise<void> {
+  async delete(restaurantId: string, voucherId: string): Promise<void> {
     return api.delete(`/restaurants/${restaurantId}/vouchers/${voucherId}`);
   }
 
   async validate(
-    restaurantId: number,
+    restaurantId: string,
     code: string,
     reservationAmount?: number
   ): Promise<VoucherValidateResponse> {

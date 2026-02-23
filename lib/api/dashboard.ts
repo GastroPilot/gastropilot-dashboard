@@ -35,9 +35,9 @@ export interface DashboardData {
 export interface KitchenData {
   orders: Order[];
   order_items: Array<{
-    id: number;
-    order_id: number;
-    menu_item_id: number | null;
+    id: string;
+    order_id: string;
+    menu_item_id: string | null;
     item_name: string;
     item_description: string | null;
     category: string | null;
@@ -81,7 +81,7 @@ export const dashboardApi = {
    * Fetch all dashboard data in a single request.
    * This replaces 10+ individual API calls.
    */
-  async getDashboardData(restaurantId: number, date?: Date): Promise<DashboardData> {
+  async getDashboardData(restaurantId: string, date?: Date): Promise<DashboardData> {
     const dateStr = date ? date.toISOString().split('T')[0] : undefined;
     const params = dateStr ? `?date=${dateStr}` : '';
     return api.get<DashboardData>(`/dashboard/batch/${restaurantId}${params}`);
@@ -90,7 +90,7 @@ export const dashboardApi = {
   /**
    * Fetch kitchen view data in a single request.
    */
-  async getKitchenData(restaurantId: number): Promise<KitchenData> {
+  async getKitchenData(restaurantId: string): Promise<KitchenData> {
     return api.get<KitchenData>(`/dashboard/kitchen/${restaurantId}`);
   },
   
@@ -98,7 +98,7 @@ export const dashboardApi = {
    * Fetch insights/analytics data in a single request.
    */
   async getInsightsData(
-    restaurantId: number,
+    restaurantId: string,
     options?: { fromDate?: Date; toDate?: Date }
   ): Promise<InsightsData> {
     const params = new URLSearchParams();

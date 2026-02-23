@@ -35,7 +35,7 @@ export interface PaymentRequest {
 }
 
 export interface PaymentResponse {
-  payment_id: number;
+  payment_id: string;
   checkout_id?: string | null;  // Checkout ID für weitere Verarbeitung
   client_transaction_id: string;
   reader_id?: string | null;  // Optional, da Zahlung ohne Reader-ID möglich ist
@@ -50,14 +50,14 @@ export interface PaymentResponse {
 /**
  * Listet alle Reader (Terminals) für ein Restaurant.
  */
-export async function listReaders(restaurantId: number): Promise<SumUpReader[]> {
+export async function listReaders(restaurantId: string): Promise<SumUpReader[]> {
   return api.get<SumUpReader[]>(`/restaurants/${restaurantId}/sumup/readers`);
 }
 
 /**
  * Holt einen einzelnen Reader.
  */
-export async function getReader(restaurantId: number, readerId: string): Promise<SumUpReader> {
+export async function getReader(restaurantId: string, readerId: string): Promise<SumUpReader> {
   return api.get<SumUpReader>(`/restaurants/${restaurantId}/sumup/readers/${readerId}`);
 }
 
@@ -65,7 +65,7 @@ export async function getReader(restaurantId: number, readerId: string): Promise
  * Erstellt einen neuen Reader (paart ein Terminal).
  */
 export async function createReader(
-  restaurantId: number,
+  restaurantId: string,
   pairingCode: string,
   name: string,
   metadata?: Record<string, any>
@@ -81,7 +81,7 @@ export async function createReader(
  * Holt den Status eines Readers (Batterie, Verbindung, aktueller Zustand).
  */
 export async function getReaderStatus(
-  restaurantId: number,
+  restaurantId: string,
   readerId: string
 ): Promise<SumUpReaderStatus> {
   return api.get<SumUpReaderStatus>(`/restaurants/${restaurantId}/sumup/readers/${readerId}/status`);
@@ -91,8 +91,8 @@ export async function getReaderStatus(
  * Startet eine Zahlung für eine Bestellung über SumUp Terminal.
  */
 export async function startPayment(
-  restaurantId: number,
-  orderId: number,
+  restaurantId: string,
+  orderId: string,
   paymentData: PaymentRequest
 ): Promise<PaymentResponse> {
   return api.post<PaymentResponse>(
@@ -105,7 +105,7 @@ export async function startPayment(
  * Bricht eine laufende Zahlung am Terminal ab.
  */
 export async function terminatePayment(
-  restaurantId: number,
+  restaurantId: string,
   readerId: string
 ): Promise<void> {
   return api.post<void>(`/restaurants/${restaurantId}/sumup/readers/${readerId}/terminate`);
@@ -115,9 +115,9 @@ export async function terminatePayment(
  * SumUp Payment Interface
  */
 export interface SumUpPayment {
-  id: number;
-  order_id: number;
-  restaurant_id: number;
+  id: string;
+  order_id: string;
+  restaurant_id: string;
   checkout_id?: string | null;
   client_transaction_id?: string | null;
   transaction_code?: string | null;
@@ -129,7 +129,7 @@ export interface SumUpPayment {
   completed_at?: string | null;
   created_at_utc: string;
   order?: {
-    id: number;
+    id: string;
     order_number?: string | null;
     total: number;
     status: string;
@@ -140,7 +140,7 @@ export interface SumUpPayment {
  * Ruft fehlgeschlagene SumUp-Zahlungen für ein Restaurant ab.
  */
 export async function getFailedPayments(
-  restaurantId: number,
+  restaurantId: string,
   limit: number = 50
 ): Promise<SumUpPayment[]> {
   return api.get<SumUpPayment[]>(
@@ -152,7 +152,7 @@ export async function getFailedPayments(
  * Ruft SumUp-Zahlungen für ein Restaurant ab (mit optionalem Status-Filter).
  */
 export async function getPayments(
-  restaurantId: number,
+  restaurantId: string,
   status?: string,
   limit: number = 100
 ): Promise<SumUpPayment[]> {
@@ -168,8 +168,8 @@ export async function getPayments(
  * Ruft alle SumUp-Zahlungen für eine bestimmte Bestellung ab.
  */
 export async function getOrderPayments(
-  restaurantId: number,
-  orderId: number
+  restaurantId: string,
+  orderId: string
 ): Promise<SumUpPayment[]> {
   return api.get<SumUpPayment[]>(
     `/restaurants/${restaurantId}/sumup/orders/${orderId}/payments`

@@ -11,6 +11,7 @@ import { ordersApi, Order } from "@/lib/api/orders";
 import { Obstacle } from "@/lib/api/obstacles";
 import { Area } from "@/lib/api/areas";
 import { authApi } from "@/lib/api/auth";
+import { impersonation } from "@/lib/api/admin";
 import { tableDayConfigsApi, TableDayConfig } from "@/lib/api/table-day-configs";
 import { reservationTableDayConfigsApi, ReservationTableDayConfig } from "@/lib/api/reservation-table-day-configs";
 import { blocksApi, Block } from "@/lib/api/blocks";
@@ -65,7 +66,7 @@ function useOptimizedClock(updateInterval = 10000) {
 /**
  * Hook für Batch-API-Aufrufe mit Caching
  */
-function useDashboardData(restaurantId: number | null, selectedDate: Date) {
+function useDashboardData(restaurantId: string | null, selectedDate: Date) {
   const [data, setData] = useState<{
     restaurant: Restaurant | null;
     areas: Area[];
@@ -97,7 +98,7 @@ function useDashboardData(restaurantId: number | null, selectedDate: Date) {
   const lastFetchKeyRef = useRef<string>("");
   const abortControllerRef = useRef<AbortController | null>(null);
   
-  const fetchData = useCallback(async (restId: number, date: Date, background = false) => {
+  const fetchData = useCallback(async (restId: string, date: Date, background = false) => {
     const cacheKey = `${restId}-${format(date, 'yyyy-MM-dd')}`;
     
     // Skip duplicate requests
@@ -122,7 +123,7 @@ function useDashboardData(restaurantId: number | null, selectedDate: Date) {
       lastFetchKeyRef.current = cacheKey;
       
       // Process table day configs to apply to tables
-      const configMap = new Map<number, TableDayConfig>();
+      const configMap = new Map<string, TableDayConfig>();
       const tempConfigMap = new Map<string, TableDayConfig>();
       
       (batchData.table_day_configs || []).forEach((config: any) => {
@@ -167,7 +168,7 @@ function useDashboardData(restaurantId: number | null, selectedDate: Date) {
       tempConfigMap.forEach(config => {
         if (!config.is_hidden && config.number && config.capacity) {
           const tempTable: Table = {
-            id: -config.id,
+            id: `temp-${config.id}`,
             restaurant_id: config.restaurant_id,
             number: config.number,
             capacity: config.capacity,
@@ -263,9 +264,9 @@ export default function DashboardPage() {
   // STATE - Reduziert auf das Wesentliche
   // ============================================
   
-  const [restaurantId, setRestaurantId] = useState<number | null>(null);
+  const [restaurantId, setRestaurantId] = useState<string | null>(null);
   const [restaurantsLoaded, setRestaurantsLoaded] = useState(false);
-  const [selectedAreaId, setSelectedAreaId] = useState<number | null>(null);
+  const [selectedAreaId, setSelectedAreaId] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   
   // UI State
@@ -286,16 +287,16 @@ export default function DashboardPage() {
   const [editingBlock, setEditingBlock] = useState<Block | null>(null);
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
-  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [selectedTableForOrder, setSelectedTableForOrder] = useState<Table | null>(null);
   
   // Drag State
-  const [activeId, setActiveId] = useState<number | null>(null);
-  const [activeReservationId, setActiveReservationId] = useState<number | null>(null);
-  const [activeBlockId, setActiveBlockId] = useState<number | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [activeReservationId, setActiveReservationId] = useState<string | null>(null);
+  const [activeBlockId, setActiveBlockId] = useState<string | null>(null);
   
   // UI Controls
-  const [updatingStatus, setUpdatingStatus] = useState<number | null>(null);
+  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
   const [waitlistSearchQuery, setWaitlistSearchQuery] = useState<string>("");
   const [currentUser, setCurrentUser] = useState<{ role: string } | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -304,7 +305,7 @@ export default function DashboardPage() {
   const [zoomLevel, setZoomLevel] = useState(1);
   const [isZooming, setIsZooming] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
-  const [selectedTableIds, setSelectedTableIds] = useState<Set<number>>(new Set());
+  const [selectedTableIds, setSelectedTableIds] = useState<Set<string>>(new Set());
   const tablePlanRef = useRef<HTMLDivElement | null>(null);
   
   // Toast State
@@ -347,9 +348,9 @@ export default function DashboardPage() {
   
   // Reservation to temp table mapping
   const reservationToTempTableMap = useMemo(() => {
-    const mapping = new Map<number, number>();
+    const mapping = new Map<string, string>();
     reservationTableDayConfigs.forEach(rtdc => {
-      const tempTable = allTables.find(t => t.id === -rtdc.table_day_config_id);
+      const tempTable = allTables.find(t => t.id === `temp-${rtdc.table_day_config_id}`);
       if (tempTable) {
         mapping.set(rtdc.reservation_id, tempTable.id);
       }
@@ -358,7 +359,7 @@ export default function DashboardPage() {
   }, [reservationTableDayConfigs, allTables]);
   
   // Filter by area
-  const filterByArea = useCallback(<T extends { area_id?: number | null }>(items: T[], areaId: number | null) => {
+  const filterByArea = useCallback(<T extends { area_id?: string | null }>(items: T[], areaId: string | null) => {
     if (!areaId) return items;
     return items.filter((item) => (item.area_id ?? null) === areaId);
   }, []);
@@ -431,6 +432,12 @@ export default function DashboardPage() {
   useEffect(() => {
     async function loadRestaurant() {
       try {
+        // Grundstatus: platform_admin ohne Impersonation → kein Tenant-Kontext
+        const user = await authApi.getCurrentUser();
+        setCurrentUser(user);
+        if (user.role === "platform_admin" && !impersonation.isActive()) {
+          return; // restaurantId bleibt null → Grundstatus-Screen wird gezeigt
+        }
         const restaurants = await restaurantsApi.list();
         if (restaurants.length > 0) {
           setRestaurantId(restaurants[0].id);
@@ -584,7 +591,7 @@ export default function DashboardPage() {
   const handleDragStart = useCallback((event: DragStartEvent) => {
     const id = event.active.id;
     const activeData = event.active.data.current as
-      | { type?: "reservation" | "table" | "block"; reservationId?: number; tableId?: number; blockId?: number }
+      | { type?: "reservation" | "table" | "block"; reservationId?: string; tableId?: string; blockId?: string }
       | undefined;
     const activeType = activeData?.type;
     
@@ -592,14 +599,14 @@ export default function DashboardPage() {
     setIsPanning(false);
     
     if (activeType === "reservation") {
-      const reservationId = activeData?.reservationId ?? Math.abs(id as number);
+      const reservationId = activeData?.reservationId ?? String(id);
       setActiveReservationId(reservationId);
       setTableDetailsOpen(false);
     } else if (activeType === "block") {
-      const blockId = activeData?.blockId ?? Number(String(id).replace("block-", ""));
-      setActiveBlockId(Number.isNaN(blockId) ? null : blockId);
+      const blockId = activeData?.blockId ?? String(id).replace("block-", "");
+      setActiveBlockId(blockId || null);
     } else {
-      const tableId = activeData?.tableId ?? (id as number);
+      const tableId = activeData?.tableId ?? String(id);
       setActiveId(tableId);
     }
   }, []);
@@ -608,21 +615,21 @@ export default function DashboardPage() {
     const { active, over } = event;
     const activeIdValue = active.id;
     const activeData = active.data.current as
-      | { type?: "reservation" | "table" | "block"; reservationId?: number; tableId?: number; blockId?: number }
+      | { type?: "reservation" | "table" | "block"; reservationId?: string; tableId?: string; blockId?: string }
       | undefined;
     const activeType = activeData?.type;
 
     // Block drag handling
     if (activeType === "block") {
-      const blockId = activeData?.blockId ?? Number(String(activeIdValue).replace("block-", ""));
+      const blockId = activeData?.blockId ?? String(activeIdValue).replace("block-", "");
       const block = blocks.find((item) => item.id === blockId);
       if (!block || !restaurant) {
         setActiveBlockId(null);
         return;
       }
 
-      if (over && typeof over.id === "number" && over.id > 0) {
-        const tableId = over.id;
+      if (over && over.id) {
+        const tableId = String(over.id);
         const table = tables.find((t) => t.id === tableId);
         if (!table) {
           setActiveBlockId(null);
@@ -687,8 +694,8 @@ export default function DashboardPage() {
     }
 
     // Reservation drag handling
-    if (activeType === "reservation" || (activeType !== "table" && (activeIdValue as number) < 0)) {
-      const reservationId = activeData?.reservationId ?? Math.abs(activeIdValue as number);
+    if (activeType === "reservation" || (activeType !== "table" && String(activeIdValue).startsWith("temp-"))) {
+      const reservationId = activeData?.reservationId ?? String(activeIdValue);
       const reservation = reservations.find((r) => r.id === reservationId);
 
       if (!reservation || !restaurant) {
@@ -705,7 +712,7 @@ export default function DashboardPage() {
           });
           const tempTableId = reservationToTempTableMap.get(reservation.id);
           if (tempTableId !== undefined) {
-            const tableDayConfigId = Math.abs(tempTableId);
+            const tableDayConfigId = String(tempTableId).replace('temp-', '');
             try {
               await reservationTableDayConfigsApi.delete(restaurant.id, reservation.id, tableDayConfigId);
             } catch (error) {
@@ -726,8 +733,8 @@ export default function DashboardPage() {
       }
 
       // Drop on table
-      if (over && typeof over.id === "number" && over.id !== 0) {
-        const tableId = over.id;
+      if (over && over.id) {
+        const tableId = String(over.id);
         const table = tables.find((t) => t.id === tableId);
 
         if (!table) {
@@ -742,16 +749,16 @@ export default function DashboardPage() {
         }
 
         if (table.is_active && table.capacity >= reservation.party_size) {
-          if (tableId > 0 && hasBlockConflict(tableId, reservation.start_at, reservation.end_at)) {
+          if (String(tableId).startsWith("temp-") !== true && hasBlockConflict(tableId, reservation.start_at, reservation.end_at)) {
             addToast(`${table.number} ist in diesem Zeitraum blockiert.`, "error");
             setActiveReservationId(null);
             return;
           }
 
           // Temporary table
-          if (tableId < 0) {
+          if (String(tableId).startsWith("temp-")) {
             try {
-              const tableDayConfigId = Math.abs(tableId);
+              const tableDayConfigId = String(tableId).replace("temp-", "");
               await reservationsApi.update(restaurant.id, reservation.id, {
                 table_id: null,
                 status: "confirmed",
@@ -813,9 +820,9 @@ export default function DashboardPage() {
     }
 
     // Table drag handling (position change)
-    const tableId = activeData?.tableId ?? activeIdValue;
+    const tableId = String(activeData?.tableId ?? activeIdValue);
     const table = tables.find((t) => t.id === tableId);
-    const isTempTable = table?.id ? table.id < 0 : false;
+    const isTempTable = table?.id ? String(table.id).startsWith("temp-") : false;
 
     if (!table || !restaurant) {
       setActiveId(null);
@@ -926,7 +933,7 @@ export default function DashboardPage() {
     if (!restaurant) return;
     
     const dateStr = format(selectedDate, "yyyy-MM-dd");
-    const tableId = table.id < 0 ? null : table.id;
+    const tableId = String(table.id).startsWith("temp-") ? null : table.id;
     
     try {
       const existingConfig = tableDayConfigs.find(c => 
@@ -950,7 +957,7 @@ export default function DashboardPage() {
         capacity: existingConfig?.capacity ?? table.capacity,
         shape: existingConfig?.shape ?? table.shape,
         notes: existingConfig?.notes ?? table.notes,
-        is_temporary: existingConfig?.is_temporary || table.id < 0,
+        is_temporary: existingConfig?.is_temporary || String(table.id).startsWith("temp-"),
       };
       
       await tableDayConfigsApi.createOrUpdate(restaurant.id, updateData);
@@ -966,7 +973,7 @@ export default function DashboardPage() {
     if (!restaurant || selectedTableIds.size < 2) return;
     
     try {
-      const groupId = Math.min(...Array.from(selectedTableIds));
+      const groupId = Array.from(selectedTableIds)[0];
       const dateStr = format(selectedDate, "yyyy-MM-dd");
       
       await Promise.all(
@@ -974,7 +981,7 @@ export default function DashboardPage() {
           const table = tables.find(t => t.id === tableId);
           if (!table) return Promise.resolve();
           
-          const isTempTable = table.id < 0;
+          const isTempTable = String(table.id).startsWith("temp-");
           return tableDayConfigsApi.createOrUpdate(restaurant.id, {
             table_id: isTempTable ? null : tableId,
             date: dateStr,
@@ -1021,7 +1028,7 @@ export default function DashboardPage() {
           const table = tables.find(t => t.id === tableId);
           if (!table) return Promise.resolve();
           
-          const isTempTable = table.id < 0;
+          const isTempTable = String(table.id).startsWith("temp-");
           const existingConfig = tableDayConfigs.find(c =>
             isTempTable
               ? c.table_id === null && c.is_temporary && c.number === table.number
@@ -1134,7 +1141,7 @@ export default function DashboardPage() {
           );
           if (!ok) return;
           
-          const updatedReservations = new Set<number>();
+          const updatedReservations = new Set<string>();
           for (const assignment of tempAssignments) {
             if (!updatedReservations.has(assignment.reservation_id)) {
               await reservationsApi.update(restaurant.id, assignment.reservation_id, {
@@ -1264,22 +1271,43 @@ export default function DashboardPage() {
     return <LoadingOverlay />;
   }
 
-  // Kein Restaurant gefunden - zeige Hinweis mit Link zur Verwaltung
+  // Kein Restaurant gefunden
   if (!restaurantId) {
+    const isGrundstatus = currentUser?.role === "platform_admin";
     return (
-      <div className="p-6 bg-background min-h-screen flex items-center justify-center">
+      <div className="p-6 bg-background h-full flex items-center justify-center">
         <div className="text-center max-w-md">
-          <h2 className="text-xl font-semibold text-foreground mb-4">Kein Restaurant gefunden</h2>
-          <p className="text-muted-foreground mb-6">
-            Bitte erstelle zuerst ein Restaurant, um das Dashboard nutzen zu können.
-          </p>
-          <Link
-            href="/dashboard/restaurants/create"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Restaurant erstellen
-          </Link>
+          {isGrundstatus ? (
+            <>
+              <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+                <ShieldCheck className="w-7 h-7 text-muted-foreground" />
+              </div>
+              <h2 className="text-xl font-semibold text-foreground mb-2">Kein Tenant ausgewählt</h2>
+              <p className="text-muted-foreground mb-6 text-sm">
+                Du befindest dich im Grundstatus als Plattform-Admin. Wähle einen Tenant aus, um das Dashboard zu nutzen.
+              </p>
+              <Link
+                href="/dashboard/restaurants"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+              >
+                Zur Tenant-Verwaltung
+              </Link>
+            </>
+          ) : (
+            <>
+              <h2 className="text-xl font-semibold text-foreground mb-4">Kein Restaurant gefunden</h2>
+              <p className="text-muted-foreground mb-6">
+                Bitte erstelle zuerst ein Restaurant, um das Dashboard nutzen zu können.
+              </p>
+              <Link
+                href="/dashboard/restaurants/create"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                Restaurant erstellen
+              </Link>
+            </>
+          )}
         </div>
       </div>
     );
@@ -1408,7 +1436,7 @@ export default function DashboardPage() {
                       <XSquare className="w-3.5 h-3.5 mr-1" />
                       <span className="text-xs">Abbrechen</span>
                     </Button>
-                    {(currentUser?.role === "servecta" || currentUser?.role === "restaurantinhaber" || currentUser?.role === "schichtleiter") && (
+                    {(currentUser?.role === "platform_admin" || currentUser?.role === "owner" || currentUser?.role === "manager") && (
                       <>
                         <Button
                           variant="default"
@@ -1439,7 +1467,7 @@ export default function DashboardPage() {
                   </>
                 ) : (
                   <>
-                    {(currentUser?.role === "servecta" || currentUser?.role === "restaurantinhaber" || currentUser?.role === "schichtleiter") && (
+                    {(currentUser?.role === "platform_admin" || currentUser?.role === "owner" || currentUser?.role === "manager") && (
                       <div className="relative" ref={actionsMenuRef}>
                         <Button
                           variant="outline"
@@ -1904,7 +1932,7 @@ export default function DashboardPage() {
                           });
                           const tempTableId = reservationToTempTableMap.get(reservation.id);
                           if (tempTableId !== undefined) {
-                            const tableDayConfigId = Math.abs(tempTableId);
+                            const tableDayConfigId = String(tempTableId).replace('temp-', '');
                             try {
                               await reservationTableDayConfigsApi.delete(restaurant.id, reservation.id, tableDayConfigId);
                             } catch (error) {

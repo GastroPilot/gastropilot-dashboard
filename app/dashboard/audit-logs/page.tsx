@@ -69,7 +69,7 @@ export default function AuditLogsPage() {
   );
 
   const userMap = useMemo(() => {
-    const map = new Map<number, User>();
+    const map = new Map<string, User>();
     operators.forEach((op) => map.set(op.id, op));
     return map;
   }, [operators]);
@@ -186,11 +186,11 @@ export default function AuditLogsPage() {
 
   const getRoleIcon = (role?: string) => {
     switch (role) {
-      case "servecta":
+      case "platform_admin":
         return Shield;
-      case "restaurantinhaber":
+      case "owner":
         return UserCheck;
-      case "schichtleiter":
+      case "manager":
         return UserIcon;
       default:
         return UserIcon;
@@ -199,26 +199,25 @@ export default function AuditLogsPage() {
 
   const getRoleTone = (role?: string) => {
     switch (role) {
-      case "servecta":
+      case "platform_admin":
         return "text-purple-300 border-purple-500/60 bg-purple-900/40";
-      case "restaurantinhaber":
+      case "owner":
         return "text-primary border-primary/60 bg-primary/20";
-      case "schichtleiter":
+      case "manager":
         return "text-amber-300 border-amber-500/60 bg-amber-900/40";
       default:
         return "text-muted-foreground border-border/60 bg-background/50";
     }
   };
 
-  const loadLogs = async (restaurantId: number, nextOffset = offset) => {
+  const loadLogs = async (restaurantId: string, nextOffset = offset) => {
     try {
       setIsRefreshing(true);
-      const userIdNumber = userId ? parseInt(userId, 10) : undefined;
       const actionParam = action === "create" ? "post" : action || undefined;
       const hasLocalFilters = Boolean(dateFrom || dateTo || searchTerm.trim());
       const response = await auditLogsApi.list(restaurantId, {
         action: actionParam,
-        user_id: Number.isFinite(userIdNumber) ? userIdNumber : undefined,
+        user_id: userId || undefined,
         limit: PAGE_SIZE,
         offset: nextOffset,
       });
@@ -593,7 +592,7 @@ export default function AuditLogsPage() {
                       >
                         <span className="truncate">
                           {userId ? (() => {
-                                const user = operators.find((u) => u.id === parseInt(userId, 10));
+                                const user = operators.find((u) => u.id === userId);
                                 return user ? `${user.first_name} ${user.last_name} (#${user.operator_number})` : "Benutzer wählen";
                               })()
                             : "Alle Benutzer"}

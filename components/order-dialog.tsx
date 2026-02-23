@@ -36,7 +36,7 @@ import { AITableSuggestion } from "@/components/ai-table-suggestion";
 interface OrderDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  restaurantId: number;
+  restaurantId: string;
   order?: OrderWithItems | null;
   table?: Table | null;
   availableTables?: Table[];
@@ -56,7 +56,7 @@ export function OrderDialog({
   onOrderUpdated,
   onNotify,
 }: OrderDialogProps) {
-  const [selectedTableId, setSelectedTableId] = useState<number | null>(null);
+  const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
   const [partySize, setPartySize] = useState<number | null>(null);
   const [notes, setNotes] = useState("");
   const [specialRequests, setSpecialRequests] = useState("");
@@ -67,7 +67,7 @@ export function OrderDialog({
   const [items, setItems] = useState<OrderItem[]>([]);
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [menuCategories, setMenuCategories] = useState<MenuCategory[]>([]);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [menuSearchQuery, setMenuSearchQuery] = useState("");
   const [showMenuSelection, setShowMenuSelection] = useState(false);
   const [tableMenuOpen, setTableMenuOpen] = useState(false);
@@ -139,8 +139,8 @@ export function OrderDialog({
 
   const handleAddMenuItem = (menuItem: MenuItem) => {
     const newItem: OrderItem = {
-      id: Date.now(), // Temporary ID
-      order_id: order?.id || 0,
+      id: `temp-${Date.now()}`, // Temporary ID
+      order_id: order?.id || "0",
       item_name: menuItem.name,
       item_description: menuItem.description,
       category: menuCategories.find((c) => c.id === menuItem.category_id)?.name || null,
@@ -238,7 +238,7 @@ export function OrderDialog({
 
 
   const handleRemoveItem = (index: number) => {
-    if (items[index].id && items[index].id > 1000) {
+    if (items[index].id && !String(items[index].id).startsWith('temp-')) {
       // Real item from backend
       const confirmed = confirmAction("Möchten Sie diese Position wirklich löschen?");
       if (!confirmed) return;

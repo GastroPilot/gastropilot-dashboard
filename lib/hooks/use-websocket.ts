@@ -18,7 +18,7 @@ type WebSocketMessage = {
 };
 
 interface UseWebSocketOptions {
-  restaurantId: number | undefined;
+  restaurantId: string | undefined;
   channels?: WebSocketChannel[];
   onMessage?: (message: WebSocketMessage) => void;
   onConnect?: () => void;
@@ -100,7 +100,7 @@ export function useWebSocket({
         
         case 'order_updated':
           if (message.data && restaurantId) {
-            const orderData = message.data as { id: number };
+            const orderData = message.data as { id: string };
             updateOrder(orderData.id, message.data as any);
             queryClient.invalidateQueries({ queryKey: orderKeys.lists() });
           }
@@ -121,7 +121,7 @@ export function useWebSocket({
         
         case 'reservation_updated':
           if (message.data && restaurantId) {
-            const reservationData = message.data as { id: number };
+            const reservationData = message.data as { id: string };
             updateReservation(reservationData.id, message.data as any);
             queryClient.invalidateQueries({ queryKey: reservationKeys.lists() });
           }
@@ -129,7 +129,7 @@ export function useWebSocket({
         
         case 'reservation_deleted':
           if (message.data && restaurantId) {
-            const reservationData = message.data as { id: number };
+            const reservationData = message.data as { id: string };
             removeReservation(reservationData.id);
             queryClient.invalidateQueries({ queryKey: reservationKeys.lists() });
           }
@@ -137,7 +137,7 @@ export function useWebSocket({
         
         case 'table_updated':
           if (message.data && restaurantId) {
-            const tableData = message.data as { id: number };
+            const tableData = message.data as { id: string };
             updateTable(tableData.id, message.data as any);
             queryClient.invalidateQueries({ queryKey: tableKeys.lists() });
           }
@@ -269,7 +269,7 @@ export function useWebSocket({
 /**
  * Hook specifically for kitchen real-time updates
  */
-export function useKitchenWebSocket(restaurantId: number | undefined) {
+export function useKitchenWebSocket(restaurantId: string | undefined) {
   return useWebSocket({
     restaurantId,
     channels: ['kitchen', 'orders'],
@@ -280,7 +280,7 @@ export function useKitchenWebSocket(restaurantId: number | undefined) {
 /**
  * Hook specifically for dashboard real-time updates
  */
-export function useDashboardWebSocket(restaurantId: number | undefined) {
+export function useDashboardWebSocket(restaurantId: string | undefined) {
   return useWebSocket({
     restaurantId,
     channels: ['all'],

@@ -1,11 +1,11 @@
 import { api } from "./client";
 
 export interface AuditLog {
-  id: number;
-  restaurant_id: number;
-  user_id?: number | null;
+  id: string;
+  restaurant_id: string;
+  user_id?: string | null;
   entity_type: string;
-  entity_id?: number | null;
+  entity_id?: string | null;
   action: string;
   description?: string | null;
   details?: Record<string, any> | null;
@@ -15,11 +15,11 @@ export interface AuditLog {
 
 export interface AuditLogFilters {
   entity_type?: string;
-  entity_id?: number;
+  entity_id?: string;
   action?: string;
   limit?: number;
   offset?: number;
-  user_id?: number;
+  user_id?: string;
 }
 
 export interface AuditLogListResponse {
@@ -79,12 +79,12 @@ const normalizeAuditLogResponse = (
 };
 
 export const auditLogsApi = {
-  list: async (restaurantId: number, params: AuditLogFilters = {}): Promise<AuditLogListResponse> => {
+  list: async (restaurantId: string, params: AuditLogFilters = {}): Promise<AuditLogListResponse> => {
     const query = new URLSearchParams();
     if (params.entity_type) query.append("entity_type", params.entity_type);
-    if (typeof params.entity_id === "number") query.append("entity_id", params.entity_id.toString());
+    if (params.entity_id !== undefined) query.append("entity_id", params.entity_id);
     if (params.action) query.append("action", params.action);
-    if (typeof params.user_id === "number") query.append("user_id", params.user_id.toString());
+    if (params.user_id) query.append("user_id", params.user_id);
     if (params.limit) query.append("limit", params.limit.toString());
     if (params.offset) query.append("offset", params.offset.toString());
 

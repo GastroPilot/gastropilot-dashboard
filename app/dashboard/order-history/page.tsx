@@ -116,8 +116,8 @@ export default function OrderHistoryPage() {
   const [filters, setFilters] = useState<{
     startDate: string;
     endDate: string;
-    tableId: number | null;
-    guestId: number | null;
+    tableId: string | null;
+    guestId: string | null;
   }>({
     startDate: format(startOfDay(subDays(new Date(), 7)), "yyyy-MM-dd"),
     endDate: format(endOfDay(new Date()), "yyyy-MM-dd"),

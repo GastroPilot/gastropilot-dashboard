@@ -5,9 +5,9 @@ import { useDashboardDataStore } from '@/lib/stores/dashboard-store';
 // Filter type that matches the API parameters
 export interface OrderFilters {
   status?: OrderStatus;
-  table_id?: number;
-  guest_id?: number;
-  reservation_id?: number;
+  table_id?: string;
+  guest_id?: string;
+  reservation_id?: string;
   start_date?: string;
   end_date?: string;
 }
@@ -15,19 +15,19 @@ export interface OrderFilters {
 export const orderKeys = {
   all: ['orders'] as const,
   lists: () => [...orderKeys.all, 'list'] as const,
-  list: (restaurantId: number, filters?: OrderFilters) =>
+  list: (restaurantId: string, filters?: OrderFilters) =>
     [...orderKeys.lists(), restaurantId, filters] as const,
   details: () => [...orderKeys.all, 'detail'] as const,
-  detail: (restaurantId: number, id: number) =>
+  detail: (restaurantId: string, id: string) =>
     [...orderKeys.details(), restaurantId, id] as const,
-  statistics: (restaurantId: number) =>
+  statistics: (restaurantId: string) =>
     [...orderKeys.all, 'statistics', restaurantId] as const,
 };
 
 /**
  * Hook to fetch orders for a restaurant
  */
-export function useOrders(restaurantId: number | undefined, filters?: OrderFilters) {
+export function useOrders(restaurantId: string | undefined, filters?: OrderFilters) {
   return useQuery({
     queryKey: orderKeys.list(restaurantId!, filters),
     queryFn: () => ordersApi.list(restaurantId!, filters),
@@ -40,7 +40,7 @@ export function useOrders(restaurantId: number | undefined, filters?: OrderFilte
 /**
  * Hook to fetch a single order
  */
-export function useOrder(restaurantId: number | undefined, id: number | undefined) {
+export function useOrder(restaurantId: string | undefined, id: string | undefined) {
   return useQuery({
     queryKey: orderKeys.detail(restaurantId!, id!),
     queryFn: () => ordersApi.get(restaurantId!, id!),
@@ -56,7 +56,7 @@ export function useCreateOrder() {
   const addOrder = useDashboardDataStore((s) => s.addOrder);
   
   return useMutation({
-    mutationFn: ({ restaurantId, data }: { restaurantId: number; data: OrderCreate }) =>
+    mutationFn: ({ restaurantId, data }: { restaurantId: string; data: OrderCreate }) =>
       ordersApi.create(restaurantId, data),
     onMutate: async ({ restaurantId, data }) => {
       await queryClient.cancelQueries({ queryKey: orderKeys.lists() });
@@ -64,7 +64,7 @@ export function useCreateOrder() {
       // Optimistically add to store with all required Order fields
       const now = new Date().toISOString();
       const tempOrder: Order = {
-        id: -Date.now(),
+        id: `temp-${Date.now()}`,
         restaurant_id: restaurantId,
         table_id: data.table_id ?? null,
         guest_id: data.guest_id ?? null,
@@ -114,8 +114,8 @@ export function useUpdateOrder() {
       id,
       data,
     }: {
-      restaurantId: number;
-      id: number;
+      restaurantId: string;
+      id: string;
       data: OrderUpdate;
     }) => ordersApi.update(restaurantId, id, data),
     onMutate: async ({ id, data }) => {
@@ -135,7 +135,7 @@ export function useDeleteOrder() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ restaurantId, id }: { restaurantId: number; id: number }) =>
+    mutationFn: ({ restaurantId, id }: { restaurantId: string; id: string }) =>
       ordersApi.delete(restaurantId, id),
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: orderKeys.lists() });
@@ -144,7 +144,7 @@ export function useDeleteOrder() {
 }
 
 // TODO: Implement useOrderStatistics when backend endpoint is available
-// export function useOrderStatistics(restaurantId: number | undefined, params?: { from?: string; to?: string }) {
+// export function useOrderStatistics(restaurantId: string | undefined, params?: { from?: string; to?: string }) {
 //   return useQuery({
 //     queryKey: orderKeys.statistics(restaurantId!),
 //     queryFn: () => ordersApi.getStatistics(restaurantId!, params),

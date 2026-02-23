@@ -28,12 +28,12 @@ const TYPE_OPTIONS = [
 interface CreateObstacleDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  restaurantId: number;
+  restaurantId: string;
   onSaved: () => void;
   obstacle?: Obstacle | null;
   onDeleted?: () => void;
   areas: Area[];
-  selectedAreaId: number | null;
+  selectedAreaId: string | null;
 }
 
 export function CreateObstacleDialog({
@@ -56,7 +56,7 @@ export function CreateObstacleDialog({
   const [blocking, setBlocking] = useState(true);
   const [color, setColor] = useState("");
   const [notes, setNotes] = useState("");
-  const [areaId, setAreaId] = useState<number | null>(selectedAreaId ?? null);
+  const [areaId, setAreaId] = useState<string | null>(selectedAreaId ?? null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [areaMenuOpen, setAreaMenuOpen] = useState(false);

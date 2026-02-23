@@ -1,8 +1,11 @@
 import { api, refreshToken } from "./client";
 
 export interface LoginRequest {
-  operator_number: string;
-  pin: string;
+  operator_number?: string;
+  pin?: string;
+  tenant_slug?: string;
+  email?: string;
+  password?: string;
 }
 
 export interface NFCLoginRequest {
@@ -17,16 +20,19 @@ export interface TokenResponse {
 }
 
 export interface User {
-  id: number;
-  operator_number: string;
+  id: string;
+  tenant_id?: string | null;
+  email?: string | null;
+  operator_number: string | null;
   nfc_tag_id?: string | null;
   first_name: string;
   last_name: string;
   role: string;
+  auth_method?: string;
   is_active: boolean;
-  created_at_utc: string;
-  updated_at_utc: string;
-  last_login_at_utc?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  last_login_at?: string | null;
 }
 
 export interface UserCreate {
@@ -35,7 +41,7 @@ export interface UserCreate {
   nfc_tag_id?: string | null;
   first_name: string;
   last_name: string;
-  role: "servecta" | "restaurantinhaber" | "schichtleiter" | "mitarbeiter";
+  role: "platform_admin" | "owner" | "manager" | "staff" | "kitchen" | "guest";
 }
 
 export interface UserUpdate {
@@ -44,7 +50,7 @@ export interface UserUpdate {
   nfc_tag_id?: string | null;
   first_name?: string;
   last_name?: string;
-  role?: "servecta" | "restaurantinhaber" | "schichtleiter" | "mitarbeiter";
+  role?: "platform_admin" | "owner" | "manager" | "staff" | "kitchen" | "guest";
   is_active?: boolean;
 }
 
@@ -156,18 +162,18 @@ export const authApi = {
   },
 
   createOperator: async (data: UserCreate): Promise<User> => {
-    return api.post<User>("/auth/create-operator", data);
+    return api.post<User>("/users/", data);
   },
 
   listOperators: async (): Promise<User[]> => {
-    return api.get<User[]>("/auth/operators");
+    return api.get<User[]>("/users/");
   },
 
-  updateOperator: async (operatorId: number, data: UserUpdate): Promise<User> => {
-    return api.patch<User>(`/auth/operators/${operatorId}`, data);
+  updateOperator: async (operatorId: string, data: UserUpdate): Promise<User> => {
+    return api.patch<User>(`/users/${operatorId}`, data);
   },
 
-  deleteOperator: async (operatorId: number): Promise<void> => {
-    return api.delete(`/auth/operators/${operatorId}`);
+  deleteOperator: async (operatorId: string): Promise<void> => {
+    return api.delete(`/users/${operatorId}`);
   },
 };

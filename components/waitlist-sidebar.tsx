@@ -14,9 +14,9 @@ import { useUserSettings } from "@/lib/hooks/use-user-settings";
 interface WaitlistSidebarProps {
   reservations: Reservation[];
   blocks?: Block[];
-  activeReservationId: number | null;
-  activeBlockId?: number | null;
-  getTableName?: (tableId: number | null) => string;
+  activeReservationId: string | null;
+  activeBlockId?: string | null;
+  getTableName?: (tableId: string | null) => string;
   getReservationTableLabel?: (reservation: Reservation) => string | null;
   getBlockTableLabels?: (block: Block) => string[];
   searchQuery?: string;

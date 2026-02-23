@@ -36,7 +36,7 @@ export default function MenuPage() {
   const [items, setItems] = useState<MenuItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   
   // Dialog States
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
@@ -54,7 +54,7 @@ export default function MenuPage() {
   const [itemDescription, setItemDescription] = useState("");
   const [itemPrice, setItemPrice] = useState<number>(0);
   const [itemTaxRate, setItemTaxRate] = useState<number>(0.19);  // Default 19%
-  const [itemCategoryId, setItemCategoryId] = useState<number | null>(null);
+  const [itemCategoryId, setItemCategoryId] = useState<string | null>(null);
   const [itemIsAvailable, setItemIsAvailable] = useState(true);
   const [itemSortOrder, setItemSortOrder] = useState(0);
   const [taxMenuOpen, setTaxMenuOpen] = useState(false);
