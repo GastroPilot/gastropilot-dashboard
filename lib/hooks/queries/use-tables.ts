@@ -5,16 +5,16 @@ import { useDashboardDataStore } from '@/lib/stores/dashboard-store';
 export const tableKeys = {
   all: ['tables'] as const,
   lists: () => [...tableKeys.all, 'list'] as const,
-  list: (restaurantId: number) => [...tableKeys.lists(), restaurantId] as const,
+  list: (restaurantId: string) => [...tableKeys.lists(), restaurantId] as const,
   details: () => [...tableKeys.all, 'detail'] as const,
-  detail: (restaurantId: number, id: number) =>
+  detail: (restaurantId: string, id: string) =>
     [...tableKeys.details(), restaurantId, id] as const,
 };
 
 /**
  * Hook to fetch tables for a restaurant
  */
-export function useTables(restaurantId: number | undefined) {
+export function useTables(restaurantId: string | undefined) {
   return useQuery({
     queryKey: tableKeys.list(restaurantId!),
     queryFn: () => tablesApi.list(restaurantId!),
@@ -25,7 +25,7 @@ export function useTables(restaurantId: number | undefined) {
 /**
  * Hook to fetch a single table
  */
-export function useTable(restaurantId: number | undefined, id: number | undefined) {
+export function useTable(restaurantId: string | undefined, id: string | undefined) {
   return useQuery({
     queryKey: tableKeys.detail(restaurantId!, id!),
     queryFn: () => tablesApi.get(restaurantId!, id!),
@@ -40,7 +40,7 @@ export function useCreateTable() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ restaurantId, data }: { restaurantId: number; data: TableCreate }) =>
+    mutationFn: ({ restaurantId, data }: { restaurantId: string; data: TableCreate }) =>
       tablesApi.create(restaurantId, data),
     onSuccess: (_, { restaurantId }) => {
       queryClient.invalidateQueries({ queryKey: tableKeys.list(restaurantId) });
@@ -61,8 +61,8 @@ export function useUpdateTable() {
       id,
       data,
     }: {
-      restaurantId: number;
-      id: number;
+      restaurantId: string;
+      id: string;
       data: TableUpdate;
     }) => tablesApi.update(restaurantId, id, data),
     onMutate: async ({ id, data }) => {
@@ -82,7 +82,7 @@ export function useDeleteTable() {
   const queryClient = useQueryClient();
   
   return useMutation({
-    mutationFn: ({ restaurantId, id }: { restaurantId: number; id: number }) =>
+    mutationFn: ({ restaurantId, id }: { restaurantId: string; id: string }) =>
       tablesApi.delete(restaurantId, id),
     onSuccess: (_, { restaurantId }) => {
       queryClient.invalidateQueries({ queryKey: tableKeys.list(restaurantId) });

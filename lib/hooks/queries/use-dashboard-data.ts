@@ -5,11 +5,11 @@ import { useEffect } from 'react';
 
 export const dashboardKeys = {
   all: ['dashboard'] as const,
-  batch: (restaurantId: number, date?: string) =>
+  batch: (restaurantId: string, date?: string) =>
     [...dashboardKeys.all, 'batch', restaurantId, date] as const,
-  kitchen: (restaurantId: number) =>
+  kitchen: (restaurantId: string) =>
     [...dashboardKeys.all, 'kitchen', restaurantId] as const,
-  insights: (restaurantId: number, from?: string, to?: string) =>
+  insights: (restaurantId: string, from?: string, to?: string) =>
     [...dashboardKeys.all, 'insights', restaurantId, from, to] as const,
 };
 
@@ -21,7 +21,7 @@ export const dashboardKeys = {
  * - Improves load time significantly
  * - Syncs data to the Zustand store automatically
  */
-export function useDashboardData(restaurantId: number | undefined, date?: Date) {
+export function useDashboardData(restaurantId: string | undefined, date?: Date) {
   const dateStr = date?.toISOString().split('T')[0];
   
   const {
@@ -66,7 +66,7 @@ export function useDashboardData(restaurantId: number | undefined, date?: Date) 
  * - More frequent refetching
  * - Only active orders
  */
-export function useKitchenData(restaurantId: number | undefined) {
+export function useKitchenData(restaurantId: string | undefined) {
   return useQuery({
     queryKey: dashboardKeys.kitchen(restaurantId!),
     queryFn: () => dashboardApi.getKitchenData(restaurantId!),
@@ -80,7 +80,7 @@ export function useKitchenData(restaurantId: number | undefined) {
  * Hook to fetch insights/analytics data.
  */
 export function useInsightsData(
-  restaurantId: number | undefined,
+  restaurantId: string | undefined,
   options?: { fromDate?: Date; toDate?: Date }
 ) {
   const fromStr = options?.fromDate?.toISOString().split('T')[0];

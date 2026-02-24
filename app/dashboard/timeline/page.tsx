@@ -268,7 +268,7 @@ export default function TimelinePage() {
       (a, b) => parseISO(a.start_at).getTime() - parseISO(b.start_at).getTime()
     );
     const laneEnds: number[] = [];
-    const map = new Map<number, number>();
+    const map = new Map<string, number>();
     sorted.forEach((res) => {
       const start = parseISO(res.start_at).getTime();
       const end = parseISO(res.end_at).getTime();
@@ -296,7 +296,7 @@ export default function TimelinePage() {
     });
   }, [blocks, selectedDate]);
   const blocksByTable = useMemo(() => {
-    const map = new Map<number, Block[]>();
+    const map = new Map<string, Block[]>();
     const blockMap = new Map(blocksForDay.map((block) => [block.id, block]));
     blockAssignments.forEach((assignment) => {
       if (!assignment.table_id) return;
@@ -355,7 +355,7 @@ export default function TimelinePage() {
   };
 
   const reservationsByTable = useMemo(() => {
-    const map = new Map<number, Reservation[]>();
+    const map = new Map<string, Reservation[]>();
     reservationsForDay.forEach((reservation) => {
       if (!reservation.table_id) return;
       const list = map.get(reservation.table_id) ?? [];
@@ -367,11 +367,11 @@ export default function TimelinePage() {
   }, [reservationsForDay]);
 
   const tablesByArea = useMemo(() => {
-    const grouped = new Map<number | "unassigned", Table[]>();
+    const grouped = new Map<string | "unassigned", Table[]>();
     tables.forEach((table) => {
-      const key: number | "unassigned" =
+      const key: string | "unassigned" =
         table.area_id !== null && table.area_id !== undefined
-          ? Number(table.area_id)
+          ? table.area_id
           : "unassigned";
       const list = grouped.get(key) ?? [];
       list.push(table);
@@ -383,8 +383,8 @@ export default function TimelinePage() {
     return grouped;
   }, [tables]);
 
-  const areaOrder: (number | "unassigned")[] = useMemo(() => {
-    const ids: (number | "unassigned")[] = areas.map((area) => Number(area.id));
+  const areaOrder: (string | "unassigned")[] = useMemo(() => {
+    const ids: (string | "unassigned")[] = areas.map((area) => area.id);
     if (tablesByArea.has("unassigned")) ids.push("unassigned");
     return ids;
   }, [areas, tablesByArea]);

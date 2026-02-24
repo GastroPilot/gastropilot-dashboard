@@ -8,7 +8,7 @@ import { Clock, Users, CheckCircle, XCircle, AlertTriangle, Armchair, ShieldChec
 interface ReservationCardProps {
   reservation: Reservation;
   isDragging?: boolean;
-  getTableName?: (tableId: number | null) => string;
+  getTableName?: (tableId: string | null) => string;
   getTableLabel?: (reservation: Reservation) => string | null;
   onClick?: (reservation: Reservation) => void;
   onDelete?: (reservation: Reservation) => void;

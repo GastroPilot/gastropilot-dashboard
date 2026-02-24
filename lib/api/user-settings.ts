@@ -1,8 +1,8 @@
 import { api, ApiError } from "./client";
 
 export interface UserSettings {
-  id: number;
-  user_id: number;
+  id: string;
+  user_id: string;
   settings: Record<string, any>;
   created_at_utc: string;
   updated_at_utc: string;

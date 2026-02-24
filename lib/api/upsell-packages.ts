@@ -4,8 +4,8 @@
 import { api } from "./client";
 
 export interface UpsellPackage {
-  id: number;
-  restaurant_id: number;
+  id: string;
+  restaurant_id: string;
   name: string;
   description: string | null;
   price: number;
@@ -23,7 +23,7 @@ export interface UpsellPackage {
 }
 
 export interface UpsellPackageCreate {
-  restaurant_id: number;
+  restaurant_id: string;
   name: string;
   description?: string | null;
   price: number;
@@ -58,23 +58,23 @@ export interface UpsellPackageAvailabilityResponse {
 }
 
 class UpsellPackagesApi {
-  async list(restaurantId: number, includeInactive: boolean = false): Promise<UpsellPackage[]> {
+  async list(restaurantId: string, includeInactive: boolean = false): Promise<UpsellPackage[]> {
     return api.get<UpsellPackage[]>(
       `/restaurants/${restaurantId}/upsell-packages/?include_inactive=${includeInactive}`
     );
   }
 
-  async get(restaurantId: number, packageId: number): Promise<UpsellPackage> {
+  async get(restaurantId: string, packageId: string): Promise<UpsellPackage> {
     return api.get<UpsellPackage>(`/restaurants/${restaurantId}/upsell-packages/${packageId}`);
   }
 
-  async create(restaurantId: number, data: UpsellPackageCreate): Promise<UpsellPackage> {
+  async create(restaurantId: string, data: UpsellPackageCreate): Promise<UpsellPackage> {
     return api.post<UpsellPackage>(`/restaurants/${restaurantId}/upsell-packages`, data);
   }
 
   async update(
-    restaurantId: number,
-    packageId: number,
+    restaurantId: string,
+    packageId: string,
     data: UpsellPackageUpdate
   ): Promise<UpsellPackage> {
     return api.put<UpsellPackage>(
@@ -83,12 +83,12 @@ class UpsellPackagesApi {
     );
   }
 
-  async delete(restaurantId: number, packageId: number): Promise<void> {
+  async delete(restaurantId: string, packageId: string): Promise<void> {
     return api.delete(`/restaurants/${restaurantId}/upsell-packages/${packageId}`);
   }
 
   async getAvailability(
-    restaurantId: number,
+    restaurantId: string,
     date: string,
     time: string,
     partySize: number

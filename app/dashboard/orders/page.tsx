@@ -97,14 +97,14 @@ export default function OrdersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedStatuses, setSelectedStatuses] = useState<OrderStatus[]>(ALL_STATUSES);
   const [statusMenuOpen, setStatusMenuOpen] = useState(false);
-  const [selectedTableId, setSelectedTableId] = useState<number | null>(null);
+  const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
   const [tableMenuOpen, setTableMenuOpen] = useState(false);
   const [toasts, setToasts] = useState<
     { id: string; message: string; variant?: "info" | "error" | "success" }[]
   >([]);
   const [orderDialogOpen, setOrderDialogOpen] = useState(false);
   const [orderDetailDialogOpen, setOrderDetailDialogOpen] = useState(false);
-  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [selectedTableForOrder, setSelectedTableForOrder] = useState<Table | null>(null);
   const { settings, updateSettings, error: settingsError } = useUserSettings();
   const settingsInitializedRef = useRef(false);
@@ -223,7 +223,7 @@ export default function OrdersPage() {
   const hasActiveStatusFilter =
     selectedStatuses.length > 0 && selectedStatuses.length < ALL_STATUSES.length;
 
-  const getTableName = (tableId: number | null) => {
+  const getTableName = (tableId: string | null) => {
     if (!tableId) return "Kein Tisch";
     const table = tables.find((t) => t.id === tableId);
     return table ? `${table.number}` : "Unbekannter Tisch";

@@ -44,7 +44,7 @@ const TABLES_ZOOM_SETTINGS_KEY = "dashboard_zoom_level";
 export default function TableManagementPage() {
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [areas, setAreas] = useState<Area[]>([]);
-  const [selectedAreaId, setSelectedAreaId] = useState<number | null>(null);
+  const [selectedAreaId, setSelectedAreaId] = useState<string | null>(null);
   const [tables, setTables] = useState<Table[]>([]);
   const [allTables, setAllTables] = useState<Table[]>([]);
   const [obstacles, setObstacles] = useState<Obstacle[]>([]);
@@ -56,8 +56,8 @@ export default function TableManagementPage() {
   const [tableDetailsOpen, setTableDetailsOpen] = useState(false);
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [selectedObstacle, setSelectedObstacle] = useState<Obstacle | null>(null);
-  const [activeId, setActiveId] = useState<number | null>(null);
-  const [activeObstacleId, setActiveObstacleId] = useState<number | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [activeObstacleId, setActiveObstacleId] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<{ role: string } | null>(null);
   const [toasts, setToasts] = useState<{ id: string; message: string; variant?: "info" | "error" | "success" }[]>([]);
   const { settings, updateSettings, error: settingsError } = useUserSettings();
@@ -109,7 +109,7 @@ export default function TableManagementPage() {
     })
   );
 
-  const filterByArea = useCallback(<T extends { area_id?: number | null }>(items: T[], areaId: number | null) => {
+  const filterByArea = useCallback(<T extends { area_id?: string | null }>(items: T[], areaId: string | null) => {
     if (!areaId) return items;
     return items.filter((item) => (item.area_id ?? null) === areaId);
   }, []);
@@ -200,7 +200,7 @@ export default function TableManagementPage() {
     }
   };
 
-  const loadData = useCallback(async (background = false, preferredAreaId: number | null = null) => {
+  const loadData = useCallback(async (background = false, preferredAreaId: string | null = null) => {
     try {
       if (background) {
         setIsRefreshing(true);
@@ -335,11 +335,10 @@ export default function TableManagementPage() {
   const handleDragStart = (event: DragStartEvent) => {
     const id = event.active.id;
     if (typeof id === "string" && id.startsWith("obstacle-")) {
-      setActiveObstacleId(parseInt(id.replace("obstacle-", ""), 10));
+      setActiveObstacleId(id.replace("obstacle-", ""));
       return;
     }
-    const numericId = id as number;
-    setActiveId(numericId);
+    setActiveId(String(id));
   };
 
   const handleDragEnd = async (event: DragEndEvent) => {
@@ -354,7 +353,7 @@ export default function TableManagementPage() {
 
     // Obstacles drag
     if (typeof activeRaw === "string" && activeRaw.startsWith("obstacle-")) {
-      const obstacleId = parseInt(activeRaw.replace("obstacle-", ""), 10);
+      const obstacleId = activeRaw.replace("obstacle-", "");
       const obstacle = obstacles.find((o) => o.id === obstacleId);
       if (!obstacle) {
         setActiveObstacleId(null);
@@ -382,7 +381,7 @@ export default function TableManagementPage() {
     }
 
     // Tables drag
-    const tableId = activeRaw as number;
+    const tableId = String(activeRaw);
     const table = tables.find((t) => t.id === tableId);
     if (!table) {
       setActiveId(null);
@@ -511,7 +510,7 @@ export default function TableManagementPage() {
               </div>
             </div>
             <div className="flex items-center gap-2 pt-1.5 md:pt-2">
-              {(currentUser?.role === "servecta" || currentUser?.role === "restaurantinhaber" || currentUser?.role === "schichtleiter") && (
+              {(currentUser?.role === "platform_admin" || currentUser?.role === "owner" || currentUser?.role === "manager") && (
                 <>
                   <Button
                     onClick={() => setCreateTableOpen(true)}
@@ -588,7 +587,7 @@ export default function TableManagementPage() {
                 </div>
               )}
             </div>
-            {(currentUser?.role === "servecta" || currentUser?.role === "restaurantinhaber" || currentUser?.role === "schichtleiter") && (
+            {(currentUser?.role === "platform_admin" || currentUser?.role === "owner" || currentUser?.role === "manager") && (
               <div className="flex items-center gap-2">
                 <Button size="sm" variant="outline" onClick={openCreateAreaDialog} className="min-h-[36px]">
                   <Plus className="w-4 h-4 mr-2" />
@@ -868,7 +867,7 @@ export default function TableManagementPage() {
               <div className="text-center space-y-3">
                 <p className="text-muted-foreground text-lg">Noch keine Tische vorhanden</p>
                 <p className="text-muted-foreground text-sm">Lege hier neue Tische an oder verschiebe bestehende.</p>
-                {(currentUser?.role === "servecta" || currentUser?.role === "restaurantinhaber" || currentUser?.role === "schichtleiter") && (
+                {(currentUser?.role === "platform_admin" || currentUser?.role === "owner" || currentUser?.role === "manager") && (
                   <Button
                     onClick={() => setCreateTableOpen(true)}
                     className="touch-manipulation min-h-[44px]"

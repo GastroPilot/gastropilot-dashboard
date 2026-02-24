@@ -1,8 +1,8 @@
 import { api } from "./client";
 
 export interface Obstacle {
-  id: number;
-  restaurant_id: number;
+  id: string;
+  restaurant_id: string;
   type: string;
   name?: string | null;
   x: number;
@@ -13,7 +13,7 @@ export interface Obstacle {
   blocking: boolean;
   color?: string | null;
   notes?: string | null;
-  area_id?: number | null;
+  area_id?: string | null;
 }
 
 export interface ObstacleCreate {
@@ -27,22 +27,22 @@ export interface ObstacleCreate {
   blocking?: boolean;
   color?: string | null;
   notes?: string | null;
-  area_id?: number | null;
+  area_id?: string | null;
 }
 
 export interface ObstacleUpdate extends Partial<ObstacleCreate> {}
 
 export const obstaclesApi = {
-  async list(restaurantId: number): Promise<Obstacle[]> {
+  async list(restaurantId: string): Promise<Obstacle[]> {
     return api.get(`/restaurants/${restaurantId}/obstacles/`);
   },
-  async create(restaurantId: number, data: ObstacleCreate): Promise<Obstacle> {
+  async create(restaurantId: string, data: ObstacleCreate): Promise<Obstacle> {
     return api.post(`/restaurants/${restaurantId}/obstacles/`, data);
   },
-  async update(restaurantId: number, obstacleId: number, data: ObstacleUpdate): Promise<Obstacle> {
+  async update(restaurantId: string, obstacleId: string, data: ObstacleUpdate): Promise<Obstacle> {
     return api.patch(`/restaurants/${restaurantId}/obstacles/${obstacleId}`, data);
   },
-  async delete(restaurantId: number, obstacleId: number): Promise<void> {
+  async delete(restaurantId: string, obstacleId: string): Promise<void> {
     await api.delete(`/restaurants/${restaurantId}/obstacles/${obstacleId}`);
   },
 };

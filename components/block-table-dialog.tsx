@@ -16,7 +16,7 @@ import type { Table } from "@/lib/api/tables";
 interface BlockTableDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  restaurantId: number;
+  restaurantId: string;
   tables?: Table[];
   block?: Block | null;
   blocks?: Block[];
@@ -103,7 +103,7 @@ export function BlockTableDialog({
 
       const conflictingTables: string[] = [];
       for (const tableId of tableIds) {
-        if (!tableId || tableId <= 0) continue;
+        if (!tableId) continue;
         const reservations = await reservationsApi.list(restaurantId, {
           from: queryStart.toISOString(),
           to: queryEnd.toISOString(),
@@ -150,7 +150,7 @@ export function BlockTableDialog({
           "success"
         );
       } else {
-        const validTables = tables.filter((item) => item.id > 0);
+        const validTables = tables.filter((item) => !String(item.id).startsWith("temp-"));
         if (validTables.length === 0) {
           setError("Bitte wähle mindestens einen Standard-Tisch aus.");
           return;

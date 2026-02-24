@@ -1,9 +1,9 @@
 import { api } from "./client";
 
 export interface TableDayConfig {
-  id: number;
-  restaurant_id: number;
-  table_id: number | null;
+  id: string;
+  restaurant_id: string;
+  table_id: string | null;
   date: string;
   is_hidden: boolean;
   is_temporary: boolean;
@@ -17,7 +17,7 @@ export interface TableDayConfig {
   height: number | null;
   is_active: boolean | null;
   color: string | null;
-  join_group_id: number | null;
+  join_group_id: string | null;
   is_joinable: boolean | null;
   rotation: number | null;
   created_at_utc: string;
@@ -25,7 +25,7 @@ export interface TableDayConfig {
 }
 
 export interface TableDayConfigCreate {
-  table_id?: number | null;
+  table_id?: string | null;
   date: string;
   is_hidden?: boolean | null;
   is_temporary?: boolean | null;
@@ -39,7 +39,7 @@ export interface TableDayConfigCreate {
   height?: number | null;
   is_active?: boolean | null;
   color?: string | null;
-  join_group_id?: number | null;
+  join_group_id?: string | null;
   is_joinable?: boolean | null;
   rotation?: number | null;
 }
@@ -51,18 +51,18 @@ export interface TableDayConfigUpdate {
   height?: number | null;
   is_active?: boolean | null;
   color?: string | null;
-  join_group_id?: number | null;
+  join_group_id?: string | null;
   is_joinable?: boolean | null;
   rotation?: number | null;
 }
 
 export const tableDayConfigsApi = {
-  getByDate: async (restaurantId: number, date: string): Promise<TableDayConfig[]> => {
+  getByDate: async (restaurantId: string, date: string): Promise<TableDayConfig[]> => {
     return api.get<TableDayConfig[]>(`/restaurants/${restaurantId}/table-day-configs/by-date/${date}`);
   },
 
   createOrUpdate: async (
-    restaurantId: number,
+    restaurantId: string,
     data: TableDayConfigCreate
   ): Promise<TableDayConfig> => {
     // Backend-Route ist @router.post("/"), daher trailing slash erforderlich
@@ -70,8 +70,8 @@ export const tableDayConfigsApi = {
   },
 
   update: async (
-    restaurantId: number,
-    configId: number,
+    restaurantId: string,
+    configId: string,
     data: TableDayConfigUpdate
   ): Promise<TableDayConfig> => {
     return api.patch<TableDayConfig>(
@@ -81,9 +81,9 @@ export const tableDayConfigsApi = {
   },
 
   delete: async (
-    restaurantId: number,
+    restaurantId: string,
     date: string,
-    tableId: number
+    tableId: string
   ): Promise<void> => {
     return api.delete(
       `/restaurants/${restaurantId}/table-day-configs/by-date/${date}/table/${tableId}`
@@ -91,8 +91,8 @@ export const tableDayConfigsApi = {
   },
 
   deleteById: async (
-    restaurantId: number,
-    configId: number
+    restaurantId: string,
+    configId: string
   ): Promise<void> => {
     return api.delete(
       `/restaurants/${restaurantId}/table-day-configs/${configId}`
@@ -100,7 +100,7 @@ export const tableDayConfigsApi = {
   },
 
   deleteAllForDate: async (
-    restaurantId: number,
+    restaurantId: string,
     date: string
   ): Promise<void> => {
     return api.delete(

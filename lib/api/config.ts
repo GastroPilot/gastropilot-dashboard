@@ -5,6 +5,7 @@
  * - localhost → localhost:8001 (Entwicklung)
  * - gpilot.app → api.gpilot.app (Prod)
  * - kunde.gpilot.app → api-kunde.gpilot.app (Kunde/Prod)
+ * - stage.gpilot.app → stage-api.gpilot.app (Staging-Setup)
  * - staging.gpilot.app → api-staging.gpilot.app (Staging)
  * - demo.gpilot.app → api-demo.gpilot.app (Demo)
  *
@@ -29,12 +30,22 @@ function computeApiUrlFromHostname(hostname: string): string {
     return 'https://api.gpilot.app';
   }
 
+  // Staging: stage.gpilot.app → stage-api.gpilot.app (Konvention Staging-Setup)
+  if (hostname === 'stage.gpilot.app' || hostname === 'www.stage.gpilot.app') {
+    return 'https://stage-api.gpilot.app';
+  }
+
+  // Local-Staging: stage.servecta.local → stage-api.servecta.local
+  if (hostname === 'stage.servecta.local' || hostname === 'www.stage.servecta.local') {
+    return 'http://stage-api.servecta.local';
+  }
+
   // Dynamische URL-Generierung für gpilot.app Subdomains
-  // Schema: {subdomain}.gpilot.app → api-{subdomain}.gpilot.app
+  // Schema: {subdomain}.gpilot.app → {subdomain}-api.gpilot.app
   const gpilotMatch = hostname.match(/^([^.]+)\.gpilot\.app$/);
   if (gpilotMatch) {
     const subdomain = gpilotMatch[1];
-    return `https://api-${subdomain}.gpilot.app`;
+    return `https://${subdomain}-api.gpilot.app`;
   }
 
   // Fallback für unbekannte Domains

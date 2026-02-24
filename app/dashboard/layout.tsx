@@ -5,10 +5,10 @@ import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import { authApi, User } from "@/lib/api/auth";
 import { restaurantsApi } from "@/lib/api/restaurants";
-import { licenseApi, Features } from "@/lib/api/license";
+import { impersonation } from "@/lib/api/admin";
 import { Button } from "@/components/ui/button";
 import { confirmAction } from "@/lib/utils";
-import { LogOut, Menu, X } from "lucide-react";
+import { LogOut, Menu, X, ShieldAlert } from "lucide-react";
 import { LoadingOverlay } from "@/components/loading-overlay";
 import { Logo } from "@/components/logo";
 import { ThemeSwitch } from "@/components/theme-switch";
@@ -25,7 +25,7 @@ export default function DashboardLayout({
   const [isNavOpen, setIsNavOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [restaurantName, setRestaurantName] = useState<string>("GastroPilot");
-  const [features, setFeatures] = useState<Features | null>(null);
+  const [impersonatingName, setImpersonatingName] = useState<string | null>(null);
   const profileMenuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -85,40 +85,35 @@ export default function DashboardLayout({
   }, [router]);
 
   useEffect(() => {
+    // Restaurantname laden – nur wenn Tenant-Kontext vorhanden
     const loadRestaurantName = async () => {
+      if (!user) return;
+      // Grundstatus: platform_admin ohne Impersonation → "GastroPilot" als Name
+      if (user.role === "platform_admin" && !impersonation.isActive()) {
+        setRestaurantName("GastroPilot");
+        return;
+      }
       try {
-        const name = await restaurantsApi.getPublicName();
-        setRestaurantName(name);
-      } catch (err) {
-        // Ignore errors - restaurant name is optional
-        console.error("Fehler beim Laden des Restaurantnamens:", err);
+        const restaurants = await restaurantsApi.list();
+        if (restaurants.length > 0) {
+          setRestaurantName(restaurants[0].name);
+        }
+      } catch {
+        // ignore
       }
     };
     loadRestaurantName();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
-    const loadFeatures = async () => {
-      try {
-        const featuresData = await licenseApi.getFeatures();
-        setFeatures(featuresData);
-      } catch (err) {
-        // Ignore errors - use defaults if license check fails
-        console.error("Fehler beim Laden der Features:", err);
-        // Fallback: alle Features aktiviert (für Development)
-        setFeatures({
-          reservations_module: true,
-          orders_module: true,
-          web_reservation_module: true,
-          whatsapp_bot_module: true,
-          phone_bot_module: true,
-        });
-      }
-    };
-    if (user) {
-      loadFeatures();
-    }
-  }, [user]);
+    setImpersonatingName(impersonation.getTenantName());
+  }, [pathname]);
+
+  const handleStopImpersonation = () => {
+    impersonation.stop();
+    // Vollständiger Page-Reload damit alle Daten neu geladen werden
+    window.location.href = "/dashboard/restaurants";
+  };
 
   useEffect(() => {
     // schliesse Mobile-Menü und Profil-Menü beim Navigieren
@@ -137,13 +132,11 @@ export default function DashboardLayout({
   }, []);
 
   const navLinks = useMemo(() => {
-    const canManageTables = user && (user.role === "servecta" || user.role === "restaurantinhaber" || user.role === "schichtleiter");
-    const isOwner = user && (user.role === "servecta" || user.role === "restaurantinhaber");
-    const canViewAuditLogs = user && (user.role === "servecta" || user.role === "restaurantinhaber" || user.role === "schichtleiter");
+    const isGrundstatus = user?.role === "platform_admin" && !impersonation.isActive();
+    const canManageTables = user && (user.role === "platform_admin" || user.role === "owner" || user.role === "manager");
+    const isOwner = user && (user.role === "platform_admin" || user.role === "owner");
+    const canViewAuditLogs = user && (user.role === "platform_admin" || user.role === "owner" || user.role === "manager");
 
-    // Prüfe License Features
-    const reservationsEnabled = features?.reservations_module ?? true; // Default: enabled
-    const ordersEnabled = features?.orders_module ?? true; // Default: enabled
     return [
       {
         href: "/dashboard",
@@ -155,67 +148,73 @@ export default function DashboardLayout({
         href: "/dashboard/tables",
         label: "Tische verwalten",
         active: pathname?.startsWith("/dashboard/tables"),
-        show: !!canManageTables && reservationsEnabled,
+        show: !!canManageTables && !isGrundstatus,
       },
       {
         href: "/dashboard/orders",
         label: "Bestellungen",
         active: pathname?.startsWith("/dashboard/orders"),
-        show: !!user && ordersEnabled,
+        show: !!user && !isGrundstatus,
       },
       {
         href: "/dashboard/kitchen",
         label: "Küchen-Ansicht",
         active: pathname?.startsWith("/dashboard/kitchen"),
-        show: !!user && ordersEnabled,
+        show: !!user && !isGrundstatus,
       },
       {
         href: "/dashboard/order-statistics",
         label: "Bestellstatistiken",
         active: pathname?.startsWith("/dashboard/order-statistics"),
-        show: !!user && user.role === "schichtleiter" && ordersEnabled,
+        show: !!user && user.role === "manager" && !isGrundstatus,
       },
       {
         href: "/dashboard/order-history",
         label: "Bestellhistorie",
         active: pathname?.startsWith("/dashboard/order-history"),
-        show: !!user && ordersEnabled,
+        show: !!user && !isGrundstatus,
       },
       {
         href: "/dashboard/menu",
         label: "Menü verwalten",
         active: pathname?.startsWith("/dashboard/menu"),
-        show: !!canManageTables && ordersEnabled,
+        show: !!canManageTables && !isGrundstatus,
       },
       {
         href: "/dashboard/vouchers",
         label: "Gutscheine",
         active: pathname?.startsWith("/dashboard/vouchers"),
-        show: !!isOwner && reservationsEnabled,
+        show: !!isOwner && !isGrundstatus,
       },
       {
         href: "/dashboard/upsell-packages",
         label: "Upsell-Pakete",
         active: pathname?.startsWith("/dashboard/upsell-packages"),
-        show: !!isOwner && reservationsEnabled,
+        show: !!isOwner && !isGrundstatus,
       },
       {
         href: "/dashboard/restaurants",
-        label: "Restaurant verwalten",
+        label: "Tenants",
         active: pathname === "/dashboard/restaurants",
-        show: user?.role === "servecta",
+        show: user?.role === "platform_admin",
+      },
+      {
+        href: "/dashboard/tenant-settings",
+        label: "Restaurant-Einstellungen",
+        active: pathname === "/dashboard/tenant-settings",
+        show: !!(user && (user.role === "platform_admin" || user.role === "owner" || user.role === "manager")) && !isGrundstatus,
       },
       {
         href: "/dashboard/operators",
         label: "Bedienerverwaltung",
         active: pathname === "/dashboard/operators",
-        show: !!isOwner,
+        show: !!isOwner && !isGrundstatus,
       },
       {
         href: "/dashboard/owner-insights",
         label: "Kennzahlen",
         active: pathname?.startsWith("/dashboard/owner-insights"),
-        show: !!isOwner,
+        show: !!isOwner && !isGrundstatus,
       },
       {
         href: "/dashboard/hilfecenter",
@@ -236,7 +235,7 @@ export default function DashboardLayout({
         show: !!canViewAuditLogs,
       },
     ].filter((link) => link.show);
-  }, [pathname, user, features]);
+  }, [pathname, user]);
 
   const groupedNav = useMemo(() => {
     const map = new Map(navLinks.map((link) => [link.href, link]));
@@ -259,6 +258,7 @@ export default function DashboardLayout({
         title: "VERWALTUNG",
         items: [
           pick("/dashboard/restaurants"),
+          pick("/dashboard/tenant-settings"),
           pick("/dashboard/operators"),
           pick("/dashboard/vouchers"),
           pick("/dashboard/upsell-packages"),
@@ -434,6 +434,26 @@ export default function DashboardLayout({
           </>
         )}
       </nav>
+
+      {/* Impersonation-Banner */}
+      {impersonatingName && (
+        <div className="shrink-0 flex items-center justify-between gap-3 px-4 py-2 bg-amber-500/10 border-b border-amber-500/30 text-amber-400 text-xs">
+          <div className="flex items-center gap-2 min-w-0">
+            <ShieldAlert className="w-4 h-4 flex-shrink-0" />
+            <span className="truncate">
+              Du impersonierst gerade: <strong className="font-semibold">{impersonatingName}</strong>
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={handleStopImpersonation}
+            className="flex-shrink-0 rounded border border-amber-500/40 bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-400 hover:bg-amber-500/20 transition-colors"
+          >
+            Beenden
+          </button>
+        </div>
+      )}
+
       <main className="flex-1 overflow-hidden min-h-0">{children}</main>
     </div>
   );

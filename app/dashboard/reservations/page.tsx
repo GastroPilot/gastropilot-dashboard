@@ -75,7 +75,7 @@ export default function ReservationsPage() {
   const [blockEditOpen, setBlockEditOpen] = useState(false);
   const [editingBlock, setEditingBlock] = useState<Block | null>(null);
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
-  const [selectedTableId, setSelectedTableId] = useState<number | null>(null);
+  const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
   const [toasts, setToasts] = useState<{ id: string; message: string; variant?: "info" | "error" | "success" }[]>([]);
   const tableMenuRef = useRef<HTMLDivElement | null>(null);
   const [now, setNow] = useState<Date>(new Date());
@@ -263,7 +263,7 @@ export default function ReservationsPage() {
 
   const showBlocks = selectedStatuses.length === 0 || selectedStatuses.includes("block");
   const blockTableNumbers = useMemo(() => {
-    const map = new Map<number, string[]>();
+    const map = new Map<string, string[]>();
     blockAssignments.forEach((assignment) => {
       if (!assignment.table_id) return;
       const table = tables.find((item) => item.id === assignment.table_id);
@@ -369,7 +369,7 @@ export default function ReservationsPage() {
     });
   };
 
-  const getTableName = (tableId: number | null) => {
+  const getTableName = (tableId: string | null) => {
     if (!tableId) return "Ohne Nummer";
     const table = tables.find((t) => t.id === tableId);
     return table ? `${table.number}` : "Unbekannt";
@@ -402,7 +402,7 @@ export default function ReservationsPage() {
     };
   };
 
-  const getBlockTableLabel = (blockId: number) => {
+  const getBlockTableLabel = (blockId: string) => {
     const entries = blockTableNumbers.get(blockId);
     if (!entries || entries.length === 0) return "Ohne Tisch";
     return entries.length === 1 ? `Tisch ${entries[0]}` : `Tische ${entries.join(", ")}`;

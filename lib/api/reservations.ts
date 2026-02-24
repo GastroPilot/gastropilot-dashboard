@@ -10,10 +10,10 @@ export type ReservationStatus =
   | "no_show";
 
 export interface Reservation {
-  id: number;
-  restaurant_id: number;
-  table_id: number | null;
-  guest_id: number | null;
+  id: string;
+  restaurant_id: string;
+  table_id: string | null;
+  guest_id: string | null;
   start_at: string;
   end_at: string;
   party_size: number;
@@ -31,7 +31,7 @@ export interface Reservation {
   canceled_at: string | null;
   created_at_utc: string;
   updated_at_utc: string;
-  voucher_id: number | null;
+  voucher_id: string | null;
   voucher_discount_amount: number | null;
   prepayment_required: boolean;
   prepayment_amount: number | null;
@@ -39,8 +39,8 @@ export interface Reservation {
 }
 
 export interface ReservationCreate {
-  table_id?: number | null;
-  guest_id?: number | null;
+  table_id?: string | null;
+  guest_id?: string | null;
   start_at: string;
   end_at: string;
   party_size: number;
@@ -55,8 +55,8 @@ export interface ReservationCreate {
 }
 
 export interface ReservationUpdate {
-  table_id?: number | null;
-  guest_id?: number | null;
+  table_id?: string | null;
+  guest_id?: string | null;
   start_at?: string;
   end_at?: string;
   party_size?: number;
@@ -71,14 +71,14 @@ export interface ReservationUpdate {
 
 export const reservationsApi = {
   list: async (
-    restaurantId: number,
-    params?: { from?: string; to?: string; status?: ReservationStatus; table_id?: number }
+    restaurantId: string,
+    params?: { from?: string; to?: string; status?: ReservationStatus; table_id?: string }
   ): Promise<Reservation[]> => {
     const queryParams = new URLSearchParams();
     if (params?.from) queryParams.append("from", params.from);
     if (params?.to) queryParams.append("to", params.to);
     if (params?.status) queryParams.append("status", params.status);
-    if (params?.table_id) queryParams.append("table_id", params.table_id.toString());
+    if (params?.table_id) queryParams.append("table_id", params.table_id);
     
     const query = queryParams.toString();
     // Backend-Route ist @router.get("/"), daher trailing slash erforderlich
@@ -87,14 +87,14 @@ export const reservationsApi = {
     );
   },
 
-  get: async (restaurantId: number, reservationId: number): Promise<Reservation> => {
+  get: async (restaurantId: string, reservationId: string): Promise<Reservation> => {
     return api.get<Reservation>(
       `/restaurants/${restaurantId}/reservations/${reservationId}`
     );
   },
 
   create: async (
-    restaurantId: number,
+    restaurantId: string,
     data: ReservationCreate
   ): Promise<Reservation> => {
     // Backend-Route ist @router.post("/"), daher trailing slash erforderlich
@@ -105,8 +105,8 @@ export const reservationsApi = {
   },
 
   update: async (
-    restaurantId: number,
-    reservationId: number,
+    restaurantId: string,
+    reservationId: string,
     data: ReservationUpdate
   ): Promise<Reservation> => {
     return api.patch<Reservation>(
@@ -115,13 +115,13 @@ export const reservationsApi = {
     );
   },
 
-  delete: async (restaurantId: number, reservationId: number): Promise<void> => {
+  delete: async (restaurantId: string, reservationId: string): Promise<void> => {
     return api.delete(`/restaurants/${restaurantId}/reservations/${reservationId}`);
   },
 
   cancel: async (
-    restaurantId: number,
-    reservationId: number,
+    restaurantId: string,
+    reservationId: string,
     canceledReason?: string
   ): Promise<Reservation> => {
     return api.post<Reservation>(

@@ -1,8 +1,8 @@
 import { api } from "./client";
 
 export interface MenuCategory {
-  id: number;
-  restaurant_id: number;
+  id: string;
+  restaurant_id: string;
   name: string;
   description: string | null;
   sort_order: number | null;
@@ -12,9 +12,9 @@ export interface MenuCategory {
 }
 
 export interface MenuItem {
-  id: number;
-  restaurant_id: number;
-  category_id: number | null;
+  id: string;
+  restaurant_id: string;
+  category_id: string | null;
   name: string;
   description: string | null;
   price: number;  // Preis inkl. MwSt.
@@ -45,7 +45,7 @@ export interface MenuCategoryUpdate {
 }
 
 export interface MenuItemCreate {
-  category_id?: number | null;
+  category_id?: string | null;
   name: string;
   description?: string | null;
   price: number;  // Preis inkl. MwSt.
@@ -60,7 +60,7 @@ export interface MenuItemCreate {
 }
 
 export interface MenuItemUpdate {
-  category_id?: number | null;
+  category_id?: string | null;
   name?: string;
   description?: string | null;
   price?: number;  // Preis inkl. MwSt.
@@ -76,23 +76,23 @@ export interface MenuItemUpdate {
 
 export const menuApi = {
   // Categories
-  listCategories: async (restaurantId: number): Promise<MenuCategory[]> => {
+  listCategories: async (restaurantId: string): Promise<MenuCategory[]> => {
     // Backend-Route ist @router.get("/"), daher trailing slash erforderlich
     return api.get<MenuCategory[]>(`/restaurants/${restaurantId}/menu/categories/`);
   },
 
-  getCategory: async (restaurantId: number, categoryId: number): Promise<MenuCategory> => {
+  getCategory: async (restaurantId: string, categoryId: string): Promise<MenuCategory> => {
     return api.get<MenuCategory>(`/restaurants/${restaurantId}/menu/categories/${categoryId}`);
   },
 
-  createCategory: async (restaurantId: number, data: MenuCategoryCreate): Promise<MenuCategory> => {
+  createCategory: async (restaurantId: string, data: MenuCategoryCreate): Promise<MenuCategory> => {
     // Backend-Route ist @router.post("/"), daher trailing slash erforderlich
     return api.post<MenuCategory>(`/restaurants/${restaurantId}/menu/categories/`, data);
   },
 
   updateCategory: async (
-    restaurantId: number,
-    categoryId: number,
+    restaurantId: string,
+    categoryId: string,
     data: MenuCategoryUpdate
   ): Promise<MenuCategory> => {
     return api.patch<MenuCategory>(
@@ -101,17 +101,17 @@ export const menuApi = {
     );
   },
 
-  deleteCategory: async (restaurantId: number, categoryId: number): Promise<void> => {
+  deleteCategory: async (restaurantId: string, categoryId: string): Promise<void> => {
     return api.delete(`/restaurants/${restaurantId}/menu/categories/${categoryId}`);
   },
 
   // Items
   listItems: async (
-    restaurantId: number,
-    params?: { category_id?: number; available_only?: boolean }
+    restaurantId: string,
+    params?: { category_id?: string; available_only?: boolean }
   ): Promise<MenuItem[]> => {
     const queryParams = new URLSearchParams();
-    if (params?.category_id) queryParams.append("category_id", params.category_id.toString());
+    if (params?.category_id) queryParams.append("category_id", params.category_id);
     if (params?.available_only) queryParams.append("available_only", "true");
 
     const query = queryParams.toString();
@@ -121,24 +121,24 @@ export const menuApi = {
     );
   },
 
-  getItem: async (restaurantId: number, itemId: number): Promise<MenuItem> => {
+  getItem: async (restaurantId: string, itemId: string): Promise<MenuItem> => {
     return api.get<MenuItem>(`/restaurants/${restaurantId}/menu/items/${itemId}`);
   },
 
-  createItem: async (restaurantId: number, data: MenuItemCreate): Promise<MenuItem> => {
+  createItem: async (restaurantId: string, data: MenuItemCreate): Promise<MenuItem> => {
     // Backend-Route ist @router.post("/"), daher trailing slash erforderlich
     return api.post<MenuItem>(`/restaurants/${restaurantId}/menu/items/`, data);
   },
 
   updateItem: async (
-    restaurantId: number,
-    itemId: number,
+    restaurantId: string,
+    itemId: string,
     data: MenuItemUpdate
   ): Promise<MenuItem> => {
     return api.patch<MenuItem>(`/restaurants/${restaurantId}/menu/items/${itemId}`, data);
   },
 
-  deleteItem: async (restaurantId: number, itemId: number): Promise<void> => {
+  deleteItem: async (restaurantId: string, itemId: string): Promise<void> => {
     return api.delete(`/restaurants/${restaurantId}/menu/items/${itemId}`);
   },
 };

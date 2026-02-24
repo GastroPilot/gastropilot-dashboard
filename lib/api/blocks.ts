@@ -1,47 +1,47 @@
 import { api } from "./client";
 
 export interface Block {
-  id: number;
-  restaurant_id: number;
-  table_id: number | null;
+  id: string;
+  restaurant_id: string;
+  table_id: string | null;
   start_at: string;
   end_at: string;
   reason: string | null;
-  created_by_user_id: number;
+  created_by_user_id: string;
   created_at_utc: string;
   updated_at_utc: string;
 }
 
 export interface BlockCreate {
-  table_id?: number | null;
+  table_id?: string | null;
   start_at: string;
   end_at: string;
   reason?: string | null;
 }
 
 export interface BlockUpdate {
-  table_id?: number | null;
+  table_id?: string | null;
   start_at?: string;
   end_at?: string;
   reason?: string | null;
 }
 
 export const blocksApi = {
-  list: async (restaurantId: number): Promise<Block[]> => {
+  list: async (restaurantId: string): Promise<Block[]> => {
     // Backend-Route ist @router.get("/"), daher trailing slash erforderlich
     return api.get<Block[]>(`/restaurants/${restaurantId}/blocks/`);
   },
 
-  create: async (restaurantId: number, data: BlockCreate): Promise<Block> => {
+  create: async (restaurantId: string, data: BlockCreate): Promise<Block> => {
     // Backend-Route ist @router.post("/"), daher trailing slash erforderlich
     return api.post<Block>(`/restaurants/${restaurantId}/blocks/`, data);
   },
 
-  update: async (restaurantId: number, blockId: number, data: BlockUpdate): Promise<Block> => {
+  update: async (restaurantId: string, blockId: string, data: BlockUpdate): Promise<Block> => {
     return api.patch<Block>(`/restaurants/${restaurantId}/blocks/${blockId}`, data);
   },
 
-  delete: async (restaurantId: number, blockId: number): Promise<{ message: string }> => {
+  delete: async (restaurantId: string, blockId: string): Promise<{ message: string }> => {
     return api.delete<{ message: string }>(`/restaurants/${restaurantId}/blocks/${blockId}`);
   },
 };

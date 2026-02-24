@@ -15,7 +15,7 @@ import type { Block } from '@/lib/api/blocks';
 import type { BlockAssignment } from '@/lib/api/block-assignments';
 
 interface UseDashboardOptions {
-  restaurantId?: number;
+  restaurantId?: string;
   onError?: (error: Error) => void;
 }
 
@@ -97,7 +97,7 @@ export function useOptimizedDashboard({
    * Fetch all dashboard data in one request
    */
   const fetchDashboardData = useCallback(async (
-    restId: number,
+    restId: string,
     date: Date,
     options: { background?: boolean } = {}
   ) => {

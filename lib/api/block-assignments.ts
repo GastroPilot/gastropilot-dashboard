@@ -1,19 +1,19 @@
 import { api } from "./client";
 
 export interface BlockAssignment {
-  id: number;
-  block_id: number;
-  table_id: number;
+  id: string;
+  block_id: string;
+  table_id: string;
   created_at_utc: string;
 }
 
 export interface BlockAssignmentCreate {
-  block_id: number;
-  table_id: number;
+  block_id: string;
+  table_id: string;
 }
 
 export const blockAssignmentsApi = {
-  list: async (restaurantId: number): Promise<BlockAssignment[]> => {
+  list: async (restaurantId: string): Promise<BlockAssignment[]> => {
     // Backend-Route ist @router.get("/"), daher trailing slash erforderlich
     return api.get<BlockAssignment[]>(
       `/restaurants/${restaurantId}/block-assignments/`
@@ -21,7 +21,7 @@ export const blockAssignmentsApi = {
   },
 
   create: async (
-    restaurantId: number,
+    restaurantId: string,
     data: BlockAssignmentCreate
   ): Promise<BlockAssignment> => {
     // Backend-Route ist @router.post("/"), daher trailing slash erforderlich
@@ -31,7 +31,7 @@ export const blockAssignmentsApi = {
     );
   },
 
-  delete: async (restaurantId: number, assignmentId: number): Promise<{ message: string }> => {
+  delete: async (restaurantId: string, assignmentId: string): Promise<{ message: string }> => {
     return api.delete<{ message: string }>(
       `/restaurants/${restaurantId}/block-assignments/${assignmentId}`
     );

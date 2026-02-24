@@ -42,7 +42,7 @@ export default function OperatorsPage() {
     nfc_tag_id: "",
     first_name: "",
     last_name: "",
-    role: "mitarbeiter",
+    role: "staff",
     is_active: true,
   });
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -159,7 +159,7 @@ export default function OperatorsPage() {
           nfc_tag_id: "",
           first_name: "",
           last_name: "",
-          role: "mitarbeiter",
+          role: "staff",
           is_active: true,
         });
         addToast("Bediener erfolgreich aktualisiert", "success");
@@ -227,7 +227,7 @@ export default function OperatorsPage() {
           nfc_tag_id: "",
           first_name: "",
           last_name: "",
-          role: "mitarbeiter",
+          role: "staff",
           is_active: true,
         });
         addToast("Bediener erfolgreich angelegt", "success");
@@ -252,12 +252,12 @@ export default function OperatorsPage() {
   const handleEdit = (operator: User) => {
     setEditingOperator(operator);
     setFormData({
-      operator_number: operator.operator_number,
+      operator_number: operator.operator_number ?? "",
       pin: "", // PIN wird nicht angezeigt
       nfc_tag_id: operator.nfc_tag_id || "",
       first_name: operator.first_name,
       last_name: operator.last_name,
-      role: operator.role as "servecta" | "restaurantinhaber" | "schichtleiter" | "mitarbeiter",
+      role: operator.role as "platform_admin" | "owner" | "manager" | "staff" | "kitchen" | "guest",
       is_active: operator.is_active,
     });
     setShowCreateForm(true);
@@ -293,21 +293,25 @@ export default function OperatorsPage() {
       nfc_tag_id: "",
       first_name: "",
       last_name: "",
-      role: "mitarbeiter",
+      role: "staff",
       is_active: true,
     });
   };
 
   const getRoleLabel = (role: string) => {
     switch (role) {
-      case "servecta":
-        return "Servecta";
-      case "restaurantinhaber":
+      case "platform_admin":
+        return "Platform Admin";
+      case "owner":
         return "Restaurantinhaber";
-      case "schichtleiter":
+      case "manager":
         return "Schichtleiter";
-      case "mitarbeiter":
+      case "staff":
         return "Mitarbeiter";
+      case "kitchen":
+        return "Küche";
+      case "guest":
+        return "Gast";
       default:
         return role;
     }
@@ -315,11 +319,11 @@ export default function OperatorsPage() {
 
   const getRoleIcon = (role: string) => {
     switch (role) {
-      case "servecta":
+      case "platform_admin":
         return Shield;
-      case "restaurantinhaber":
+      case "owner":
         return UserCheck;
-      case "schichtleiter":
+      case "manager":
         return UserIcon;
       default:
         return UserIcon;
@@ -343,7 +347,7 @@ export default function OperatorsPage() {
   const filteredOperators = useMemo(() => {
     return operators.filter((operator) => {
       const matchesSearch = 
-        operator.operator_number.includes(searchQuery) ||
+        (operator.operator_number ?? "").includes(searchQuery) ||
         `${operator.first_name} ${operator.last_name}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (operator.nfc_tag_id && operator.nfc_tag_id.toLowerCase().includes(searchQuery.toLowerCase()));
       
@@ -591,15 +595,15 @@ export default function OperatorsPage() {
                       {formRoleMenuOpen && (
                         <div className="absolute mt-1 w-full rounded-lg border border-border bg-background shadow-xl z-40 overflow-hidden">
                           <div className="divide-y divide-border/80">
-                            {currentUser?.role === "servecta" && (
+                            {currentUser?.role === "platform_admin" && (
                               <button
                                 type="button"
                                 onClick={() => {
-                                  setFormData({ ...formData, role: "servecta" });
+                                  setFormData({ ...formData, role: "platform_admin" });
                                   setFormRoleMenuOpen(false);
                                 }}
                                 className={`w-full px-3 py-2 text-left text-sm transition-colors ${
-                                  formData.role === "servecta"
+                                  formData.role === "platform_admin"
                                 ? "bg-card text-foreground font-semibold"
                                 : "text-foreground hover:bg-accent/70"
                             }`}
@@ -613,11 +617,11 @@ export default function OperatorsPage() {
                             <button
                               type="button"
                               onClick={() => {
-                                setFormData({ ...formData, role: "restaurantinhaber" });
+                                setFormData({ ...formData, role: "owner" });
                                 setFormRoleMenuOpen(false);
                               }}
                               className={`w-full px-3 py-2 text-left text-sm transition-colors ${
-                                formData.role === "restaurantinhaber"
+                                formData.role === "owner"
                                 ? "bg-card text-foreground font-semibold"
                                 : "text-foreground hover:bg-accent/70"
                             }`}
@@ -630,11 +634,11 @@ export default function OperatorsPage() {
                             <button
                               type="button"
                               onClick={() => {
-                                setFormData({ ...formData, role: "schichtleiter" });
+                                setFormData({ ...formData, role: "manager" });
                                 setFormRoleMenuOpen(false);
                               }}
                               className={`w-full px-3 py-2 text-left text-sm transition-colors ${
-                                formData.role === "schichtleiter"
+                                formData.role === "manager"
                                 ? "bg-card text-foreground font-semibold"
                                 : "text-foreground hover:bg-accent/70"
                             }`}
@@ -647,11 +651,11 @@ export default function OperatorsPage() {
                             <button
                               type="button"
                               onClick={() => {
-                                setFormData({ ...formData, role: "mitarbeiter" });
+                                setFormData({ ...formData, role: "staff" });
                                 setFormRoleMenuOpen(false);
                               }}
                               className={`w-full px-3 py-2 text-left text-sm transition-colors ${
-                                formData.role === "mitarbeiter"
+                                formData.role === "staff"
                                 ? "bg-card text-foreground font-semibold"
                                 : "text-foreground hover:bg-accent/70"
                             }`}
@@ -666,18 +670,18 @@ export default function OperatorsPage() {
                       )}
                     </div>
                     <div className="text-xs text-muted-foreground space-y-1">
-                      {formData.role === "servecta" && (
+                      {formData.role === "platform_admin" && (
                         <p className="text-red-400 font-semibold">
                           ⚠️ Warnung: Servecta-Rolle gibt alle Berechtigungen!
                         </p>
                       )}
-                      {formData.role === "restaurantinhaber" && (
+                      {formData.role === "owner" && (
                         <p>Restaurantinhaber kann Bediener verwalten (außer Servecta)</p>
                       )}
-                      {formData.role === "schichtleiter" && (
+                      {formData.role === "manager" && (
                         <p>Schichtleiter kann Reservierungen bearbeiten und Tische verwalten</p>
                       )}
-                      {formData.role === "mitarbeiter" && (
+                      {formData.role === "staff" && (
                         <p>Mitarbeiter kann Reservierungen annehmen, zuweisen, platzieren und abschließen</p>
                       )}
                     </div>
@@ -819,11 +823,11 @@ export default function OperatorsPage() {
                         <Users className="w-4 h-4 text-muted-foreground" />
                         {roleFilter === "all"
                           ? "Alle Rollen"
-                          : roleFilter === "servecta"
-                          ? "Servecta"
-                          : roleFilter === "restaurantinhaber"
+                          : roleFilter === "platform_admin"
+                          ? "Platform Admin"
+                          : roleFilter === "owner"
                           ? "Restaurantinhaber"
-                          : roleFilter === "schichtleiter"
+                          : roleFilter === "manager"
                           ? "Schichtleiter"
                           : "Mitarbeiter"}
                       </span>
@@ -849,33 +853,33 @@ export default function OperatorsPage() {
                               Alle Rollen
                             </span>
                           </button>
-                          {currentUser?.role === "servecta" && (
+                          {currentUser?.role === "platform_admin" && (
                             <button
                               type="button"
                               onClick={() => {
-                                setRoleFilter("servecta");
+                                setRoleFilter("platform_admin");
                                 setRoleMenuOpen(false);
                               }}
                               className={`w-full px-3 py-2 text-left text-sm transition-colors ${
-                                roleFilter === "servecta"
+                                roleFilter === "platform_admin"
                                 ? "bg-card text-foreground font-semibold"
                                 : "text-foreground hover:bg-accent/70"
                             }`}
                           >
                             <span className="flex items-center gap-2">
                               <Shield className="w-4 h-4 text-purple-300" />
-                              Servecta
+                              Platform Admin
                             </span>
                           </button>
                           )}
                           <button
                             type="button"
                             onClick={() => {
-                              setRoleFilter("restaurantinhaber");
+                              setRoleFilter("owner");
                               setRoleMenuOpen(false);
                             }}
                             className={`w-full px-3 py-2 text-left text-sm transition-colors ${
-                              roleFilter === "restaurantinhaber"
+                              roleFilter === "owner"
                                 ? "bg-card text-foreground font-semibold"
                                 : "text-foreground hover:bg-accent/70"
                             }`}
@@ -888,11 +892,11 @@ export default function OperatorsPage() {
                           <button
                             type="button"
                             onClick={() => {
-                              setRoleFilter("schichtleiter");
+                              setRoleFilter("manager");
                               setRoleMenuOpen(false);
                             }}
                             className={`w-full px-3 py-2 text-left text-sm transition-colors ${
-                              roleFilter === "schichtleiter"
+                              roleFilter === "manager"
                                 ? "bg-card text-foreground font-semibold"
                                 : "text-foreground hover:bg-accent/70"
                             }`}
@@ -905,11 +909,11 @@ export default function OperatorsPage() {
                           <button
                             type="button"
                             onClick={() => {
-                              setRoleFilter("mitarbeiter");
+                              setRoleFilter("staff");
                               setRoleMenuOpen(false);
                             }}
                             className={`w-full px-3 py-2 text-left text-sm transition-colors ${
-                              roleFilter === "mitarbeiter"
+                              roleFilter === "staff"
                                 ? "bg-card text-foreground font-semibold"
                                 : "text-foreground hover:bg-accent/70"
                             }`}
@@ -987,11 +991,11 @@ export default function OperatorsPage() {
                             <td className="py-3 px-4">
                               <span
                                 className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium ${
-                                  operator.role === "servecta"
+                                  operator.role === "platform_admin"
                                     ? "bg-purple-200 text-black border border-purple-300 dark:bg-purple-900/50 dark:text-purple-300 dark:border-purple-700/50"
-                                    : operator.role === "restaurantinhaber"
+                                    : operator.role === "owner"
                                     ? "bg-blue-200 text-black border border-blue-300 dark:bg-blue-900/50 dark:text-blue-300 dark:border-blue-700/50"
-                                    : operator.role === "schichtleiter"
+                                    : operator.role === "manager"
                                     ? "bg-yellow-200 text-black border border-yellow-300 dark:bg-yellow-900/50 dark:text-yellow-300 dark:border-yellow-700/50"
                                     : "bg-muted/70 text-black border border-input/70 dark:bg-muted/50 dark:text-muted-foreground dark:border-input/50"
                                 }`}
@@ -1003,7 +1007,7 @@ export default function OperatorsPage() {
                             <td className="py-3 px-4 text-muted-foreground">
                               <div className="flex items-center gap-1.5 text-sm">
                                 <Clock className="w-3.5 h-3.5 text-muted-foreground" />
-                                {formatLastLogin(operator.last_login_at_utc)}
+                                {formatLastLogin(operator.last_login_at)}
                               </div>
                             </td>
                             <td className="py-3 px-4">

@@ -19,10 +19,10 @@ import { ApiError } from "@/lib/api/client";
 interface CreateTableDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  restaurantId: number;
+  restaurantId: string;
   onTableCreated: () => void;
   areas: Area[];
-  selectedAreaId: number | null;
+  selectedAreaId: string | null;
 }
 
 export function CreateTableDialog({
@@ -38,7 +38,7 @@ export function CreateTableDialog({
   const [notes, setNotes] = useState("");
   const [isActive, setIsActive] = useState(true);
   const [rotation, setRotation] = useState(0);
-  const [areaId, setAreaId] = useState<number | null>(selectedAreaId ?? null);
+  const [areaId, setAreaId] = useState<string | null>(selectedAreaId ?? null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [areaMenuOpen, setAreaMenuOpen] = useState(false);

@@ -29,17 +29,17 @@ interface DashboardUIState {
   // Selection
   selectedTable: Table | null;
   selectedReservation: Reservation | null;
-  selectedOrderId: number | null;
+  selectedOrderId: string | null;
   selectedTableForOrder: Table | null;
   editingBlock: Block | null;
-  selectedAreaId: number | null;
-  selectedTableIds: Set<number>;
+  selectedAreaId: string | null;
+  selectedTableIds: Set<string>;
   selectionMode: boolean;
   
   // Drag & Drop
-  activeId: number | null;
-  activeReservationId: number | null;
-  activeBlockId: number | null;
+  activeId: string | null;
+  activeReservationId: string | null;
+  activeBlockId: string | null;
   
   // Zoom & Pan
   zoomLevel: number;
@@ -49,7 +49,7 @@ interface DashboardUIState {
   
   // Loading
   isInitialLoading: boolean;
-  updatingStatus: number | null;
+  updatingStatus: string | null;
   
   // Search
   waitlistSearchQuery: string;
@@ -74,22 +74,22 @@ interface DashboardUIActions {
   closeCreateTempTable: () => void;
   openBlockEdit: (block?: Block) => void;
   closeBlockEdit: () => void;
-  openOrderDetailDialog: (orderId: number) => void;
+  openOrderDetailDialog: (orderId: string) => void;
   closeOrderDetailDialog: () => void;
   openOrderDialog: (table?: Table) => void;
   closeOrderDialog: () => void;
   
   // Selection
-  setSelectedAreaId: (id: number | null) => void;
-  setSelectedTableIds: (ids: Set<number>) => void;
-  toggleTableSelection: (id: number) => void;
+  setSelectedAreaId: (id: string | null) => void;
+  setSelectedTableIds: (ids: Set<string>) => void;
+  toggleTableSelection: (id: string) => void;
   clearTableSelection: () => void;
   setSelectionMode: (enabled: boolean) => void;
   
   // Drag & Drop
-  setActiveId: (id: number | null) => void;
-  setActiveReservationId: (id: number | null) => void;
-  setActiveBlockId: (id: number | null) => void;
+  setActiveId: (id: string | null) => void;
+  setActiveReservationId: (id: string | null) => void;
+  setActiveBlockId: (id: string | null) => void;
   
   // Zoom & Pan
   setZoomLevel: (level: number) => void;
@@ -102,7 +102,7 @@ interface DashboardUIActions {
   
   // Loading
   setIsInitialLoading: (loading: boolean) => void;
-  setUpdatingStatus: (id: number | null) => void;
+  setUpdatingStatus: (id: string | null) => void;
   
   // Search
   setWaitlistSearchQuery: (query: string) => void;
@@ -131,7 +131,7 @@ const initialUIState: DashboardUIState = {
   selectedTableForOrder: null,
   editingBlock: null,
   selectedAreaId: null,
-  selectedTableIds: new Set(),
+  selectedTableIds: new Set<string>(),
   selectionMode: false,
   activeId: null,
   activeReservationId: null,
@@ -216,7 +216,7 @@ export const useDashboardUIStore = create<DashboardUIState & DashboardUIActions>
       clearTableSelection: () => set({ selectedTableIds: new Set() }),
       setSelectionMode: (enabled) => set({
         selectionMode: enabled,
-        selectedTableIds: enabled ? get().selectedTableIds : new Set(),
+        selectedTableIds: enabled ? get().selectedTableIds : new Set<string>(),
       }),
       
       // Drag & Drop
@@ -280,7 +280,7 @@ interface DashboardDataState {
   orders: Order[];
   selectedDate: Date;
   currentUser: { role: string } | null;
-  reservationToTempTableMap: Map<number, number>;
+  reservationToTempTableMap: Map<string, string>;
 }
 
 interface DashboardDataActions {
@@ -296,14 +296,14 @@ interface DashboardDataActions {
   setOrders: (orders: Order[]) => void;
   setSelectedDate: (date: Date) => void;
   setCurrentUser: (user: { role: string } | null) => void;
-  setReservationToTempTableMap: (map: Map<number, number>) => void;
+  setReservationToTempTableMap: (map: Map<string, string>) => void;
   
   // Optimistic updates
-  updateTable: (tableId: number, updates: Partial<Table>) => void;
-  updateReservation: (reservationId: number, updates: Partial<Reservation>) => void;
+  updateTable: (tableId: string, updates: Partial<Table>) => void;
+  updateReservation: (reservationId: string, updates: Partial<Reservation>) => void;
   addReservation: (reservation: Reservation) => void;
-  removeReservation: (reservationId: number) => void;
-  updateOrder: (orderId: number, updates: Partial<Order>) => void;
+  removeReservation: (reservationId: string) => void;
+  updateOrder: (orderId: string, updates: Partial<Order>) => void;
   addOrder: (order: Order) => void;
   
   reset: () => void;
@@ -322,7 +322,7 @@ const initialDataState: DashboardDataState = {
   orders: [],
   selectedDate: new Date(),
   currentUser: null,
-  reservationToTempTableMap: new Map(),
+  reservationToTempTableMap: new Map<string, string>(),
 };
 
 export const useDashboardDataStore = create<DashboardDataState & DashboardDataActions>()(

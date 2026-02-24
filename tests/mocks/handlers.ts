@@ -8,7 +8,7 @@ const mockUser = {
   operator_number: '1234',
   first_name: 'Test',
   last_name: 'User',
-  role: 'mitarbeiter',
+  role: 'staff',
   is_active: true,
 };
 
