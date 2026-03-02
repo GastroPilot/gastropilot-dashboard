@@ -134,6 +134,11 @@ export const authApi = {
       localStorage.removeItem("access_token");
       localStorage.removeItem("refresh_token");
       localStorage.removeItem("access_token_expires_at");
+      // Impersonation-Daten aufräumen
+      localStorage.removeItem("admin_original_token");
+      localStorage.removeItem("admin_original_expires_at");
+      localStorage.removeItem("impersonating_tenant_id");
+      localStorage.removeItem("impersonating_tenant_name");
     }
   },
 

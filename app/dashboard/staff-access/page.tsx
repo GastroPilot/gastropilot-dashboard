@@ -356,6 +356,9 @@ export default function StaffAccessPage() {
 
   const filteredUsers = useMemo(() => {
     return users.filter((user) => {
+      // Nur Platform-Benutzer anzeigen (ohne Tenant-Zuordnung)
+      if (user.tenant_id) return false;
+
       const matchesSearch =
         (user.operator_number ?? "").includes(searchQuery) ||
         `${user.first_name} ${user.last_name}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
