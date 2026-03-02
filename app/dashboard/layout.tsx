@@ -211,6 +211,12 @@ export default function DashboardLayout({
         show: !!isOwner && !isGrundstatus,
       },
       {
+        href: "/dashboard/staff-access",
+        label: "Zugangsverwaltung",
+        active: pathname === "/dashboard/staff-access",
+        show: user?.role === "platform_admin",
+      },
+      {
         href: "/dashboard/owner-insights",
         label: "Kennzahlen",
         active: pathname?.startsWith("/dashboard/owner-insights"),
@@ -260,6 +266,7 @@ export default function DashboardLayout({
           pick("/dashboard/restaurants"),
           pick("/dashboard/tenant-settings"),
           pick("/dashboard/operators"),
+          pick("/dashboard/staff-access"),
           pick("/dashboard/vouchers"),
           pick("/dashboard/upsell-packages"),
           pick("/dashboard/owner-insights"),

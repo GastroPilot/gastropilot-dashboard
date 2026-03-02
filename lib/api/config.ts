@@ -22,7 +22,7 @@
 function computeApiUrlFromHostname(hostname: string): string {
   // Localhost Entwicklung
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    return 'http://localhost:8001';
+    return 'http://localhost:80';
   }
 
   // Prod ohne Subdomain: gpilot.app → api.gpilot.app

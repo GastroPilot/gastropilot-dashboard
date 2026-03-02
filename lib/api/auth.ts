@@ -36,9 +36,11 @@ export interface User {
 }
 
 export interface UserCreate {
-  operator_number: string;
-  pin: string;
+  operator_number?: string;
+  pin?: string;
   nfc_tag_id?: string | null;
+  email?: string | null;
+  password?: string | null;
   first_name: string;
   last_name: string;
   role: "platform_admin" | "owner" | "manager" | "staff" | "kitchen" | "guest";
@@ -48,6 +50,8 @@ export interface UserUpdate {
   operator_number?: string;
   pin?: string;
   nfc_tag_id?: string | null;
+  email?: string | null;
+  password?: string | null;
   first_name?: string;
   last_name?: string;
   role?: "platform_admin" | "owner" | "manager" | "staff" | "kitchen" | "guest";
@@ -130,6 +134,11 @@ export const authApi = {
       localStorage.removeItem("access_token");
       localStorage.removeItem("refresh_token");
       localStorage.removeItem("access_token_expires_at");
+      // Impersonation-Daten aufräumen
+      localStorage.removeItem("admin_original_token");
+      localStorage.removeItem("admin_original_expires_at");
+      localStorage.removeItem("impersonating_tenant_id");
+      localStorage.removeItem("impersonating_tenant_name");
     }
   },
 

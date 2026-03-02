@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { useUserSettings } from "@/lib/hooks/use-user-settings";
 import { Settings2, Trash2 } from "lucide-react";
 
-const SNOW_KEY = "snow_enabled";
 const CONFIRM_KEY = "confirmations_enabled";
 
 export default function UserSettingsPage() {
@@ -17,12 +16,6 @@ export default function UserSettingsPage() {
     return Object.entries(raw);
   }, [settings]);
 
-  const snowEnabled = useMemo(() => {
-    const raw = settings?.settings?.[SNOW_KEY];
-    if (raw === undefined) return true;
-    return Boolean(raw);
-  }, [settings]);
-
   const confirmationsEnabled = useMemo(() => {
     const raw = settings?.settings?.[CONFIRM_KEY];
     if (raw === undefined) return true;
@@ -31,10 +24,8 @@ export default function UserSettingsPage() {
 
   useEffect(() => {
     if (!settings) return;
-    const snow = settings.settings?.[SNOW_KEY];
     const confirmVal = settings.settings?.[CONFIRM_KEY];
     if (typeof window !== "undefined") {
-      window.localStorage.setItem(SNOW_KEY, (snow === undefined ? true : Boolean(snow)).toString());
       window.localStorage.setItem(CONFIRM_KEY, (confirmVal === undefined ? true : Boolean(confirmVal)).toString());
     }
   }, [settings]);
@@ -87,37 +78,6 @@ export default function UserSettingsPage() {
               <span className="text-[11px] uppercase tracking-wide text-muted-foreground">Schalter</span>
             </div>
             <div className="p-4 space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-foreground">
-                  <div className="font-semibold">Schnee-Effekt</div>
-                  <div className="text-xs text-muted-foreground">Schaltet die animierten Schneeflocken ein oder aus.</div>
-                </div>
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={snowEnabled}
-                  onClick={async () => {
-                    try {
-                      await updateSettings({ [SNOW_KEY]: !snowEnabled });
-                      window.localStorage.setItem(SNOW_KEY, (!snowEnabled).toString());
-                      addToast(`Schnee-Effekt ${!snowEnabled ? "aktiviert" : "deaktiviert"}.`, "success");
-                    } catch (err) {
-                      // Fehler wird bereits getoastet
-                    }
-                  }}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-ring/60 focus:ring-offset-2 focus:ring-offset-background ${
-                    snowEnabled
-                      ? "bg-primary/80 shadow-[0_10px_24px_rgba(249,81,0,0.35)] hover:shadow-[0_12px_28px_rgba(249,81,0,0.35)] hover:-translate-y-[1px]"
-                      : "bg-muted hover:bg-accent hover:-translate-y-[1px]"
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-all ${
-                      snowEnabled ? "translate-x-5" : "translate-x-1"
-                    }`}
-                  />
-                </button>
-              </div>
               <div className="flex items-center justify-between">
                 <div className="text-sm text-foreground">
                   <div className="font-semibold">Bestätigungsfenster</div>

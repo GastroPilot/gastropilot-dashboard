@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { SnowfallToggle } from "@/components/snowfall-toggle";
 import { SiteFooter } from "@/components/site-footer";
 import { QueryProvider } from "@/lib/providers/query-provider";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -46,7 +45,6 @@ export default function RootLayout({
       <body className="min-h-screen flex flex-col antialiased">
         <ThemeProvider>
           <QueryProvider>
-            <SnowfallToggle />
             <div className="flex-1 flex flex-col">{children}</div>
             <SiteFooter />
           </QueryProvider>
