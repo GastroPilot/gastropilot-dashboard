@@ -22,6 +22,7 @@ interface DialogHeaderProps {
 
 interface DialogTitleProps {
   children: React.ReactNode;
+  className?: string;
 }
 
 interface DialogDescriptionProps {
@@ -77,8 +78,8 @@ export function DialogHeader({ children }: DialogHeaderProps) {
   return <div className="px-4 md:px-6 pt-4 md:pt-6 pb-3 md:pb-4">{children}</div>;
 }
 
-export function DialogTitle({ children }: DialogTitleProps) {
-  return <h2 className="text-lg md:text-xl font-semibold text-card-foreground">{children}</h2>;
+export function DialogTitle({ children, className }: DialogTitleProps) {
+  return <h2 className={className || "text-lg md:text-xl font-semibold text-card-foreground"}>{children}</h2>;
 }
 
 export function DialogDescription({ children }: DialogDescriptionProps) {
