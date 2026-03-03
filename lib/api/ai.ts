@@ -39,33 +39,42 @@ export interface AIStatusResponse {
 }
 
 /**
+ * PeakPredict Prognose.
+ */
+export interface HourlyPrediction {
+  hour: number;
+  predicted_covers: number;
+  confidence: number;
+  label: "low" | "medium" | "high" | "peak";
+}
+
+export interface PeakPredictionResponse {
+  date: string;
+  predictions: HourlyPrediction[];
+  recommended_staff: number;
+}
+
+/**
  * API-Client für AI-Funktionen.
  */
 export const aiApi = {
-  /**
-   * Fragt KI-Vorschläge für Tischzuordnung an.
-   * 
-   * @param restaurantId - ID des Restaurants
-   * @param request - Optional mit context_hint (z.B. Gästename)
-   * @returns Top-3 Tischvorschläge mit Confidence-Score
-   */
   suggestTable: async (
-    restaurantId: string,
+    _restaurantId: string,
     request?: SuggestTableRequest
   ): Promise<SuggestTableResponse> => {
-    return api.post<SuggestTableResponse>(
-      `/restaurants/${restaurantId}/ai/suggest-table`,
-      request || {}
-    );
+    return api.post<SuggestTableResponse>("/ai/seating/suggest", request || {});
   },
 
-  /**
-   * Prüft ob AI-Features verfügbar sind.
-   * 
-   * @param restaurantId - ID des Restaurants
-   * @returns AI Status mit verfügbaren Features
-   */
-  getStatus: async (restaurantId: string): Promise<AIStatusResponse> => {
-    return api.get<AIStatusResponse>(`/restaurants/${restaurantId}/ai/status`);
+  getStatus: async (_restaurantId: string): Promise<AIStatusResponse> => {
+    return api.get<AIStatusResponse>("/ai/health");
+  },
+
+  getPeakPredictions: async (
+    date: string,
+    totalCapacity: number
+  ): Promise<PeakPredictionResponse> => {
+    return api.get<PeakPredictionResponse>(
+      `/ai/peak-predict?date=${date}&total_capacity=${totalCapacity}`
+    );
   },
 };

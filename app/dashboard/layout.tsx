@@ -187,10 +187,22 @@ export default function DashboardLayout({
         show: !!isOwner && !isGrundstatus,
       },
       {
+        href: "/dashboard/qr-codes",
+        label: "QR-Codes",
+        active: pathname?.startsWith("/dashboard/qr-codes"),
+        show: !!canManageTables && !isGrundstatus,
+      },
+      {
         href: "/dashboard/upsell-packages",
         label: "Upsell-Pakete",
         active: pathname?.startsWith("/dashboard/upsell-packages"),
         show: !!isOwner && !isGrundstatus,
+      },
+      {
+        href: "/dashboard/guests",
+        label: "Gäste / CRM",
+        active: pathname?.startsWith("/dashboard/guests"),
+        show: !!(user && (user.role === "platform_admin" || user.role === "owner" || user.role === "manager")) && !isGrundstatus,
       },
       {
         href: "/dashboard/restaurants",
@@ -217,9 +229,27 @@ export default function DashboardLayout({
         show: user?.role === "platform_admin",
       },
       {
+        href: "/dashboard/devices",
+        label: "Geraete / KDS",
+        active: pathname?.startsWith("/dashboard/devices"),
+        show: !!isOwner && !isGrundstatus,
+      },
+      {
         href: "/dashboard/owner-insights",
         label: "Kennzahlen",
         active: pathname?.startsWith("/dashboard/owner-insights"),
+        show: !!isOwner && !isGrundstatus,
+      },
+      {
+        href: "/dashboard/ai-insights",
+        label: "KI-Prognosen",
+        active: pathname?.startsWith("/dashboard/ai-insights"),
+        show: !!isOwner && !isGrundstatus,
+      },
+      {
+        href: "/dashboard/billing",
+        label: "Abonnement",
+        active: pathname?.startsWith("/dashboard/billing"),
         show: !!isOwner && !isGrundstatus,
       },
       {
@@ -255,6 +285,7 @@ export default function DashboardLayout({
           pick("/dashboard/orders"),
           pick("/dashboard/kitchen"),
           pick("/dashboard/menu"),
+          pick("/dashboard/qr-codes"),
           pick("/dashboard/order-statistics"),
           pick("/dashboard/order-history"),
           pick("/dashboard/hilfecenter"),
@@ -269,7 +300,11 @@ export default function DashboardLayout({
           pick("/dashboard/staff-access"),
           pick("/dashboard/vouchers"),
           pick("/dashboard/upsell-packages"),
+          pick("/dashboard/guests"),
+          pick("/dashboard/devices"),
           pick("/dashboard/owner-insights"),
+          pick("/dashboard/ai-insights"),
+          pick("/dashboard/billing"),
         ],
       },
       {

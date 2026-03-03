@@ -15,50 +15,42 @@ export interface ReservationTableDayConfigCreate {
 }
 
 export const reservationTableDayConfigsApi = {
-  list: async (restaurantId: string): Promise<ReservationTableDayConfig[]> => {
-    // Backend-Route ist @router.get("/"), daher trailing slash erforderlich
-    return api.get<ReservationTableDayConfig[]>(
-      `/restaurants/${restaurantId}/reservation-table-day-configs/`
-    );
+  list: async (_restaurantId: string): Promise<ReservationTableDayConfig[]> => {
+    return api.get<ReservationTableDayConfig[]>("/reservation-table-day-configs");
   },
 
   create: async (
-    restaurantId: string,
+    _restaurantId: string,
     data: ReservationTableDayConfigCreate
   ): Promise<ReservationTableDayConfig> => {
-    // Backend-Route ist @router.post("/"), daher trailing slash erforderlich
-    return api.post<ReservationTableDayConfig>(
-      `/restaurants/${restaurantId}/reservation-table-day-configs/`,
-      data
-    );
+    return api.post<ReservationTableDayConfig>("/reservation-table-day-configs", data);
   },
 
   delete: async (
-    restaurantId: string,
+    _restaurantId: string,
     reservationId: string,
     tableDayConfigId: string
   ): Promise<void> => {
     return api.delete(
-      `/restaurants/${restaurantId}/reservation-table-day-configs/?reservation_id=${reservationId}&table_day_config_id=${tableDayConfigId}`
+      `/reservation-table-day-configs?reservation_id=${reservationId}&table_day_config_id=${tableDayConfigId}`
     );
   },
 
   getByReservation: async (
-    restaurantId: string,
+    _restaurantId: string,
     reservationId: string
   ): Promise<ReservationTableDayConfig[]> => {
     return api.get<ReservationTableDayConfig[]>(
-      `/restaurants/${restaurantId}/reservation-table-day-configs/by-reservation/${reservationId}`
+      `/reservation-table-day-configs/by-reservation/${reservationId}`
     );
   },
 
   getByTableDayConfig: async (
-    restaurantId: string,
+    _restaurantId: string,
     tableDayConfigId: string
   ): Promise<ReservationTableDayConfig[]> => {
     return api.get<ReservationTableDayConfig[]>(
-      `/restaurants/${restaurantId}/reservation-table-day-configs/by-table-day-config/${tableDayConfigId}`
+      `/reservation-table-day-configs/by-table-day-config/${tableDayConfigId}`
     );
   },
 };
-

@@ -29,29 +29,27 @@ export interface GuestUpdate {
 }
 
 export const guestsApi = {
-  list: async (restaurantId: string): Promise<Guest[]> => {
-    // Backend-Route ist @router.get("/"), daher trailing slash erforderlich
-    return api.get<Guest[]>(`/restaurants/${restaurantId}/guests/`);
+  list: async (_restaurantId: string): Promise<Guest[]> => {
+    return api.get<Guest[]>("/guests");
   },
 
-  get: async (restaurantId: string, guestId: string): Promise<Guest> => {
-    return api.get<Guest>(`/restaurants/${restaurantId}/guests/${guestId}`);
+  get: async (_restaurantId: string, guestId: string): Promise<Guest> => {
+    return api.get<Guest>(`/guests/${guestId}`);
   },
 
-  create: async (restaurantId: string, data: GuestCreate): Promise<Guest> => {
-    // Backend-Route ist @router.post("/"), daher trailing slash erforderlich
-    return api.post<Guest>(`/restaurants/${restaurantId}/guests/`, data);
+  create: async (_restaurantId: string, data: GuestCreate): Promise<Guest> => {
+    return api.post<Guest>("/guests", data);
   },
 
   update: async (
-    restaurantId: string,
+    _restaurantId: string,
     guestId: string,
     data: GuestUpdate
   ): Promise<Guest> => {
-    return api.patch<Guest>(`/restaurants/${restaurantId}/guests/${guestId}`, data);
+    return api.patch<Guest>(`/guests/${guestId}`, data);
   },
 
-  delete: async (restaurantId: string, guestId: string): Promise<void> => {
-    return api.delete(`/restaurants/${restaurantId}/guests/${guestId}`);
+  delete: async (_restaurantId: string, guestId: string): Promise<void> => {
+    return api.delete(`/guests/${guestId}`);
   },
 };

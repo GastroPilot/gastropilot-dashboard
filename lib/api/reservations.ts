@@ -71,7 +71,7 @@ export interface ReservationUpdate {
 
 export const reservationsApi = {
   list: async (
-    restaurantId: string,
+    _restaurantId: string,
     params?: { from?: string; to?: string; status?: ReservationStatus; table_id?: string }
   ): Promise<Reservation[]> => {
     const queryParams = new URLSearchParams();
@@ -79,53 +79,41 @@ export const reservationsApi = {
     if (params?.to) queryParams.append("to", params.to);
     if (params?.status) queryParams.append("status", params.status);
     if (params?.table_id) queryParams.append("table_id", params.table_id);
-    
+
     const query = queryParams.toString();
-    // Backend-Route ist @router.get("/"), daher trailing slash erforderlich
-    return api.get<Reservation[]>(
-      `/restaurants/${restaurantId}/reservations/${query ? `?${query}` : ""}`
-    );
+    return api.get<Reservation[]>(`/reservations${query ? `?${query}` : ""}`);
   },
 
-  get: async (restaurantId: string, reservationId: string): Promise<Reservation> => {
-    return api.get<Reservation>(
-      `/restaurants/${restaurantId}/reservations/${reservationId}`
-    );
+  get: async (_restaurantId: string, reservationId: string): Promise<Reservation> => {
+    return api.get<Reservation>(`/reservations/${reservationId}`);
   },
 
   create: async (
-    restaurantId: string,
+    _restaurantId: string,
     data: ReservationCreate
   ): Promise<Reservation> => {
-    // Backend-Route ist @router.post("/"), daher trailing slash erforderlich
-    return api.post<Reservation>(
-      `/restaurants/${restaurantId}/reservations/`,
-      data
-    );
+    return api.post<Reservation>("/reservations", data);
   },
 
   update: async (
-    restaurantId: string,
+    _restaurantId: string,
     reservationId: string,
     data: ReservationUpdate
   ): Promise<Reservation> => {
-    return api.patch<Reservation>(
-      `/restaurants/${restaurantId}/reservations/${reservationId}`,
-      data
-    );
+    return api.patch<Reservation>(`/reservations/${reservationId}`, data);
   },
 
-  delete: async (restaurantId: string, reservationId: string): Promise<void> => {
-    return api.delete(`/restaurants/${restaurantId}/reservations/${reservationId}`);
+  delete: async (_restaurantId: string, reservationId: string): Promise<void> => {
+    return api.delete(`/reservations/${reservationId}`);
   },
 
   cancel: async (
-    restaurantId: string,
+    _restaurantId: string,
     reservationId: string,
     canceledReason?: string
   ): Promise<Reservation> => {
     return api.post<Reservation>(
-      `/restaurants/${restaurantId}/reservations/${reservationId}/cancel`,
+      `/reservations/${reservationId}/cancel`,
       canceledReason ? { canceled_reason: canceledReason } : {}
     );
   },

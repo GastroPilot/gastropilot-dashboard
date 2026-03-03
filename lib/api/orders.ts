@@ -122,7 +122,7 @@ export interface OrderUpdate {
 
 export const ordersApi = {
   list: async (
-    restaurantId: string,
+    _restaurantId: string,
     params?: {
       status?: OrderStatus;
       table_id?: string;
@@ -142,70 +142,60 @@ export const ordersApi = {
     if (params?.end_date) queryParams.append("end_date", params.end_date);
 
     const query = queryParams.toString();
-    // Backend-Route ist @router.get("/"), daher trailing slash erforderlich
-    return api.get<Order[]>(
-      `/restaurants/${restaurantId}/orders/${query ? `?${query}` : ""}`
-    );
+    return api.get<Order[]>(`/orders${query ? `?${query}` : ""}`);
   },
 
-  get: async (restaurantId: string, orderId: string): Promise<OrderWithItems> => {
-    return api.get<OrderWithItems>(
-      `/restaurants/${restaurantId}/orders/${orderId}`
-    );
+  get: async (_restaurantId: string, orderId: string): Promise<OrderWithItems> => {
+    return api.get<OrderWithItems>(`/orders/${orderId}`);
   },
 
-  create: async (restaurantId: string, data: OrderCreate): Promise<Order> => {
-    // Backend-Route ist @router.post("/"), daher trailing slash erforderlich
-    return api.post<Order>(`/restaurants/${restaurantId}/orders/`, data);
+  create: async (_restaurantId: string, data: OrderCreate): Promise<Order> => {
+    return api.post<Order>("/orders", data);
   },
 
   update: async (
-    restaurantId: string,
+    _restaurantId: string,
     orderId: string,
     data: OrderUpdate
   ): Promise<Order> => {
-    return api.patch<Order>(
-      `/restaurants/${restaurantId}/orders/${orderId}`,
-      data
-    );
+    return api.patch<Order>(`/orders/${orderId}`, data);
   },
 
-  delete: async (restaurantId: string, orderId: string): Promise<void> => {
-    return api.delete(`/restaurants/${restaurantId}/orders/${orderId}`);
+  updateStatus: async (
+    _restaurantId: string,
+    orderId: string,
+    status: OrderStatus
+  ): Promise<Order> => {
+    return api.patch<Order>(`/orders/${orderId}/status`, { status });
+  },
+
+  delete: async (_restaurantId: string, orderId: string): Promise<void> => {
+    return api.delete(`/orders/${orderId}`);
   },
 
   // OrderItem endpoints
   addItem: async (
-    restaurantId: string,
+    _restaurantId: string,
     orderId: string,
     item: OrderItemCreate
   ): Promise<OrderItem> => {
-    return api.post<OrderItem>(
-      `/restaurants/${restaurantId}/orders/${orderId}/items`,
-      item
-    );
+    return api.post<OrderItem>(`/orders/${orderId}/items`, item);
   },
 
   updateItem: async (
-    restaurantId: string,
+    _restaurantId: string,
     orderId: string,
     itemId: string,
     item: OrderItemUpdate
   ): Promise<OrderItem> => {
-    return api.patch<OrderItem>(
-      `/restaurants/${restaurantId}/orders/${orderId}/items/${itemId}`,
-      item
-    );
+    return api.patch<OrderItem>(`/orders/${orderId}/items/${itemId}`, item);
   },
 
   deleteItem: async (
-    restaurantId: string,
+    _restaurantId: string,
     orderId: string,
     itemId: string
   ): Promise<void> => {
-    return api.delete(
-      `/restaurants/${restaurantId}/orders/${orderId}/items/${itemId}`
-    );
+    return api.delete(`/orders/${orderId}/items/${itemId}`);
   },
 };
-
