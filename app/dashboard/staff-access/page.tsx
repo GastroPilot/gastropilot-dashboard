@@ -167,7 +167,7 @@ export default function StaffAccessPage() {
         }
       } else {
         if (formData.email && !formData.email.includes("@")) {
-          setError("Bitte eine gueltige E-Mail-Adresse eingeben");
+          setError("Bitte eine gültige E-Mail-Adresse eingeben");
           return;
         }
         if (formData.password && formData.password.length < 8) {
@@ -225,7 +225,7 @@ export default function StaffAccessPage() {
         }
       } else {
         if (!formData.email || !formData.email.includes("@")) {
-          setError("Bitte eine gueltige E-Mail-Adresse eingeben");
+          setError("Bitte eine gültige E-Mail-Adresse eingeben");
           return;
         }
         if (!formData.password || formData.password.length < 8) {
@@ -288,18 +288,18 @@ export default function StaffAccessPage() {
 
   const handleDelete = async (user: User) => {
     const label = user.email || user.operator_number || `${user.first_name} ${user.last_name}`;
-    if (!confirmAction(`Moechtest du den Zugang von ${user.first_name} ${user.last_name} (${label}) wirklich loeschen?`)) {
+    if (!confirmAction(`Möchtest du den Zugang von ${user.first_name} ${user.last_name} (${label}) wirklich löschen?`)) {
       return;
     }
 
     try {
       await authApi.deleteOperator(user.id);
-      addToast(`Zugang von ${user.first_name} ${user.last_name} wurde geloescht`, "success");
+      addToast(`Zugang von ${user.first_name} ${user.last_name} wurde gelöscht`, "success");
       await loadUsers();
     } catch (err) {
-      console.error("Fehler beim Loeschen:", err);
+      console.error("Fehler beim Löschen:", err);
       if (err instanceof ApiError) {
-        addToast(err.message || "Fehler beim Loeschen", "error");
+        addToast(err.message || "Fehler beim Löschen", "error");
       } else {
         addToast("Ein Fehler ist aufgetreten", "error");
       }
@@ -319,7 +319,7 @@ export default function StaffAccessPage() {
       case "owner": return "Restaurantinhaber";
       case "manager": return "Schichtleiter";
       case "staff": return "Mitarbeiter";
-      case "kitchen": return "Kueche";
+      case "kitchen": return "Küche";
       case "guest": return "Gast";
       default: return role;
     }
@@ -412,7 +412,7 @@ export default function StaffAccessPage() {
                   Zugangsverwaltung
                 </h1>
                 <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
-                  {users.length} {users.length === 1 ? "Zugang" : "Zugaenge"} insgesamt
+                  {users.length} {users.length === 1 ? "Zugang" : "Zugänge"} insgesamt
                 </p>
               </div>
             </div>
@@ -525,14 +525,14 @@ export default function StaffAccessPage() {
                           type="password"
                           value={formData.password}
                           onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                          placeholder={editingUser ? "Leer lassen, um nicht zu aendern" : "Passwort eingeben"}
+                          placeholder={editingUser ? "Leer lassen, um nicht zu ändern" : "Passwort eingeben"}
                           required={!editingUser}
                           minLength={8}
                           className="bg-card/50 border-input text-foreground placeholder:text-muted-foreground focus:border-primary"
                         />
                         {editingUser && (
                           <p className="text-xs text-muted-foreground">
-                            Leer lassen, um Passwort nicht zu aendern
+                            Leer lassen, um Passwort nicht zu ändern
                           </p>
                         )}
                       </div>
@@ -575,14 +575,14 @@ export default function StaffAccessPage() {
                             const value = e.target.value.replace(/\D/g, "").slice(0, 6);
                             setFormData({ ...formData, pin: value });
                           }}
-                          placeholder={editingUser ? "Leer lassen, um nicht zu aendern" : "PIN eingeben"}
+                          placeholder={editingUser ? "Leer lassen, um nicht zu ändern" : "PIN eingeben"}
                           maxLength={6}
                           required={!editingUser}
                           className="text-center text-xl tracking-widest font-mono bg-card/50 border-input text-foreground focus:border-primary"
                         />
                         {editingUser && (
                           <p className="text-xs text-muted-foreground">
-                            Leer lassen, um PIN nicht zu aendern
+                            Leer lassen, um PIN nicht zu ändern
                           </p>
                         )}
                       </div>
@@ -643,7 +643,7 @@ export default function StaffAccessPage() {
                       className="font-mono bg-card/50 border-input text-foreground placeholder:text-muted-foreground focus:border-primary"
                     />
                     <p className="text-xs text-muted-foreground">
-                      Die Tag-ID des NFC-Transponders fuer Login ohne PIN.
+                      Die Tag-ID des NFC-Transponders für Login ohne PIN.
                     </p>
                   </div>
 
@@ -721,13 +721,13 @@ export default function StaffAccessPage() {
                         </p>
                       )}
                       {formData.role === "owner" && (
-                        <p>Restaurantinhaber kann Bediener verwalten und alle Restaurant-Einstellungen aendern</p>
+                        <p>Restaurantinhaber kann Bediener verwalten und alle Restaurant-Einstellungen ändern</p>
                       )}
                       {formData.role === "manager" && (
                         <p>Schichtleiter kann Reservierungen bearbeiten und Tische verwalten</p>
                       )}
                       {formData.role === "staff" && (
-                        <p>Mitarbeiter kann Reservierungen annehmen, zuweisen, platzieren und abschliessen</p>
+                        <p>Mitarbeiter kann Reservierungen annehmen, zuweisen, platzieren und abschließen</p>
                       )}
                     </div>
                   </div>
@@ -783,7 +783,7 @@ export default function StaffAccessPage() {
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        Inaktive Zugaenge koennen sich nicht anmelden.
+                        Inaktive Zugänge können sich nicht anmelden.
                       </p>
                     </div>
                   )}
@@ -803,7 +803,7 @@ export default function StaffAccessPage() {
                       ) : (
                         <>
                           <Save className="w-4 h-4" />
-                          <span>{editingUser ? "Aenderungen speichern" : "Zugang anlegen"}</span>
+                          <span>{editingUser ? "Änderungen speichern" : "Zugang anlegen"}</span>
                         </>
                       )}
                     </Button>
@@ -922,8 +922,8 @@ export default function StaffAccessPage() {
                   <Users className="w-16 h-16 mx-auto mb-4 opacity-50" />
                   <p className="text-lg font-medium">
                     {users.length === 0
-                      ? "Noch keine Zugaenge vorhanden"
-                      : "Keine Zugaenge gefunden"}
+                      ? "Noch keine Zugänge vorhanden"
+                      : "Keine Zugänge gefunden"}
                   </p>
                   {users.length === 0 && (
                     <p className="text-sm mt-2">
@@ -1031,7 +1031,7 @@ export default function StaffAccessPage() {
                                   className="touch-manipulation min-h-[36px] gap-1.5 shadow-none hover:shadow-[0_12px_32px_rgba(239,68,68,0.45)]"
                                 >
                                   <Trash2 className="w-4 h-4" />
-                                  <span className="hidden sm:inline">Loeschen</span>
+                                  <span className="hidden sm:inline">Löschen</span>
                                 </Button>
                               </div>
                             </td>

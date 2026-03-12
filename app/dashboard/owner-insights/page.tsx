@@ -348,7 +348,7 @@ export default function OwnerInsightsPage() {
       ["Bestätigungsquote", `${kpis.confirmationRate.toFixed(1)}%`],
       ["Storno-Quote", `${kpis.cancellationRate.toFixed(1)}%`],
       ["No-Show-Quote", `${kpis.noShowRate.toFixed(1)}%`],
-      ["Avg Partygroesse", kpis.avgParty.toFixed(2)],
+      ["Avg Partygröße", kpis.avgParty.toFixed(2)],
       ["Avg Aufenthaltsdauer (Minuten)", kpis.avgDuration.toFixed(1)],
       ["Avg Vorlaufzeit (Stunden)", kpis.avgLead.toFixed(1)],
       ["Tisch-Zuordnung", `${kpis.tableAssignmentRate.toFixed(1)}%`],
