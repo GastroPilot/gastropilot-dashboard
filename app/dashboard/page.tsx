@@ -169,7 +169,7 @@ function useDashboardData(restaurantId: string | null, selectedDate: Date) {
         if (!config.is_hidden && config.number && config.capacity) {
           const tempTable: Table = {
             id: `temp-${config.id}`,
-            restaurant_id: config.restaurant_id,
+            restaurant_id: config.restaurant_id ?? config.tenant_id ?? restId,
             number: config.number,
             capacity: config.capacity,
             shape: config.shape ?? "rectangle",
@@ -184,8 +184,8 @@ function useDashboardData(restaurantId: string | null, selectedDate: Date) {
             join_group_id: config.join_group_id ?? null,
             is_outdoor: false,
             rotation: config.rotation ?? null,
-            created_at_utc: config.created_at_utc,
-            updated_at_utc: config.updated_at_utc,
+            created_at_utc: config.created_at_utc ?? config.created_at ?? new Date().toISOString(),
+            updated_at_utc: config.updated_at_utc ?? config.updated_at ?? new Date().toISOString(),
             area_id: null,
           };
           visibleTables.push(tempTable);
@@ -365,7 +365,16 @@ export default function DashboardPage() {
   }, []);
   
   // Gefilterte Daten nach Area
-  const tables = useMemo(() => filterByArea(allTables, selectedAreaId), [allTables, selectedAreaId, filterByArea]);
+  const tables = useMemo(
+    () =>
+      allTables.filter((table) => {
+        if (!selectedAreaId) return true;
+        // Temp-Tische haben keine area_id und sollen trotzdem sichtbar bleiben.
+        if (String(table.id).startsWith("temp-")) return true;
+        return (table.area_id ?? null) === selectedAreaId;
+      }),
+    [allTables, selectedAreaId]
+  );
   const obstacles = useMemo(() => filterByArea(allObstacles, selectedAreaId), [allObstacles, selectedAreaId, filterByArea]);
   
   // Alle Berechnungen gecached

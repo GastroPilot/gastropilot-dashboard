@@ -256,14 +256,29 @@ export default function TableManagementPage() {
   }, [selectedAreaId, allTables, allObstacles, filterByArea]);
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    if (!areaMenuOpen) return;
+
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
       if (areaMenuRef.current && !areaMenuRef.current.contains(event.target as Node)) {
         setAreaMenuOpen(false);
       }
     };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setAreaMenuOpen(false);
+      }
+    };
+
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    document.addEventListener("touchstart", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [areaMenuOpen]);
 
   const openCreateAreaDialog = () => {
     setEditingArea(null);
@@ -538,54 +553,58 @@ export default function TableManagementPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3 relative">
-            <div className="flex items-center gap-2" ref={areaMenuRef}>
+            <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground uppercase tracking-wide">Bereich</span>
-              <button
-                type="button"
-                onClick={() => setAreaMenuOpen((prev) => !prev)}
-                className="inline-flex items-center justify-between gap-2 px-3 py-2 rounded-md border border-input bg-card text-sm text-foreground shadow-inner hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring min-w-[180px] disabled:opacity-60 disabled:cursor-not-allowed"
-                disabled={areas.length === 0}
-              >
-                <span className="truncate">
-                  {selectedAreaId
-                    ? areas.find((a) => a.id === selectedAreaId)?.name || "Area auswählen"
-                    : "Area auswählen"}
-                </span>
-                <ChevronDown className={`w-4 h-4 transition-transform ${areaMenuOpen ? "rotate-180" : ""}`} />
-              </button>
-              {areaMenuOpen && (
-                <div className="absolute mt-1 w-64 rounded-lg border border-border bg-background shadow-xl z-40 overflow-hidden">
-                  <div className="divide-y divide-border">
-                    {areas.map((area) => {
-                      const active = selectedAreaId === area.id;
-                      return (
-                        <button
-                          key={area.id}
-                          type="button"
-                          onClick={() => {
-                            if (active) return;
-                            setSelectedAreaId(area.id);
-                            setAreaMenuOpen(false);
-                          }}
-                          className={`w-full px-3 py-2 text-left flex items-center justify-between gap-2 text-sm transition-colors ${
-                            active
-                              ? "bg-card text-foreground font-semibold cursor-default"
-                              : "text-foreground hover:bg-accent"
-                          }`}
-                          disabled={active}
-                        >
-                          <span className="truncate">{area.name}</span>
-                        </button>
-                      );
-                    })}
-                    {areas.length === 0 && (
-                      <div className="px-3 py-3 text-sm text-muted-foreground">
-                        Keine Area vorhanden.
-                      </div>
-                    )}
+              <div className="relative" ref={areaMenuRef}>
+                <button
+                  type="button"
+                  onClick={() => setAreaMenuOpen((prev) => !prev)}
+                  aria-haspopup="listbox"
+                  aria-expanded={areaMenuOpen}
+                  className="inline-flex items-center justify-between gap-2 px-3 py-2 rounded-md border border-input bg-card text-sm text-foreground shadow-inner hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring min-w-[180px] disabled:opacity-60 disabled:cursor-not-allowed"
+                  disabled={areas.length === 0}
+                >
+                  <span className="truncate">
+                    {selectedAreaId
+                      ? areas.find((a) => a.id === selectedAreaId)?.name || "Area auswählen"
+                      : "Area auswählen"}
+                  </span>
+                  <ChevronDown className={`w-4 h-4 transition-transform ${areaMenuOpen ? "rotate-180" : ""}`} />
+                </button>
+                {areaMenuOpen && (
+                  <div className="absolute left-0 top-full mt-1 w-64 rounded-lg border border-border bg-background shadow-xl z-[120] overflow-hidden">
+                    <div className="divide-y divide-border">
+                      {areas.map((area) => {
+                        const active = selectedAreaId === area.id;
+                        return (
+                          <button
+                            key={area.id}
+                            type="button"
+                            onClick={() => {
+                              if (active) return;
+                              setSelectedAreaId(area.id);
+                              setAreaMenuOpen(false);
+                            }}
+                            className={`w-full px-3 py-2 text-left flex items-center justify-between gap-2 text-sm transition-colors ${
+                              active
+                                ? "bg-card text-foreground font-semibold cursor-default"
+                                : "text-foreground hover:bg-accent"
+                            }`}
+                            disabled={active}
+                          >
+                            <span className="truncate">{area.name}</span>
+                          </button>
+                        );
+                      })}
+                      {areas.length === 0 && (
+                        <div className="px-3 py-3 text-sm text-muted-foreground">
+                          Keine Area vorhanden.
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
             {(currentUser?.role === "platform_admin" || currentUser?.role === "owner" || currentUser?.role === "manager") && (
               <div className="flex items-center gap-2">

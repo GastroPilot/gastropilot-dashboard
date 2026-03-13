@@ -19,6 +19,69 @@ export class ApiError extends Error {
 let refreshPromise: Promise<string | null> | null = null;
 let lastRefreshTime = 0;
 const REFRESH_COOLDOWN = 2000; // 2 Sekunden Cooldown zwischen Refreshes
+const API_DEBUG_ENABLED = process.env.NEXT_PUBLIC_API_DEBUG === "true";
+
+function debugLog(...args: unknown[]): void {
+  if (API_DEBUG_ENABLED) {
+    console.debug(...args);
+  }
+}
+
+const ORDERS_SERVICE_ENDPOINT_PATTERN =
+  /^\/(orders|kitchen|waitlist|order-statistics|invoices|sumup)(\/|$)/;
+const AI_SERVICE_ENDPOINT_PATTERN = /^\/ai(\/|$)/;
+
+function resolveBaseUrlForEndpoint(endpoint: string): string {
+  const baseUrl = getApiBaseUrl();
+  const isOrdersServiceEndpoint =
+    ORDERS_SERVICE_ENDPOINT_PATTERN.test(endpoint) ||
+    endpoint.startsWith("/webhooks/sumup");
+  const isAiServiceEndpoint = AI_SERVICE_ENDPOINT_PATTERN.test(endpoint);
+
+  if (isAiServiceEndpoint) {
+    const explicitAiBaseUrl = process.env.NEXT_PUBLIC_AI_API_BASE_URL;
+    if (explicitAiBaseUrl) {
+      return explicitAiBaseUrl;
+    }
+
+    // Lokales Direkt-Setup ohne nginx: core auf 8000, ai auf 8002
+    try {
+      const parsed = new URL(baseUrl);
+      const isLocalhost =
+        parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1";
+      if (isLocalhost && parsed.port === "8000") {
+        return `${parsed.protocol}//${parsed.hostname}:8002`;
+      }
+    } catch {
+      // Fallback: nutze default baseUrl
+    }
+
+    return baseUrl;
+  }
+
+  if (!isOrdersServiceEndpoint) {
+    return baseUrl;
+  }
+
+  const explicitOrdersBaseUrl = process.env.NEXT_PUBLIC_ORDERS_API_BASE_URL;
+  if (explicitOrdersBaseUrl) {
+    return explicitOrdersBaseUrl;
+  }
+
+  // Lokales Direkt-Setup ohne nginx: core auf 8000, orders auf 8001
+  try {
+    const parsed = new URL(baseUrl);
+    const isLocalhost =
+      parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1";
+    if (isLocalhost && parsed.port === "8000") {
+      return `${parsed.protocol}//${parsed.hostname}:8001`;
+    }
+  } catch {
+    // Fallback: nutze default baseUrl
+  }
+
+  return baseUrl;
+}
 
 /**
  * Globale Token-Refresh-Funktion mit Singleton-Pattern.
@@ -30,14 +93,14 @@ const REFRESH_COOLDOWN = 2000; // 2 Sekunden Cooldown zwischen Refreshes
 export async function refreshToken(): Promise<string | null> {
   // Wenn bereits ein Refresh läuft, warte auf das Ergebnis
   if (refreshPromise) {
-    console.log("🔄 Refresh bereits in Arbeit, warte auf Ergebnis...");
+    debugLog("[API] Refresh bereits in Arbeit, warte auf Ergebnis");
     return refreshPromise;
   }
 
   // Cooldown: Wenn kürzlich ein Refresh stattfand, nicht nochmal refreshen
   const now = Date.now();
   if (now - lastRefreshTime < REFRESH_COOLDOWN) {
-    console.log("⏳ Refresh Cooldown aktiv, überspringe...");
+    debugLog("[API] Refresh Cooldown aktiv, ueberspringe");
     const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
     return token;
   }
@@ -49,11 +112,11 @@ export async function refreshToken(): Promise<string | null> {
         : null;
 
       if (!refreshTokenValue) {
-        console.warn("⚠️ Kein Refresh-Token gefunden");
+        debugLog("[API] Kein Refresh-Token gefunden");
         return null;
       }
 
-      console.log("🔄 Starte Token-Refresh...");
+      debugLog("[API] Starte Token-Refresh");
       const refreshUrl = buildApiUrl(getApiBaseUrl(), API_PREFIX, "/auth/refresh");
       const response = await fetch(refreshUrl, {
         method: "POST",
@@ -87,7 +150,7 @@ export async function refreshToken(): Promise<string | null> {
       }
 
       lastRefreshTime = Date.now();
-      console.log("✅ Token erfolgreich erneuert");
+      debugLog("[API] Token erfolgreich erneuert");
       return data.access_token;
     } catch (error) {
       console.error("❌ Token-Refresh fehlgeschlagen:", error);
@@ -114,9 +177,9 @@ async function request<T>(
   options: RequestInit = {},
   retryOnAuthError: boolean = true
 ): Promise<T> {
-  const baseUrl = getApiBaseUrl();
+  const baseUrl = resolveBaseUrlForEndpoint(endpoint);
   const url = buildApiUrl(baseUrl, API_PREFIX, endpoint);
-  console.log(`[API Client] Request to: ${url} (baseUrl: ${baseUrl})`);
+  debugLog(`[API Client] Request to: ${url} (baseUrl: ${baseUrl})`);
 
   // Prüfe ob Token abgelaufen ist und erneuere es proaktiv
   let token = typeof window !== "undefined" 
@@ -145,11 +208,9 @@ async function request<T>(
 
   if (token) {
     headers.set("Authorization", `Bearer ${token}`);
-    if (typeof window !== "undefined" && process.env.NODE_ENV === "development") {
-      console.log(`🔑 Sending request to ${endpoint} with token: ${token.substring(0, 20)}...`);
-    }
+    debugLog(`[API] Authorization header gesetzt fuer Endpoint ${endpoint}`);
   } else if (typeof window !== "undefined") {
-    console.warn("⚠️ Kein Token gefunden für Request:", endpoint);
+    debugLog(`[API] Kein Token gefunden fuer Request: ${endpoint}`);
   }
 
   const response = await fetch(url, {

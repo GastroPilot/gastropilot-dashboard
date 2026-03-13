@@ -38,6 +38,11 @@ export interface Reservation {
   upsell_packages: UpsellPackage[] | null;
 }
 
+type ApiReservationStatus = ReservationStatus | "cancelled";
+type ReservationApiResponse = Omit<Reservation, "status"> & {
+  status: ApiReservationStatus;
+};
+
 export interface ReservationCreate {
   table_id?: string | null;
   guest_id?: string | null;
@@ -69,9 +74,26 @@ export interface ReservationUpdate {
   tags?: string[];
 }
 
+type ReservationApiPayload = Omit<ReservationCreate, "start_at" | "end_at" | "channel"> & {
+  starts_at?: string;
+  ends_at?: string;
+  source?: string;
+};
+
+type ReservationApiUpdatePayload = Omit<ReservationUpdate, "start_at" | "end_at"> & {
+  starts_at?: string;
+  ends_at?: string;
+};
+
+function normalizeReservation(reservation: ReservationApiResponse): Reservation {
+  const normalizedStatus: ReservationStatus =
+    reservation.status === "cancelled" ? "canceled" : reservation.status;
+  return { ...reservation, status: normalizedStatus };
+}
+
 export const reservationsApi = {
   list: async (
-    restaurantId: string,
+    _restaurantId: string,
     params?: { from?: string; to?: string; status?: ReservationStatus; table_id?: string }
   ): Promise<Reservation[]> => {
     const queryParams = new URLSearchParams();
@@ -81,52 +103,64 @@ export const reservationsApi = {
     if (params?.table_id) queryParams.append("table_id", params.table_id);
     
     const query = queryParams.toString();
-    // Backend-Route ist @router.get("/"), daher trailing slash erforderlich
-    return api.get<Reservation[]>(
-      `/restaurants/${restaurantId}/reservations/${query ? `?${query}` : ""}`
+    const response = await api.get<ReservationApiResponse[]>(
+      `/reservations/${query ? `?${query}` : ""}`
     );
+    return response.map(normalizeReservation);
   },
 
-  get: async (restaurantId: string, reservationId: string): Promise<Reservation> => {
-    return api.get<Reservation>(
-      `/restaurants/${restaurantId}/reservations/${reservationId}`
-    );
+  get: async (_restaurantId: string, reservationId: string): Promise<Reservation> => {
+    const response = await api.get<ReservationApiResponse>(`/reservations/${reservationId}`);
+    return normalizeReservation(response);
   },
 
   create: async (
-    restaurantId: string,
+    _restaurantId: string,
     data: ReservationCreate
   ): Promise<Reservation> => {
-    // Backend-Route ist @router.post("/"), daher trailing slash erforderlich
-    return api.post<Reservation>(
-      `/restaurants/${restaurantId}/reservations/`,
-      data
-    );
+    const payload: ReservationApiPayload = {
+      ...data,
+      starts_at: data.start_at,
+      ends_at: data.end_at,
+      source: data.channel,
+    };
+    const response = await api.post<ReservationApiResponse>(`/reservations/`, payload);
+    return normalizeReservation(response);
   },
 
   update: async (
-    restaurantId: string,
+    _restaurantId: string,
     reservationId: string,
     data: ReservationUpdate
   ): Promise<Reservation> => {
-    return api.patch<Reservation>(
-      `/restaurants/${restaurantId}/reservations/${reservationId}`,
-      data
+    const payload: ReservationApiUpdatePayload = {
+      ...data,
+      starts_at: data.start_at,
+      ends_at: data.end_at,
+    };
+    const response = await api.patch<ReservationApiResponse>(
+      `/reservations/${reservationId}`,
+      payload
     );
+    return normalizeReservation(response);
   },
 
-  delete: async (restaurantId: string, reservationId: string): Promise<void> => {
-    return api.delete(`/restaurants/${restaurantId}/reservations/${reservationId}`);
+  delete: async (_restaurantId: string, reservationId: string): Promise<void> => {
+    return api.delete(`/reservations/${reservationId}`);
   },
 
   cancel: async (
-    restaurantId: string,
+    _restaurantId: string,
     reservationId: string,
     canceledReason?: string
   ): Promise<Reservation> => {
-    return api.post<Reservation>(
-      `/restaurants/${restaurantId}/reservations/${reservationId}/cancel`,
-      canceledReason ? { canceled_reason: canceledReason } : {}
+    const response = await api.patch<ReservationApiResponse>(
+      `/reservations/${reservationId}`,
+      {
+        status: "canceled",
+        ...(canceledReason ? { notes: canceledReason } : {}),
+      }
     );
+    return normalizeReservation(response);
   },
 };

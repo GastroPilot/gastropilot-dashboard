@@ -13,12 +13,22 @@ export interface ImpersonateResponse {
   tenant_name: string;
 }
 
+export interface UserImpersonateResponse {
+  impersonation_token: string;
+  user_id: string;
+  user_name: string;
+  tenant_id: string | null;
+}
+
 export const adminApi = {
   listTenants: (): Promise<Tenant[]> =>
     api.get<Tenant[]>("/admin/tenants"),
 
   impersonateTenant: (tenantId: string): Promise<ImpersonateResponse> =>
     api.get<ImpersonateResponse>(`/admin/tenants/${tenantId}/impersonate`),
+
+  impersonateUser: (userId: string): Promise<UserImpersonateResponse> =>
+    api.get<UserImpersonateResponse>(`/admin/users/${userId}/impersonate`),
 };
 
 // ─── Impersonation-Helpers ────────────────────────────────────────────────────

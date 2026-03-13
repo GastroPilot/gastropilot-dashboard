@@ -55,39 +55,36 @@ export interface VoucherValidateResponse {
 }
 
 class VouchersApi {
-  async list(restaurantId: string, includeInactive: boolean = false): Promise<Voucher[]> {
-    return api.get<Voucher[]>(
-      `/restaurants/${restaurantId}/vouchers/?include_inactive=${includeInactive}`
-    );
+  async list(_restaurantId: string, includeInactive: boolean = false): Promise<Voucher[]> {
+    return api.get<Voucher[]>(`/vouchers/?include_inactive=${includeInactive}`);
   }
 
-  async get(restaurantId: string, voucherId: string): Promise<Voucher> {
-    return api.get<Voucher>(`/restaurants/${restaurantId}/vouchers/${voucherId}`);
+  async get(_restaurantId: string, voucherId: string): Promise<Voucher> {
+    return api.get<Voucher>(`/vouchers/${voucherId}`);
   }
 
-  async create(restaurantId: string, data: VoucherCreate): Promise<Voucher> {
-    return api.post<Voucher>(`/restaurants/${restaurantId}/vouchers`, data);
+  async create(_restaurantId: string, data: VoucherCreate): Promise<Voucher> {
+    return api.post<Voucher>(`/vouchers/`, data);
   }
 
-  async update(restaurantId: string, voucherId: string, data: VoucherUpdate): Promise<Voucher> {
-    return api.put<Voucher>(`/restaurants/${restaurantId}/vouchers/${voucherId}`, data);
+  async update(_restaurantId: string, voucherId: string, data: VoucherUpdate): Promise<Voucher> {
+    return api.put<Voucher>(`/vouchers/${voucherId}`, data);
   }
 
-  async delete(restaurantId: string, voucherId: string): Promise<void> {
-    return api.delete(`/restaurants/${restaurantId}/vouchers/${voucherId}`);
+  async delete(_restaurantId: string, voucherId: string): Promise<void> {
+    return api.delete(`/vouchers/${voucherId}`);
   }
 
   async validate(
-    restaurantId: string,
+    _restaurantId: string,
     code: string,
     reservationAmount?: number
   ): Promise<VoucherValidateResponse> {
     return api.post<VoucherValidateResponse>(
-      `/restaurants/${restaurantId}/vouchers/validate`,
+      `/vouchers/validate`,
       {
         code,
-        restaurant_id: restaurantId,
-        reservation_amount: reservationAmount,
+        order_value: reservationAmount,
       }
     );
   }

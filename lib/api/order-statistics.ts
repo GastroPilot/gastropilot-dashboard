@@ -31,7 +31,7 @@ export interface HourlyStatistics {
 
 export const orderStatisticsApi = {
   getRevenue: async (
-    restaurantId: string,
+    _restaurantId: string,
     params?: { start_date?: string; end_date?: string }
   ): Promise<RevenueStatistics> => {
     const queryParams = new URLSearchParams();
@@ -40,12 +40,12 @@ export const orderStatisticsApi = {
 
     const query = queryParams.toString();
     return api.get<RevenueStatistics>(
-      `/restaurants/${restaurantId}/order-statistics/revenue${query ? `?${query}` : ""}`
+      `/order-statistics/revenue${query ? `?${query}` : ""}`
     );
   },
 
   getTopItems: async (
-    restaurantId: string,
+    _restaurantId: string,
     params?: { start_date?: string; end_date?: string; limit?: number }
   ): Promise<TopItem[]> => {
     const queryParams = new URLSearchParams();
@@ -55,12 +55,12 @@ export const orderStatisticsApi = {
 
     const query = queryParams.toString();
     return api.get<TopItem[]>(
-      `/restaurants/${restaurantId}/order-statistics/top-items${query ? `?${query}` : ""}`
+      `/order-statistics/top-items${query ? `?${query}` : ""}`
     );
   },
 
   getCategoryStatistics: async (
-    restaurantId: string,
+    _restaurantId: string,
     params?: { start_date?: string; end_date?: string }
   ): Promise<CategoryStatistics> => {
     const queryParams = new URLSearchParams();
@@ -69,12 +69,12 @@ export const orderStatisticsApi = {
 
     const query = queryParams.toString();
     return api.get<CategoryStatistics>(
-      `/restaurants/${restaurantId}/order-statistics/category-statistics${query ? `?${query}` : ""}`
+      `/order-statistics/category-statistics${query ? `?${query}` : ""}`
     );
   },
 
   getHourlyStatistics: async (
-    restaurantId: string,
+    _restaurantId: string,
     params?: { start_date?: string; end_date?: string }
   ): Promise<HourlyStatistics> => {
     const queryParams = new URLSearchParams();
@@ -83,7 +83,7 @@ export const orderStatisticsApi = {
 
     const query = queryParams.toString();
     return api.get<HourlyStatistics>(
-      `/restaurants/${restaurantId}/order-statistics/hourly-statistics${query ? `?${query}` : ""}`
+      `/order-statistics/hourly-statistics${query ? `?${query}` : ""}`
     );
   },
 };

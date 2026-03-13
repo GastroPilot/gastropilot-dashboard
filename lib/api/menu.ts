@@ -77,17 +77,20 @@ export interface MenuItemUpdate {
 export const menuApi = {
   // Categories
   listCategories: async (restaurantId: string): Promise<MenuCategory[]> => {
-    // Backend-Route ist @router.get("/"), daher trailing slash erforderlich
-    return api.get<MenuCategory[]>(`/restaurants/${restaurantId}/menu/categories/`);
+    return api.get<MenuCategory[]>(`/menus/categories`);
   },
 
   getCategory: async (restaurantId: string, categoryId: string): Promise<MenuCategory> => {
-    return api.get<MenuCategory>(`/restaurants/${restaurantId}/menu/categories/${categoryId}`);
+    const categories = await menuApi.listCategories(restaurantId);
+    const category = categories.find((item) => item.id === categoryId);
+    if (!category) {
+      throw new Error("Kategorie nicht gefunden");
+    }
+    return category;
   },
 
   createCategory: async (restaurantId: string, data: MenuCategoryCreate): Promise<MenuCategory> => {
-    // Backend-Route ist @router.post("/"), daher trailing slash erforderlich
-    return api.post<MenuCategory>(`/restaurants/${restaurantId}/menu/categories/`, data);
+    return api.post<MenuCategory>(`/menus/categories`, data);
   },
 
   updateCategory: async (
@@ -95,14 +98,11 @@ export const menuApi = {
     categoryId: string,
     data: MenuCategoryUpdate
   ): Promise<MenuCategory> => {
-    return api.patch<MenuCategory>(
-      `/restaurants/${restaurantId}/menu/categories/${categoryId}`,
-      data
-    );
+    return api.patch<MenuCategory>(`/menus/categories/${categoryId}`, data);
   },
 
   deleteCategory: async (restaurantId: string, categoryId: string): Promise<void> => {
-    return api.delete(`/restaurants/${restaurantId}/menu/categories/${categoryId}`);
+    return api.delete(`/menus/categories/${categoryId}`);
   },
 
   // Items
@@ -115,19 +115,17 @@ export const menuApi = {
     if (params?.available_only) queryParams.append("available_only", "true");
 
     const query = queryParams.toString();
-    // Backend-Route ist @router.get("/"), daher trailing slash erforderlich
     return api.get<MenuItem[]>(
-      `/restaurants/${restaurantId}/menu/items/${query ? `?${query}` : ""}`
+      `/menus/items${query ? `?${query}` : ""}`
     );
   },
 
   getItem: async (restaurantId: string, itemId: string): Promise<MenuItem> => {
-    return api.get<MenuItem>(`/restaurants/${restaurantId}/menu/items/${itemId}`);
+    return api.get<MenuItem>(`/menus/items/${itemId}`);
   },
 
   createItem: async (restaurantId: string, data: MenuItemCreate): Promise<MenuItem> => {
-    // Backend-Route ist @router.post("/"), daher trailing slash erforderlich
-    return api.post<MenuItem>(`/restaurants/${restaurantId}/menu/items/`, data);
+    return api.post<MenuItem>(`/menus/items`, data);
   },
 
   updateItem: async (
@@ -135,11 +133,11 @@ export const menuApi = {
     itemId: string,
     data: MenuItemUpdate
   ): Promise<MenuItem> => {
-    return api.patch<MenuItem>(`/restaurants/${restaurantId}/menu/items/${itemId}`, data);
+    return api.patch<MenuItem>(`/menus/items/${itemId}`, data);
   },
 
   deleteItem: async (restaurantId: string, itemId: string): Promise<void> => {
-    return api.delete(`/restaurants/${restaurantId}/menu/items/${itemId}`);
+    return api.delete(`/menus/items/${itemId}`);
   },
 };
 

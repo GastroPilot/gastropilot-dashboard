@@ -81,7 +81,7 @@ export const authApi = {
   },
 
   loginNFC: async (data: NFCLoginRequest): Promise<TokenResponse> => {
-    const response = await api.post<TokenResponse>("/auth/login-nfc", data);
+    const response = await api.post<TokenResponse>("/auth/login", data);
     if (typeof window !== "undefined") {
       localStorage.setItem("access_token", response.access_token);
       localStorage.setItem("refresh_token", response.refresh_token);
