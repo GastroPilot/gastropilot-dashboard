@@ -7,7 +7,6 @@ export type ReservationStatus =
   | "seated"
   | "completed"
   | "canceled"
-  | "cancelled"
   | "no_show";
 
 export interface Reservation {
@@ -38,6 +37,11 @@ export interface Reservation {
   prepayment_amount: number | null;
   upsell_packages: UpsellPackage[] | null;
 }
+
+type ApiReservationStatus = ReservationStatus | "cancelled";
+type ReservationApiResponse = Omit<Reservation, "status"> & {
+  status: ApiReservationStatus;
+};
 
 export interface ReservationCreate {
   table_id?: string | null;
@@ -81,11 +85,10 @@ type ReservationApiUpdatePayload = Omit<ReservationUpdate, "start_at" | "end_at"
   ends_at?: string;
 };
 
-function normalizeReservation(reservation: Reservation): Reservation {
-  if (reservation.status === "cancelled") {
-    return { ...reservation, status: "canceled" };
-  }
-  return reservation;
+function normalizeReservation(reservation: ReservationApiResponse): Reservation {
+  const normalizedStatus: ReservationStatus =
+    reservation.status === "cancelled" ? "canceled" : reservation.status;
+  return { ...reservation, status: normalizedStatus };
 }
 
 export const reservationsApi = {
@@ -100,12 +103,14 @@ export const reservationsApi = {
     if (params?.table_id) queryParams.append("table_id", params.table_id);
     
     const query = queryParams.toString();
-    const response = await api.get<Reservation[]>(`/reservations/${query ? `?${query}` : ""}`);
+    const response = await api.get<ReservationApiResponse[]>(
+      `/reservations/${query ? `?${query}` : ""}`
+    );
     return response.map(normalizeReservation);
   },
 
   get: async (_restaurantId: string, reservationId: string): Promise<Reservation> => {
-    const response = await api.get<Reservation>(`/reservations/${reservationId}`);
+    const response = await api.get<ReservationApiResponse>(`/reservations/${reservationId}`);
     return normalizeReservation(response);
   },
 
@@ -119,7 +124,7 @@ export const reservationsApi = {
       ends_at: data.end_at,
       source: data.channel,
     };
-    const response = await api.post<Reservation>(`/reservations/`, payload);
+    const response = await api.post<ReservationApiResponse>(`/reservations/`, payload);
     return normalizeReservation(response);
   },
 
@@ -133,7 +138,10 @@ export const reservationsApi = {
       starts_at: data.start_at,
       ends_at: data.end_at,
     };
-    const response = await api.patch<Reservation>(`/reservations/${reservationId}`, payload);
+    const response = await api.patch<ReservationApiResponse>(
+      `/reservations/${reservationId}`,
+      payload
+    );
     return normalizeReservation(response);
   },
 
@@ -146,7 +154,7 @@ export const reservationsApi = {
     reservationId: string,
     canceledReason?: string
   ): Promise<Reservation> => {
-    const response = await api.patch<Reservation>(
+    const response = await api.patch<ReservationApiResponse>(
       `/reservations/${reservationId}`,
       {
         status: "canceled",

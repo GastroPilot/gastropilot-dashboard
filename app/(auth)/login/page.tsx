@@ -121,7 +121,7 @@ function LoginForm() {
 
     const slug = normalizeTenantSlug(tenantInput);
     if (!slug) {
-      const msg = "Bitte Tenant-Slug eingeben";
+      const msg = "Bitte Restaurant-Kürzel eingeben";
       setError(msg);
       addToast(msg, "error");
       return;
@@ -132,7 +132,7 @@ function LoginForm() {
     setLoading(false);
 
     if (!found) {
-      const msg = "Tenant-Slug nicht gefunden. Bitte prüfen und erneut versuchen.";
+      const msg = "Restaurant-Kürzel nicht gefunden. Bitte prüfen und erneut versuchen.";
       setError(msg);
       addToast(msg, "error");
       return;
@@ -160,7 +160,7 @@ function LoginForm() {
 
     if (mode === "pin") {
       if (!activeTenantSlug) {
-        const msg = "Bitte zuerst Tenant-Slug eingeben";
+        const msg = "Bitte zuerst Restaurant-Kürzel eingeben";
         setError(msg);
         addToast(msg, "error");
         return;
@@ -275,7 +275,7 @@ function LoginForm() {
           <div className="mb-4 rounded-lg border border-blue-500/30 bg-blue-500/8 px-4 py-3 text-sm text-blue-400 flex items-start gap-2.5">
             <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
             <span>
-              Gib zuerst den Tenant-Slug deines Restaurants ein. Admins können alternativ den
+              Gib zuerst den Restaurant-Kürzel deines Restaurants ein. Admins können alternativ den
               Bypass über 5 Klicks auf das Logo nutzen.
             </span>
           </div>
@@ -344,7 +344,7 @@ function LoginForm() {
                     className="flex items-center gap-2 text-sm font-medium text-foreground"
                   >
                     <Building2 className="w-4 h-4 text-primary" />
-                    Tenant-Slug
+                    Restaurant-Kürzel
                   </label>
                   <Input
                     id="tenantSlug"

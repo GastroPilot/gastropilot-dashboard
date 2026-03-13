@@ -671,7 +671,6 @@ export default function DashboardPage() {
         const conflict = tableReservations.some((reservation) => {
           const isActive =
             reservation.status !== "canceled" &&
-            reservation.status !== "cancelled" &&
             reservation.status !== "completed" &&
             reservation.status !== "no_show";
           if (!isActive) return false;
@@ -1218,7 +1217,6 @@ export default function DashboardPage() {
       case "seated": return "Platziert";
       case "completed": return "Abgeschlossen";
       case "canceled": return "Storniert";
-      case "cancelled": return "Storniert";
       case "no_show": return "No-Show";
       default: return "Ausstehend";
     }
@@ -1258,7 +1256,6 @@ export default function DashboardPage() {
     seated: { Icon: Users, tone: "bg-emerald-900/40 border-emerald-600 text-emerald-100" },
     completed: { Icon: CheckCircle, tone: "bg-amber-900/30 border-amber-600 text-amber-100" },
     canceled: { Icon: XCircle, tone: "bg-red-900/30 border-red-600 text-red-100" },
-    cancelled: { Icon: XCircle, tone: "bg-red-900/30 border-red-600 text-red-100" },
     no_show: { Icon: XCircle, tone: "bg-orange-900/30 border-orange-600 text-orange-100" },
   }), []);
 
