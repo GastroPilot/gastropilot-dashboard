@@ -58,50 +58,47 @@ export interface UpsellPackageAvailabilityResponse {
 }
 
 class UpsellPackagesApi {
-  async list(restaurantId: string, includeInactive: boolean = false): Promise<UpsellPackage[]> {
+  async list(_restaurantId: string, includeInactive: boolean = false): Promise<UpsellPackage[]> {
     return api.get<UpsellPackage[]>(
-      `/restaurants/${restaurantId}/upsell-packages/?include_inactive=${includeInactive}`
+      `/upsell-packages/?include_inactive=${includeInactive}`
     );
   }
 
-  async get(restaurantId: string, packageId: string): Promise<UpsellPackage> {
-    return api.get<UpsellPackage>(`/restaurants/${restaurantId}/upsell-packages/${packageId}`);
+  async get(_restaurantId: string, packageId: string): Promise<UpsellPackage> {
+    return api.get<UpsellPackage>(`/upsell-packages/${packageId}`);
   }
 
-  async create(restaurantId: string, data: UpsellPackageCreate): Promise<UpsellPackage> {
-    return api.post<UpsellPackage>(`/restaurants/${restaurantId}/upsell-packages`, data);
+  async create(_restaurantId: string, data: UpsellPackageCreate): Promise<UpsellPackage> {
+    return api.post<UpsellPackage>(`/upsell-packages/`, data);
   }
 
   async update(
-    restaurantId: string,
+    _restaurantId: string,
     packageId: string,
     data: UpsellPackageUpdate
   ): Promise<UpsellPackage> {
-    return api.put<UpsellPackage>(
-      `/restaurants/${restaurantId}/upsell-packages/${packageId}`,
-      data
-    );
+    return api.put<UpsellPackage>(`/upsell-packages/${packageId}`, data);
   }
 
-  async delete(restaurantId: string, packageId: string): Promise<void> {
-    return api.delete(`/restaurants/${restaurantId}/upsell-packages/${packageId}`);
+  async delete(_restaurantId: string, packageId: string): Promise<void> {
+    return api.delete(`/upsell-packages/${packageId}`);
   }
 
   async getAvailability(
-    restaurantId: string,
+    _restaurantId: string,
     date: string,
     time: string,
     partySize: number
   ): Promise<UpsellPackageAvailabilityResponse> {
-    return api.post<UpsellPackageAvailabilityResponse>(
-      `/restaurants/${restaurantId}/upsell-packages/availability`,
+    const packages = await api.post<UpsellPackage[]>(
+      `/upsell-packages/availability`,
       {
-        restaurant_id: restaurantId,
         date,
         time,
         party_size: partySize,
       }
     );
+    return { packages };
   }
 }
 

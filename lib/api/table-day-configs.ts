@@ -2,7 +2,8 @@ import { api } from "./client";
 
 export interface TableDayConfig {
   id: string;
-  restaurant_id: string;
+  restaurant_id?: string;
+  tenant_id?: string;
   table_id: string | null;
   date: string;
   is_hidden: boolean;
@@ -20,8 +21,10 @@ export interface TableDayConfig {
   join_group_id: string | null;
   is_joinable: boolean | null;
   rotation: number | null;
-  created_at_utc: string;
-  updated_at_utc: string;
+  created_at_utc?: string;
+  updated_at_utc?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface TableDayConfigCreate {

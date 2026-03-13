@@ -27,21 +27,19 @@ export interface BlockUpdate {
 }
 
 export const blocksApi = {
-  list: async (restaurantId: string): Promise<Block[]> => {
-    // Backend-Route ist @router.get("/"), daher trailing slash erforderlich
-    return api.get<Block[]>(`/restaurants/${restaurantId}/blocks/`);
+  list: async (_restaurantId: string): Promise<Block[]> => {
+    return api.get<Block[]>(`/blocks/`);
   },
 
-  create: async (restaurantId: string, data: BlockCreate): Promise<Block> => {
-    // Backend-Route ist @router.post("/"), daher trailing slash erforderlich
-    return api.post<Block>(`/restaurants/${restaurantId}/blocks/`, data);
+  create: async (_restaurantId: string, data: BlockCreate): Promise<Block> => {
+    return api.post<Block>(`/blocks/`, data);
   },
 
-  update: async (restaurantId: string, blockId: string, data: BlockUpdate): Promise<Block> => {
-    return api.patch<Block>(`/restaurants/${restaurantId}/blocks/${blockId}`, data);
+  update: async (_restaurantId: string, blockId: string, data: BlockUpdate): Promise<Block> => {
+    return api.patch<Block>(`/blocks/${blockId}`, data);
   },
 
-  delete: async (restaurantId: string, blockId: string): Promise<{ message: string }> => {
-    return api.delete<{ message: string }>(`/restaurants/${restaurantId}/blocks/${blockId}`);
+  delete: async (_restaurantId: string, blockId: string): Promise<{ message: string }> => {
+    return api.delete<{ message: string }>(`/blocks/${blockId}`);
   },
 };

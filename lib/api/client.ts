@@ -20,6 +20,62 @@ let refreshPromise: Promise<string | null> | null = null;
 let lastRefreshTime = 0;
 const REFRESH_COOLDOWN = 2000; // 2 Sekunden Cooldown zwischen Refreshes
 
+const ORDERS_SERVICE_ENDPOINT_PATTERN =
+  /^\/(orders|kitchen|waitlist|order-statistics|invoices|sumup)(\/|$)/;
+const AI_SERVICE_ENDPOINT_PATTERN = /^\/ai(\/|$)/;
+
+function resolveBaseUrlForEndpoint(endpoint: string): string {
+  const baseUrl = getApiBaseUrl();
+  const isOrdersServiceEndpoint =
+    ORDERS_SERVICE_ENDPOINT_PATTERN.test(endpoint) ||
+    endpoint.startsWith("/webhooks/sumup");
+  const isAiServiceEndpoint = AI_SERVICE_ENDPOINT_PATTERN.test(endpoint);
+
+  if (isAiServiceEndpoint) {
+    const explicitAiBaseUrl = process.env.NEXT_PUBLIC_AI_API_BASE_URL;
+    if (explicitAiBaseUrl) {
+      return explicitAiBaseUrl;
+    }
+
+    // Lokales Direkt-Setup ohne nginx: core auf 8000, ai auf 8002
+    try {
+      const parsed = new URL(baseUrl);
+      const isLocalhost =
+        parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1";
+      if (isLocalhost && parsed.port === "8000") {
+        return `${parsed.protocol}//${parsed.hostname}:8002`;
+      }
+    } catch {
+      // Fallback: nutze default baseUrl
+    }
+
+    return baseUrl;
+  }
+
+  if (!isOrdersServiceEndpoint) {
+    return baseUrl;
+  }
+
+  const explicitOrdersBaseUrl = process.env.NEXT_PUBLIC_ORDERS_API_BASE_URL;
+  if (explicitOrdersBaseUrl) {
+    return explicitOrdersBaseUrl;
+  }
+
+  // Lokales Direkt-Setup ohne nginx: core auf 8000, orders auf 8001
+  try {
+    const parsed = new URL(baseUrl);
+    const isLocalhost =
+      parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1";
+    if (isLocalhost && parsed.port === "8000") {
+      return `${parsed.protocol}//${parsed.hostname}:8001`;
+    }
+  } catch {
+    // Fallback: nutze default baseUrl
+  }
+
+  return baseUrl;
+}
+
 /**
  * Globale Token-Refresh-Funktion mit Singleton-Pattern.
  * Verhindert Race Conditions bei parallelen API-Calls.
@@ -114,7 +170,7 @@ async function request<T>(
   options: RequestInit = {},
   retryOnAuthError: boolean = true
 ): Promise<T> {
-  const baseUrl = getApiBaseUrl();
+  const baseUrl = resolveBaseUrlForEndpoint(endpoint);
   const url = buildApiUrl(baseUrl, API_PREFIX, endpoint);
   console.log(`[API Client] Request to: ${url} (baseUrl: ${baseUrl})`);
 

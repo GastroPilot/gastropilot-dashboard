@@ -50,11 +50,11 @@ export const aiApi = {
    * @returns Top-3 Tischvorschläge mit Confidence-Score
    */
   suggestTable: async (
-    restaurantId: string,
+    _restaurantId: string,
     request?: SuggestTableRequest
   ): Promise<SuggestTableResponse> => {
     return api.post<SuggestTableResponse>(
-      `/restaurants/${restaurantId}/ai/suggest-table`,
+      `/ai/seating/suggest`,
       request || {}
     );
   },
@@ -65,7 +65,13 @@ export const aiApi = {
    * @param restaurantId - ID des Restaurants
    * @returns AI Status mit verfügbaren Features
    */
-  getStatus: async (restaurantId: string): Promise<AIStatusResponse> => {
-    return api.get<AIStatusResponse>(`/restaurants/${restaurantId}/ai/status`);
+  getStatus: async (_restaurantId: string): Promise<AIStatusResponse> => {
+    await api.get<{ status: string; service: string }>(`/ai/health`);
+    return {
+      ai_enabled: true,
+      features: {
+        table_suggestions: true,
+      },
+    };
   },
 };
