@@ -23,24 +23,20 @@ test.describe('Authentication', () => {
     // Wait for page to be fully loaded
     await page.waitForLoadState('networkidle');
     
-    // Check for login form elements using IDs (more reliable)
-    await expect(page.locator('#operatorNumber')).toBeVisible({ timeout: 10000 });
-    await expect(page.locator('#pin')).toBeVisible();
-    await expect(page.getByRole('button', { name: /anmelden/i })).toBeVisible();
+    // New flow starts with tenant slug entry
+    await expect(page.locator('#tenantSlug')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('button', { name: /weiter zum login/i })).toBeVisible();
   });
   
   test('shows error on invalid credentials', async ({ page }) => {
     await page.goto('/login', { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('networkidle');
     
-    // Fill form using IDs
-    await page.locator('#operatorNumber').fill('9999');
-    await page.locator('#pin').fill('999999');
-    await page.getByRole('button', { name: /anmelden/i }).click();
+    // Try to continue without tenant slug (local validation)
+    await page.getByRole('button', { name: /weiter zum login/i }).click();
     
-    // Should show error message (either in error div or toast)
-    const errorLocator = page.locator('text=/ungültig|invalid|fehler|error/i');
-    await expect(errorLocator.first()).toBeVisible({ timeout: 10000 });
+    // Should show a validation error
+    await expect(page.locator('text=/tenant-slug/i').first()).toBeVisible({ timeout: 10000 });
   });
   
   // Skip login redirect test - requires real backend with valid credentials
