@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { authApi, User, UserCreate, UserUpdate } from "@/lib/api/auth";
+import { adminApi, impersonation } from "@/lib/api/admin";
 import { ApiError } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +27,8 @@ import {
   Key,
   CreditCard,
   User as UserIcon,
-  ChevronDown
+  ChevronDown,
+  LogIn
 } from "lucide-react";
 
 export default function OperatorsPage() {
@@ -56,6 +58,7 @@ export default function OperatorsPage() {
   const formRoleMenuRef = useRef<HTMLDivElement | null>(null);
   const [statusMenuOpen, setStatusMenuOpen] = useState(false);
   const statusMenuRef = useRef<HTMLDivElement | null>(null);
+  const [impersonatingOperatorId, setImpersonatingOperatorId] = useState<string | null>(null);
   const [toasts, setToasts] = useState<{ id: string; message: string; variant?: "info" | "error" | "success" }[]>([]);
 
   const addToast = useCallback(
@@ -280,6 +283,34 @@ export default function OperatorsPage() {
       } else {
         addToast("Ein Fehler ist aufgetreten", "error");
       }
+    }
+  };
+
+  const handleImpersonate = async (operator: User) => {
+    if (!currentUser || currentUser.role !== "platform_admin") return;
+    if (operator.id === currentUser.id) {
+      addToast("Du kannst dich nicht selbst impersonieren", "error");
+      return;
+    }
+
+    const confirmed = confirmAction(
+      `Möchtest du ${operator.first_name} ${operator.last_name} wirklich impersonieren?\n\nDu siehst danach exakt die Oberfläche und Rechte dieses Benutzers.`
+    );
+    if (!confirmed) return;
+
+    setImpersonatingOperatorId(operator.id);
+    try {
+      const res = await adminApi.impersonateUser(operator.id);
+      impersonation.start(res.impersonation_token, res.user_id, `User: ${res.user_name}`);
+      window.location.href = "/dashboard";
+    } catch (err) {
+      console.error("Fehler bei User-Impersonation:", err);
+      if (err instanceof ApiError) {
+        addToast(err.message || "Impersonation fehlgeschlagen", "error");
+      } else {
+        addToast("Impersonation fehlgeschlagen", "error");
+      }
+      setImpersonatingOperatorId(null);
     }
   };
 
@@ -1025,6 +1056,22 @@ export default function OperatorsPage() {
                             </td>
                             <td className="py-3 px-4">
                               <div className="flex justify-end gap-2">
+                                {currentUser?.role === "platform_admin" && operator.id !== currentUser.id && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleImpersonate(operator)}
+                                    disabled={impersonatingOperatorId === operator.id}
+                                    className="touch-manipulation min-h-[36px] gap-1.5 bg-[#F95100] text-white border-[#F95100] hover:bg-[#E04800] hover:border-[#E04800] hover:text-white"
+                                  >
+                                    {impersonatingOperatorId === operator.id ? (
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                      <LogIn className="w-4 h-4" />
+                                    )}
+                                    <span className="hidden sm:inline">Impersonieren</span>
+                                  </Button>
+                                )}
                                 <Button
                                   variant="outline"
                                   size="sm"
