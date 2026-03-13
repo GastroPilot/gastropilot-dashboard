@@ -41,10 +41,9 @@ test.describe('Login Page UI', () => {
     await page.goto('/login', { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('networkidle');
     
-    // Check main elements exist
-    await expect(page.locator('#operatorNumber')).toBeVisible({ timeout: 10000 });
-    await expect(page.locator('#pin')).toBeVisible();
-    await expect(page.getByRole('button', { name: /anmelden/i })).toBeVisible();
+    // New login flow starts with tenant slug step
+    await expect(page.locator('#tenantSlug')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('button', { name: /weiter zum login/i })).toBeVisible();
     
     // Check NFC login link exists
     await expect(page.locator('a[href="/login-nfc"]')).toBeVisible();
@@ -67,8 +66,8 @@ test.describe('Responsive Design', () => {
     await page.goto('/login', { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('networkidle');
     
-    // Login form should be visible
-    await expect(page.locator('#operatorNumber')).toBeVisible({ timeout: 10000 });
+    // Tenant step should be visible
+    await expect(page.locator('#tenantSlug')).toBeVisible({ timeout: 10000 });
     
     // Page should not have horizontal scroll
     const bodyWidth = await page.evaluate(() => document.body.scrollWidth);
@@ -83,8 +82,8 @@ test.describe('Responsive Design', () => {
     await page.goto('/login', { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('networkidle');
     
-    // Login form should be visible
-    await expect(page.locator('#operatorNumber')).toBeVisible({ timeout: 10000 });
+    // Tenant step should be visible
+    await expect(page.locator('#tenantSlug')).toBeVisible({ timeout: 10000 });
     
     // No JS errors should occur
     const errors: string[] = [];
@@ -99,7 +98,8 @@ test.describe('Responsive Design', () => {
 
 test.describe('Form Validation', () => {
   test('shows error for short operator number', async ({ page }) => {
-    await page.goto('/login', { waitUntil: 'domcontentloaded' });
+    // Provide tenant slug via query to jump directly to PIN form
+    await page.goto('/login?t=test-tenant', { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('networkidle');
     
     // Fill with only 3 digits
@@ -113,7 +113,8 @@ test.describe('Form Validation', () => {
   });
   
   test('shows error for short PIN', async ({ page }) => {
-    await page.goto('/login', { waitUntil: 'domcontentloaded' });
+    // Provide tenant slug via query to jump directly to PIN form
+    await page.goto('/login?t=test-tenant', { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('networkidle');
     
     await page.locator('#operatorNumber').fill('1234');

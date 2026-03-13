@@ -28,15 +28,17 @@ test.describe('Authentication', () => {
     await expect(page.getByRole('button', { name: /weiter zum login/i })).toBeVisible();
   });
   
-  test('shows error on invalid credentials', async ({ page }) => {
+  test('requires tenant slug before continuing', async ({ page }) => {
     await page.goto('/login', { waitUntil: 'domcontentloaded' });
     await page.waitForLoadState('networkidle');
     
-    // Try to continue without tenant slug (local validation)
+    // Try to continue without tenant slug (browser required validation)
     await page.getByRole('button', { name: /weiter zum login/i }).click();
     
-    // Should show a validation error
-    await expect(page.locator('text=/tenant-slug/i').first()).toBeVisible({ timeout: 10000 });
+    const validationMessage = await page
+      .locator('#tenantSlug')
+      .evaluate((el) => (el as HTMLInputElement).validationMessage);
+    expect(validationMessage.length).toBeGreaterThan(0);
   });
   
   // Skip login redirect test - requires real backend with valid credentials

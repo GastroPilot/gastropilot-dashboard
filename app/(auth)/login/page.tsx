@@ -271,16 +271,6 @@ function LoginForm() {
           <p className="text-muted-foreground text-sm">Restaurantmanagement</p>
         </div>
 
-        {showTenantStep && !showTabs && (
-          <div className="mb-4 rounded-lg border border-blue-500/30 bg-blue-500/8 px-4 py-3 text-sm text-blue-400 flex items-start gap-2.5">
-            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-            <span>
-              Gib zuerst den Restaurant-Kürzel deines Restaurants ein. Admins können alternativ den
-              Bypass über 5 Klicks auf das Logo nutzen.
-            </span>
-          </div>
-        )}
-
         {slugValid === false && (
           <div className="mb-4 rounded-lg border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-400 flex items-center gap-2">
             <AlertCircle className="w-4 h-4 flex-shrink-0" />
