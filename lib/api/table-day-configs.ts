@@ -58,15 +58,14 @@ export interface TableDayConfigUpdate {
 
 export const tableDayConfigsApi = {
   getByDate: async (restaurantId: string, date: string): Promise<TableDayConfig[]> => {
-    return api.get<TableDayConfig[]>(`/restaurants/${restaurantId}/table-day-configs/by-date/${date}`);
+    return api.get<TableDayConfig[]>(`/table-day-configs/by-date/${date}`);
   },
 
   createOrUpdate: async (
     restaurantId: string,
     data: TableDayConfigCreate
   ): Promise<TableDayConfig> => {
-    // Backend-Route ist @router.post("/"), daher trailing slash erforderlich
-    return api.post<TableDayConfig>(`/restaurants/${restaurantId}/table-day-configs/`, data);
+    return api.post<TableDayConfig>(`/table-day-configs/`, data);
   },
 
   update: async (
@@ -74,10 +73,7 @@ export const tableDayConfigsApi = {
     configId: string,
     data: TableDayConfigUpdate
   ): Promise<TableDayConfig> => {
-    return api.patch<TableDayConfig>(
-      `/restaurants/${restaurantId}/table-day-configs/${configId}`,
-      data
-    );
+    return api.patch<TableDayConfig>(`/table-day-configs/${configId}`, data);
   },
 
   delete: async (
@@ -85,27 +81,21 @@ export const tableDayConfigsApi = {
     date: string,
     tableId: string
   ): Promise<void> => {
-    return api.delete(
-      `/restaurants/${restaurantId}/table-day-configs/by-date/${date}/table/${tableId}`
-    );
+    return api.delete(`/table-day-configs/by-date/${date}/table/${tableId}`);
   },
 
   deleteById: async (
     restaurantId: string,
     configId: string
   ): Promise<void> => {
-    return api.delete(
-      `/restaurants/${restaurantId}/table-day-configs/${configId}`
-    );
+    return api.delete(`/table-day-configs/${configId}`);
   },
 
   deleteAllForDate: async (
     restaurantId: string,
     date: string
   ): Promise<void> => {
-    return api.delete(
-      `/restaurants/${restaurantId}/table-day-configs/by-date/${date}`
-    );
+    return api.delete(`/table-day-configs/by-date/${date}`);
   },
 };
 
