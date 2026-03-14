@@ -68,8 +68,11 @@ class UpsellPackagesApi {
     return api.get<UpsellPackage>(`/upsell-packages/${packageId}`);
   }
 
-  async create(_restaurantId: string, data: UpsellPackageCreate): Promise<UpsellPackage> {
-    return api.post<UpsellPackage>(`/upsell-packages/`, data);
+  async create(restaurantId: string, data: UpsellPackageCreate): Promise<UpsellPackage> {
+    return api.post<UpsellPackage>(`/upsell-packages/`, {
+      ...data,
+      restaurant_id: restaurantId,
+    });
   }
 
   async update(

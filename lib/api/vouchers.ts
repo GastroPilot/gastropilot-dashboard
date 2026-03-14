@@ -63,8 +63,11 @@ class VouchersApi {
     return api.get<Voucher>(`/vouchers/${voucherId}`);
   }
 
-  async create(_restaurantId: string, data: VoucherCreate): Promise<Voucher> {
-    return api.post<Voucher>(`/vouchers/`, data);
+  async create(restaurantId: string, data: VoucherCreate): Promise<Voucher> {
+    return api.post<Voucher>(`/vouchers/`, {
+      ...data,
+      restaurant_id: restaurantId,
+    });
   }
 
   async update(_restaurantId: string, voucherId: string, data: VoucherUpdate): Promise<Voucher> {

@@ -28,6 +28,7 @@ export interface TableDayConfig {
 }
 
 export interface TableDayConfigCreate {
+  restaurant_id?: string | null;
   table_id?: string | null;
   date: string;
   is_hidden?: boolean | null;
@@ -68,7 +69,10 @@ export const tableDayConfigsApi = {
     restaurantId: string,
     data: TableDayConfigCreate
   ): Promise<TableDayConfig> => {
-    return api.post<TableDayConfig>(`/table-day-configs/`, data);
+    return api.post<TableDayConfig>(`/table-day-configs/`, {
+      ...data,
+      restaurant_id: restaurantId,
+    });
   },
 
   update: async (

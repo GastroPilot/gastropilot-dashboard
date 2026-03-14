@@ -78,6 +78,7 @@ type ReservationApiPayload = Omit<ReservationCreate, "start_at" | "end_at" | "ch
   starts_at?: string;
   ends_at?: string;
   source?: string;
+  restaurant_id?: string;
 };
 
 type ReservationApiUpdatePayload = Omit<ReservationUpdate, "start_at" | "end_at"> & {
@@ -115,7 +116,7 @@ export const reservationsApi = {
   },
 
   create: async (
-    _restaurantId: string,
+    restaurantId: string,
     data: ReservationCreate
   ): Promise<Reservation> => {
     const payload: ReservationApiPayload = {
@@ -123,6 +124,7 @@ export const reservationsApi = {
       starts_at: data.start_at,
       ends_at: data.end_at,
       source: data.channel,
+      restaurant_id: restaurantId,
     };
     const response = await api.post<ReservationApiResponse>(`/reservations/`, payload);
     return normalizeReservation(response);
