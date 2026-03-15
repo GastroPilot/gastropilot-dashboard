@@ -1050,7 +1050,7 @@ export function OrderDetailDialog({
                             variant="destructive"
                             onClick={() => handleDeleteItem(item.id)}
                             disabled={loading}
-                            className="shadow-none hover:shadow-[0_14px_36px_rgba(239,68,68,0.4)]"
+                            className="shadow-none"
                             title="Position löschen"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -1522,7 +1522,7 @@ export function OrderDetailDialog({
                                             variant="outline"
                                             onClick={() => handleRemoveSplitPayment(index)}
                                             disabled={isPaymentLocked}
-                                            className="bg-red-900/30 border-red-600 text-red-200 shadow-none hover:bg-red-900/50 hover:border-red-500 hover:shadow-[0_10px_24px_rgba(239,68,68,0.35)] disabled:opacity-60 disabled:cursor-not-allowed"
+                                            className="bg-red-900/30 border-red-600 text-red-200 shadow-none hover:bg-red-900/50 hover:border-red-500 disabled:opacity-60 disabled:cursor-not-allowed"
                                             title="Split entfernen"
                                           >
                                             <X className="w-3 h-3" />
@@ -1759,7 +1759,7 @@ export function OrderDetailDialog({
                 variant="destructive"
                 onClick={handleDeleteOrder}
                 disabled={loading || deleting}
-                className="shadow-none hover:shadow-[0_12px_32px_rgba(239,68,68,0.4)]"
+                className="shadow-none"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
                 Löschen

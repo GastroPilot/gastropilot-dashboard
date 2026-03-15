@@ -140,7 +140,7 @@ export default function UserSettingsPage() {
                           <Button
                             variant="destructive"
                             size="sm"
-                            className="h-9 px-3 gap-2 shadow-none hover:shadow-[0_12px_32px_rgba(239,68,68,0.45)]"
+                            className="h-9 px-3 gap-2 shadow-none"
                             onClick={async () => {
                               try {
                                 await deleteSettingKey(key);

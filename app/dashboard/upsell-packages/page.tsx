@@ -14,15 +14,12 @@ import { Input } from "@/components/ui/input";
 import { LoadingOverlay } from "@/components/loading-overlay";
 import {
   Plus,
-  Edit,
   Trash2,
   Package,
   X,
   Save,
   CheckCircle2,
   XCircle,
-  Clock,
-  Users,
   Calendar,
 } from "lucide-react";
 import { confirmAction } from "@/lib/utils";
@@ -235,6 +232,8 @@ export default function UpsellPackagesPage() {
     try {
       await upsellPackagesApi.delete(restaurant.id, pkg.id);
       addToast("Upsell-Paket gelöscht", "success");
+      setDialogOpen(false);
+      resetForm();
       await loadData();
     } catch (err: any) {
       addToast(err?.message || "Fehler beim Löschen", "error");
@@ -372,7 +371,17 @@ export default function UpsellPackagesPage() {
                 .map((pkg) => (
                   <div
                     key={pkg.id}
-                    className={`bg-card border rounded-lg p-4 transition-colors ${
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Upsell-Paket ${pkg.name} bearbeiten`}
+                    onClick={() => openEditDialog(pkg)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        openEditDialog(pkg);
+                      }
+                    }}
+                    className={`bg-card border rounded-lg p-4 transition-colors cursor-pointer ${
                       pkg.is_active
                         ? "border-border hover:border-purple-500"
                         : "border-border opacity-60"
@@ -452,25 +461,6 @@ export default function UpsellPackagesPage() {
                       </div>
                     </div>
 
-                    <div className="flex gap-2 pt-3 border-t border-border">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openEditDialog(pkg)}
-                        className="flex-1 border-input text-foreground hover:bg-muted"
-                      >
-                        <Edit className="w-4 h-4 mr-1" />
-                        Bearbeiten
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(pkg)}
-                        className="border-red-600 text-red-400 hover:bg-red-900/20 hover:border-red-500"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
                   </div>
                 ))}
             </div>
@@ -735,6 +725,17 @@ export default function UpsellPackagesPage() {
           </div>
 
           <DialogFooter className="border-t border-border pt-4">
+            {editingPackage && (
+              <Button
+                variant="destructive"
+                onClick={() => handleDelete(editingPackage)}
+                disabled={loading}
+                className="mr-auto shadow-none gap-2"
+              >
+                <Trash2 className="w-4 h-4 mr-1" />
+                Löschen
+              </Button>
+            )}
             <Button
               variant="outline"
               onClick={() => setDialogOpen(false)}

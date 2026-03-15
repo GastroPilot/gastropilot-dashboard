@@ -863,7 +863,7 @@ export function ReservationDialog({
                 variant="destructive"
                 onClick={handleDelete}
                 disabled={loading}
-                className="mr-auto shadow-none hover:shadow-[0_12px_32px_rgba(239,68,68,0.4)] gap-2"
+                className="mr-auto shadow-none gap-2"
               >
                 <Trash2 className="w-4 h-4" />
                 Löschen

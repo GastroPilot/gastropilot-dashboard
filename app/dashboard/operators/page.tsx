@@ -1085,7 +1085,7 @@ export default function OperatorsPage() {
                                   variant="destructive"
                                   size="sm"
                                   onClick={() => handleDelete(operator)}
-                                  className="touch-manipulation min-h-[36px] gap-1.5 shadow-none hover:shadow-[0_12px_32px_rgba(239,68,68,0.45)]"
+                                  className="touch-manipulation min-h-[36px] gap-1.5 shadow-none"
                                 >
                                   <Trash2 className="w-4 h-4" />
                                   <span className="hidden sm:inline">Löschen</span>

@@ -306,7 +306,7 @@ export function BlockTableDialog({
                 variant="destructive"
                 onClick={handleDelete}
                 disabled={loading || deleting}
-                className="mr-auto shadow-none hover:shadow-[0_12px_32px_rgba(239,68,68,0.45)]"
+                className="mr-auto shadow-none"
               >
                 <Trash2 className={`w-4 h-4 mr-2 ${deleting ? "animate-spin" : ""}`} />
                 Block entfernen

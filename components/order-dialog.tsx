@@ -604,7 +604,7 @@ export function OrderDialog({
                               size="sm"
                               onClick={() => handleRemoveItem(index)}
                               disabled={loading}
-                              className="w-full ml-2 shadow-none hover:shadow-[0_14px_36px_rgba(239,68,68,0.4)]"
+                              className="w-full ml-2 shadow-none"
                               title="Position entfernen"
                             >
                               <Trash2 className="w-4 h-4" />
