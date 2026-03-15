@@ -8,6 +8,7 @@ export interface BlockAssignment {
 }
 
 export interface BlockAssignmentCreate {
+  restaurant_id?: string | null;
   block_id: string;
   table_id: string;
 }
@@ -18,10 +19,13 @@ export const blockAssignmentsApi = {
   },
 
   create: async (
-    _restaurantId: string,
+    restaurantId: string,
     data: BlockAssignmentCreate
   ): Promise<BlockAssignment> => {
-    return api.post<BlockAssignment>(`/blocks/assignments`, data);
+    return api.post<BlockAssignment>(`/blocks/assignments`, {
+      ...data,
+      restaurant_id: restaurantId,
+    });
   },
 
   delete: async (_restaurantId: string, assignmentId: string): Promise<{ message: string }> => {

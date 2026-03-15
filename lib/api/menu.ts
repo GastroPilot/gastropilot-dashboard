@@ -31,6 +31,7 @@ export interface MenuItem {
 }
 
 export interface MenuCategoryCreate {
+  restaurant_id?: string | null;
   name: string;
   description?: string | null;
   sort_order?: number;
@@ -45,6 +46,7 @@ export interface MenuCategoryUpdate {
 }
 
 export interface MenuItemCreate {
+  restaurant_id?: string | null;
   category_id?: string | null;
   name: string;
   description?: string | null;
@@ -90,7 +92,10 @@ export const menuApi = {
   },
 
   createCategory: async (restaurantId: string, data: MenuCategoryCreate): Promise<MenuCategory> => {
-    return api.post<MenuCategory>(`/menus/categories`, data);
+    return api.post<MenuCategory>(`/menus/categories`, {
+      ...data,
+      restaurant_id: restaurantId,
+    });
   },
 
   updateCategory: async (
@@ -125,7 +130,10 @@ export const menuApi = {
   },
 
   createItem: async (restaurantId: string, data: MenuItemCreate): Promise<MenuItem> => {
-    return api.post<MenuItem>(`/menus/items`, data);
+    return api.post<MenuItem>(`/menus/items`, {
+      ...data,
+      restaurant_id: restaurantId,
+    });
   },
 
   updateItem: async (

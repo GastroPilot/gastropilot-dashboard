@@ -610,7 +610,7 @@ export default function MenuPage() {
                 variant="destructive"
                 onClick={() => handleDeleteCategory(editingCategory)}
                 disabled={loading}
-                className="mr-auto shadow-none hover:shadow-[0_12px_32px_rgba(239,68,68,0.4)]"
+                className="mr-auto shadow-none"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
                 Löschen
@@ -852,7 +852,7 @@ export default function MenuPage() {
                 variant="destructive"
                 onClick={() => handleDeleteItem(editingItem)}
                 disabled={loading}
-                className="mr-auto shadow-none hover:shadow-[0_12px_32px_rgba(239,68,68,0.4)]"
+                className="mr-auto shadow-none"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
                 Löschen

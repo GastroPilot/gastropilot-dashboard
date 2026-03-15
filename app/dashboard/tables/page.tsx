@@ -627,7 +627,7 @@ export default function TableManagementPage() {
                   variant="destructive"
                   onClick={handleDeleteArea}
                   disabled={!selectedAreaId}
-                  className="min-h-[36px] shadow-none hover:shadow-[0_12px_32px_rgba(239,68,68,0.45)]"
+                  className="min-h-[36px] shadow-none"
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
                   Löschen

@@ -14,7 +14,7 @@ interface ReservationOnTableProps {
 
 export function ReservationOnTable({ reservation, onClick, onRemove, isDragging }: ReservationOnTableProps) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
-    id: -reservation.id, // Negative ID um von Tischen zu unterscheiden
+    id: `reservation-${reservation.id}`,
     data: { type: "reservation", reservationId: reservation.id },
   });
 

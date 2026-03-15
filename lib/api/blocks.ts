@@ -13,6 +13,7 @@ export interface Block {
 }
 
 export interface BlockCreate {
+  restaurant_id?: string | null;
   table_id?: string | null;
   start_at: string;
   end_at: string;
@@ -31,8 +32,11 @@ export const blocksApi = {
     return api.get<Block[]>(`/blocks/`);
   },
 
-  create: async (_restaurantId: string, data: BlockCreate): Promise<Block> => {
-    return api.post<Block>(`/blocks/`, data);
+  create: async (restaurantId: string, data: BlockCreate): Promise<Block> => {
+    return api.post<Block>(`/blocks/`, {
+      ...data,
+      restaurant_id: restaurantId,
+    });
   },
 
   update: async (_restaurantId: string, blockId: string, data: BlockUpdate): Promise<Block> => {

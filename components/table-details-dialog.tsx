@@ -66,7 +66,7 @@ function DraggableReservationItem({
   children: ReactNode;
 }) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
-    id: -reservation.id,
+    id: `reservation-${reservation.id}`,
     data: { type: "reservation", reservationId: reservation.id },
   });
 
@@ -1011,7 +1011,7 @@ export function TableDetailsDialog({
                             handleDeleteBlock(assignment.id);
                           }}
                           disabled={deletingBlockId === assignment.id}
-                          className="min-h-[36px] px-3 shadow-none hover:shadow-[0_10px_24px_rgba(239,68,68,0.35)]"
+                          className="min-h-[36px] px-3 shadow-none"
                         >
                           Entfernen
                         </Button>
@@ -1031,7 +1031,7 @@ export function TableDetailsDialog({
                 variant="destructive"
                 onClick={handleDelete}
                 disabled={loading}
-                className="min-w-[150px] whitespace-nowrap shadow-none hover:shadow-[0_12px_32px_rgba(239,68,68,0.45)]"
+                className="min-w-[150px] whitespace-nowrap shadow-none"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
                 Tisch löschen
@@ -1065,7 +1065,7 @@ export function TableDetailsDialog({
                 variant="destructive"
                 onClick={handleDeleteTempTable}
                 disabled={loading}
-                className="shadow-none hover:shadow-[0_12px_32px_rgba(239,68,68,0.45)]"
+                className="shadow-none"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
                 Temporären Tisch löschen

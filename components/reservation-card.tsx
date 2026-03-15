@@ -23,7 +23,7 @@ export function ReservationCard({
   onDelete,
 }: ReservationCardProps) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
-    id: -reservation.id, // Negative ID um von Tischen zu unterscheiden
+    id: `reservation-${reservation.id}`,
     data: { type: "reservation", reservationId: reservation.id },
   });
 
