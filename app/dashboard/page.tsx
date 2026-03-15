@@ -422,6 +422,18 @@ export default function DashboardPage() {
     })
   );
 
+  const resolveReservationId = useCallback(
+    (
+      dndId: string | number,
+      activeData?: { reservationId?: string } | null
+    ): string => {
+      if (activeData?.reservationId) return activeData.reservationId;
+      const raw = String(dndId);
+      return raw.startsWith("reservation-") ? raw.replace("reservation-", "") : raw;
+    },
+    []
+  );
+
   // ============================================
   // CALLBACKS
   // ============================================
@@ -608,7 +620,7 @@ export default function DashboardPage() {
     setIsPanning(false);
     
     if (activeType === "reservation") {
-      const reservationId = activeData?.reservationId ?? String(id);
+      const reservationId = resolveReservationId(id, activeData);
       setActiveReservationId(reservationId);
       setTableDetailsOpen(false);
     } else if (activeType === "block") {
@@ -618,7 +630,7 @@ export default function DashboardPage() {
       const tableId = activeData?.tableId ?? String(id);
       setActiveId(tableId);
     }
-  }, []);
+  }, [resolveReservationId]);
 
   const handleDragEnd = useCallback(async (event: DragEndEvent) => {
     const { active, over } = event;
@@ -704,7 +716,7 @@ export default function DashboardPage() {
 
     // Reservation drag handling
     if (activeType === "reservation" || (activeType !== "table" && String(activeIdValue).startsWith("temp-"))) {
-      const reservationId = activeData?.reservationId ?? String(activeIdValue);
+      const reservationId = resolveReservationId(activeIdValue, activeData);
       const reservation = reservations.find((r) => r.id === reservationId);
 
       if (!reservation || !restaurant) {
@@ -904,7 +916,8 @@ export default function DashboardPage() {
   }, [
     blocks, blockAssignments, tables, reservations, restaurant, 
     reservationToTempTableMap, tableDayConfigs, selectedDate, zoomLevel,
-    addToast, refreshData, hasBlockConflict, hasTimeConflict, getTableReservations
+    addToast, refreshData, hasBlockConflict, hasTimeConflict, getTableReservations,
+    resolveReservationId
   ]);
 
   // ============================================
