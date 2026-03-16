@@ -153,8 +153,9 @@ function useDashboardData(restaurantId: string | null, selectedDate: Date) {
         
         visibleTables.push({
           ...table,
-          position_x: (config.position_x !== null && config.position_x !== undefined) ? config.position_x : table.position_x,
-          position_y: (config.position_y !== null && config.position_y !== undefined) ? config.position_y : table.position_y,
+          // Keep canonical coordinates from base table data so /dashboard and /dashboard/tables stay in sync.
+          position_x: table.position_x,
+          position_y: table.position_y,
           width: config.width ?? table.width,
           height: config.height ?? table.height,
           is_active: config.is_active ?? table.is_active,
@@ -860,47 +861,52 @@ export default function DashboardPage() {
     const newX = currentX + deltaX / effectiveZoom;
     const newY = currentY + deltaY / effectiveZoom;
 
-    const dateStr = format(selectedDate, "yyyy-MM-dd");
     try {
-      const existingConfig = tableDayConfigs.find((c) =>
-        isTempTable
-          ? c.table_id === null && c.is_temporary && c.number === table.number
-          : c.table_id === table.id
-      );
-      
-      const updateData: any = {
-        table_id: isTempTable ? null : table.id,
-        date: dateStr,
-        position_x: Math.max(0, newX),
-        position_y: Math.max(0, newY),
-      };
-      
       if (isTempTable) {
+        const dateStr = format(selectedDate, "yyyy-MM-dd");
+        const existingConfig = tableDayConfigs.find(
+          (c) => c.table_id === null && c.is_temporary && c.number === table.number
+        );
+
+        const updateData: any = {
+          table_id: null,
+          date: dateStr,
+          position_x: Math.max(0, newX),
+          position_y: Math.max(0, newY),
+        };
+
         updateData.is_temporary = true;
         updateData.number = table.number;
         updateData.capacity = table.capacity;
         updateData.shape = table.shape;
         updateData.notes = table.notes;
-      }
-      
-      if (existingConfig) {
-        if (existingConfig.width !== null) updateData.width = existingConfig.width;
-        if (existingConfig.height !== null) updateData.height = existingConfig.height;
-        if (existingConfig.is_active !== null) updateData.is_active = existingConfig.is_active;
-        if (existingConfig.color !== null) updateData.color = existingConfig.color;
-        if (existingConfig.rotation !== null) updateData.rotation = existingConfig.rotation;
-        if (existingConfig.join_group_id !== null) updateData.join_group_id = existingConfig.join_group_id;
-        if (existingConfig.is_joinable !== null) updateData.is_joinable = existingConfig.is_joinable;
+
+        if (existingConfig) {
+          if (existingConfig.width !== null) updateData.width = existingConfig.width;
+          if (existingConfig.height !== null) updateData.height = existingConfig.height;
+          if (existingConfig.is_active !== null) updateData.is_active = existingConfig.is_active;
+          if (existingConfig.color !== null) updateData.color = existingConfig.color;
+          if (existingConfig.rotation !== null) updateData.rotation = existingConfig.rotation;
+          if (existingConfig.join_group_id !== null) updateData.join_group_id = existingConfig.join_group_id;
+          if (existingConfig.is_joinable !== null) updateData.is_joinable = existingConfig.is_joinable;
+        } else {
+          updateData.width = table.width;
+          updateData.height = table.height;
+          updateData.is_active = table.is_active;
+          updateData.color = table.color;
+          updateData.rotation = table.rotation;
+          updateData.is_joinable = table.is_joinable;
+        }
+
+        await tableDayConfigsApi.createOrUpdate(restaurant.id, updateData);
       } else {
-        updateData.width = table.width;
-        updateData.height = table.height;
-        updateData.is_active = table.is_active;
-        updateData.color = table.color;
-        updateData.rotation = table.rotation;
-        updateData.is_joinable = table.is_joinable;
+        // Persist position globally for regular tables.
+        await tablesApi.update(restaurant.id, table.id, {
+          position_x: Math.max(0, newX),
+          position_y: Math.max(0, newY),
+        });
       }
-      
-      await tableDayConfigsApi.createOrUpdate(restaurant.id, updateData);
+
       addToast(`Tisch ${table.number} wurde verschoben.`, "success");
       refreshData(true);
     } catch (error) {
