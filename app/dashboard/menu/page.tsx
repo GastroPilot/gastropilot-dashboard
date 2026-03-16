@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { restaurantsApi, Restaurant } from "@/lib/api/restaurants";
 import { menuApi, MenuItem, MenuCategory } from "@/lib/api/menu";
 import { Button } from "@/components/ui/button";
@@ -15,8 +15,6 @@ import {
   X,
   Save,
   Search,
-  ChevronDown,
-  Check,
   CheckCircle,
   XCircle,
 } from "lucide-react";
@@ -29,6 +27,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { DropdownSelector } from "@/components/area-selector";
 
 export default function MenuPage() {
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
@@ -57,13 +56,9 @@ export default function MenuPage() {
   const [itemCategoryId, setItemCategoryId] = useState<string | null>(null);
   const [itemIsAvailable, setItemIsAvailable] = useState(true);
   const [itemSortOrder, setItemSortOrder] = useState(0);
-  const [taxMenuOpen, setTaxMenuOpen] = useState(false);
-  const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const taxMenuRef = useRef<HTMLDivElement | null>(null);
-  const categoryMenuRef = useRef<HTMLDivElement | null>(null);
   const [toasts, setToasts] = useState<
     { id: string; message: string; variant?: "info" | "error" | "success" }[]
   >([]);
@@ -111,20 +106,6 @@ export default function MenuPage() {
     loadData();
   }, [loadData]);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Node;
-      if (taxMenuRef.current && !taxMenuRef.current.contains(target)) {
-        setTaxMenuOpen(false);
-      }
-      if (categoryMenuRef.current && !categoryMenuRef.current.contains(target)) {
-        setCategoryMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
   const filteredItems = items.filter((item) => {
     if (selectedCategoryId !== null && item.category_id !== selectedCategoryId) return false;
     if (searchQuery) {
@@ -136,6 +117,16 @@ export default function MenuPage() {
     }
     return true;
   });
+  const taxRateOptions = [
+    { id: "0.07", label: "7% MwSt." },
+    { id: "0.19", label: "19% MwSt." },
+  ];
+  const itemCategoryOptions = [
+    { id: "__none__", label: "Keine Kategorie" },
+    ...categories
+      .filter((category) => category.is_active)
+      .map((category) => ({ id: category.id, label: category.name })),
+  ];
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("de-DE", {
@@ -706,44 +697,15 @@ export default function MenuPage() {
                 <label className="block text-sm font-medium text-muted-foreground mb-2">
                   MwSt-Satz *
                 </label>
-                <div ref={taxMenuRef} className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setTaxMenuOpen((prev) => !prev)}
-                    className="w-full rounded-lg border border-border bg-card text-foreground px-3 py-2 text-sm shadow-inner flex items-center justify-between gap-2 hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring min-h-[40px] touch-manipulation"
-                    disabled={loading}
-                  >
-                    <span className="truncate">
-                      {itemTaxRate === 0.07 ? "7% MwSt." : "19% MwSt."}
-                    </span>
-                    <ChevronDown className={`w-4 h-4 transition-transform ${taxMenuOpen ? "rotate-180" : ""}`} />
-                  </button>
-                  {taxMenuOpen && (
-                    <div className="absolute left-0 right-0 mt-1 rounded-lg border border-border bg-background shadow-xl z-[60] overflow-hidden">
-                      {[0.07, 0.19].map((rate) => {
-                        const isSelected = itemTaxRate === rate;
-                        return (
-                          <button
-                            key={rate}
-                            type="button"
-                            onClick={() => {
-                              setItemTaxRate(rate);
-                              setTaxMenuOpen(false);
-                            }}
-                            className={`w-full px-3 py-3 text-sm flex items-center justify-between transition-colors ${
-                              isSelected
-                                ? "font-semibold text-foreground border-l-2 border-primary bg-accent"
-                                : "text-foreground hover:bg-card"
-                            }`}
-                          >
-                            {rate === 0.07 ? "7% MwSt." : "19% MwSt."}
-                            {isSelected && <Check className="w-4 h-4 text-primary" />}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
+                <DropdownSelector
+                  options={taxRateOptions}
+                  selectedId={itemTaxRate.toFixed(2)}
+                  onSelect={(value) => setItemTaxRate(parseFloat(value))}
+                  placeholder="MwSt-Satz wählen"
+                  disabled={loading}
+                  triggerClassName="w-full rounded-lg border border-border bg-card text-foreground px-3 py-2 text-sm shadow-inner flex items-center justify-between gap-2 hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring min-h-[40px] touch-manipulation disabled:opacity-60 disabled:cursor-not-allowed"
+                  menuClassName="z-[60]"
+                />
               </div>
             </div>
 
@@ -752,63 +714,16 @@ export default function MenuPage() {
                 <label className="block text-sm font-medium text-muted-foreground mb-2">
                   Kategorie
                 </label>
-                <div ref={categoryMenuRef} className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setCategoryMenuOpen((prev) => !prev)}
-                    className="w-full rounded-lg border border-border bg-card text-foreground px-3 py-2 text-sm shadow-inner flex items-center justify-between gap-2 hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring min-h-[40px] touch-manipulation"
-                    disabled={loading}
-                  >
-                    <span className="truncate">
-                      {itemCategoryId
-                        ? categories.find((c) => c.id === itemCategoryId)?.name || "Kategorie auswählen"
-                        : "Keine Kategorie"}
-                    </span>
-                    <ChevronDown className={`w-4 h-4 transition-transform ${categoryMenuOpen ? "rotate-180" : ""}`} />
-                  </button>
-                  {categoryMenuOpen && (
-                    <div className="absolute left-0 right-0 mt-1 rounded-lg border border-border bg-background shadow-xl z-[60] max-h-[60vh] overflow-auto">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setItemCategoryId(null);
-                          setCategoryMenuOpen(false);
-                        }}
-                        className={`w-full px-3 py-3 text-sm flex items-center justify-between transition-colors ${
-                          !itemCategoryId
-                            ? "font-semibold text-foreground border-l-2 border-primary bg-accent"
-                            : "text-foreground hover:bg-card"
-                        }`}
-                      >
-                        Keine Kategorie
-                        {!itemCategoryId && <Check className="w-4 h-4 text-primary" />}
-                      </button>
-                      {categories
-                        .filter((c) => c.is_active)
-                        .map((category) => {
-                          const isSelected = itemCategoryId === category.id;
-                          return (
-                            <button
-                              key={category.id}
-                              type="button"
-                              onClick={() => {
-                                setItemCategoryId(category.id);
-                                setCategoryMenuOpen(false);
-                              }}
-                              className={`w-full px-3 py-3 text-sm flex items-center justify-between transition-colors ${
-                                isSelected
-                                  ? "font-semibold text-foreground border-l-2 border-primary bg-accent"
-                                  : "text-foreground hover:bg-card"
-                              }`}
-                            >
-                              {category.name}
-                              {isSelected && <Check className="w-4 h-4 text-primary" />}
-                            </button>
-                          );
-                        })}
-                    </div>
-                  )}
-                </div>
+                <DropdownSelector
+                  options={itemCategoryOptions}
+                  selectedId={itemCategoryId ?? "__none__"}
+                  onSelect={(value) => setItemCategoryId(value === "__none__" ? null : value)}
+                  placeholder="Keine Kategorie"
+                  disabled={loading}
+                  triggerClassName="w-full rounded-lg border border-border bg-card text-foreground px-3 py-2 text-sm shadow-inner flex items-center justify-between gap-2 hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring min-h-[40px] touch-manipulation disabled:opacity-60 disabled:cursor-not-allowed"
+                  menuClassName="max-h-[60vh] overflow-auto"
+                  zIndexClassName="z-[60]"
+                />
               </div>
             </div>
 

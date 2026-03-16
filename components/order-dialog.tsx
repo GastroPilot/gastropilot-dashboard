@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ordersApi, Order, OrderCreate, OrderUpdate, OrderWithItems, OrderItem, OrderItemCreate } from "@/lib/api/orders";
 import { Table } from "@/lib/api/tables";
 import { menuApi, MenuItem, MenuCategory } from "@/lib/api/menu";
@@ -24,7 +24,6 @@ import {
   Trash2,
   Save,
   X,
-  Check,
   Euro,
   Users,
   FileText,
@@ -32,6 +31,7 @@ import {
 } from "lucide-react";
 import { confirmAction } from "@/lib/utils";
 import { AITableSuggestion } from "@/components/ai-table-suggestion";
+import { DropdownSelector } from "@/components/area-selector";
 
 interface OrderDialogProps {
   open: boolean;
@@ -70,9 +70,7 @@ export function OrderDialog({
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [menuSearchQuery, setMenuSearchQuery] = useState("");
   const [showMenuSelection, setShowMenuSelection] = useState(false);
-  const [tableMenuOpen, setTableMenuOpen] = useState(false);
   const [showManualTableSelect, setShowManualTableSelect] = useState(false);
-  const tableMenuRef = useRef<HTMLDivElement | null>(null);
 
   const loadMenuData = useCallback(async () => {
     try {
@@ -114,16 +112,6 @@ export function OrderDialog({
       setError("");
     }
   }, [open, order, table, restaurantId, loadMenuData]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (tableMenuRef.current && !tableMenuRef.current.contains(event.target as Node)) {
-        setTableMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   const filteredMenuItems = menuItems.filter((item) => {
     if (selectedCategoryId && item.category_id !== selectedCategoryId) return false;
@@ -274,6 +262,31 @@ export function OrderDialog({
   const subtotal = calculateSubtotal();
   const tax = subtotal * (0.19 / 1.19);
   const total = calculateTotal();
+  const tableOptions = [
+    { id: "__none__", label: "Kein Tisch" },
+    ...[...availableTables]
+      .sort((a, b) => a.number.localeCompare(b.number, undefined, { numeric: true }))
+      .map((tableOption) => ({
+        id: tableOption.id,
+        label: `${tableOption.number} · ${tableOption.capacity} Pers.`,
+      })),
+  ];
+  const statusOptions = [
+    { id: "open", label: "Offen" },
+    { id: "sent_to_kitchen", label: "An Küche gesendet" },
+    { id: "in_preparation", label: "In Zubereitung" },
+    { id: "ready", label: "Fertig" },
+    { id: "served", label: "Serviert" },
+    { id: "paid", label: "Bezahlt" },
+    { id: "canceled", label: "Storniert" },
+  ];
+  const paymentMethodOptions = [
+    { id: "__none__", label: "Nicht ausgewählt" },
+    { id: "cash", label: "Bar" },
+    { id: "card", label: "Karte" },
+    { id: "sumup_card", label: "SumUp Terminal" },
+    { id: "split", label: "Geteilt" },
+  ];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -325,79 +338,33 @@ export function OrderDialog({
 
             {/* Grundinformationen */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div ref={tableMenuRef} className="relative">
+              <div>
                 <label className="block text-sm font-medium text-muted-foreground mb-2">
                   <TableIcon className="w-4 h-4 inline mr-1" />
                   Tisch
                 </label>
-                <button
-                  type="button"
-                  onClick={() => setTableMenuOpen((prev) => !prev)}
-                  className="w-full rounded-lg border border-input bg-card text-foreground px-3 py-2 text-sm flex items-center justify-between gap-2 focus:outline-none focus:ring-2 focus:ring-ring touch-manipulation min-h-[40px]"
+                <DropdownSelector
+                  options={tableOptions}
+                  selectedId={selectedTableId ?? "__none__"}
+                  onSelect={(value) => {
+                    if (value === "__none__") {
+                      setSelectedTableId(null);
+                      return;
+                    }
+                    setSelectedTableId(value);
+                    const selectedTable = availableTables.find((tableOption) => tableOption.id === value);
+                    if (selectedTable) {
+                      setPartySize((prev) =>
+                        prev ? Math.min(prev, selectedTable.capacity) : Math.min(selectedTable.capacity, 4),
+                      );
+                    }
+                  }}
+                  placeholder="Kein Tisch"
                   disabled={loading}
-                >
-                  <span className="truncate">
-                    {selectedTableId
-                      ? availableTables.find((t) => t.id === selectedTableId)?.number ?? "Tisch wählen"
-                      : "Kein Tisch"}
-                  </span>
-                  <svg
-                    className={`h-4 w-4 transition-transform ${tableMenuOpen ? "rotate-180" : ""}`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                {tableMenuOpen && (
-                  <div className="absolute z-[110] mt-1 w-full rounded-lg border border-border bg-card shadow-xl backdrop-blur-sm max-h-[60vh] overflow-auto">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedTableId(null);
-                        setTableMenuOpen(false);
-                      }}
-                      className={`w-full px-3 py-3 text-sm transition-colors flex items-center justify-between ${
-                        !selectedTableId
-                          ? "bg-accent text-foreground font-semibold border-l-2 border-primary"
-                          : "text-foreground hover:bg-accent"
-                      }`}
-                    >
-                      <span className="truncate">Kein Tisch</span>
-                      {!selectedTableId && <Check className="w-4 h-4 text-primary flex-shrink-0" />}
-                    </button>
-                    {[...availableTables]
-                      .sort((a, b) => a.number.localeCompare(b.number, undefined, { numeric: true }))
-                      .map((t) => {
-                        const isActive = selectedTableId === t.id;
-                        return (
-                          <button
-                            key={t.id}
-                            type="button"
-                            onClick={() => {
-                              setSelectedTableId(t.id);
-                              setPartySize((prev) =>
-                                prev ? Math.min(prev, t.capacity) : Math.min(t.capacity, 4)
-                              );
-                              setTableMenuOpen(false);
-                            }}
-                            className={`w-full px-3 py-3 text-sm transition-colors flex items-center justify-between ${
-                              isActive
-                                ? "bg-accent text-foreground font-semibold border-l-2 border-primary"
-                                : "text-foreground hover:bg-accent"
-                            }`}
-                          >
-                            <span className="truncate">
-                              {t.number} · {t.capacity} Pers.
-                            </span>
-                            {isActive && <Check className="w-4 h-4 text-primary flex-shrink-0" />}
-                          </button>
-                        );
-                      })}
-                  </div>
-                )}
+                  triggerClassName="w-full rounded-lg border border-input bg-card text-foreground px-3 py-2 text-sm flex items-center justify-between gap-2 focus:outline-none focus:ring-2 focus:ring-ring touch-manipulation min-h-[40px] disabled:opacity-60 disabled:cursor-not-allowed"
+                  menuClassName="max-h-[60vh] overflow-auto backdrop-blur-sm"
+                  zIndexClassName="z-[110]"
+                />
               </div>
 
               <div>
@@ -426,38 +393,32 @@ export function OrderDialog({
                   <label className="block text-sm font-medium text-muted-foreground mb-2">
                     Status
                   </label>
-                  <select
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value)}
-                    className="w-full px-3 py-2 bg-card border border-input rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  <DropdownSelector
+                    options={statusOptions}
+                    selectedId={status}
+                    onSelect={setStatus}
+                    placeholder="Status auswählen"
                     disabled={loading}
-                  >
-                    <option value="open">Offen</option>
-                    <option value="sent_to_kitchen">An Küche gesendet</option>
-                    <option value="in_preparation">In Zubereitung</option>
-                    <option value="ready">Fertig</option>
-                    <option value="served">Serviert</option>
-                    <option value="paid">Bezahlt</option>
-                    <option value="canceled">Storniert</option>
-                  </select>
+                    triggerClassName="w-full px-3 py-2 bg-card border border-input rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring inline-flex items-center justify-between gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                    menuWidthClassName="w-full"
+                    zIndexClassName="z-[120]"
+                  />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-muted-foreground mb-2">
                     Zahlungsmethode
                   </label>
-                  <select
-                    value={paymentMethod}
-                    onChange={(e) => setPaymentMethod(e.target.value)}
-                    className="w-full px-3 py-2 bg-card border border-input rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                  <DropdownSelector
+                    options={paymentMethodOptions}
+                    selectedId={paymentMethod || "__none__"}
+                    onSelect={(value) => setPaymentMethod(value === "__none__" ? "" : value)}
+                    placeholder="Nicht ausgewählt"
                     disabled={loading}
-                  >
-                    <option value="">Nicht ausgewählt</option>
-                    <option value="cash">Bar</option>
-                    <option value="card">Karte</option>
-                    <option value="sumup_card">SumUp Terminal</option>
-                    <option value="split">Geteilt</option>
-                  </select>
+                    triggerClassName="w-full px-3 py-2 bg-card border border-input rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring inline-flex items-center justify-between gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                    menuWidthClassName="w-full"
+                    zIndexClassName="z-[120]"
+                  />
                 </div>
               </div>
             )}

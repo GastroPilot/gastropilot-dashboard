@@ -30,6 +30,7 @@ import { OrderDetailDialog } from "@/components/order-detail-dialog";
 import { OrderWithItems } from "@/lib/api/orders";
 import { useUserSettings } from "@/lib/hooks/use-user-settings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DropdownSelector } from "@/components/area-selector";
 
 const ALL_STATUSES: OrderStatus[] = [
   "open",
@@ -102,9 +103,7 @@ export default function OrderHistoryPage() {
   const [selectedOrder, setSelectedOrder] = useState<OrderWithItems | null>(null);
   const [isOrderDialogOpen, setIsOrderDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [tableMenuOpen, setTableMenuOpen] = useState(false);
   const [statusMenuOpen, setStatusMenuOpen] = useState(false);
-  const tableMenuRef = useRef<HTMLDivElement | null>(null);
   const statusMenuRef = useRef<HTMLDivElement | null>(null);
   const [selectedStatuses, setSelectedStatuses] = useState<OrderStatus[]>(ALL_STATUSES);
   const { settings, updateSettings } = useUserSettings();
@@ -204,9 +203,6 @@ export default function OrderHistoryPage() {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
-      if (tableMenuRef.current && !tableMenuRef.current.contains(target)) {
-        setTableMenuOpen(false);
-      }
       if (statusMenuRef.current && !statusMenuRef.current.contains(target)) {
         setStatusMenuOpen(false);
       }
@@ -243,6 +239,12 @@ export default function OrderHistoryPage() {
       guestName.includes(query)
     );
   });
+  const tableFilterOptions = [
+    { id: "__all__", label: "Alle Tische" },
+    ...[...tables]
+      .sort((a, b) => a.number.localeCompare(b.number, undefined, { numeric: true }))
+      .map((tableOption) => ({ id: tableOption.id, label: tableOption.number })),
+  ];
   const totalPages = Math.max(1, Math.ceil(filteredOrders.length / pageSize));
   const safePage = Math.min(currentPage, totalPages);
   const pageStart = (safePage - 1) * pageSize;
@@ -390,65 +392,22 @@ export default function OrderHistoryPage() {
                     className="bg-card/50 border-input text-foreground placeholder:text-muted-foreground"
                   />
                 </div>
-                <div className="space-y-2 relative z-[60]" ref={tableMenuRef}>
+                <div className="space-y-2 relative z-[60]">
                   <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
                     <TableIcon className="w-4 h-4 text-primary" />
                     Tischnummer
                   </label>
-                  <button
-                    type="button"
-                    onClick={() => setTableMenuOpen((prev) => !prev)}
-                    className="w-full inline-flex items-center justify-between gap-2 px-3 py-2 rounded-md border border-input bg-card/50 text-sm text-foreground shadow-inner hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring min-h-[40px]"
-                  >
-                    <span className="truncate">
-                      {filters.tableId
-                        ? `${tables.find((t) => t.id === filters.tableId)?.number ?? "-"}`
-                        : "Alle Tische"}
-                    </span>
-                    <ChevronDown className={`w-4 h-4 transition-transform ${tableMenuOpen ? "rotate-180" : ""}`} />
-                  </button>
-                  {tableMenuOpen && (
-                    <div className="absolute mt-1 w-full rounded-lg border border-border bg-background shadow-xl z-[80] overflow-hidden">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setFilters({ ...filters, tableId: null });
-                          setTableMenuOpen(false);
-                        }}
-                        className={`w-full px-3 py-2 text-left flex items-center justify-between gap-2 text-sm transition-colors ${
-                          !filters.tableId
-                            ? "bg-card text-foreground font-semibold"
-                            : "text-foreground hover:bg-accent/70"
-                        }`}
-                      >
-                        <span className="truncate">Alle Tische</span>
-                        {!filters.tableId && <Check className="w-4 h-4 text-primary" />}
-                      </button>
-                      {[...tables]
-                        .sort((a, b) => a.number.localeCompare(b.number, undefined, { numeric: true }))
-                        .map((table) => {
-                          const isSelected = filters.tableId === table.id;
-                          return (
-                            <button
-                              key={table.id}
-                              type="button"
-                              onClick={() => {
-                                setFilters({ ...filters, tableId: table.id });
-                                setTableMenuOpen(false);
-                              }}
-                              className={`w-full px-3 py-2 text-left flex items-center justify-between gap-2 text-sm transition-colors ${
-                                isSelected
-                                  ? "bg-card text-foreground font-semibold"
-                                  : "text-foreground hover:bg-accent/70"
-                              }`}
-                            >
-                              <span className="truncate">{table.number}</span>
-                              {isSelected && <Check className="w-4 h-4 text-primary" />}
-                            </button>
-                          );
-                        })}
-                    </div>
-                  )}
+                  <DropdownSelector
+                    options={tableFilterOptions}
+                    selectedId={filters.tableId ?? "__all__"}
+                    onSelect={(value) =>
+                      setFilters({ ...filters, tableId: value === "__all__" ? null : value })
+                    }
+                    placeholder="Alle Tische"
+                    triggerClassName="w-full inline-flex items-center justify-between gap-2 px-3 py-2 rounded-md border border-input bg-card/50 text-sm text-foreground shadow-inner hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring min-h-[40px]"
+                    menuWidthClassName="w-full"
+                    zIndexClassName="z-[80]"
+                  />
                 </div>
                 <div className="space-y-2 relative z-[60]" ref={statusMenuRef}>
                   <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">

@@ -21,6 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LoadingOverlay } from "@/components/loading-overlay";
+import { DropdownSelector } from "@/components/area-selector";
 import { restaurantsApi } from "@/lib/api/restaurants";
 import { impersonation } from "@/lib/api/admin";
 import { authApi } from "@/lib/api/auth";
@@ -185,18 +186,17 @@ function SelectField({
   options: { value: string; label: string }[];
   className?: string;
 }) {
+  const widthClass = className ?? "w-full sm:w-56";
   return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className={`h-9 md:h-10 rounded-md border border-input bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background ${className ?? "w-full sm:w-56"}`}
-    >
-      {options.map((o) => (
-        <option key={o.value} value={o.value}>
-          {o.label}
-        </option>
-      ))}
-    </select>
+    <DropdownSelector
+      options={options.map((option) => ({ id: option.value, label: option.label }))}
+      selectedId={value}
+      onSelect={onChange}
+      placeholder="Auswählen"
+      triggerClassName={`h-9 md:h-10 rounded-md border border-input bg-background px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background inline-flex items-center justify-between gap-2 ${widthClass}`}
+      menuWidthClassName="w-full"
+      zIndexClassName="z-[140]"
+    />
   );
 }
 

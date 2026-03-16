@@ -6,6 +6,7 @@ import { vouchersApi, Voucher, VoucherCreate, VoucherUpdate } from "@/lib/api/vo
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LoadingOverlay } from "@/components/loading-overlay";
+import { DropdownSelector } from "@/components/area-selector";
 import { Plus, Edit, Trash2, Ticket, X, Save, Copy, CheckCircle2, XCircle } from "lucide-react";
 import { confirmAction } from "@/lib/utils";
 import {
@@ -40,6 +41,10 @@ export default function VouchersPage() {
   const [maxUses, setMaxUses] = useState<number | null>(null);
   const [minOrderValue, setMinOrderValue] = useState<number | null>(null);
   const [isActive, setIsActive] = useState(true);
+  const voucherTypeOptions = [
+    { id: "fixed", label: "Fester Betrag (€)" },
+    { id: "percentage", label: "Prozentual (%)" },
+  ];
 
   const addToast = useCallback(
     (message: string, variant: "info" | "error" | "success" = "info") => {
@@ -454,14 +459,15 @@ export default function VouchersPage() {
                 <label className="block text-sm font-medium text-muted-foreground mb-1">
                   Typ *
                 </label>
-                <select
-                  value={type}
-                  onChange={(e) => setType(e.target.value as "fixed" | "percentage")}
-                  className="w-full px-3 py-2 rounded-md border border-input bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  <option value="fixed">Fester Betrag (€)</option>
-                  <option value="percentage">Prozentual (%)</option>
-                </select>
+                <DropdownSelector
+                  options={voucherTypeOptions}
+                  selectedId={type}
+                  onSelect={(value) => setType(value as "fixed" | "percentage")}
+                  placeholder="Typ wählen"
+                  triggerClassName="w-full px-3 py-2 rounded-md border border-input bg-card text-foreground focus:outline-none focus:ring-2 focus:ring-ring inline-flex items-center justify-between gap-2"
+                  menuWidthClassName="w-full"
+                  zIndexClassName="z-[140]"
+                />
               </div>
 
               <div>

@@ -29,6 +29,7 @@ import { CreateTempTableDialog } from "@/components/create-temp-table-dialog";
 import { BlockTableDialog } from "@/components/block-table-dialog";
 import { LoadingOverlay } from "@/components/loading-overlay";
 import { SkeletonTableCard } from "@/components/skeletons";
+import { AreaSelector } from "@/components/area-selector";
 import { Button } from "@/components/ui/button";
 import { useUserSettings } from "@/lib/hooks/use-user-settings";
 import { useDashboardComputations } from "@/lib/hooks/use-dashboard-computations";
@@ -152,8 +153,9 @@ function useDashboardData(restaurantId: string | null, selectedDate: Date) {
         
         visibleTables.push({
           ...table,
-          position_x: (config.position_x !== null && config.position_x !== undefined) ? config.position_x : table.position_x,
-          position_y: (config.position_y !== null && config.position_y !== undefined) ? config.position_y : table.position_y,
+          // Keep canonical coordinates from base table data so /dashboard and /dashboard/tables stay in sync.
+          position_x: table.position_x,
+          position_y: table.position_y,
           width: config.width ?? table.width,
           height: config.height ?? table.height,
           is_active: config.is_active ?? table.is_active,
@@ -270,8 +272,6 @@ export default function DashboardPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   
   // UI State
-  const [areaMenuOpen, setAreaMenuOpen] = useState(false);
-  const areaMenuRef = useRef<HTMLDivElement | null>(null);
   const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
   const actionsMenuRef = useRef<HTMLDivElement | null>(null);
   
@@ -555,9 +555,6 @@ export default function DashboardPage() {
   // Click outside handlers
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (areaMenuRef.current && !areaMenuRef.current.contains(event.target as Node)) {
-        setAreaMenuOpen(false);
-      }
       if (actionsMenuRef.current && !actionsMenuRef.current.contains(event.target as Node)) {
         setActionsMenuOpen(false);
       }
@@ -864,47 +861,52 @@ export default function DashboardPage() {
     const newX = currentX + deltaX / effectiveZoom;
     const newY = currentY + deltaY / effectiveZoom;
 
-    const dateStr = format(selectedDate, "yyyy-MM-dd");
     try {
-      const existingConfig = tableDayConfigs.find((c) =>
-        isTempTable
-          ? c.table_id === null && c.is_temporary && c.number === table.number
-          : c.table_id === table.id
-      );
-      
-      const updateData: any = {
-        table_id: isTempTable ? null : table.id,
-        date: dateStr,
-        position_x: Math.max(0, newX),
-        position_y: Math.max(0, newY),
-      };
-      
       if (isTempTable) {
+        const dateStr = format(selectedDate, "yyyy-MM-dd");
+        const existingConfig = tableDayConfigs.find(
+          (c) => c.table_id === null && c.is_temporary && c.number === table.number
+        );
+
+        const updateData: any = {
+          table_id: null,
+          date: dateStr,
+          position_x: Math.max(0, newX),
+          position_y: Math.max(0, newY),
+        };
+
         updateData.is_temporary = true;
         updateData.number = table.number;
         updateData.capacity = table.capacity;
         updateData.shape = table.shape;
         updateData.notes = table.notes;
-      }
-      
-      if (existingConfig) {
-        if (existingConfig.width !== null) updateData.width = existingConfig.width;
-        if (existingConfig.height !== null) updateData.height = existingConfig.height;
-        if (existingConfig.is_active !== null) updateData.is_active = existingConfig.is_active;
-        if (existingConfig.color !== null) updateData.color = existingConfig.color;
-        if (existingConfig.rotation !== null) updateData.rotation = existingConfig.rotation;
-        if (existingConfig.join_group_id !== null) updateData.join_group_id = existingConfig.join_group_id;
-        if (existingConfig.is_joinable !== null) updateData.is_joinable = existingConfig.is_joinable;
+
+        if (existingConfig) {
+          if (existingConfig.width !== null) updateData.width = existingConfig.width;
+          if (existingConfig.height !== null) updateData.height = existingConfig.height;
+          if (existingConfig.is_active !== null) updateData.is_active = existingConfig.is_active;
+          if (existingConfig.color !== null) updateData.color = existingConfig.color;
+          if (existingConfig.rotation !== null) updateData.rotation = existingConfig.rotation;
+          if (existingConfig.join_group_id !== null) updateData.join_group_id = existingConfig.join_group_id;
+          if (existingConfig.is_joinable !== null) updateData.is_joinable = existingConfig.is_joinable;
+        } else {
+          updateData.width = table.width;
+          updateData.height = table.height;
+          updateData.is_active = table.is_active;
+          updateData.color = table.color;
+          updateData.rotation = table.rotation;
+          updateData.is_joinable = table.is_joinable;
+        }
+
+        await tableDayConfigsApi.createOrUpdate(restaurant.id, updateData);
       } else {
-        updateData.width = table.width;
-        updateData.height = table.height;
-        updateData.is_active = table.is_active;
-        updateData.color = table.color;
-        updateData.rotation = table.rotation;
-        updateData.is_joinable = table.is_joinable;
+        // Persist position globally for regular tables.
+        await tablesApi.update(restaurant.id, table.id, {
+          position_x: Math.max(0, newX),
+          position_y: Math.max(0, newY),
+        });
       }
-      
-      await tableDayConfigsApi.createOrUpdate(restaurant.id, updateData);
+
       addToast(`Tisch ${table.number} wurde verschoben.`, "success");
       refreshData(true);
     } catch (error) {
@@ -1814,41 +1816,13 @@ export default function DashboardPage() {
               {/* Area-Switch */}
               {areas.length > 0 && (
                 <div className="absolute bottom-4 left-4 z-20 pointer-events-auto">
-                  <div className="relative" ref={areaMenuRef}>
-                    <button
-                      type="button"
-                      onClick={() => setAreaMenuOpen((prev) => !prev)}
-                      className="h-10 min-w-[180px] rounded-md border border-input bg-background text-foreground px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring flex items-center justify-between"
-                    >
-                      <span className="truncate">
-                        {selectedAreaId
-                          ? areas.find((a) => a.id === selectedAreaId)?.name || "Area auswählen"
-                          : "Area auswählen"}
-                      </span>
-                      <ChevronDown className={`h-4 w-4 transition-transform ${areaMenuOpen ? "rotate-180" : ""}`} />
-                    </button>
-                    {areaMenuOpen && (
-                      <div className="absolute bottom-full mb-2 w-full rounded-lg border border-border bg-card shadow-xl max-h-60 overflow-auto">
-                        {areas.map((area) => (
-                          <button
-                            key={area.id}
-                            type="button"
-                            onClick={() => {
-                              setSelectedAreaId(area.id);
-                              setAreaMenuOpen(false);
-                            }}
-                            className={`w-full px-3 py-2 text-left text-sm ${
-                              selectedAreaId === area.id
-                                ? "font-semibold text-foreground bg-accent"
-                                : "text-foreground hover:bg-accent"
-                            }`}
-                          >
-                            {area.name}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                  <AreaSelector
+                    areas={areas}
+                    selectedAreaId={selectedAreaId}
+                    onSelect={setSelectedAreaId}
+                    menuPlacement="top"
+                    minWidthClassName="min-w-[180px] h-10"
+                  />
                 </div>
               )}
 
