@@ -29,6 +29,7 @@ import { CreateTempTableDialog } from "@/components/create-temp-table-dialog";
 import { BlockTableDialog } from "@/components/block-table-dialog";
 import { LoadingOverlay } from "@/components/loading-overlay";
 import { SkeletonTableCard } from "@/components/skeletons";
+import { AreaSelector } from "@/components/area-selector";
 import { Button } from "@/components/ui/button";
 import { useUserSettings } from "@/lib/hooks/use-user-settings";
 import { useDashboardComputations } from "@/lib/hooks/use-dashboard-computations";
@@ -270,8 +271,6 @@ export default function DashboardPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   
   // UI State
-  const [areaMenuOpen, setAreaMenuOpen] = useState(false);
-  const areaMenuRef = useRef<HTMLDivElement | null>(null);
   const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
   const actionsMenuRef = useRef<HTMLDivElement | null>(null);
   
@@ -555,9 +554,6 @@ export default function DashboardPage() {
   // Click outside handlers
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (areaMenuRef.current && !areaMenuRef.current.contains(event.target as Node)) {
-        setAreaMenuOpen(false);
-      }
       if (actionsMenuRef.current && !actionsMenuRef.current.contains(event.target as Node)) {
         setActionsMenuOpen(false);
       }
@@ -1814,41 +1810,13 @@ export default function DashboardPage() {
               {/* Area-Switch */}
               {areas.length > 0 && (
                 <div className="absolute bottom-4 left-4 z-20 pointer-events-auto">
-                  <div className="relative" ref={areaMenuRef}>
-                    <button
-                      type="button"
-                      onClick={() => setAreaMenuOpen((prev) => !prev)}
-                      className="h-10 min-w-[180px] rounded-md border border-input bg-background text-foreground px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring flex items-center justify-between"
-                    >
-                      <span className="truncate">
-                        {selectedAreaId
-                          ? areas.find((a) => a.id === selectedAreaId)?.name || "Area auswählen"
-                          : "Area auswählen"}
-                      </span>
-                      <ChevronDown className={`h-4 w-4 transition-transform ${areaMenuOpen ? "rotate-180" : ""}`} />
-                    </button>
-                    {areaMenuOpen && (
-                      <div className="absolute bottom-full mb-2 w-full rounded-lg border border-border bg-card shadow-xl max-h-60 overflow-auto">
-                        {areas.map((area) => (
-                          <button
-                            key={area.id}
-                            type="button"
-                            onClick={() => {
-                              setSelectedAreaId(area.id);
-                              setAreaMenuOpen(false);
-                            }}
-                            className={`w-full px-3 py-2 text-left text-sm ${
-                              selectedAreaId === area.id
-                                ? "font-semibold text-foreground bg-accent"
-                                : "text-foreground hover:bg-accent"
-                            }`}
-                          >
-                            {area.name}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                  <AreaSelector
+                    areas={areas}
+                    selectedAreaId={selectedAreaId}
+                    onSelect={setSelectedAreaId}
+                    menuPlacement="top"
+                    minWidthClassName="min-w-[180px] h-10"
+                  />
                 </div>
               )}
 

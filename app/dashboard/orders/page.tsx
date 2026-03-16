@@ -10,6 +10,7 @@ import { LoadingOverlay } from "@/components/loading-overlay";
 import { SkeletonOrderCard } from "@/components/skeletons";
 import { OrderDialog } from "@/components/order-dialog";
 import { OrderDetailDialog } from "@/components/order-detail-dialog";
+import { DropdownSelector } from "@/components/area-selector";
 import { useUserSettings } from "@/lib/hooks/use-user-settings";
 import { format, parseISO } from "date-fns";
 import { de } from "date-fns/locale";
@@ -98,7 +99,6 @@ export default function OrdersPage() {
   const [selectedStatuses, setSelectedStatuses] = useState<OrderStatus[]>(ALL_STATUSES);
   const [statusMenuOpen, setStatusMenuOpen] = useState(false);
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
-  const [tableMenuOpen, setTableMenuOpen] = useState(false);
   const [toasts, setToasts] = useState<
     { id: string; message: string; variant?: "info" | "error" | "success" }[]
   >([]);
@@ -110,7 +110,6 @@ export default function OrdersPage() {
   const settingsInitializedRef = useRef(false);
   const lastPersistedStatusesRef = useRef<string>("");
   const statusMenuRef = useRef<HTMLDivElement | null>(null);
-  const tableMenuRef = useRef<HTMLDivElement | null>(null);
 
   const addToast = useCallback(
     (message: string, variant: "info" | "error" | "success" = "info") => {
@@ -163,9 +162,6 @@ export default function OrdersPage() {
     const handleClickOutside = (event: MouseEvent) => {
       if (statusMenuRef.current && !statusMenuRef.current.contains(event.target as Node)) {
         setStatusMenuOpen(false);
-      }
-      if (tableMenuRef.current && !tableMenuRef.current.contains(event.target as Node)) {
-        setTableMenuOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -228,6 +224,12 @@ export default function OrdersPage() {
     const table = tables.find((t) => t.id === tableId);
     return table ? `${table.number}` : "Unbekannter Tisch";
   };
+  const tableFilterOptions = [
+    { id: "__all__", label: "Alle Tische" },
+    ...[...tables]
+      .sort((a, b) => a.number.localeCompare(b.number, undefined, { numeric: true }))
+      .map((tableOption) => ({ id: tableOption.id, label: tableOption.number })),
+  ];
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("de-DE", {
@@ -301,60 +303,23 @@ export default function OrdersPage() {
             />
           </div>
 
-          <div className="relative" ref={tableMenuRef}>
-            <button
-              type="button"
-              onClick={() => setTableMenuOpen((prev) => !prev)}
-              className="w-full md:w-auto rounded-lg border border-border bg-card text-foreground px-3 py-2 text-sm shadow-inner flex items-center justify-between gap-2 hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring min-h-[40px] touch-manipulation"
-            >
+          <DropdownSelector
+            options={tableFilterOptions}
+            selectedId={selectedTableId ?? "__all__"}
+            onSelect={(value) => setSelectedTableId(value === "__all__" ? null : value)}
+            placeholder="Alle Tische"
+            triggerClassName="w-full md:w-auto rounded-lg border border-border bg-card text-foreground px-3 py-2 text-sm shadow-inner flex items-center justify-between gap-2 hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring min-h-[40px] touch-manipulation"
+            menuAlign="right"
+            menuWidthClassName="w-64"
+            menuClassName="max-h-[70vh] overflow-auto"
+            zIndexClassName="z-[50]"
+            renderSelected={(selected) => (
               <div className="flex items-center gap-2 min-w-0">
                 <TableIcon className="w-4 h-4 text-muted-foreground" />
-                <span className="truncate">
-                  {selectedTableId ? getTableName(selectedTableId) : "Alle Tische"}
-                </span>
-              </div>
-              <ChevronDown className={`w-4 h-4 transition-transform ${tableMenuOpen ? "rotate-180" : ""}`} />
-            </button>
-            {tableMenuOpen && (
-              <div className="absolute right-0 mt-1 w-64 rounded-lg border border-border bg-background shadow-xl z-[50] max-h-[70vh] overflow-auto">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedTableId(null);
-                    setTableMenuOpen(false);
-                  }}
-                  className={`w-full px-3 py-3 text-sm flex items-center justify-between transition-colors ${
-                    !selectedTableId
-                      ? "font-semibold text-foreground border-l-2 border-primary bg-accent"
-                      : "text-foreground hover:bg-accent"
-                  }`}
-                >
-                  Alle Tische
-                  {!selectedTableId && <Check className="w-4 h-4 text-primary" />}
-                </button>
-                {[...tables]
-                  .sort((a, b) => a.number.localeCompare(b.number, undefined, { numeric: true }))
-                  .map((table) => (
-                    <button
-                      key={table.id}
-                      type="button"
-                      onClick={() => {
-                        setSelectedTableId(table.id);
-                        setTableMenuOpen(false);
-                      }}
-                      className={`w-full px-3 py-3 text-sm flex items-center justify-between transition-colors ${
-                        selectedTableId === table.id
-                          ? "font-semibold text-foreground border-l-2 border-primary bg-accent"
-                          : "text-foreground hover:bg-accent"
-                      }`}
-                    >
-                      {table.number}
-                      {selectedTableId === table.id && <Check className="w-4 h-4 text-primary" />}
-                    </button>
-                  ))}
+                <span className="truncate">{selected?.label ?? "Alle Tische"}</span>
               </div>
             )}
-          </div>
+          />
 
           <div className="relative" ref={statusMenuRef}>
             <button

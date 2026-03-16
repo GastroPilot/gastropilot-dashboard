@@ -15,6 +15,7 @@ import { de } from "date-fns/locale";
 import { Ban, Calendar, Check, ChevronDown, ChevronLeft, ChevronRight, Clock, LayoutGrid, Plus, Filter } from "lucide-react";
 import { ReservationDialog } from "@/components/reservation-dialog";
 import { useUserSettings } from "@/lib/hooks/use-user-settings";
+import { DropdownSelector } from "@/components/area-selector";
 
 const BASE_SLOT_MINUTES = 30;
 const BASE_SLOT_WIDTH = 56; // px per 30-min slot for horizontal spacing
@@ -81,8 +82,6 @@ export default function TimelinePage() {
   const [now, setNow] = useState<Date>(new Date());
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [slotMenuOpen, setSlotMenuOpen] = useState(false);
-  const slotMenuRef = useRef<HTMLDivElement | null>(null);
   const [reservationDialogOpen, setReservationDialogOpen] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
@@ -129,9 +128,6 @@ export default function TimelinePage() {
     const interval = setInterval(() => setNow(new Date()), 1000);
 
     const handleClickOutside = (event: MouseEvent) => {
-      if (slotMenuRef.current && !slotMenuRef.current.contains(event.target as Node)) {
-        setSlotMenuOpen(false);
-      }
       if (statusMenuRef.current && !statusMenuRef.current.contains(event.target as Node)) {
         setStatusMenuOpen(false);
       }
@@ -237,6 +233,10 @@ export default function TimelinePage() {
   }, [loadData]);
 
   const slotWidth = useMemo(() => Math.max(36, Math.round((BASE_SLOT_WIDTH / BASE_SLOT_MINUTES) * slotMinutes)), [slotMinutes]);
+  const slotOptions = [15, 30, 60].map((value) => ({
+    id: String(value),
+    label: `${value} Minuten`,
+  }));
   const reservationsForDayAll = useMemo(() => {
     const dayStartDate = startOfDay(selectedDate);
     const dayEndDate = endOfDay(selectedDate);
@@ -626,45 +626,35 @@ export default function TimelinePage() {
                   </div>
                 )}
               </div>
-              <div className="relative" ref={slotMenuRef}>
-                <button
-                  type="button"
-                  onClick={() => setSlotMenuOpen((prev) => !prev)}
-                  className="inline-flex items-center justify-between gap-2 min-w-[120px] rounded-lg border border-border bg-card text-foreground px-3 py-2 text-sm shadow-inner hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring"
-                >
+              <DropdownSelector
+                options={slotOptions}
+                selectedId={String(slotMinutes)}
+                onSelect={(value) => {
+                  const minutes = Number(value);
+                  setSlotMinutes(minutes);
+                  void persistSlotMinutes(minutes);
+                }}
+                placeholder="Intervall"
+                triggerClassName="inline-flex items-center justify-between gap-2 min-w-[120px] rounded-lg border border-border bg-card text-foreground px-3 py-2 text-sm shadow-inner hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring"
+                menuAlign="right"
+                menuWidthClassName="w-44"
+                zIndexClassName="z-[60]"
+                renderSelected={(selected) => (
                   <span className="flex items-center gap-2">
                     <Clock className="w-4 h-4 text-muted-foreground" />
-                    {slotMinutes} Min
+                    {selected?.label ?? `${slotMinutes} Minuten`}
                   </span>
-                  <ChevronDown className={`w-4 h-4 transition-transform ${slotMenuOpen ? "rotate-180" : ""}`} />
-                </button>
-                {slotMenuOpen && (
-                  <div className="absolute right-0 mt-1 w-44 rounded-lg border border-border bg-background shadow-xl z-[60] overflow-hidden">
-                    {[15, 30, 60].map((value) => (
-                      <button
-                        key={value}
-                        type="button"
-                        onClick={() => {
-                          setSlotMinutes(value);
-                          void persistSlotMinutes(value);
-                          setSlotMenuOpen(false);
-                        }}
-                        className={`w-full px-3 py-3 text-sm flex items-center justify-between transition-colors ${
-                          slotMinutes === value
-                            ? "font-semibold text-foreground border-l-2 border-primary bg-accent"
-                            : "text-foreground hover:bg-accent"
-                        }`}
-                      >
-                        <span className="flex items-center gap-2">
-                          <Clock className="w-4 h-4 text-muted-foreground" />
-                          {value} Minuten
-                        </span>
-                        {slotMinutes === value && <Check className="w-4 h-4 text-primary" />}
-                      </button>
-                    ))}
-                  </div>
                 )}
-              </div>
+                renderOption={(option, selected) => (
+                  <>
+                    <span className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-muted-foreground" />
+                      {option.label}
+                    </span>
+                    {selected && <Check className="w-4 h-4 text-primary" />}
+                  </>
+                )}
+              />
               <Button
                 variant="outline"
                 size="sm"

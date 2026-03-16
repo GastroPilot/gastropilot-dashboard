@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { LoadingOverlay } from "@/components/loading-overlay";
 import { confirmAction } from "@/lib/utils";
+import { DropdownSelector } from "@/components/area-selector";
 import {
   Plus,
   X,
@@ -27,6 +28,7 @@ import {
   CreditCard,
   User as UserIcon,
   ChevronDown,
+  Check,
   Mail,
   Lock,
   KeyRound,
@@ -72,10 +74,6 @@ export default function StaffAccessPage() {
   const [submitting, setSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
-  const [roleMenuOpen, setRoleMenuOpen] = useState(false);
-  const roleMenuRef = useRef<HTMLDivElement | null>(null);
-  const [formRoleMenuOpen, setFormRoleMenuOpen] = useState(false);
-  const formRoleMenuRef = useRef<HTMLDivElement | null>(null);
   const [statusMenuOpen, setStatusMenuOpen] = useState(false);
   const statusMenuRef = useRef<HTMLDivElement | null>(null);
   const [toasts, setToasts] = useState<{ id: string; message: string; variant?: "info" | "error" | "success" }[]>([]);
@@ -126,12 +124,6 @@ export default function StaffAccessPage() {
   // Close dropdown menus on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (roleMenuRef.current && !roleMenuRef.current.contains(event.target as Node)) {
-        setRoleMenuOpen(false);
-      }
-      if (formRoleMenuRef.current && !formRoleMenuRef.current.contains(event.target as Node)) {
-        setFormRoleMenuOpen(false);
-      }
       if (statusMenuRef.current && !statusMenuRef.current.contains(event.target as Node)) {
         setStatusMenuOpen(false);
       }
@@ -333,6 +325,18 @@ export default function StaffAccessPage() {
       default: return UserIcon;
     }
   };
+  const getRoleIconToneClass = (role: string) => {
+    switch (role) {
+      case "platform_admin":
+        return "text-purple-300";
+      case "owner":
+        return "text-blue-300";
+      case "manager":
+        return "text-yellow-300";
+      default:
+        return "text-foreground";
+    }
+  };
 
   const getAuthMethodLabel = (user: User) => {
     if (user.email) return "E-Mail";
@@ -372,6 +376,24 @@ export default function StaffAccessPage() {
   }, [users, searchQuery, roleFilter]);
 
   const FormRoleIcon = getRoleIcon(formData.role);
+  const assignableRoles = useMemo(
+    () =>
+      [
+        ...(currentUser?.role === "platform_admin" ? ["platform_admin"] : []),
+        "owner",
+        "manager",
+        "staff",
+      ] as string[],
+    [currentUser?.role],
+  );
+  const formRoleOptions = useMemo(
+    () => assignableRoles.map((role) => ({ id: role, label: getRoleLabel(role) })),
+    [assignableRoles],
+  );
+  const roleFilterOptions = useMemo(
+    () => [{ id: "all", label: "Alle Rollen" }, ...formRoleOptions],
+    [formRoleOptions],
+  );
 
   if (loading) {
     return <LoadingOverlay />;
@@ -653,67 +675,33 @@ export default function StaffAccessPage() {
                       <Shield className="w-4 h-4 text-primary" />
                       Rolle
                     </label>
-                    <div className="relative" ref={formRoleMenuRef}>
-                      <button
-                        type="button"
-                        onClick={() => setFormRoleMenuOpen((prev) => !prev)}
-                        className="inline-flex items-center justify-between w-full gap-2 rounded-md border border-input bg-accent/70 px-3 py-2 text-sm text-foreground shadow-inner hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
-                      >
+                    <DropdownSelector
+                      options={formRoleOptions}
+                      selectedId={formData.role}
+                      onSelect={(value) => setFormData({ ...formData, role: value as UserCreate["role"] })}
+                      placeholder="Rolle auswählen"
+                      triggerClassName="inline-flex items-center justify-between w-full gap-2 rounded-md border border-input bg-accent/70 px-3 py-2 text-sm text-foreground shadow-inner hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
+                      menuWidthClassName="w-full"
+                      zIndexClassName="z-40"
+                      renderSelected={() => (
                         <span className="flex items-center gap-2">
                           <FormRoleIcon className="w-4 h-4 text-foreground" />
                           {getRoleLabel(formData.role)}
                         </span>
-                        <ChevronDown className={`w-4 h-4 transition-transform ${formRoleMenuOpen ? "rotate-180" : ""}`} />
-                      </button>
-                      {formRoleMenuOpen && (
-                        <div className="absolute mt-1 w-full rounded-lg border border-border bg-background shadow-xl z-40 overflow-hidden">
-                          <div className="divide-y divide-border/80">
-                            {currentUser?.role === "platform_admin" && (
-                              <button
-                                type="button"
-                                onClick={() => { setFormData({ ...formData, role: "platform_admin" }); setFormRoleMenuOpen(false); }}
-                                className={`w-full px-3 py-2 text-left text-sm transition-colors ${formData.role === "platform_admin" ? "bg-card text-foreground font-semibold" : "text-foreground hover:bg-accent/70"}`}
-                              >
-                                <span className="flex items-center gap-2">
-                                  <Shield className="w-4 h-4 text-purple-300" />
-                                  Platform Admin
-                                </span>
-                              </button>
-                            )}
-                            <button
-                              type="button"
-                              onClick={() => { setFormData({ ...formData, role: "owner" }); setFormRoleMenuOpen(false); }}
-                              className={`w-full px-3 py-2 text-left text-sm transition-colors ${formData.role === "owner" ? "bg-card text-foreground font-semibold" : "text-foreground hover:bg-accent/70"}`}
-                            >
-                              <span className="flex items-center gap-2">
-                                <UserCheck className="w-4 h-4 text-blue-300" />
-                                Restaurantinhaber
-                              </span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => { setFormData({ ...formData, role: "manager" }); setFormRoleMenuOpen(false); }}
-                              className={`w-full px-3 py-2 text-left text-sm transition-colors ${formData.role === "manager" ? "bg-card text-foreground font-semibold" : "text-foreground hover:bg-accent/70"}`}
-                            >
-                              <span className="flex items-center gap-2">
-                                <UserIcon className="w-4 h-4 text-yellow-300" />
-                                Schichtleiter
-                              </span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => { setFormData({ ...formData, role: "staff" }); setFormRoleMenuOpen(false); }}
-                              className={`w-full px-3 py-2 text-left text-sm transition-colors ${formData.role === "staff" ? "bg-card text-foreground font-semibold" : "text-foreground hover:bg-accent/70"}`}
-                            >
-                              <span className="flex items-center gap-2">
-                                <UserIcon className="w-4 h-4 text-foreground" />
-                                Mitarbeiter
-                              </span>
-                            </button>
-                          </div>
-                        </div>
                       )}
-                    </div>
+                      renderOption={(option, selected) => {
+                        const RoleIcon = getRoleIcon(option.id);
+                        return (
+                          <>
+                            <span className="flex items-center gap-2">
+                              <RoleIcon className={`w-4 h-4 ${getRoleIconToneClass(option.id)}`} />
+                              {option.label}
+                            </span>
+                            {selected && <Check className="w-4 h-4 text-primary" />}
+                          </>
+                        );
+                      }}
+                    />
                     <div className="text-xs text-muted-foreground space-y-1">
                       {formData.role === "platform_admin" && (
                         <p className="text-red-400 font-semibold">
@@ -842,77 +830,44 @@ export default function StaffAccessPage() {
                       className="pl-10 bg-card/50 border-input text-foreground placeholder:text-muted-foreground focus:border-primary w-full sm:w-64"
                     />
                   </div>
-                  <div className="relative" ref={roleMenuRef}>
-                    <button
-                      type="button"
-                      onClick={() => setRoleMenuOpen((prev) => !prev)}
-                      className="inline-flex items-center justify-between w-full sm:w-56 gap-2 rounded-md border border-input bg-accent/70 px-3 py-2 text-sm text-foreground shadow-inner hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
-                    >
+                  <DropdownSelector
+                    options={roleFilterOptions}
+                    selectedId={roleFilter}
+                    onSelect={setRoleFilter}
+                    placeholder="Alle Rollen"
+                    triggerClassName="inline-flex items-center justify-between w-full sm:w-56 gap-2 rounded-md border border-input bg-accent/70 px-3 py-2 text-sm text-foreground shadow-inner hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
+                    menuWidthClassName="w-full"
+                    zIndexClassName="z-40"
+                    renderSelected={() => (
                       <span className="flex items-center gap-2">
-                        <Users className="w-4 h-4 text-muted-foreground" />
+                        {roleFilter === "all" ? (
+                          <Users className="w-4 h-4 text-muted-foreground" />
+                        ) : (
+                          (() => {
+                            const RoleIcon = getRoleIcon(roleFilter);
+                            return <RoleIcon className={`w-4 h-4 ${getRoleIconToneClass(roleFilter)}`} />;
+                          })()
+                        )}
                         {roleFilter === "all" ? "Alle Rollen" : getRoleLabel(roleFilter)}
                       </span>
-                      <ChevronDown className={`w-4 h-4 transition-transform ${roleMenuOpen ? "rotate-180" : ""}`} />
-                    </button>
-                    {roleMenuOpen && (
-                      <div className="absolute mt-1 w-full rounded-lg border border-border bg-background shadow-xl z-40 overflow-hidden">
-                        <div className="divide-y divide-border/80">
-                          <button
-                            type="button"
-                            onClick={() => { setRoleFilter("all"); setRoleMenuOpen(false); }}
-                            className={`w-full px-3 py-2 text-left text-sm transition-colors ${roleFilter === "all" ? "bg-card text-foreground font-semibold" : "text-foreground hover:bg-accent/70"}`}
-                          >
-                            <span className="flex items-center gap-2">
-                              <Users className="w-4 h-4 text-muted-foreground" />
-                              Alle Rollen
-                            </span>
-                          </button>
-                          {currentUser?.role === "platform_admin" && (
-                            <button
-                              type="button"
-                              onClick={() => { setRoleFilter("platform_admin"); setRoleMenuOpen(false); }}
-                              className={`w-full px-3 py-2 text-left text-sm transition-colors ${roleFilter === "platform_admin" ? "bg-card text-foreground font-semibold" : "text-foreground hover:bg-accent/70"}`}
-                            >
-                              <span className="flex items-center gap-2">
-                                <Shield className="w-4 h-4 text-purple-300" />
-                                Platform Admin
-                              </span>
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            onClick={() => { setRoleFilter("owner"); setRoleMenuOpen(false); }}
-                            className={`w-full px-3 py-2 text-left text-sm transition-colors ${roleFilter === "owner" ? "bg-card text-foreground font-semibold" : "text-foreground hover:bg-accent/70"}`}
-                          >
-                            <span className="flex items-center gap-2">
-                              <UserCheck className="w-4 h-4 text-blue-300" />
-                              Restaurantinhaber
-                            </span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => { setRoleFilter("manager"); setRoleMenuOpen(false); }}
-                            className={`w-full px-3 py-2 text-left text-sm transition-colors ${roleFilter === "manager" ? "bg-card text-foreground font-semibold" : "text-foreground hover:bg-accent/70"}`}
-                          >
-                            <span className="flex items-center gap-2">
-                              <UserIcon className="w-4 h-4 text-yellow-300" />
-                              Schichtleiter
-                            </span>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => { setRoleFilter("staff"); setRoleMenuOpen(false); }}
-                            className={`w-full px-3 py-2 text-left text-sm transition-colors ${roleFilter === "staff" ? "bg-card text-foreground font-semibold" : "text-foreground hover:bg-accent/70"}`}
-                          >
-                            <span className="flex items-center gap-2">
-                              <UserIcon className="w-4 h-4 text-foreground" />
-                              Mitarbeiter
-                            </span>
-                          </button>
-                        </div>
-                      </div>
                     )}
-                  </div>
+                    renderOption={(option, selected) => (
+                      <>
+                        <span className="flex items-center gap-2">
+                          {option.id === "all" ? (
+                            <Users className="w-4 h-4 text-muted-foreground" />
+                          ) : (
+                            (() => {
+                              const RoleIcon = getRoleIcon(option.id);
+                              return <RoleIcon className={`w-4 h-4 ${getRoleIconToneClass(option.id)}`} />;
+                            })()
+                          )}
+                          {option.label}
+                        </span>
+                        {selected && <Check className="w-4 h-4 text-primary" />}
+                      </>
+                    )}
+                  />
                 </div>
               </div>
             </CardHeader>

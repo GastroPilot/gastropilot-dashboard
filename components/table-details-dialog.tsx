@@ -16,9 +16,10 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ApiError } from "@/lib/api/client";
 import { format } from "date-fns";
-import { Trash2, Plus, Clock, CheckCircle, EyeOff, ChevronDown, XCircle, X, Save, Star, AlertTriangle, Gift, Accessibility } from "lucide-react";
+import { Trash2, Plus, Clock, CheckCircle, EyeOff, XCircle, X, Save, Star, AlertTriangle, Gift, Accessibility } from "lucide-react";
 import { confirmAction } from "@/lib/utils";
 import { BlockTableDialog } from "@/components/block-table-dialog";
+import { AreaSelector } from "@/components/area-selector";
 
 const ORDER_STATUS_META: Record<OrderStatus, { label: string; tone: string; border: string }> = {
   open: {
@@ -161,8 +162,6 @@ export function TableDetailsDialog({
   const [editBlockDialogOpen, setEditBlockDialogOpen] = useState(false);
   const [editingBlocks, setEditingBlocks] = useState<Block[]>([]);
   const [currentUser, setCurrentUser] = useState<{ role: string } | null>(null);
-  const [areaMenuOpen, setAreaMenuOpen] = useState(false);
-  const areaMenuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (table) {
@@ -190,16 +189,6 @@ export function TableDetailsDialog({
       }
     };
     loadCurrentUser();
-  }, []);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (areaMenuRef.current && !areaMenuRef.current.contains(event.target as Node)) {
-        setAreaMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -618,39 +607,12 @@ export function TableDetailsDialog({
               {allowTableManagement && areas.length > 0 && (
                 <div className="space-y-1">
                   <p className="text-xs text-muted-foreground">Area</p>
-                  <div className="relative" ref={areaMenuRef}>
-                    <button
-                      type="button"
-                      onClick={() => setAreaMenuOpen((prev) => !prev)}
-                      className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-card text-foreground px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring shadow-inner"
-                    >
-                      <span className="truncate">
-                        {areaId ? areas.find((a) => a.id === areaId)?.name || "Area auswählen" : "Area auswählen"}
-                      </span>
-                      <ChevronDown className={`h-4 w-4 transition-transform ${areaMenuOpen ? "rotate-180" : ""}`} />
-                    </button>
-                    {areaMenuOpen && (
-                      <div className="absolute z-10 mt-1 w-full rounded-lg border border-border bg-background shadow-xl max-h-60 overflow-auto">
-                        {areas.map((area) => (
-                          <button
-                            key={area.id}
-                            type="button"
-                            onClick={() => {
-                              setAreaId(area.id);
-                              setAreaMenuOpen(false);
-                            }}
-                            className={`w-full px-3 py-2 text-left text-sm ${
-                              areaId === area.id
-                                ? "font-semibold text-foreground"
-                                : "text-foreground hover:bg-accent"
-                            }`}
-                          >
-                            {area.name}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                  <AreaSelector
+                    areas={areas}
+                    selectedAreaId={areaId}
+                    onSelect={setAreaId}
+                    minWidthClassName="w-full"
+                  />
                 </div>
               )}
               <div className="space-y-1">

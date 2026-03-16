@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertTriangle, BarChart3, Calendar, Clock3, Download, Filter, RefreshCcw, TrendingUp, Users, ArrowUpRight, ArrowDownRight, ChevronDown, ShieldCheck, CheckCircle, XCircle, AlertCircle, EyeOff } from "lucide-react";
+import { DropdownSelector } from "@/components/area-selector";
 
 type RangePreset = "today" | "7d" | "30d" | "90d" | "custom";
 
@@ -62,9 +63,7 @@ export default function OwnerInsightsPage() {
   const [customTo, setCustomTo] = useState("");
   const [statusFilter, setStatusFilter] = useState<ReservationStatus | "all">("all");
   const [refreshing, setRefreshing] = useState(false);
-  const [rangeMenuOpen, setRangeMenuOpen] = useState(false);
   const [statusMenuOpen, setStatusMenuOpen] = useState(false);
-  const rangeMenuRef = useRef<HTMLDivElement | null>(null);
   const statusMenuRef = useRef<HTMLDivElement | null>(null);
   const [reloadTick, setReloadTick] = useState(0);
   const [detail, setDetail] = useState<{ title: string; rows: { label: string; value: string }[] } | null>(null);
@@ -83,6 +82,13 @@ export default function OwnerInsightsPage() {
     }
     return { from, to };
   }, [rangePreset, customFrom, customTo]);
+  const rangePresetOptions: { id: RangePreset; label: string }[] = [
+    { id: "today", label: "Heute" },
+    { id: "7d", label: "Letzte 7 Tage" },
+    { id: "30d", label: "Letzte 30 Tage" },
+    { id: "90d", label: "Letzte 90 Tage" },
+    { id: "custom", label: "Eigener Zeitraum" },
+  ];
 
   useEffect(() => {
     let active = true;
@@ -139,14 +145,9 @@ export default function OwnerInsightsPage() {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node;
-      if (
-        (rangeMenuRef.current && rangeMenuRef.current.contains(target)) ||
-        (statusMenuRef.current && statusMenuRef.current.contains(target))
-      ) {
-        return;
+      if (statusMenuRef.current && !statusMenuRef.current.contains(target)) {
+        setStatusMenuOpen(false);
       }
-      setRangeMenuOpen(false);
-      setStatusMenuOpen(false);
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -552,55 +553,17 @@ export default function OwnerInsightsPage() {
           </CardHeader>
           <CardContent className="pt-0">
             <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-              <div className="relative col-span-1" ref={rangeMenuRef}>
+              <div className="relative col-span-1">
                 <label className="text-xs text-muted-foreground mb-1 block">Zeitraum</label>
-                <button
-                  type="button"
-                  onClick={() => setRangeMenuOpen((prev) => !prev)}
-                  className="w-full inline-flex items-center justify-between rounded-md border border-border bg-accent/70 px-3 py-2 text-sm text-foreground shadow-inner hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
-                >
-                  <span>
-                    {rangePreset === "today"
-                      ? "Heute"
-                      : rangePreset === "7d"
-                      ? "Letzte 7 Tage"
-                      : rangePreset === "30d"
-                      ? "Letzte 30 Tage"
-                      : rangePreset === "90d"
-                      ? "Letzte 90 Tage"
-                      : "Eigener Zeitraum"}
-                  </span>
-                  <ChevronDown className={`w-4 h-4 transition-transform ${rangeMenuOpen ? "rotate-180" : ""}`} />
-                </button>
-                {rangeMenuOpen && (
-                  <div className="absolute mt-1 w-full rounded-lg border border-border bg-background shadow-xl z-40 overflow-hidden">
-                    <div className="divide-y divide-border/80">
-                      {[
-                        { value: "today", label: "Heute" },
-                        { value: "7d", label: "Letzte 7 Tage" },
-                        { value: "30d", label: "Letzte 30 Tage" },
-                        { value: "90d", label: "Letzte 90 Tage" },
-                        { value: "custom", label: "Eigener Zeitraum" },
-                      ].map((opt) => (
-                        <button
-                          key={opt.value}
-                          type="button"
-                          onClick={() => {
-                            setRangePreset(opt.value as RangePreset);
-                            setRangeMenuOpen(false);
-                          }}
-                          className={`w-full px-3 py-2 text-left text-sm transition-colors ${
-                            rangePreset === opt.value
-                              ? "bg-card text-foreground font-semibold"
-                              : "text-foreground hover:bg-accent/70"
-                          }`}
-                        >
-                          {opt.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                <DropdownSelector
+                  options={rangePresetOptions}
+                  selectedId={rangePreset}
+                  onSelect={setRangePreset}
+                  placeholder="Zeitraum auswählen"
+                  triggerClassName="w-full inline-flex items-center justify-between rounded-md border border-border bg-accent/70 px-3 py-2 text-sm text-foreground shadow-inner hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
+                  menuWidthClassName="w-full"
+                  zIndexClassName="z-40"
+                />
               </div>
               <div className="col-span-1">
                 <label className="text-xs text-muted-foreground mb-1 block flex items-center gap-1">

@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import Link from "next/link";
 import { restaurantsApi, Restaurant } from "@/lib/api/restaurants";
 import { auditLogsApi, AuditLog } from "@/lib/api/audit-logs";
@@ -9,13 +9,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { LoadingOverlay } from "@/components/loading-overlay";
+import { DropdownSelector } from "@/components/area-selector";
 import { 
   RefreshCw, 
   ArrowLeft, 
   ChevronLeft, 
   ChevronRight, 
   Filter, 
-  ChevronDown, 
   Check,
   FileText,
   Search,
@@ -48,14 +48,10 @@ export default function AuditLogsPage() {
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [offset, setOffset] = useState(0);
   const [operators, setOperators] = useState<User[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [actionMenuOpen, setActionMenuOpen] = useState(false);
   const [toasts, setToasts] = useState<{ id: string; message: string; variant?: "info" | "error" | "success" }[]>([]);
-  const actionMenuRef = useRef<HTMLDivElement | null>(null);
-  const userMenuRef = useRef<HTMLDivElement | null>(null);
 
   const addToast = useCallback(
     (message: string, variant: "info" | "error" | "success" = "info") => {
@@ -102,19 +98,6 @@ export default function AuditLogsPage() {
   useEffect(() => {
     loadInitial();
   }, [loadInitial]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (actionMenuRef.current && !actionMenuRef.current.contains(event.target as Node)) {
-        setActionMenuOpen(false);
-      }
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
-        setUserMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   const friendlyAction = (value?: string) => {
     const normalized = (value || "").toLowerCase();
@@ -209,6 +192,20 @@ export default function AuditLogsPage() {
         return "text-muted-foreground border-border/60 bg-background/50";
     }
   };
+  const actionOptions = [
+    { id: "", label: "Alle Aktionen" },
+    { id: "create", label: "Erstellt" },
+    { id: "delete", label: "Gelöscht" },
+    { id: "patch", label: "Geändert" },
+  ];
+  const userOptions = [
+    { id: "", label: "Alle Benutzer" },
+    ...operators.map((operator) => ({
+      id: String(operator.id),
+      label: `${operator.first_name} ${operator.last_name} (#${operator.operator_number})`,
+      role: operator.role,
+    })),
+  ];
 
   const loadLogs = async (restaurantId: string, nextOffset = offset) => {
     try {
@@ -521,13 +518,16 @@ export default function AuditLogsPage() {
                       <Activity className="w-4 h-4 text-primary" />
                       Aktion
                     </label>
-                    <div className="relative z-[60]" ref={actionMenuRef}>
-                      <button
-                        type="button"
-                        onClick={() => setActionMenuOpen((prev) => !prev)}
-                        className="w-full inline-flex items-center justify-between gap-2 px-3 py-2 rounded-md border border-input bg-card/50 text-sm text-foreground shadow-inner hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring min-h-[40px]"
-                      >
-                        {(() => {
+                    <div className="relative z-[60]">
+                      <DropdownSelector
+                        options={actionOptions}
+                        selectedId={action}
+                        onSelect={setAction}
+                        placeholder="Alle Aktionen"
+                        triggerClassName="w-full inline-flex items-center justify-between gap-2 px-3 py-2 rounded-md border border-input bg-card/50 text-sm text-foreground shadow-inner hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring min-h-[40px]"
+                        menuWidthClassName="w-full"
+                        zIndexClassName="z-[80]"
+                        renderSelected={() => {
                           const Icon = action ? getActionIcon(action) : Activity;
                           return (
                             <span className="flex items-center gap-2 truncate">
@@ -537,45 +537,22 @@ export default function AuditLogsPage() {
                               <span className="truncate">{friendlyAction(action) || "Alle Aktionen"}</span>
                             </span>
                           );
-                        })()}
-                        <ChevronDown className={`w-4 h-4 transition-transform ${actionMenuOpen ? "rotate-180" : ""}`} />
-                      </button>
-                      {actionMenuOpen && (
-                        <div className="absolute mt-1 w-full rounded-lg border border-border bg-background shadow-xl z-[80] overflow-hidden">
-                          {[
-                            { value: "", label: "Alle Aktionen" },
-                            { value: "create", label: "Erstellt" },
-                            { value: "delete", label: "Gelöscht" },
-                            { value: "patch", label: "Geändert" },
-                          ].map((item) => {
-                            const active = action === item.value;
-                            const Icon = item.value ? getActionIcon(item.value) : Activity;
-                            return (
-                              <button
-                                key={item.value || "all"}
-                                type="button"
-                                onClick={() => {
-                                  setAction(item.value);
-                                  setActionMenuOpen(false);
-                                }}
-                                className={`w-full px-3 py-2 text-left flex items-center justify-between gap-2 text-sm transition-colors ${
-                                  active
-                                    ? "bg-card text-foreground font-semibold"
-                                    : "text-foreground hover:bg-accent"
-                                }`}
-                              >
-                                <span className="flex items-center gap-2 truncate">
-                                  <span className={`inline-flex items-center justify-center w-6 h-6 rounded-md border ${getActionTone(item.value)}`}>
-                                    <Icon className="w-3.5 h-3.5" />
-                                  </span>
-                                  <span className="truncate">{item.label}</span>
+                        }}
+                        renderOption={(option, selected) => {
+                          const Icon = option.id ? getActionIcon(option.id) : Activity;
+                          return (
+                            <>
+                              <span className="flex items-center gap-2 truncate">
+                                <span className={`inline-flex items-center justify-center w-6 h-6 rounded-md border ${getActionTone(option.id)}`}>
+                                  <Icon className="w-3.5 h-3.5" />
                                 </span>
-                                {active && <Check className="w-4 h-4 text-primary" />}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
+                                <span className="truncate">{option.label}</span>
+                              </span>
+                              {selected && <Check className="w-4 h-4 text-primary" />}
+                            </>
+                          );
+                        }}
+                      />
                     </div>
                   </div>
 
@@ -584,80 +561,51 @@ export default function AuditLogsPage() {
                       <UserIcon className="w-4 h-4 text-primary" />
                       Benutzer
                     </label>
-                    <div className="relative z-[60]" ref={userMenuRef}>
-                      <button
-                        type="button"
-                        onClick={() => setUserMenuOpen((prev) => !prev)}
-                        className="w-full inline-flex items-center justify-between gap-2 px-3 py-2 rounded-md border border-input bg-card/50 text-sm text-foreground shadow-inner hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring min-h-[40px]"
-                      >
-                        <span className="truncate">
-                          {userId ? (() => {
-                                const user = operators.find((u) => u.id === userId);
-                                return user ? `${user.first_name} ${user.last_name} (#${user.operator_number})` : "Benutzer wählen";
-                              })()
-                            : "Alle Benutzer"}
-                        </span>
-                        <ChevronDown className={`w-4 h-4 transition-transform ${userMenuOpen ? "rotate-180" : ""}`} />
-                      </button>
-                      {userMenuOpen && (
-                        <div className="absolute mt-1 w-full rounded-lg border border-border bg-background shadow-xl z-[80]">
-                          <div
-                            className="max-h-64 overflow-y-scroll overflow-x-hidden"
-                            style={{ 
-                              WebkitOverflowScrolling: 'touch',
-                              scrollbarWidth: 'thin',
-                              scrollbarColor: 'rgba(156, 163, 175, 0.5) transparent'
-                            }}
-                          >
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setUserId("");
-                                setUserMenuOpen(false);
-                              }}
-                              className={`w-full px-3 py-2 text-left flex items-center justify-between gap-2 text-sm transition-colors whitespace-nowrap ${
-                                userId === ""
-                                  ? "bg-card text-foreground font-semibold"
-                                  : "text-foreground hover:bg-accent"
-                              }`}
-                            >
-                              <span className="truncate">Alle Benutzer</span>
-                              {userId === "" && <Check className="w-4 h-4 text-primary flex-shrink-0" />}
-                            </button>
-                            {operators.map((op) => {
-                              const active = userId === String(op.id);
-                              return (
-                                <button
-                                  key={op.id}
-                                  type="button"
-                                  onClick={() => {
-                                    setUserId(String(op.id));
-                                    setUserMenuOpen(false);
-                                  }}
-                                className={`w-full px-3 py-2 text-left flex items-center justify-between gap-2 text-sm transition-colors whitespace-nowrap ${
-                                  active
-                                    ? "bg-card text-foreground font-semibold"
-                                    : "text-foreground hover:bg-accent"
-                                }`}
-                              >
-                                  <span className="flex items-center gap-2 truncate">
-                                  <span className={`inline-flex items-center justify-center w-6 h-6 rounded-md border bg-background/70 ${getRoleTone(op.role)}`}>
-                                    {(() => {
-                                      const RoleIcon = getRoleIcon(op.role);
-                                      return <RoleIcon className="w-3.5 h-3.5" />;
-                                    })()}
-                                  </span>
-                                    <span className="truncate">
-                                      {op.first_name} {op.last_name} (#{op.operator_number})
-                                    </span>
-                                  </span>
-                                  {active && <Check className="w-4 h-4 text-primary flex-shrink-0" />}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      )}
+                    <div className="relative z-[60]">
+                      <DropdownSelector
+                        options={userOptions}
+                        selectedId={userId}
+                        onSelect={setUserId}
+                        placeholder="Alle Benutzer"
+                        triggerClassName="w-full inline-flex items-center justify-between gap-2 px-3 py-2 rounded-md border border-input bg-card/50 text-sm text-foreground shadow-inner hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring min-h-[40px]"
+                        menuWidthClassName="w-full"
+                        zIndexClassName="z-[80]"
+                        menuClassName="max-h-64 overflow-y-scroll overflow-x-hidden"
+                        renderSelected={() => (
+                          <span className="truncate">
+                            {userId
+                              ? (() => {
+                                  const selectedUser = operators.find((operator) => operator.id === userId);
+                                  return selectedUser
+                                    ? `${selectedUser.first_name} ${selectedUser.last_name} (#${selectedUser.operator_number})`
+                                    : "Benutzer wählen";
+                                })()
+                              : "Alle Benutzer"}
+                          </span>
+                        )}
+                        renderOption={(option, selected) => {
+                          if (!option.id) {
+                            return (
+                              <>
+                                <span className="truncate">Alle Benutzer</span>
+                                {selected && <Check className="w-4 h-4 text-primary flex-shrink-0" />}
+                              </>
+                            );
+                          }
+                          const RoleIcon = getRoleIcon((option as { role?: string }).role);
+                          return (
+                            <>
+                              <span className="flex items-center gap-2 truncate">
+                                <span className={`inline-flex items-center justify-center w-6 h-6 rounded-md border bg-background/70 ${getRoleTone((option as { role?: string }).role)}`}>
+                                  <RoleIcon className="w-3.5 h-3.5" />
+                                </span>
+                                <span className="truncate">{option.label}</span>
+                              </span>
+                              {selected && <Check className="w-4 h-4 text-primary flex-shrink-0" />}
+                            </>
+                          );
+                        }}
+                      />
                     </div>
                   </div>
 

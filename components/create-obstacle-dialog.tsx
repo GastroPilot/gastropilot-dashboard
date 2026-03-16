@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useRef } from "react";
+﻿import { useEffect, useState } from "react";
 import { obstaclesApi, Obstacle, ObstacleCreate, ObstacleUpdate } from "@/lib/api/obstacles";
 import { Area } from "@/lib/api/areas";
 import { Button } from "@/components/ui/button";
@@ -12,8 +12,9 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ApiError } from "@/lib/api/client";
-import { ChevronDown, Check, Trash2, X, Save } from "lucide-react";
+import { Trash2, X, Save } from "lucide-react";
 import { confirmAction } from "@/lib/utils";
+import { AreaSelector, DropdownSelector } from "@/components/area-selector";
 
 const PRESET_COLORS = ["#ef4444", "#f97316", "#22c55e", "#3b82f6", "#8b5cf6"];
 const TYPE_OPTIONS = [
@@ -46,6 +47,10 @@ export function CreateObstacleDialog({
   areas,
   selectedAreaId,
 }: CreateObstacleDialogProps) {
+  const obstacleTypeOptions = TYPE_OPTIONS.map((option) => ({
+    id: option.value,
+    label: option.label,
+  }));
   const [type, setType] = useState("door");
   const [name, setName] = useState("");
   const [x, setX] = useState(50);
@@ -59,8 +64,6 @@ export function CreateObstacleDialog({
   const [areaId, setAreaId] = useState<string | null>(selectedAreaId ?? null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [areaMenuOpen, setAreaMenuOpen] = useState(false);
-  const areaMenuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -94,16 +97,6 @@ export function CreateObstacleDialog({
       setError("");
     }
   }, [open, obstacle, selectedAreaId]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (areaMenuRef.current && !areaMenuRef.current.contains(event.target as Node)) {
-        setAreaMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -191,17 +184,15 @@ export function CreateObstacleDialog({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium mb-1 text-muted-foreground">Typ *</label>
-                <select
-                  value={type}
-                  onChange={(e) => setType(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-input bg-card text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  {TYPE_OPTIONS.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
+                <DropdownSelector
+                  options={obstacleTypeOptions}
+                  selectedId={type}
+                  onSelect={setType}
+                  placeholder="Typ auswählen"
+                  triggerClassName="flex h-10 w-full items-center justify-between rounded-md border border-input bg-card text-foreground px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-60 disabled:cursor-not-allowed"
+                  menuWidthClassName="w-full"
+                  zIndexClassName="z-[140]"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium mb-1 text-muted-foreground">Name</label>
@@ -215,40 +206,12 @@ export function CreateObstacleDialog({
 
             <div>
               <label className="block text-sm font-medium mb-1 text-muted-foreground">Area *</label>
-              <div className="relative" ref={areaMenuRef}>
-                <button
-                  type="button"
-                  onClick={() => setAreaMenuOpen((prev) => !prev)}
-                  className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-card text-foreground px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring shadow-inner"
-                  disabled={areas.length === 0}
-                >
-                  <span className="truncate">
-                    {areaId ? areas.find((a) => a.id === areaId)?.name || "Area auswählen" : "Area auswählen"}
-                  </span>
-                  <ChevronDown className={`h-4 w-4 transition-transform ${areaMenuOpen ? "rotate-180" : ""}`} />
-                </button>
-                {areaMenuOpen && (
-                  <div className="absolute z-10 mt-1 w-full rounded-lg border border-border bg-card shadow-xl max-h-60 overflow-auto">
-                    {areas.map((area) => (
-                      <button
-                        key={area.id}
-                        type="button"
-                        onClick={() => {
-                          setAreaId(area.id);
-                          setAreaMenuOpen(false);
-                        }}
-                        className={`w-full px-3 py-2 text-left text-sm ${
-                          areaId === area.id
-                            ? "font-semibold text-foreground dark:text-white"
-                            : "text-foreground hover:bg-accent"
-                        }`}
-                      >
-                        {area.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <AreaSelector
+                areas={areas}
+                selectedAreaId={areaId}
+                onSelect={setAreaId}
+                minWidthClassName="w-full"
+              />
               {areas.length === 0 && (
                 <p className="text-xs text-amber-300 mt-2">
                   Keine Area vorhanden. Bitte zuerst eine Area anlegen.

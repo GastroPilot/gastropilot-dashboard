@@ -14,6 +14,7 @@ import { ReservationDialog } from "@/components/reservation-dialog";
 import { BlockTableDialog } from "@/components/block-table-dialog";
 import { LoadingOverlay } from "@/components/loading-overlay";
 import { SkeletonReservationCard } from "@/components/skeletons";
+import { DropdownSelector } from "@/components/area-selector";
 import { format, parseISO, startOfDay, endOfDay, isToday } from "date-fns";
 import { de } from "date-fns/locale";
 import { Ban, Calendar, Check, CheckCircle, ChevronDown, Clock, Filter, LayoutGrid, Mail, Phone, Users, XCircle, ChevronLeft, ChevronRight, Plus } from "lucide-react";
@@ -69,7 +70,6 @@ export default function ReservationsPage() {
   const [reservationSearchQuery, setReservationSearchQuery] = useState("");
   const [selectedStatuses, setSelectedStatuses] = useState<ReservationFilter[]>(ALL_FILTERS);
   const [statusMenuOpen, setStatusMenuOpen] = useState(false);
-  const [tableMenuOpen, setTableMenuOpen] = useState(false);
   const [reservationDialogOpen, setReservationDialogOpen] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
   const [blockEditOpen, setBlockEditOpen] = useState(false);
@@ -77,7 +77,6 @@ export default function ReservationsPage() {
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
   const [toasts, setToasts] = useState<{ id: string; message: string; variant?: "info" | "error" | "success" }[]>([]);
-  const tableMenuRef = useRef<HTMLDivElement | null>(null);
   const [now, setNow] = useState<Date>(new Date());
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const settingsInitializedRef = useRef(false);
@@ -151,16 +150,9 @@ export default function ReservationsPage() {
     loadInitialRestaurant();
 
     const interval = setInterval(() => setNow(new Date()), 1000);
-    const handleClickOutside = (event: MouseEvent) => {
-      if (tableMenuRef.current && !tableMenuRef.current.contains(event.target as Node)) {
-        setTableMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
 
     return () => {
       clearInterval(interval);
-      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
@@ -374,6 +366,12 @@ export default function ReservationsPage() {
     const table = tables.find((t) => t.id === tableId);
     return table ? `${table.number}` : "Unbekannt";
   };
+  const tableFilterOptions = [
+    { id: "__all__", label: "Alle Tische" },
+    ...[...tables]
+      .sort((a, b) => a.number.localeCompare(b.number, undefined, { numeric: true }))
+      .map((tableOption) => ({ id: tableOption.id, label: tableOption.number })),
+  ];
 
   const getStatusLabel = (status: ReservationFilter) => {
     if (status === "block") return "Block";
@@ -556,58 +554,23 @@ export default function ReservationsPage() {
               className="pl-3 bg-background border-border text-foreground"
             />
           </div>
-          <div className="relative" ref={tableMenuRef}>
-            <button
-              type="button"
-              onClick={() => setTableMenuOpen((prev) => !prev)}
-              className="w-full rounded-lg border border-border bg-card text-foreground px-3 py-2 text-sm shadow-inner flex items-center justify-between gap-2 hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring min-h-[40px] touch-manipulation"
-            >
+          <DropdownSelector
+            options={tableFilterOptions}
+            selectedId={selectedTableId ?? "__all__"}
+            onSelect={(value) => setSelectedTableId(value === "__all__" ? null : value)}
+            placeholder="Alle Tische"
+            triggerClassName="w-full rounded-lg border border-border bg-card text-foreground px-3 py-2 text-sm shadow-inner flex items-center justify-between gap-2 hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring min-h-[40px] touch-manipulation"
+            menuAlign="right"
+            menuWidthClassName="w-64"
+            menuClassName="max-h-[70vh] overflow-auto"
+            zIndexClassName="z-[50]"
+            renderSelected={(selected) => (
               <div className="flex items-center gap-2 min-w-0">
                 <LayoutGrid className="w-4 h-4 text-muted-foreground" />
-                <span className="truncate">
-                  {selectedTableId ? `${getTableName(selectedTableId)}` : "Alle Tische"}
-                </span>
-              </div>
-              <ChevronDown className={`w-4 h-4 transition-transform ${tableMenuOpen ? "rotate-180" : ""}`} />
-            </button>
-            {tableMenuOpen && (
-              <div className="absolute right-0 mt-1 w-64 rounded-lg border border-border bg-background shadow-xl z-[50] max-h-[70vh] overflow-auto">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedTableId(null);
-                    setTableMenuOpen(false);
-                  }}
-                  className={`w-full px-3 py-3 text-sm flex items-center justify-between transition-colors ${
-                    !selectedTableId
-                      ? "font-semibold text-foreground border-l-2 border-primary bg-accent"
-                      : "text-foreground hover:bg-card"
-                  }`}
-                >
-                  Alle Tische
-                  {!selectedTableId && <Check className="w-4 h-4 text-primary" />}
-                </button>
-                {[...tables].sort((a, b) => a.number.localeCompare(b.number, undefined, { numeric: true })).map((table) => (
-                  <button
-                    key={table.id}
-                    type="button"
-                    onClick={() => {
-                      setSelectedTableId(table.id);
-                      setTableMenuOpen(false);
-                    }}
-                    className={`w-full px-3 py-3 text-sm flex items-center justify-between transition-colors ${
-                      selectedTableId === table.id
-                        ? "font-semibold text-foreground border-l-2 border-primary bg-accent"
-                        : "text-foreground hover:bg-card"
-                    }`}
-                  >
-                    {table.number}
-                    {selectedTableId === table.id && <Check className="w-4 h-4 text-primary" />}
-                  </button>
-                ))}
+                <span className="truncate">{selected?.label ?? "Alle Tische"}</span>
               </div>
             )}
-          </div>
+          />
           <div className="relative md:col-span-1">
             <button
               type="button"

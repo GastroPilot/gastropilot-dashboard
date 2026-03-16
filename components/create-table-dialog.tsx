@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { tablesApi, TableCreate } from "@/lib/api/tables";
 import { Area } from "@/lib/api/areas";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ChevronDown, Check, X, Save } from "lucide-react";
+import { X, Save } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { ApiError } from "@/lib/api/client";
+import { AreaSelector } from "@/components/area-selector";
 
 interface CreateTableDialogProps {
   open: boolean;
@@ -41,25 +42,12 @@ export function CreateTableDialog({
   const [areaId, setAreaId] = useState<string | null>(selectedAreaId ?? null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [areaMenuOpen, setAreaMenuOpen] = useState(false);
-  const areaMenuRef = useRef<HTMLDivElement | null>(null);
 
   // Fehlermeldung zurücksetzen, sobald der Dialog geöffnet/geschlossen wird
   useEffect(() => {
     setError("");
     setAreaId(selectedAreaId ?? null);
-    setAreaMenuOpen(false);
   }, [open, selectedAreaId]);
-
-  useEffect(() => {
-    const handler = (event: MouseEvent) => {
-      if (areaMenuRef.current && !areaMenuRef.current.contains(event.target as Node)) {
-        setAreaMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, []);
 
   const resetForm = () => {
     setNumber("");
@@ -176,40 +164,12 @@ export function CreateTableDialog({
 
             <div>
               <label className="block text-sm font-medium mb-1 text-muted-foreground">Area *</label>
-              <div className="relative" ref={areaMenuRef}>
-                <button
-                  type="button"
-                  onClick={() => setAreaMenuOpen((prev) => !prev)}
-                  className="flex h-10 w-full items-center justify-between rounded-md border border-input bg-card text-foreground px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring shadow-inner disabled:opacity-60"
-                  disabled={!hasAreas}
-                >
-                  <span className="truncate">
-                    {areaId ? areas.find((a) => a.id === areaId)?.name || "Area auswählen" : "Area auswählen"}
-                  </span>
-                  <ChevronDown className={`h-4 w-4 transition-transform ${areaMenuOpen ? "rotate-180" : ""}`} />
-                </button>
-                {areaMenuOpen && (
-                  <div className="absolute z-20 mt-1 w-full rounded-lg border border-border bg-card shadow-xl max-h-60 overflow-auto">
-                    {areas.map((area) => (
-                      <button
-                        key={area.id}
-                        type="button"
-                        onClick={() => {
-                          setAreaId(area.id);
-                          setAreaMenuOpen(false);
-                        }}
-                        className={`w-full px-3 py-2 text-left text-sm ${
-                          areaId === area.id
-                            ? "font-semibold text-foreground dark:text-white"
-                            : "text-foreground hover:bg-accent"
-                        }`}
-                      >
-                        {area.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <AreaSelector
+                areas={areas}
+                selectedAreaId={areaId}
+                onSelect={setAreaId}
+                minWidthClassName="w-full"
+              />
               {!hasAreas && (
                 <p className="text-xs text-amber-300 mt-2">
                   Keine Area vorhanden. Bitte zuerst eine Area anlegen.
