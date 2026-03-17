@@ -452,7 +452,7 @@ function LoginForm() {
                         type="email"
                         value={email}
                         onChange={(e) => { setEmail(e.target.value); setError(""); }}
-                        placeholder="admin@gastropilot.de"
+                        placeholder="E-Mail eingeben"
                         required
                         autoFocus
                         autoComplete="email"
@@ -472,7 +472,7 @@ function LoginForm() {
                         type="password"
                         value={password}
                         onChange={(e) => { setPassword(e.target.value); setError(""); }}
-                        placeholder="••••••••"
+                        placeholder="Passwort eingeben"
                         required
                         autoComplete="current-password"
                       />
@@ -513,11 +513,6 @@ function LoginForm() {
           </CardContent>
         </Card>
 
-        <div className="mt-6 text-center">
-          <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} Servecta • GastroPilot
-          </p>
-        </div>
       </div>
     </div>
   );

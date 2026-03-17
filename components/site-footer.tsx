@@ -3,16 +3,24 @@
 import { useMemo, useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 
-const APP_VERSION_RAW = (process.env.NEXT_PUBLIC_APP_VERSION ?? "0.0.0-dev").trim();
-const APP_VERSION = APP_VERSION_RAW.startsWith("v") ? APP_VERSION_RAW : `v${APP_VERSION_RAW}`;
+const APP_VERSION_RAW = (process.env.NEXT_PUBLIC_APP_VERSION ?? "0.0.0").trim();
 
-const AUTH_PATHS = ["/login", "/login-nfc"];
+function formatVersion(raw: string): string {
+  const bare = raw.startsWith("v") ? raw.slice(1) : raw;
+  // Fallback: Commit-Hash kürzen (sollte durch CI nicht mehr vorkommen)
+  if (/^[0-9a-f]{40}$/i.test(bare)) {
+    return `v${bare.slice(0, 7)}`;
+  }
+  return raw.startsWith("v") ? raw : `v${raw}`;
+}
+
+const APP_VERSION = formatVersion(APP_VERSION_RAW);
 
 /**
  * Ermittelt das Environment basierend auf der Domain.
  * - localhost → Development
  * - test.gpilot.app → Test
- * - staging.gpilot.app → Staging
+ * - stage.gpilot.app → Stage
  * - demo.gpilot.app → Demo
  * - gpilot.app → Production (wird nicht angezeigt)
  */
@@ -32,8 +40,8 @@ function getEnvironment(): string | null {
     switch (subdomain) {
       case "test":
         return "Test";
-      case "staging":
-        return "Staging";
+      case "stage":
+        return "Stage";
       case "demo":
         return "Demo";
       default:
@@ -57,37 +65,45 @@ export function SiteFooter() {
     setEnvironment(getEnvironment());
   }, []);
 
-  const hideFooter = useMemo(() => {
+  const isAuthPage = useMemo(() => {
     if (!pathname) return false;
-    return AUTH_PATHS.some((authPath) => pathname.startsWith(authPath));
+    return ["/login", "/login-nfc"].some((p) => pathname.startsWith(p));
   }, [pathname]);
 
-  if (hideFooter) {
-    return null;
-  }
-
   const currentYear = new Date().getFullYear();
+
+  const displayVersion = environment
+    ? `${APP_VERSION}-${environment}`
+    : APP_VERSION;
+
+  const versionContent = (
+    <>
+      <span className={environment ? `font-medium ${
+        environment === "Development" ? "text-[#F95100]" :
+        environment === "Test" ? "text-yellow-500" :
+        environment === "Stage" ? "text-orange-500" :
+        environment === "Demo" ? "text-purple-500" :
+        "text-muted-foreground"
+      }` : ""}>
+        Version {displayVersion}
+      </span>
+      <span className="text-muted-foreground/50">|</span>
+      <span className="font-semibold">Servecta @ {currentYear}</span>
+    </>
+  );
+
+  if (isAuthPage) {
+    return (
+      <footer className="fixed bottom-0 inset-x-0 py-3 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+        {versionContent}
+      </footer>
+    );
+  }
 
   return (
     <footer className="bg-card border-t border-border px-4 py-2 flex items-center justify-between text-xs text-muted-foreground">
       <div className="flex items-center gap-2 text-muted-foreground">
-        <span>Version {APP_VERSION}</span>
-        {environment && (
-          <>
-            <span className="text-muted-foreground/50">|</span>
-            <span className={`font-medium ${
-              environment === "Development" ? "text-[#F95100]" :
-              environment === "Test" ? "text-yellow-500" :
-              environment === "Staging" ? "text-orange-500" :
-              environment === "Demo" ? "text-purple-500" :
-              "text-muted-foreground"
-            }`}>
-              {environment}
-            </span>
-          </>
-        )}
-        <span className="text-muted-foreground/50">|</span>
-        <span className="font-semibold">Servecta @ {currentYear}</span>
+        {versionContent}
       </div>
     </footer>
   );
