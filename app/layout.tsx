@@ -1,54 +1,51 @@
 import type { Metadata } from "next";
+import { Manrope } from "next/font/google";
 import "./globals.css";
-import { SiteFooter } from "@/components/site-footer";
-import { QueryProvider } from "@/lib/providers/query-provider";
-import { ThemeProvider } from "@/components/theme-provider";
+import { Providers } from "@/lib/providers";
+import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
+import { InstallPrompt } from "@/components/install-prompt";
+
+const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope" });
 
 export const metadata: Metadata = {
-  title: "Reservierungsmanagement",
-  description: "Verwaltung von Tischen und Reservierungen",
+  title: {
+    default: "GastroPilot – Restaurants entdecken & reservieren",
+    template: "%s | GastroPilot",
+  },
+  description:
+    "Finden Sie das perfekte Restaurant, filtern Sie nach Allergenen und reservieren Sie online.",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || "https://gastropilot.de"
+  ),
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "GastroPilot",
+  },
 };
-
-const themeScript = `
-(function() {
-  try {
-    var raw = localStorage.getItem('gastropilot-settings');
-    if (raw) {
-      var data = JSON.parse(raw);
-      var theme = data.state && data.state.theme;
-      var isDark = false;
-      if (theme === 'dark') isDark = true;
-      else if (theme === 'light') isDark = false;
-      else if (theme === 'system') isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      document.documentElement.classList.toggle('dark', isDark);
-    }
-  } catch (e) {}
-})();
-`;
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="de" suppressHydrationWarning>
+    <html lang="de" className={manrope.variable} suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap"
-          rel="stylesheet"
-        />
+        <meta name="theme-color" content="#E75E29" />
+        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
       </head>
-      <body className="min-h-screen flex flex-col antialiased">
-        <ThemeProvider>
-          <QueryProvider>
-            <div className="flex-1 flex flex-col">{children}</div>
-            <SiteFooter />
-          </QueryProvider>
-        </ThemeProvider>
+      <body className="min-h-screen font-sans antialiased">
+        <Providers>
+          <div className="flex min-h-screen flex-col">
+            <Navbar />
+            <main className="flex-1">{children}</main>
+            <Footer />
+          </div>
+          <InstallPrompt />
+        </Providers>
       </body>
     </html>
   );
