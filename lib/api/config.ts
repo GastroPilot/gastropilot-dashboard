@@ -26,28 +26,15 @@ function computeApiUrlFromHostname(hostname: string): string {
   }
 
   // Prod ohne Subdomain: gpilot.app → api.gpilot.app
-  if (hostname === 'gpilot.app') {
+  if (hostname === 'dashboard.gpilot.app') {
     return 'https://api.gpilot.app';
   }
 
-  // Demo: demo.gpilot.app → demo-api.gpilot.app (Demo-Setup)
-  if (hostname === 'demo.gpilot.app' || hostname === 'www.demo.gpilot.app') {
-    return 'https://demo-api.gpilot.app';
-  }
-
-  // Staging: stage.gpilot.app → stage-api.gpilot.app (Konvention Staging-Setup)
-  if (hostname === 'stage.gpilot.app' || hostname === 'www.stage.gpilot.app') {
-    return 'https://stage-api.gpilot.app';
-  }
-
-    // Test: test.gpilot.app → test-api.gpilot.app (Test-Setup)
-  if (hostname === 'test.gpilot.app' || hostname === 'www.test.gpilot.app') {
-    return 'https://test-api.gpilot.app';
-  }
-
-  // Local-Staging: stage.servecta.local → stage-api.servecta.local
-  if (hostname === 'stage.servecta.local' || hostname === 'www.stage.servecta.local') {
-    return 'http://stage-api.servecta.local';
+  // Dashboard-Subdomains: {env}-dashboard.gpilot.app → {env}-api.gpilot.app
+  const dashboardMatch = hostname.match(/^([^-]+)-dashboard\.gpilot\.app$/);
+  if (dashboardMatch) {
+    const env = dashboardMatch[1];
+    return `https://${env}-api.gpilot.app`;
   }
 
   // Dynamische URL-Generierung für gpilot.app Subdomains
