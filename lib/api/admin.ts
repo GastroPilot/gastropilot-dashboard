@@ -1,168 +1,88 @@
-import { adminApi } from "./client";
+import { api } from "./client";
 
-// ─── Types ──────────────────────────────────────────────────────────────────
-
-interface PaginatedResponse<T> {
-  items: T[];
-  total: number;
-  page: number;
-  per_page: number;
+export interface Tenant {
+  id: string;
+  name: string;
+  slug: string | null;
+  created_at: string;
 }
 
-export interface AdminGuest {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string | null;
-  phone: string | null;
-  language: string | null;
-  notes: string | null;
-  email_verified: boolean;
-  has_password: boolean;
-  allergen_profile?: unknown[];
-  created_at: string | null;
-  updated_at?: string | null;
-}
-
-export interface AdminReservation {
-  id: string;
+export interface ImpersonateResponse {
+  impersonation_token: string;
   tenant_id: string;
-  restaurant_name: string;
-  guest_name: string | null;
-  guest_email: string | null;
-  guest_phone: string | null;
-  party_size: number;
-  start_at: string | null;
-  end_at: string | null;
-  status: string;
-  channel: string;
-  special_requests: string | null;
-  notes?: string | null;
-  confirmation_code?: string | null;
-  canceled_reason?: string | null;
-  created_at: string | null;
+  tenant_name: string;
 }
 
-export interface AdminReview {
-  id: string;
-  tenant_id: string;
-  restaurant_name: string;
-  guest_profile_id: string | null;
-  guest_name: string | null;
-  rating: number;
-  title: string | null;
-  text: string | null;
-  is_visible: boolean;
-  is_verified: boolean;
-  staff_reply: string | null;
-  staff_reply_at: string | null;
-  created_at: string | null;
+export interface UserImpersonateResponse {
+  impersonation_token: string;
+  user_id: string;
+  user_name: string;
+  tenant_id: string | null;
 }
 
-export interface AdminStats {
-  total_guests: number;
-  total_reservations: number;
-  total_reviews: number;
-  total_restaurants: number;
-  reservations_by_status: Record<string, number>;
-  recent_guests_30d: number;
-  recent_reservations_30d: number;
-}
+export const adminApi = {
+  listTenants: (): Promise<Tenant[]> =>
+    api.get<Tenant[]>("/admin/tenants"),
 
-// ─── API Functions ──────────────────────────────────────────────────────────
+  impersonateTenant: (tenantId: string): Promise<ImpersonateResponse> =>
+    api.get<ImpersonateResponse>(`/admin/tenants/${tenantId}/impersonate`),
 
-function buildQuery(params: Record<string, unknown>): string {
-  const parts: string[] = [];
-  for (const [key, value] of Object.entries(params)) {
-    if (value !== undefined && value !== null && value !== "") {
-      parts.push(`${key}=${encodeURIComponent(String(value))}`);
+  impersonateUser: (userId: string): Promise<UserImpersonateResponse> =>
+    api.get<UserImpersonateResponse>(`/admin/users/${userId}/impersonate`),
+};
+
+// ─── Impersonation-Helpers ────────────────────────────────────────────────────
+
+const KEYS = {
+  originalToken:     "admin_original_token",
+  originalExpiresAt: "admin_original_expires_at",
+  tenantId:          "impersonating_tenant_id",
+  tenantName:        "impersonating_tenant_name",
+} as const;
+
+export const impersonation = {
+  /** Wechselt in den Kontext eines Tenants. */
+  start(token: string, tenantId: string, tenantName: string): void {
+    if (typeof window === "undefined") return;
+    // Originaltoken sichern
+    localStorage.setItem(KEYS.originalToken, localStorage.getItem("access_token") ?? "");
+    localStorage.setItem(KEYS.originalExpiresAt, localStorage.getItem("access_token_expires_at") ?? "");
+    // Impersonation-Token aktivieren (1 h gültig, kein Refresh)
+    localStorage.setItem("access_token", token);
+    localStorage.setItem("access_token_expires_at", String(Date.now() + 3600_000));
+    localStorage.removeItem("refresh_token");
+    // Kontext merken
+    localStorage.setItem(KEYS.tenantId, tenantId);
+    localStorage.setItem(KEYS.tenantName, tenantName);
+  },
+
+  /** Beendet die Impersonation und stellt den Admin-Token wieder her. */
+  stop(): void {
+    if (typeof window === "undefined") return;
+    const original = localStorage.getItem(KEYS.originalToken);
+    const expiresAt = localStorage.getItem(KEYS.originalExpiresAt);
+    if (original) {
+      localStorage.setItem("access_token", original);
+      if (expiresAt) localStorage.setItem("access_token_expires_at", expiresAt);
     }
-  }
-  return parts.length ? `?${parts.join("&")}` : "";
-}
+    localStorage.removeItem(KEYS.originalToken);
+    localStorage.removeItem(KEYS.originalExpiresAt);
+    localStorage.removeItem(KEYS.tenantId);
+    localStorage.removeItem(KEYS.tenantName);
+  },
 
-export const adminGuestsApi = {
-  list: (params: { page?: number; per_page?: number; search?: string } = {}) =>
-    adminApi.get<PaginatedResponse<AdminGuest>>(
-      `/admin/guests${buildQuery(params)}`
-    ),
+  isActive(): boolean {
+    if (typeof window === "undefined") return false;
+    return !!localStorage.getItem(KEYS.tenantId);
+  },
 
-  get: (id: string) => adminApi.get<AdminGuest>(`/admin/guests/${id}`),
+  getTenantName(): string | null {
+    if (typeof window === "undefined") return null;
+    return localStorage.getItem(KEYS.tenantName);
+  },
 
-  update: (
-    id: string,
-    data: {
-      first_name?: string;
-      last_name?: string;
-      email?: string;
-      phone?: string;
-      language?: string;
-      notes?: string;
-      allergen_profile?: unknown[];
-      email_verified?: boolean;
-      password?: string;
-    }
-  ) => adminApi.patch<AdminGuest>(`/admin/guests/${id}`, data),
-
-  delete: (id: string) =>
-    adminApi.delete<{ deleted: boolean }>(`/admin/guests/${id}`),
-};
-
-export const adminReservationsApi = {
-  list: (
-    params: {
-      page?: number;
-      per_page?: number;
-      status?: string;
-      restaurant_id?: string;
-    } = {}
-  ) =>
-    adminApi.get<PaginatedResponse<AdminReservation>>(
-      `/admin/reservations${buildQuery(params)}`
-    ),
-
-  get: (id: string) =>
-    adminApi.get<AdminReservation>(`/admin/reservations/${id}`),
-
-  updateStatus: (
-    id: string,
-    data: { status: string; canceled_reason?: string }
-  ) =>
-    adminApi.patch<{ id: string; status: string }>(
-      `/admin/reservations/${id}/status`,
-      data
-    ),
-};
-
-export const adminReviewsApi = {
-  list: (
-    params: {
-      page?: number;
-      per_page?: number;
-      restaurant_id?: string;
-      visible?: boolean;
-    } = {}
-  ) =>
-    adminApi.get<PaginatedResponse<AdminReview>>(
-      `/admin/reviews${buildQuery(params)}`
-    ),
-
-  toggleVisibility: (id: string, is_visible: boolean) =>
-    adminApi.patch<{ id: string; is_visible: boolean }>(
-      `/admin/reviews/${id}`,
-      { is_visible }
-    ),
-
-  delete: (id: string) =>
-    adminApi.delete<{ deleted: boolean }>(`/admin/reviews/${id}`),
-
-  reply: (id: string, text: string) =>
-    adminApi.post<{ id: string; staff_reply: string; staff_reply_at: string }>(
-      `/admin/reviews/${id}/reply`,
-      { text }
-    ),
-};
-
-export const adminStatsApi = {
-  get: () => adminApi.get<AdminStats>("/admin/stats"),
+  getTenantId(): string | null {
+    if (typeof window === "undefined") return null;
+    return localStorage.getItem(KEYS.tenantId);
+  },
 };
