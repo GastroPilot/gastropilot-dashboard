@@ -28,56 +28,17 @@ export interface GuestUpdate {
   notes?: string | null;
 }
 
-interface GuestListApiResponse {
-  id: string;
-  name: string;
-  email: string | null;
-  phone: string | null;
-  notes?: string | null;
-}
-
-function splitGuestName(name: string): { first_name: string; last_name: string } {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) {
-    return { first_name: "", last_name: "" };
-  }
-  if (parts.length === 1) {
-    return { first_name: parts[0], last_name: "" };
-  }
-  return {
-    first_name: parts[0],
-    last_name: parts.slice(1).join(" "),
-  };
-}
-
-function toGuest(response: GuestListApiResponse): Guest {
-  const names = splitGuestName(response.name ?? "");
-  return {
-    id: response.id,
-    restaurant_id: "",
-    first_name: names.first_name,
-    last_name: names.last_name,
-    email: response.email,
-    phone: response.phone,
-    notes: response.notes ?? null,
-    created_at_utc: "",
-    updated_at_utc: "",
-  };
-}
-
 export const guestsApi = {
   list: async (_restaurantId: string): Promise<Guest[]> => {
-    const response = await api.get<GuestListApiResponse[]>(`/guests/`);
-    return response.map(toGuest);
+    return api.get<Guest[]>("/guests");
   },
 
   get: async (_restaurantId: string, guestId: string): Promise<Guest> => {
-    const response = await api.get<GuestListApiResponse>(`/guests/${guestId}`);
-    return toGuest(response);
+    return api.get<Guest>(`/guests/${guestId}`);
   },
 
-  create: async (_restaurantId: string, _data: GuestCreate): Promise<Guest> => {
-    throw new Error("Guest create endpoint is not available in the current backend.");
+  create: async (_restaurantId: string, data: GuestCreate): Promise<Guest> => {
+    return api.post<Guest>("/guests", data);
   },
 
   update: async (
@@ -85,14 +46,10 @@ export const guestsApi = {
     guestId: string,
     data: GuestUpdate
   ): Promise<Guest> => {
-    await api.patch(`/guests/${guestId}`, {
-      notes: data.notes ?? null,
-    });
-    const response = await api.get<GuestListApiResponse>(`/guests/${guestId}`);
-    return toGuest(response);
+    return api.patch<Guest>(`/guests/${guestId}`, data);
   },
 
-  delete: async (_restaurantId: string, _guestId: string): Promise<void> => {
-    throw new Error("Guest delete endpoint is not available in the current backend.");
+  delete: async (_restaurantId: string, guestId: string): Promise<void> => {
+    return api.delete(`/guests/${guestId}`);
   },
 };

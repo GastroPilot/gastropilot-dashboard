@@ -133,7 +133,7 @@ export const ordersApi = {
     }
   ): Promise<Order[]> => {
     const queryParams = new URLSearchParams();
-    if (params?.status) queryParams.append("status", params.status);
+    if (params?.status) queryParams.append("status_filter", params.status);
     if (params?.table_id) queryParams.append("table_id", params.table_id);
     if (params?.guest_id) queryParams.append("guest_id", params.guest_id);
     if (params?.reservation_id)
@@ -142,7 +142,7 @@ export const ordersApi = {
     if (params?.end_date) queryParams.append("end_date", params.end_date);
 
     const query = queryParams.toString();
-    return api.get<Order[]>(`/orders/${query ? `?${query}` : ""}`);
+    return api.get<Order[]>(`/orders${query ? `?${query}` : ""}`);
   },
 
   get: async (_restaurantId: string, orderId: string): Promise<OrderWithItems> => {
@@ -150,7 +150,7 @@ export const ordersApi = {
   },
 
   create: async (_restaurantId: string, data: OrderCreate): Promise<Order> => {
-    return api.post<Order>(`/orders/`, data);
+    return api.post<Order>("/orders", data);
   },
 
   update: async (
@@ -161,8 +161,16 @@ export const ordersApi = {
     return api.patch<Order>(`/orders/${orderId}`, data);
   },
 
+  updateStatus: async (
+    _restaurantId: string,
+    orderId: string,
+    status: OrderStatus
+  ): Promise<Order> => {
+    return api.patch<Order>(`/orders/${orderId}/status`, { status });
+  },
+
   delete: async (_restaurantId: string, orderId: string): Promise<void> => {
-    await api.patch<Order>(`/orders/${orderId}`, { status: "canceled" });
+    return api.delete(`/orders/${orderId}`);
   },
 
   // OrderItem endpoints
@@ -191,4 +199,3 @@ export const ordersApi = {
     return api.delete(`/orders/${orderId}/items/${itemId}`);
   },
 };
-

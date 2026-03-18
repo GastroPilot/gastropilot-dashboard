@@ -2,8 +2,7 @@ import { api } from "./client";
 
 export interface TableDayConfig {
   id: string;
-  restaurant_id?: string;
-  tenant_id?: string;
+  restaurant_id: string;
   table_id: string | null;
   date: string;
   is_hidden: boolean;
@@ -21,14 +20,11 @@ export interface TableDayConfig {
   join_group_id: string | null;
   is_joinable: boolean | null;
   rotation: number | null;
-  created_at_utc?: string;
-  updated_at_utc?: string;
-  created_at?: string;
-  updated_at?: string;
+  created_at_utc: string;
+  updated_at_utc: string;
 }
 
 export interface TableDayConfigCreate {
-  restaurant_id?: string | null;
   table_id?: string | null;
   date: string;
   is_hidden?: boolean | null;
@@ -61,22 +57,19 @@ export interface TableDayConfigUpdate {
 }
 
 export const tableDayConfigsApi = {
-  getByDate: async (restaurantId: string, date: string): Promise<TableDayConfig[]> => {
+  getByDate: async (_restaurantId: string, date: string): Promise<TableDayConfig[]> => {
     return api.get<TableDayConfig[]>(`/table-day-configs/by-date/${date}`);
   },
 
   createOrUpdate: async (
-    restaurantId: string,
+    _restaurantId: string,
     data: TableDayConfigCreate
   ): Promise<TableDayConfig> => {
-    return api.post<TableDayConfig>(`/table-day-configs/`, {
-      ...data,
-      restaurant_id: restaurantId,
-    });
+    return api.post<TableDayConfig>("/table-day-configs", data);
   },
 
   update: async (
-    restaurantId: string,
+    _restaurantId: string,
     configId: string,
     data: TableDayConfigUpdate
   ): Promise<TableDayConfig> => {
@@ -84,7 +77,7 @@ export const tableDayConfigsApi = {
   },
 
   delete: async (
-    restaurantId: string,
+    _restaurantId: string,
     date: string,
     tableId: string
   ): Promise<void> => {
@@ -92,17 +85,16 @@ export const tableDayConfigsApi = {
   },
 
   deleteById: async (
-    restaurantId: string,
+    _restaurantId: string,
     configId: string
   ): Promise<void> => {
     return api.delete(`/table-day-configs/${configId}`);
   },
 
   deleteAllForDate: async (
-    restaurantId: string,
+    _restaurantId: string,
     date: string
   ): Promise<void> => {
     return api.delete(`/table-day-configs/by-date/${date}`);
   },
 };
-

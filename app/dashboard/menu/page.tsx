@@ -19,6 +19,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { confirmAction } from "@/lib/utils";
+import { uploadsApi } from "@/lib/api/uploads";
 import {
   Dialog,
   DialogContent,
@@ -28,6 +29,23 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { DropdownSelector } from "@/components/area-selector";
+
+const EU_14_ALLERGENS = [
+  { code: "gluten", label: "Gluten" },
+  { code: "krebstiere", label: "Krebstiere" },
+  { code: "eier", label: "Eier" },
+  { code: "fisch", label: "Fisch" },
+  { code: "erdnüsse", label: "Erdnüsse" },
+  { code: "soja", label: "Soja" },
+  { code: "milch", label: "Milch" },
+  { code: "schalenfrüchte", label: "Schalenfrüchte" },
+  { code: "sellerie", label: "Sellerie" },
+  { code: "senf", label: "Senf" },
+  { code: "sesam", label: "Sesam" },
+  { code: "schwefeldioxid", label: "Schwefeldioxid" },
+  { code: "lupinen", label: "Lupinen" },
+  { code: "weichtiere", label: "Weichtiere" },
+];
 
 export default function MenuPage() {
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
@@ -57,6 +75,10 @@ export default function MenuPage() {
   const [itemIsAvailable, setItemIsAvailable] = useState(true);
   const [itemSortOrder, setItemSortOrder] = useState(0);
   
+  const [itemAllergens, setItemAllergens] = useState<string[]>([]);
+  const [itemImageUrl, setItemImageUrl] = useState<string | null>(null);
+  const [imageUploading, setImageUploading] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [toasts, setToasts] = useState<
@@ -162,14 +184,18 @@ export default function MenuPage() {
       setItemCategoryId(item.category_id);
       setItemIsAvailable(item.is_available);
       setItemSortOrder(item.sort_order || 0);
+      setItemAllergens(item.allergens || []);
+      setItemImageUrl(null); // TODO: load from item when image_url available
     } else {
       setItemName("");
       setItemDescription("");
       setItemPrice(0);
-      setItemTaxRate(0.19);  // Default 19%
+      setItemTaxRate(0.19);
       setItemCategoryId(selectedCategoryId);
       setItemIsAvailable(true);
       setItemSortOrder(items.length);
+      setItemAllergens([]);
+      setItemImageUrl(null);
     }
     setError("");
     setItemDialogOpen(true);
@@ -229,6 +255,7 @@ export default function MenuPage() {
           category_id: itemCategoryId,
           is_available: itemIsAvailable,
           sort_order: itemSortOrder,
+          allergens: itemAllergens,
         });
         addToast("Artikel erfolgreich aktualisiert", "success");
       } else {
@@ -240,6 +267,7 @@ export default function MenuPage() {
           category_id: itemCategoryId,
           is_available: itemIsAvailable,
           sort_order: itemSortOrder,
+          allergens: itemAllergens,
         });
         addToast("Artikel erfolgreich erstellt", "success");
       }
@@ -448,6 +476,18 @@ export default function MenuPage() {
                         </div>
                       </div>
                     </div>
+                    {item.allergens && item.allergens.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-2">
+                        {item.allergens.map((a) => (
+                          <span
+                            key={a}
+                            className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-500/15 text-red-400 border border-red-500/20"
+                          >
+                            {EU_14_ALLERGENS.find((e) => e.code === a)?.label || a}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                     <div className="flex items-center justify-between pt-3 border-t border-border">
                       <span className="text-lg font-bold text-foreground">{formatCurrency(item.price)}</span>
                       <span
@@ -676,6 +716,48 @@ export default function MenuPage() {
               />
             </div>
 
+            {/* Bild-Upload */}
+            <div>
+              <label className="block text-sm font-medium text-muted-foreground mb-2">
+                Artikelbild
+              </label>
+              <div className="flex items-center gap-4">
+                {itemImageUrl && (
+                  <img
+                    src={itemImageUrl}
+                    alt="Vorschau"
+                    className="w-16 h-16 rounded-lg object-cover border border-border"
+                  />
+                )}
+                <div>
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    disabled={loading || imageUploading}
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setImageUploading(true);
+                      try {
+                        const { url } = await uploadsApi.uploadMenuItemImage(file);
+                        setItemImageUrl(url);
+                        addToast("Bild hochgeladen", "success");
+                      } catch (err) {
+                        const msg = err instanceof Error ? err.message : "Upload fehlgeschlagen";
+                        addToast(msg, "error");
+                      } finally {
+                        setImageUploading(false);
+                      }
+                    }}
+                    className="text-sm text-muted-foreground file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-sm file:font-medium file:bg-primary file:text-white hover:file:bg-primary/90 file:cursor-pointer"
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    JPEG, PNG oder WebP, max. 10 MB
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-muted-foreground mb-2">
@@ -742,6 +824,39 @@ export default function MenuPage() {
                 />
               </div>
             </div>
+            {/* Allergen-Picker */}
+            <div>
+              <label className="block text-sm font-medium text-muted-foreground mb-2">
+                Allergene (EU-14)
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {EU_14_ALLERGENS.map((allergen) => {
+                  const isSelected = itemAllergens.includes(allergen.code);
+                  return (
+                    <button
+                      key={allergen.code}
+                      type="button"
+                      onClick={() => {
+                        setItemAllergens((prev) =>
+                          isSelected
+                            ? prev.filter((a) => a !== allergen.code)
+                            : [...prev, allergen.code]
+                        );
+                      }}
+                      disabled={loading}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                        isSelected
+                          ? "bg-red-500/20 border-red-500/50 text-red-300"
+                          : "bg-muted border-border text-muted-foreground hover:border-primary"
+                      }`}
+                    >
+                      {allergen.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div className="flex items-center">
               <label className="inline-flex items-center gap-3 px-3 py-2 rounded-md border border-border bg-card text-sm text-foreground cursor-pointer hover:border-primary">
                 <input

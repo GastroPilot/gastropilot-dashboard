@@ -32,11 +32,6 @@ export interface Reservation {
   updated_at_utc: string;
 }
 
-type ApiReservationStatus = ReservationStatus | "cancelled";
-type ReservationApiResponse = Omit<Reservation, "status"> & {
-  status: ApiReservationStatus;
-};
-
 export interface ReservationCreate {
   table_id?: string | null;
   guest_id?: string | null;
@@ -68,24 +63,6 @@ export interface ReservationUpdate {
   tags?: string[];
 }
 
-type ReservationApiPayload = Omit<ReservationCreate, "start_at" | "end_at" | "channel"> & {
-  starts_at?: string;
-  ends_at?: string;
-  source?: string;
-  restaurant_id?: string;
-};
-
-type ReservationApiUpdatePayload = Omit<ReservationUpdate, "start_at" | "end_at"> & {
-  starts_at?: string;
-  ends_at?: string;
-};
-
-function normalizeReservation(reservation: ReservationApiResponse): Reservation {
-  const normalizedStatus: ReservationStatus =
-    reservation.status === "cancelled" ? "canceled" : reservation.status;
-  return { ...reservation, status: normalizedStatus };
-}
-
 export const reservationsApi = {
   list: async (
     _restaurantId: string,
@@ -96,32 +73,20 @@ export const reservationsApi = {
     if (params?.to) queryParams.append("to", params.to);
     if (params?.status) queryParams.append("status", params.status);
     if (params?.table_id) queryParams.append("table_id", params.table_id);
-    
+
     const query = queryParams.toString();
-    const response = await api.get<ReservationApiResponse[]>(
-      `/reservations/${query ? `?${query}` : ""}`
-    );
-    return response.map(normalizeReservation);
+    return api.get<Reservation[]>(`/reservations${query ? `?${query}` : ""}`);
   },
 
   get: async (_restaurantId: string, reservationId: string): Promise<Reservation> => {
-    const response = await api.get<ReservationApiResponse>(`/reservations/${reservationId}`);
-    return normalizeReservation(response);
+    return api.get<Reservation>(`/reservations/${reservationId}`);
   },
 
   create: async (
-    restaurantId: string,
+    _restaurantId: string,
     data: ReservationCreate
   ): Promise<Reservation> => {
-    const payload: ReservationApiPayload = {
-      ...data,
-      starts_at: data.start_at,
-      ends_at: data.end_at,
-      source: data.channel,
-      restaurant_id: restaurantId,
-    };
-    const response = await api.post<ReservationApiResponse>(`/reservations/`, payload);
-    return normalizeReservation(response);
+    return api.post<Reservation>("/reservations", data);
   },
 
   update: async (
@@ -129,16 +94,7 @@ export const reservationsApi = {
     reservationId: string,
     data: ReservationUpdate
   ): Promise<Reservation> => {
-    const payload: ReservationApiUpdatePayload = {
-      ...data,
-      starts_at: data.start_at,
-      ends_at: data.end_at,
-    };
-    const response = await api.patch<ReservationApiResponse>(
-      `/reservations/${reservationId}`,
-      payload
-    );
-    return normalizeReservation(response);
+    return api.patch<Reservation>(`/reservations/${reservationId}`, data);
   },
 
   delete: async (_restaurantId: string, reservationId: string): Promise<void> => {
@@ -150,13 +106,9 @@ export const reservationsApi = {
     reservationId: string,
     canceledReason?: string
   ): Promise<Reservation> => {
-    const response = await api.patch<ReservationApiResponse>(
-      `/reservations/${reservationId}`,
-      {
-        status: "canceled",
-        ...(canceledReason ? { notes: canceledReason } : {}),
-      }
+    return api.post<Reservation>(
+      `/reservations/${reservationId}/cancel`,
+      canceledReason ? { canceled_reason: canceledReason } : {}
     );
-    return normalizeReservation(response);
   },
 };
