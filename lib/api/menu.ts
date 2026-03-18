@@ -31,7 +31,6 @@ export interface MenuItem {
 }
 
 export interface MenuCategoryCreate {
-  restaurant_id?: string | null;
   name: string;
   description?: string | null;
   sort_order?: number;
@@ -46,7 +45,6 @@ export interface MenuCategoryUpdate {
 }
 
 export interface MenuItemCreate {
-  restaurant_id?: string | null;
   category_id?: string | null;
   name: string;
   description?: string | null;
@@ -78,41 +76,33 @@ export interface MenuItemUpdate {
 
 export const menuApi = {
   // Categories
-  listCategories: async (restaurantId: string): Promise<MenuCategory[]> => {
-    return api.get<MenuCategory[]>(`/menus/categories`);
+  listCategories: async (_restaurantId: string): Promise<MenuCategory[]> => {
+    return api.get<MenuCategory[]>("/menus/categories");
   },
 
-  getCategory: async (restaurantId: string, categoryId: string): Promise<MenuCategory> => {
-    const categories = await menuApi.listCategories(restaurantId);
-    const category = categories.find((item) => item.id === categoryId);
-    if (!category) {
-      throw new Error("Kategorie nicht gefunden");
-    }
-    return category;
+  getCategory: async (_restaurantId: string, categoryId: string): Promise<MenuCategory> => {
+    return api.get<MenuCategory>(`/menus/categories/${categoryId}`);
   },
 
-  createCategory: async (restaurantId: string, data: MenuCategoryCreate): Promise<MenuCategory> => {
-    return api.post<MenuCategory>(`/menus/categories`, {
-      ...data,
-      restaurant_id: restaurantId,
-    });
+  createCategory: async (_restaurantId: string, data: MenuCategoryCreate): Promise<MenuCategory> => {
+    return api.post<MenuCategory>("/menus/categories", data);
   },
 
   updateCategory: async (
-    restaurantId: string,
+    _restaurantId: string,
     categoryId: string,
     data: MenuCategoryUpdate
   ): Promise<MenuCategory> => {
     return api.patch<MenuCategory>(`/menus/categories/${categoryId}`, data);
   },
 
-  deleteCategory: async (restaurantId: string, categoryId: string): Promise<void> => {
+  deleteCategory: async (_restaurantId: string, categoryId: string): Promise<void> => {
     return api.delete(`/menus/categories/${categoryId}`);
   },
 
   // Items
   listItems: async (
-    restaurantId: string,
+    _restaurantId: string,
     params?: { category_id?: string; available_only?: boolean }
   ): Promise<MenuItem[]> => {
     const queryParams = new URLSearchParams();
@@ -120,31 +110,26 @@ export const menuApi = {
     if (params?.available_only) queryParams.append("available_only", "true");
 
     const query = queryParams.toString();
-    return api.get<MenuItem[]>(
-      `/menus/items${query ? `?${query}` : ""}`
-    );
+    return api.get<MenuItem[]>(`/menus/items${query ? `?${query}` : ""}`);
   },
 
-  getItem: async (restaurantId: string, itemId: string): Promise<MenuItem> => {
+  getItem: async (_restaurantId: string, itemId: string): Promise<MenuItem> => {
     return api.get<MenuItem>(`/menus/items/${itemId}`);
   },
 
-  createItem: async (restaurantId: string, data: MenuItemCreate): Promise<MenuItem> => {
-    return api.post<MenuItem>(`/menus/items`, {
-      ...data,
-      restaurant_id: restaurantId,
-    });
+  createItem: async (_restaurantId: string, data: MenuItemCreate): Promise<MenuItem> => {
+    return api.post<MenuItem>("/menus/items", data);
   },
 
   updateItem: async (
-    restaurantId: string,
+    _restaurantId: string,
     itemId: string,
     data: MenuItemUpdate
   ): Promise<MenuItem> => {
     return api.patch<MenuItem>(`/menus/items/${itemId}`, data);
   },
 
-  deleteItem: async (restaurantId: string, itemId: string): Promise<void> => {
+  deleteItem: async (_restaurantId: string, itemId: string): Promise<void> => {
     return api.delete(`/menus/items/${itemId}`);
   },
 };

@@ -181,6 +181,18 @@ export default function DashboardLayout({
         show: !!canManageTables && !isGrundstatus,
       },
       {
+        href: "/dashboard/qr-codes",
+        label: "QR-Codes",
+        active: pathname?.startsWith("/dashboard/qr-codes"),
+        show: !!canManageTables && !isGrundstatus,
+      },
+      {
+        href: "/dashboard/guests",
+        label: "Gäste / CRM",
+        active: pathname?.startsWith("/dashboard/guests"),
+        show: !!(user && (user.role === "platform_admin" || user.role === "owner" || user.role === "manager")) && !isGrundstatus,
+      },
+      {
         href: "/dashboard/restaurants",
         label: "Tenants",
         active: pathname === "/dashboard/restaurants",
@@ -205,10 +217,34 @@ export default function DashboardLayout({
         show: user?.role === "platform_admin",
       },
       {
+        href: "/dashboard/devices",
+        label: "Geraete / KDS",
+        active: pathname?.startsWith("/dashboard/devices"),
+        show: !!isOwner && !isGrundstatus,
+      },
+      {
         href: "/dashboard/owner-insights",
         label: "Kennzahlen",
         active: pathname?.startsWith("/dashboard/owner-insights"),
         show: !!isOwner && !isGrundstatus,
+      },
+      {
+        href: "/dashboard/ai-insights",
+        label: "KI-Prognosen",
+        active: pathname?.startsWith("/dashboard/ai-insights"),
+        show: !!isOwner && !isGrundstatus,
+      },
+      {
+        href: "/dashboard/billing",
+        label: "Abonnement",
+        active: pathname?.startsWith("/dashboard/billing"),
+        show: !!isOwner && !isGrundstatus,
+      },
+      {
+        href: "/dashboard/hilfecenter",
+        label: "Hilfecenter",
+        active: pathname?.startsWith("/dashboard/hilfecenter"),
+        show: !!user,
       },
       {
         href: "/dashboard/user-settings",
@@ -237,6 +273,7 @@ export default function DashboardLayout({
           pick("/dashboard/orders"),
           pick("/dashboard/kitchen"),
           pick("/dashboard/menu"),
+          pick("/dashboard/qr-codes"),
           pick("/dashboard/order-statistics"),
           pick("/dashboard/order-history"),
           pick("/dashboard/hilfecenter"),
@@ -249,7 +286,11 @@ export default function DashboardLayout({
           pick("/dashboard/tenant-settings"),
           pick("/dashboard/operators"),
           pick("/dashboard/staff-access"),
+          pick("/dashboard/guests"),
+          pick("/dashboard/devices"),
           pick("/dashboard/owner-insights"),
+          pick("/dashboard/ai-insights"),
+          pick("/dashboard/billing"),
         ],
       },
       {
@@ -311,7 +352,7 @@ export default function DashboardLayout({
               <button
                 type="button"
                 className="sm:hidden inline-flex items-center justify-center rounded-md border border-border bg-card p-2 text-foreground hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring"
-                aria-label={isNavOpen ? "Navigation schließen" : "Navigation öffnen"}
+                aria-label={isNavOpen ? "Navigation schliessen" : "Navigation öffnen"}
                 aria-expanded={isNavOpen}
                 onClick={() => setIsNavOpen((prev) => !prev)}
               >

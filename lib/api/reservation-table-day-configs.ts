@@ -15,29 +15,29 @@ export interface ReservationTableDayConfigCreate {
 }
 
 export const reservationTableDayConfigsApi = {
-  list: async (restaurantId: string): Promise<ReservationTableDayConfig[]> => {
-    return api.get<ReservationTableDayConfig[]>(`/reservation-table-day-configs/`);
+  list: async (_restaurantId: string): Promise<ReservationTableDayConfig[]> => {
+    return api.get<ReservationTableDayConfig[]>("/reservation-table-day-configs");
   },
 
   create: async (
-    restaurantId: string,
+    _restaurantId: string,
     data: ReservationTableDayConfigCreate
   ): Promise<ReservationTableDayConfig> => {
-    return api.post<ReservationTableDayConfig>(`/reservation-table-day-configs/`, data);
+    return api.post<ReservationTableDayConfig>("/reservation-table-day-configs", data);
   },
 
   delete: async (
-    restaurantId: string,
+    _restaurantId: string,
     reservationId: string,
     tableDayConfigId: string
   ): Promise<void> => {
     return api.delete(
-      `/reservation-table-day-configs/?reservation_id=${reservationId}&table_day_config_id=${tableDayConfigId}`
+      `/reservation-table-day-configs?reservation_id=${reservationId}&table_day_config_id=${tableDayConfigId}`
     );
   },
 
   getByReservation: async (
-    restaurantId: string,
+    _restaurantId: string,
     reservationId: string
   ): Promise<ReservationTableDayConfig[]> => {
     return api.get<ReservationTableDayConfig[]>(
@@ -46,7 +46,7 @@ export const reservationTableDayConfigsApi = {
   },
 
   getByTableDayConfig: async (
-    restaurantId: string,
+    _restaurantId: string,
     tableDayConfigId: string
   ): Promise<ReservationTableDayConfig[]> => {
     return api.get<ReservationTableDayConfig[]>(
@@ -54,4 +54,3 @@ export const reservationTableDayConfigsApi = {
     );
   },
 };
-
