@@ -19,10 +19,10 @@ const APP_VERSION = formatVersion(APP_VERSION_RAW);
 /**
  * Ermittelt das Environment basierend auf der Domain.
  * - localhost → Development
- * - test.gpilot.app → Test
- * - stage.gpilot.app → Stage
- * - demo.gpilot.app → Demo
- * - gpilot.app → Production (wird nicht angezeigt)
+ * - test-dashboard.gpilot.app → Test
+ * - stage-dashboard.gpilot.app → Stage
+ * - demo-dashboard.gpilot.app → Demo
+ * - dashboard.gpilot.app → Production (wird nicht angezeigt)
  */
 function getEnvironment(): string | null {
   if (typeof window === "undefined") return null;
@@ -31,6 +31,16 @@ function getEnvironment(): string | null {
 
   if (hostname === "localhost" || hostname === "127.0.0.1") {
     return "Development";
+  }
+
+  // Dashboard-Subdomains: {env}-dashboard.gpilot.app
+  const dashboardMatch = hostname.match(/^([^-]+)-dashboard\.gpilot\.app$/);
+  if (dashboardMatch) {
+    const env = dashboardMatch[1].toLowerCase();
+    if (env === "test") return "Test";
+    if (env === "stage") return "Stage";
+    if (env === "demo") return "Demo";
+    return null;
   }
 
   // Prüfe auf gpilot.app Subdomains
@@ -45,7 +55,6 @@ function getEnvironment(): string | null {
       case "demo":
         return "Demo";
       default:
-        // Kunde-spezifische Subdomain - zeige nichts
         return null;
     }
   }
