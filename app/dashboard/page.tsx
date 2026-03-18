@@ -171,7 +171,7 @@ function useDashboardData(restaurantId: string | null, selectedDate: Date) {
         if (!config.is_hidden && config.number && config.capacity) {
           const tempTable: Table = {
             id: `temp-${config.id}`,
-            restaurant_id: config.restaurant_id ?? config.tenant_id ?? restId,
+            restaurant_id: config.restaurant_id ?? restId,
             number: config.number,
             capacity: config.capacity,
             shape: config.shape ?? "rectangle",
@@ -186,8 +186,8 @@ function useDashboardData(restaurantId: string | null, selectedDate: Date) {
             join_group_id: config.join_group_id ?? null,
             is_outdoor: false,
             rotation: config.rotation ?? null,
-            created_at_utc: config.created_at_utc ?? config.created_at ?? new Date().toISOString(),
-            updated_at_utc: config.updated_at_utc ?? config.updated_at ?? new Date().toISOString(),
+            created_at_utc: config.created_at_utc ?? new Date().toISOString(),
+            updated_at_utc: config.updated_at_utc ?? new Date().toISOString(),
             area_id: null,
           };
           visibleTables.push(tempTable);
