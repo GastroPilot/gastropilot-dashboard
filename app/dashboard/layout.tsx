@@ -181,18 +181,6 @@ export default function DashboardLayout({
         show: !!canManageTables && !isGrundstatus,
       },
       {
-        href: "/dashboard/vouchers",
-        label: "Gutscheine",
-        active: pathname?.startsWith("/dashboard/vouchers"),
-        show: !!isOwner && !isGrundstatus,
-      },
-      {
-        href: "/dashboard/upsell-packages",
-        label: "Upsell-Pakete",
-        active: pathname?.startsWith("/dashboard/upsell-packages"),
-        show: !!isOwner && !isGrundstatus,
-      },
-      {
         href: "/dashboard/restaurants",
         label: "Tenants",
         active: pathname === "/dashboard/restaurants",
@@ -221,12 +209,6 @@ export default function DashboardLayout({
         label: "Kennzahlen",
         active: pathname?.startsWith("/dashboard/owner-insights"),
         show: !!isOwner && !isGrundstatus,
-      },
-      {
-        href: "/dashboard/hilfecenter",
-        label: "Hilfecenter",
-        active: pathname?.startsWith("/dashboard/hilfecenter"),
-        show: !!user,
       },
       {
         href: "/dashboard/user-settings",
@@ -267,8 +249,6 @@ export default function DashboardLayout({
           pick("/dashboard/tenant-settings"),
           pick("/dashboard/operators"),
           pick("/dashboard/staff-access"),
-          pick("/dashboard/vouchers"),
-          pick("/dashboard/upsell-packages"),
           pick("/dashboard/owner-insights"),
         ],
       },

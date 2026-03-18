@@ -19,7 +19,7 @@ import {
 import { ApiError } from "@/lib/api/client";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
-import { Clock, ShieldCheck, Users, CheckCircle, XCircle, AlertTriangle, Check, Trash2, X, Save, Star, Gift, Accessibility, Package, Ban } from "lucide-react";
+import { Clock, ShieldCheck, Users, CheckCircle, XCircle, AlertTriangle, Check, Trash2, X, Save, Star, Gift, Accessibility, Ban } from "lucide-react";
 import { confirmAction } from "@/lib/utils";
 
 interface ReservationDialogProps {
@@ -809,34 +809,6 @@ export function ReservationDialog({
                   </div>
                 )}
                 
-                {/* Upsell-Pakete anzeigen (nur bei bestehenden Reservierungen) */}
-                {(loadedReservation || reservation) && (loadedReservation || reservation)?.upsell_packages && (loadedReservation || reservation)!.upsell_packages!.length > 0 && (
-                  <div>
-                    <label className="block text-sm font-medium mb-1.5 md:mb-2 text-foreground flex items-center gap-2">
-                      <Package className="w-4 h-4" />
-                      Zusatzpakete
-                    </label>
-                    <div className="space-y-2 bg-card/50 rounded-md p-3 border border-border">
-                      {(loadedReservation || reservation)!.upsell_packages!.map((pkg) => (
-                        <div key={pkg.id} className="flex items-start justify-between gap-3">
-                          <div className="flex-1">
-                            <div className="font-medium text-foreground">{pkg.name}</div>
-                            {pkg.description && (
-                              <div className="text-sm text-muted-foreground mt-0.5">{pkg.description}</div>
-                            )}
-                          </div>
-                          <div className="font-semibold text-purple-400">{pkg.price.toFixed(2)} €</div>
-                        </div>
-                      ))}
-                      <div className="pt-2 mt-2 border-t border-border flex items-center justify-between">
-                        <span className="font-medium text-foreground">Gesamt</span>
-                        <span className="font-bold text-purple-400">
-                          {(loadedReservation || reservation)!.upsell_packages!.reduce((sum, pkg) => sum + pkg.price, 0).toFixed(2)} €
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </>
             )}
           </div>

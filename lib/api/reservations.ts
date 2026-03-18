@@ -1,5 +1,4 @@
 import { api } from "./client";
-import { UpsellPackage } from "./upsell-packages";
 
 export type ReservationStatus =
   | "pending"
@@ -31,11 +30,6 @@ export interface Reservation {
   canceled_at: string | null;
   created_at_utc: string;
   updated_at_utc: string;
-  voucher_id: string | null;
-  voucher_discount_amount: number | null;
-  prepayment_required: boolean;
-  prepayment_amount: number | null;
-  upsell_packages: UpsellPackage[] | null;
 }
 
 type ApiReservationStatus = ReservationStatus | "cancelled";
