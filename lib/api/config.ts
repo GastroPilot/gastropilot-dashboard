@@ -30,9 +30,19 @@ function computeApiUrlFromHostname(hostname: string): string {
     return 'https://api.gpilot.app';
   }
 
+  // Demo: demo.gpilot.app → demo-api.gpilot.app (Demo-Setup)
+  if (hostname === 'demo.gpilot.app' || hostname === 'www.demo.gpilot.app') {
+    return 'https://demo-api.gpilot.app';
+  }
+
   // Staging: stage.gpilot.app → stage-api.gpilot.app (Konvention Staging-Setup)
   if (hostname === 'stage.gpilot.app' || hostname === 'www.stage.gpilot.app') {
     return 'https://stage-api.gpilot.app';
+  }
+
+    // Test: test.gpilot.app → test-api.gpilot.app (Test-Setup)
+  if (hostname === 'test.gpilot.app' || hostname === 'www.test.gpilot.app') {
+    return 'https://test-api.gpilot.app';
   }
 
   // Local-Staging: stage.servecta.local → stage-api.servecta.local
