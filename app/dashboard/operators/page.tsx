@@ -8,6 +8,14 @@ import { ApiError } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { LoadingOverlay } from "@/components/loading-overlay";
 import { confirmAction } from "@/lib/utils";
 import { DropdownSelector } from "@/components/area-selector";
@@ -36,11 +44,7 @@ import {
 export default function OperatorsPage() {
   const router = useRouter();
   type OperatorFormData = UserCreate & { is_active?: boolean };
-  const [operators, setOperators] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [showCreateForm, setShowCreateForm] = useState(false);
-  const [editingOperator, setEditingOperator] = useState<User | null>(null);
-  const [formData, setFormData] = useState<OperatorFormData>({
+  const getInitialFormData = (): OperatorFormData => ({
     operator_number: "",
     pin: "",
     nfc_tag_id: "",
@@ -49,6 +53,11 @@ export default function OperatorsPage() {
     role: "staff",
     is_active: true,
   });
+  const [operators, setOperators] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editingOperator, setEditingOperator] = useState<User | null>(null);
+  const [formData, setFormData] = useState<OperatorFormData>(getInitialFormData);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -70,16 +79,16 @@ export default function OperatorsPage() {
     []
   );
 
-  const loadCurrentUser = async () => {
+  const loadCurrentUser = useCallback(async () => {
     try {
       const user = await authApi.getCurrentUser();
       setCurrentUser(user);
     } catch (err) {
       console.error("Fehler beim Laden des aktuellen Users:", err);
     }
-  };
+  }, []);
 
-  const loadOperators = async () => {
+  const loadOperators = useCallback(async () => {
     try {
       setLoading(true);
       const data = await authApi.listOperators();
@@ -95,13 +104,13 @@ export default function OperatorsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [addToast, router]);
 
   // Initial load - lädt Bediener und aktuellen User beim Mount
   useEffect(() => {
     loadCurrentUser();
     loadOperators();
-  }, []);
+  }, [loadCurrentUser, loadOperators]);
 
   const handleOperatorNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, "").slice(0, 4);
@@ -153,16 +162,9 @@ export default function OperatorsPage() {
         };
         await authApi.updateOperator(editingOperator.id, updateData);
         setEditingOperator(null);
-        setShowCreateForm(false);
-        setFormData({
-          operator_number: "",
-          pin: "",
-          nfc_tag_id: "",
-          first_name: "",
-          last_name: "",
-          role: "staff",
-          is_active: true,
-        });
+        setDialogOpen(false);
+        setStatusMenuOpen(false);
+        setFormData(getInitialFormData());
         addToast("Bediener erfolgreich aktualisiert", "success");
         await loadOperators();
       } catch (err) {
@@ -221,16 +223,9 @@ export default function OperatorsPage() {
           nfc_tag_id: formData.nfc_tag_id?.trim() || null,
         };
         await authApi.createOperator(createData);
-        setShowCreateForm(false);
-        setFormData({
-          operator_number: "",
-          pin: "",
-          nfc_tag_id: "",
-          first_name: "",
-          last_name: "",
-          role: "staff",
-          is_active: true,
-        });
+        setDialogOpen(false);
+        setStatusMenuOpen(false);
+        setFormData(getInitialFormData());
         addToast("Bediener erfolgreich angelegt", "success");
         await loadOperators();
       } catch (err) {
@@ -261,7 +256,16 @@ export default function OperatorsPage() {
       role: operator.role as "platform_admin" | "owner" | "manager" | "staff" | "kitchen" | "guest",
       is_active: operator.is_active,
     });
-    setShowCreateForm(true);
+    setDialogOpen(true);
+    setStatusMenuOpen(false);
+    setError("");
+  };
+
+  const handleCreate = () => {
+    setEditingOperator(null);
+    setFormData(getInitialFormData());
+    setDialogOpen(true);
+    setStatusMenuOpen(false);
     setError("");
   };
 
@@ -313,18 +317,21 @@ export default function OperatorsPage() {
   };
 
   const handleCancel = () => {
-    setShowCreateForm(false);
+    setDialogOpen(false);
     setEditingOperator(null);
+    setStatusMenuOpen(false);
     setError("");
-    setFormData({
-      operator_number: "",
-      pin: "",
-      nfc_tag_id: "",
-      first_name: "",
-      last_name: "",
-      role: "staff",
-      is_active: true,
-    });
+    setFormData(getInitialFormData());
+  };
+
+  const handleDialogOpenChange = (open: boolean) => {
+    setDialogOpen(open);
+    if (!open) {
+      setEditingOperator(null);
+      setStatusMenuOpen(false);
+      setError("");
+      setFormData(getInitialFormData());
+    }
   };
 
   const getRoleLabel = (role: string) => {
@@ -460,16 +467,14 @@ export default function OperatorsPage() {
                 </p>
               </div>
             </div>
-            {!showCreateForm && (
-              <Button
-                onClick={() => setShowCreateForm(true)}
-                className="gap-2 touch-manipulation min-h-[36px] md:min-h-[40px]"
-              >
-                <Plus className="w-4 h-4" />
-                <span className="hidden sm:inline">Neuen Bediener anlegen</span>
-                <span className="sm:hidden">Neu</span>
-              </Button>
-            )}
+            <Button
+              onClick={handleCreate}
+              className="gap-2 touch-manipulation min-h-[36px] md:min-h-[40px]"
+            >
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">Neuen Bediener anlegen</span>
+              <span className="sm:hidden">Neu</span>
+            </Button>
           </div>
         </div>
       </div>
@@ -477,321 +482,6 @@ export default function OperatorsPage() {
       {/* Content */}
       <div className="flex-1 overflow-y-auto min-h-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
-          {showCreateForm && (
-            <Card className="mb-6 border-border bg-card/50 backdrop-blur-sm">
-              <CardHeader className="border-b border-border">
-                <div className="flex justify-between items-center">
-                  <CardTitle className="flex items-center gap-2 text-foreground">
-                    <UserIcon className="w-5 h-5 text-primary" />
-                    {editingOperator ? "Bediener bearbeiten" : "Neuen Bediener anlegen"}
-                  </CardTitle>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleCancel}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  {error && (
-                    <div className="p-4 bg-red-900/30 border border-red-600/50 text-red-300 rounded-lg flex items-start gap-3">
-                      <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <p className="font-medium">Fehler</p>
-                        <p className="text-sm mt-1">{error}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label 
-                        htmlFor="operator_number" 
-                        className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
-                      >
-                        <Key className="w-4 h-4 text-primary" />
-                        Bedienernummer (4 Ziffern)
-                      </label>
-                      <Input
-                        id="operator_number"
-                        type="text"
-                        inputMode="numeric"
-                        pattern="[0-9]{4}"
-                        value={formData.operator_number}
-                        onChange={handleOperatorNumberChange}
-                        placeholder="0000"
-                        maxLength={4}
-                        required={!editingOperator}
-                        disabled={editingOperator !== null}
-                        className="text-center text-2xl tracking-widest font-mono bg-card/50 border-input text-foreground focus:border-primary"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label 
-                        htmlFor="pin" 
-                        className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
-                      >
-                        <Key className="w-4 h-4 text-primary" />
-                        PIN (6-8 Ziffern)
-                      </label>
-                      <Input
-                        id="pin"
-                        type="password"
-                        inputMode="numeric"
-                        pattern="[0-9]{6,8}"
-                        value={formData.pin}
-                        onChange={handlePinChange}
-                        placeholder={editingOperator ? "Leer lassen, um nicht zu ändern" : "••••••"}
-                        maxLength={8}
-                        required={!editingOperator}
-                        className="text-center text-xl tracking-widest font-mono bg-card/50 border-input text-foreground focus:border-primary"
-                      />
-                      {editingOperator && (
-                        <p className="text-xs text-muted-foreground">
-                          Leer lassen, um PIN nicht zu ändern
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label 
-                        htmlFor="first_name" 
-                        className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
-                      >
-                        <UserIcon className="w-4 h-4 text-primary" />
-                        Vorname
-                      </label>
-                      <Input
-                        id="first_name"
-                        type="text"
-                        value={formData.first_name}
-                        onChange={(e) =>
-                          setFormData({ ...formData, first_name: e.target.value })
-                        }
-                        placeholder="Max"
-                        required
-                        minLength={2}
-                        maxLength={120}
-                        className="bg-card/50 border-input text-foreground placeholder:text-muted-foreground focus:border-primary"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <label 
-                        htmlFor="last_name" 
-                        className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
-                      >
-                        <UserIcon className="w-4 h-4 text-primary" />
-                        Nachname
-                      </label>
-                      <Input
-                        id="last_name"
-                        type="text"
-                        value={formData.last_name}
-                        onChange={(e) =>
-                          setFormData({ ...formData, last_name: e.target.value })
-                        }
-                        placeholder="Mustermann"
-                        required
-                        minLength={2}
-                        maxLength={120}
-                        className="bg-card/50 border-input text-foreground placeholder:text-muted-foreground focus:border-primary"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label 
-                      htmlFor="nfc_tag_id" 
-                      className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
-                    >
-                      <CreditCard className="w-4 h-4 text-primary" />
-                      NFC Tag-ID (optional)
-                    </label>
-                    <Input
-                      id="nfc_tag_id"
-                      type="text"
-                      value={formData.nfc_tag_id || ""}
-                      onChange={(e) =>
-                        setFormData({ ...formData, nfc_tag_id: e.target.value.trim().toUpperCase() })
-                      }
-                      placeholder="04A1B2C3D4E5F6"
-                      maxLength={64}
-                      className="font-mono bg-card/50 border-input text-foreground placeholder:text-muted-foreground focus:border-primary"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Die Tag-ID des NFC-Transponders für Login ohne PIN. Wird automatisch in Großbuchstaben konvertiert.
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label 
-                      htmlFor="role" 
-                      className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
-                    >
-                      <Shield className="w-4 h-4 text-primary" />
-                      Rolle
-                    </label>
-                    <DropdownSelector
-                      options={formRoleOptions}
-                      selectedId={formData.role}
-                      onSelect={(value) => setFormData({ ...formData, role: value as UserCreate["role"] })}
-                      placeholder="Rolle auswählen"
-                      triggerClassName="inline-flex items-center justify-between w-full gap-2 rounded-md border border-input bg-accent/70 px-3 py-2 text-sm text-foreground shadow-inner hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
-                      menuWidthClassName="w-full"
-                      zIndexClassName="z-40"
-                      renderSelected={() => (
-                        <span className="flex items-center gap-2">
-                          <FormRoleIcon className="w-4 h-4 text-foreground" />
-                          {getRoleLabel(formData.role)}
-                        </span>
-                      )}
-                      renderOption={(option, selected) => {
-                        const RoleIcon = getRoleIcon(option.id);
-                        return (
-                          <>
-                            <span className="flex items-center gap-2">
-                              <RoleIcon className={`w-4 h-4 ${getRoleIconToneClass(option.id)}`} />
-                              {option.id === "platform_admin" ? "Servecta" : option.label}
-                            </span>
-                            {selected && <Check className="w-4 h-4 text-primary" />}
-                          </>
-                        );
-                      }}
-                    />
-                    <div className="text-xs text-muted-foreground space-y-1">
-                      {formData.role === "platform_admin" && (
-                        <p className="text-red-400 font-semibold">
-                          ⚠️ Warnung: Servecta-Rolle gibt alle Berechtigungen!
-                        </p>
-                      )}
-                      {formData.role === "owner" && (
-                        <p>Restaurantinhaber kann Bediener verwalten (außer Servecta)</p>
-                      )}
-                      {formData.role === "manager" && (
-                        <p>Schichtleiter kann Reservierungen bearbeiten und Tische verwalten</p>
-                      )}
-                      {formData.role === "staff" && (
-                        <p>Mitarbeiter kann Reservierungen annehmen, zuweisen, platzieren und abschließen</p>
-                      )}
-                    </div>
-                  </div>
-
-                  {editingOperator && (
-                    <div className="space-y-2">
-                      <label 
-                        htmlFor="is_active" 
-                        className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
-                      >
-                        <UserCheck className="w-4 h-4 text-primary" />
-                        Status
-                      </label>
-                      <div className="relative" ref={statusMenuRef}>
-                        <button
-                          type="button"
-                          onClick={() => setStatusMenuOpen((prev) => !prev)}
-                          className="inline-flex items-center justify-between w-full gap-2 rounded-md border border-input bg-accent/70 px-3 py-2 text-sm text-foreground shadow-inner hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
-                        >
-                          <span className="flex items-center gap-2">
-                            {formData.is_active ? (
-                              <UserCheck className="w-4 h-4 text-green-300" />
-                            ) : (
-                              <UserX className="w-4 h-4 text-red-300" />
-                            )}
-                            {formData.is_active ? "Aktiv" : "Inaktiv"}
-                          </span>
-                          <ChevronDown className={`w-4 h-4 transition-transform ${statusMenuOpen ? "rotate-180" : ""}`} />
-                        </button>
-                        {statusMenuOpen && (
-                          <div className="absolute mt-1 w-full rounded-lg border border-border bg-background shadow-xl z-40 overflow-hidden">
-                            <div className="divide-y divide-border/80">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setFormData({ ...formData, is_active: true });
-                                  setStatusMenuOpen(false);
-                                }}
-                                className={`w-full px-3 py-2 text-left text-sm transition-colors ${
-                                  formData.is_active
-                                    ? "bg-card text-foreground font-semibold"
-                                    : "text-foreground hover:bg-accent/70"
-                                }`}
-                              >
-                                <span className="flex items-center gap-2">
-                                  <UserCheck className="w-4 h-4 text-green-300" />
-                                  Aktiv
-                                </span>
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setFormData({ ...formData, is_active: false });
-                                  setStatusMenuOpen(false);
-                                }}
-                                className={`w-full px-3 py-2 text-left text-sm transition-colors ${
-                                  formData.is_active === false
-                                    ? "bg-card text-foreground font-semibold"
-                                    : "text-foreground hover:bg-accent/70"
-                                }`}
-                              >
-                                <span className="flex items-center gap-2">
-                                  <UserX className="w-4 h-4 text-red-300" />
-                                  Inaktiv
-                                </span>
-                              </button>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Inaktive Bediener können sich nicht anmelden, bleiben aber in der Historie erhalten.
-                      </p>
-                    </div>
-                  )}
-
-                  <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-border">
-                    <Button 
-                      type="submit" 
-                      className="flex-1 gap-2 touch-manipulation min-h-[44px]" 
-                      disabled={submitting}
-                    >
-                      {submitting ? (
-                        <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                          <span>Wird gespeichert...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Save className="w-4 h-4" />
-                          <span>
-                            {editingOperator ? "Änderungen speichern" : "Bediener anlegen"}
-                          </span>
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={handleCancel}
-                      disabled={submitting}
-                      className="gap-2 touch-manipulation min-h-[44px]"
-                    >
-                      <X className="w-4 h-4" />
-                      <span>Abbrechen</span>
-                    </Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          )}
-
           <Card className="border-border bg-card/50 backdrop-blur-sm">
             <CardHeader className="border-b border-border">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -993,6 +683,320 @@ export default function OperatorsPage() {
           </Card>
         </div>
       </div>
+
+      <Dialog open={dialogOpen} onOpenChange={handleDialogOpenChange}>
+        <DialogContent
+          className="max-w-4xl max-h-[90vh] overflow-y-auto bg-card border-border text-foreground"
+          onClose={handleCancel}
+        >
+          <form onSubmit={handleSubmit}>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-foreground">
+                <UserIcon className="w-5 h-5 text-primary" />
+                {editingOperator ? "Bediener bearbeiten" : "Neuen Bediener anlegen"}
+              </DialogTitle>
+              <DialogDescription>
+                {editingOperator
+                  ? "Aktualisieren Sie die Bedienerdaten."
+                  : "Erstellen Sie einen neuen Bediener für Ihr Restaurant."}
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-6 px-4 md:px-6 pb-4">
+              {error && (
+                <div className="p-4 bg-red-900/30 border border-red-600/50 text-red-300 rounded-lg flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-medium">Fehler</p>
+                    <p className="text-sm mt-1">{error}</p>
+                  </div>
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label
+                    htmlFor="operator_number"
+                    className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
+                  >
+                    <Key className="w-4 h-4 text-primary" />
+                    Bedienernummer (4 Ziffern)
+                  </label>
+                  <Input
+                    id="operator_number"
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]{4}"
+                    value={formData.operator_number}
+                    onChange={handleOperatorNumberChange}
+                    placeholder="0000"
+                    maxLength={4}
+                    required={!editingOperator}
+                    disabled={editingOperator !== null}
+                    className="text-center text-2xl tracking-widest font-mono bg-card/50 border-input text-foreground focus:border-primary"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label
+                    htmlFor="pin"
+                    className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
+                  >
+                    <Key className="w-4 h-4 text-primary" />
+                    PIN (6-8 Ziffern)
+                  </label>
+                  <Input
+                    id="pin"
+                    type="password"
+                    inputMode="numeric"
+                    pattern="[0-9]{6,8}"
+                    value={formData.pin}
+                    onChange={handlePinChange}
+                    placeholder={editingOperator ? "Leer lassen, um nicht zu ändern" : "••••••"}
+                    maxLength={8}
+                    required={!editingOperator}
+                    className="text-center text-xl tracking-widest font-mono bg-card/50 border-input text-foreground focus:border-primary"
+                  />
+                  {editingOperator && (
+                    <p className="text-xs text-muted-foreground">
+                      Leer lassen, um PIN nicht zu ändern
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label
+                    htmlFor="first_name"
+                    className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
+                  >
+                    <UserIcon className="w-4 h-4 text-primary" />
+                    Vorname
+                  </label>
+                  <Input
+                    id="first_name"
+                    type="text"
+                    value={formData.first_name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, first_name: e.target.value })
+                    }
+                    placeholder="Max"
+                    required
+                    minLength={2}
+                    maxLength={120}
+                    className="bg-card/50 border-input text-foreground placeholder:text-muted-foreground focus:border-primary"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label
+                    htmlFor="last_name"
+                    className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
+                  >
+                    <UserIcon className="w-4 h-4 text-primary" />
+                    Nachname
+                  </label>
+                  <Input
+                    id="last_name"
+                    type="text"
+                    value={formData.last_name}
+                    onChange={(e) =>
+                      setFormData({ ...formData, last_name: e.target.value })
+                    }
+                    placeholder="Mustermann"
+                    required
+                    minLength={2}
+                    maxLength={120}
+                    className="bg-card/50 border-input text-foreground placeholder:text-muted-foreground focus:border-primary"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label
+                  htmlFor="nfc_tag_id"
+                  className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
+                >
+                  <CreditCard className="w-4 h-4 text-primary" />
+                  NFC Tag-ID (optional)
+                </label>
+                <Input
+                  id="nfc_tag_id"
+                  type="text"
+                  value={formData.nfc_tag_id || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, nfc_tag_id: e.target.value.trim().toUpperCase() })
+                  }
+                  placeholder="04A1B2C3D4E5F6"
+                  maxLength={64}
+                  className="font-mono bg-card/50 border-input text-foreground placeholder:text-muted-foreground focus:border-primary"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Die Tag-ID des NFC-Transponders für Login ohne PIN. Wird automatisch in Großbuchstaben konvertiert.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <label
+                  htmlFor="role"
+                  className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
+                >
+                  <Shield className="w-4 h-4 text-primary" />
+                  Rolle
+                </label>
+                <DropdownSelector
+                  options={formRoleOptions}
+                  selectedId={formData.role}
+                  onSelect={(value) => setFormData({ ...formData, role: value as UserCreate["role"] })}
+                  placeholder="Rolle auswählen"
+                  triggerClassName="inline-flex items-center justify-between w-full gap-2 rounded-md border border-input bg-accent/70 px-3 py-2 text-sm text-foreground shadow-inner hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
+                  menuWidthClassName="w-full"
+                  zIndexClassName="z-[130]"
+                  renderSelected={() => (
+                    <span className="flex items-center gap-2">
+                      <FormRoleIcon className="w-4 h-4 text-foreground" />
+                      {getRoleLabel(formData.role)}
+                    </span>
+                  )}
+                  renderOption={(option, selected) => {
+                    const RoleIcon = getRoleIcon(option.id);
+                    return (
+                      <>
+                        <span className="flex items-center gap-2">
+                          <RoleIcon className={`w-4 h-4 ${getRoleIconToneClass(option.id)}`} />
+                          {option.id === "platform_admin" ? "Servecta" : option.label}
+                        </span>
+                        {selected && <Check className="w-4 h-4 text-primary" />}
+                      </>
+                    );
+                  }}
+                />
+                <div className="text-xs text-muted-foreground space-y-1">
+                  {formData.role === "platform_admin" && (
+                    <p className="text-red-400 font-semibold">
+                      ⚠️ Warnung: Servecta-Rolle gibt alle Berechtigungen!
+                    </p>
+                  )}
+                  {formData.role === "owner" && (
+                    <p>Restaurantinhaber kann Bediener verwalten (außer Servecta)</p>
+                  )}
+                  {formData.role === "manager" && (
+                    <p>Schichtleiter kann Reservierungen bearbeiten und Tische verwalten</p>
+                  )}
+                  {formData.role === "staff" && (
+                    <p>Mitarbeiter kann Reservierungen annehmen, zuweisen, platzieren und abschließen</p>
+                  )}
+                </div>
+              </div>
+
+              {editingOperator && (
+                <div className="space-y-2">
+                  <label
+                    htmlFor="is_active"
+                    className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
+                  >
+                    <UserCheck className="w-4 h-4 text-primary" />
+                    Status
+                  </label>
+                  <div className="relative" ref={statusMenuRef}>
+                    <button
+                      type="button"
+                      onClick={() => setStatusMenuOpen((prev) => !prev)}
+                      className="inline-flex items-center justify-between w-full gap-2 rounded-md border border-input bg-accent/70 px-3 py-2 text-sm text-foreground shadow-inner hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
+                    >
+                      <span className="flex items-center gap-2">
+                        {formData.is_active ? (
+                          <UserCheck className="w-4 h-4 text-green-300" />
+                        ) : (
+                          <UserX className="w-4 h-4 text-red-300" />
+                        )}
+                        {formData.is_active ? "Aktiv" : "Inaktiv"}
+                      </span>
+                      <ChevronDown className={`w-4 h-4 transition-transform ${statusMenuOpen ? "rotate-180" : ""}`} />
+                    </button>
+                    {statusMenuOpen && (
+                      <div className="absolute mt-1 w-full rounded-lg border border-border bg-background shadow-xl z-[130] overflow-hidden">
+                        <div className="divide-y divide-border/80">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFormData({ ...formData, is_active: true });
+                              setStatusMenuOpen(false);
+                            }}
+                            className={`w-full px-3 py-2 text-left text-sm transition-colors ${
+                              formData.is_active
+                                ? "bg-card text-foreground font-semibold"
+                                : "text-foreground hover:bg-accent/70"
+                            }`}
+                          >
+                            <span className="flex items-center gap-2">
+                              <UserCheck className="w-4 h-4 text-green-300" />
+                              Aktiv
+                            </span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFormData({ ...formData, is_active: false });
+                              setStatusMenuOpen(false);
+                            }}
+                            className={`w-full px-3 py-2 text-left text-sm transition-colors ${
+                              formData.is_active === false
+                                ? "bg-card text-foreground font-semibold"
+                                : "text-foreground hover:bg-accent/70"
+                            }`}
+                          >
+                            <span className="flex items-center gap-2">
+                              <UserX className="w-4 h-4 text-red-300" />
+                              Inaktiv
+                            </span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Inaktive Bediener können sich nicht anmelden, bleiben aber in der Historie erhalten.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCancel}
+                disabled={submitting}
+                className="gap-2 touch-manipulation min-h-[44px]"
+              >
+                <X className="w-4 h-4" />
+                <span>Abbrechen</span>
+              </Button>
+              <Button
+                type="submit"
+                className="gap-2 touch-manipulation min-h-[44px]"
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Wird gespeichert...</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    <span>
+                      {editingOperator ? "Änderungen speichern" : "Bediener anlegen"}
+                    </span>
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
