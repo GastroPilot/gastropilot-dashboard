@@ -7,6 +7,7 @@ import { reservationsApi, Reservation } from "@/lib/api/reservations";
 import { blocksApi, Block } from "@/lib/api/blocks";
 import { blockAssignmentsApi, BlockAssignment } from "@/lib/api/block-assignments";
 import { tablesApi, Table } from "@/lib/api/tables";
+import { authApi } from "@/lib/api/auth";
 import { useUserSettings } from "@/lib/hooks/use-user-settings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,7 +30,7 @@ const RESERVATION_STATUSES: Reservation["status"][] = [
   "no_show",
 ];
 const ALL_FILTERS: ReservationFilter[] = [...RESERVATION_STATUSES, "block"];
-const STATUS_SETTINGS_KEY = "dashboard_status_filters";
+const STATUS_SETTINGS_KEY = "reservations_status_filters";
 const normalizeStatus = (value: string): ReservationFilter | null => {
   const normalized = value === "noShow" ? "no_show" : value;
   if (normalized === "block") return "block";
@@ -134,9 +135,14 @@ export default function ReservationsPage() {
       try {
         // We set initial loading true here, but the second useEffect will handle the loading state for reservations.
         setIsInitialLoading(true);
+        const user = await authApi.getCurrentUser();
         const restaurantsData = await restaurantsApi.list();
         if (restaurantsData.length > 0) {
-          setRestaurant(restaurantsData[0]);
+          const preferredRestaurant =
+            user.tenant_id != null
+              ? restaurantsData.find((restaurant) => restaurant.id === user.tenant_id)
+              : null;
+          setRestaurant(preferredRestaurant ?? restaurantsData[0]);
         } else {
           // If no restaurant, we can stop loading.
           setIsInitialLoading(false);

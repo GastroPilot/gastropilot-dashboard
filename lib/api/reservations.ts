@@ -75,7 +75,7 @@ export const reservationsApi = {
     if (params?.table_id) queryParams.append("table_id", params.table_id);
 
     const query = queryParams.toString();
-    return api.get<Reservation[]>(`/reservations${query ? `?${query}` : ""}`);
+    return api.get<Reservation[]>(`/reservations/${query ? `?${query}` : ""}`);
   },
 
   get: async (_restaurantId: string, reservationId: string): Promise<Reservation> => {
@@ -86,7 +86,14 @@ export const reservationsApi = {
     _restaurantId: string,
     data: ReservationCreate
   ): Promise<Reservation> => {
-    return api.post<Reservation>("/reservations", data);
+    const { start_at, end_at, channel, ...rest } = data;
+    const payload = {
+      ...rest,
+      starts_at: start_at,
+      ends_at: end_at,
+      source: channel ?? "manual",
+    };
+    return api.post<Reservation>("/reservations/", payload);
   },
 
   update: async (
@@ -94,7 +101,13 @@ export const reservationsApi = {
     reservationId: string,
     data: ReservationUpdate
   ): Promise<Reservation> => {
-    return api.patch<Reservation>(`/reservations/${reservationId}`, data);
+    const { start_at, end_at, ...rest } = data;
+    const payload = {
+      ...rest,
+      starts_at: start_at,
+      ends_at: end_at,
+    };
+    return api.patch<Reservation>(`/reservations/${reservationId}`, payload);
   },
 
   delete: async (_restaurantId: string, reservationId: string): Promise<void> => {
