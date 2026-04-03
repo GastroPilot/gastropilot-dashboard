@@ -34,10 +34,10 @@ export interface ObstacleUpdate extends Partial<ObstacleCreate> {}
 
 export const obstaclesApi = {
   async list(restaurantId: string): Promise<Obstacle[]> {
-    return api.get(`/restaurants/${restaurantId}/obstacles/`);
+    return api.get(`/restaurants/${restaurantId}/obstacles`);
   },
   async create(restaurantId: string, data: ObstacleCreate): Promise<Obstacle> {
-    return api.post(`/restaurants/${restaurantId}/obstacles/`, data);
+    return api.post(`/restaurants/${restaurantId}/obstacles`, data);
   },
   async update(restaurantId: string, obstacleId: string, data: ObstacleUpdate): Promise<Obstacle> {
     return api.patch(`/restaurants/${restaurantId}/obstacles/${obstacleId}`, data);

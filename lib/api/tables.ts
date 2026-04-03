@@ -57,8 +57,7 @@ export interface TableUpdate {
 
 export const tablesApi = {
   list: async (restaurantId: string): Promise<Table[]> => {
-    // Backend-Route ist @router.get("/"), daher trailing slash erforderlich
-    return api.get<Table[]>(`/restaurants/${restaurantId}/tables/`);
+    return api.get<Table[]>(`/restaurants/${restaurantId}/tables`);
   },
 
   get: async (restaurantId: string, tableId: string): Promise<Table> => {
@@ -66,8 +65,7 @@ export const tablesApi = {
   },
 
   create: async (restaurantId: string, data: TableCreate): Promise<Table> => {
-    // Backend-Route ist @router.post("/"), daher trailing slash erforderlich
-    return api.post<Table>(`/restaurants/${restaurantId}/tables/`, data);
+    return api.post<Table>(`/restaurants/${restaurantId}/tables`, data);
   },
 
   update: async (

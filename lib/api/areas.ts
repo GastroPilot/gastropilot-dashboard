@@ -18,13 +18,11 @@ export interface AreaUpdate {
 
 export const areasApi = {
   list: async (restaurantId: string): Promise<Area[]> => {
-    // Backend-Route ist @router.get("/"), daher trailing slash erforderlich
-    return api.get<Area[]>(`/restaurants/${restaurantId}/areas/`);
+    return api.get<Area[]>(`/restaurants/${restaurantId}/areas`);
   },
 
   create: async (restaurantId: string, data: AreaCreate): Promise<Area> => {
-    // Backend-Route ist @router.post("/"), daher trailing slash erforderlich
-    return api.post<Area>(`/restaurants/${restaurantId}/areas/`, data);
+    return api.post<Area>(`/restaurants/${restaurantId}/areas`, data);
   },
 
   update: async (restaurantId: string, areaId: string, data: AreaUpdate): Promise<Area> => {
