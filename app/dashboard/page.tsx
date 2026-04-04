@@ -401,6 +401,22 @@ export default function DashboardPage() {
     getBlockTableLabels,
   } = computations;
 
+  const getOrderEligibleReservations = useCallback(
+    (tableId: string): Reservation[] => {
+      const eligibleStatuses = new Set<Reservation["status"]>(["pending", "confirmed", "seated"]);
+      return reservations
+        .filter((reservation) => eligibleStatuses.has(reservation.status))
+        .filter((reservation) => {
+          if (tableId.startsWith("temp-")) {
+            return reservationToTempTableMap.get(reservation.id) === tableId;
+          }
+          return reservation.table_id === tableId;
+        })
+        .sort((a, b) => parseISO(a.start_at).getTime() - parseISO(b.start_at).getTime());
+    },
+    [reservationToTempTableMap, reservations]
+  );
+
   // ============================================
   // DND SENSORS
   // ============================================
@@ -2065,6 +2081,9 @@ export default function DashboardPage() {
             restaurantId={restaurant.id}
             table={selectedTableForOrder}
             availableTables={tables}
+            reservations={
+              selectedTableForOrder ? getOrderEligibleReservations(selectedTableForOrder.id) : []
+            }
             onOrderCreated={() => {
               refreshData(true);
               setOrderDialogOpen(false);
