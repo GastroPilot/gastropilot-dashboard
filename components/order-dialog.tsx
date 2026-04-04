@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { ordersApi, Order, OrderCreate, OrderUpdate, OrderWithItems, OrderItem, OrderItemCreate } from "@/lib/api/orders";
 import { Table } from "@/lib/api/tables";
+import { Reservation } from "@/lib/api/reservations";
 import { menuApi, MenuItem, MenuCategory } from "@/lib/api/menu";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,6 +41,7 @@ interface OrderDialogProps {
   order?: OrderWithItems | null;
   table?: Table | null;
   availableTables?: Table[];
+  reservations?: Reservation[];
   onOrderCreated: () => void;
   onOrderUpdated?: () => void;
   onNotify?: (message: string, variant?: "info" | "success" | "error") => void;
@@ -52,11 +54,13 @@ export function OrderDialog({
   order,
   table,
   availableTables = [],
+  reservations = [],
   onOrderCreated,
   onOrderUpdated,
   onNotify,
 }: OrderDialogProps) {
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
+  const [selectedReservationId, setSelectedReservationId] = useState<string | null>(null);
   const [partySize, setPartySize] = useState<number | null>(null);
   const [notes, setNotes] = useState("");
   const [specialRequests, setSpecialRequests] = useState("");
@@ -89,6 +93,7 @@ export function OrderDialog({
     if (open) {
       if (order) {
         setSelectedTableId(order.table_id);
+        setSelectedReservationId(order.reservation_id);
         setPartySize(order.party_size);
         setNotes(order.notes || "");
         setSpecialRequests(order.special_requests || "");
@@ -97,6 +102,7 @@ export function OrderDialog({
         setItems(order.items || []);
       } else {
         setSelectedTableId(table?.id || null);
+        setSelectedReservationId(reservations[0]?.id ?? null);
         setPartySize(table ? Math.min(table.capacity, 4) : null);
         setNotes("");
         setSpecialRequests("");
@@ -111,7 +117,27 @@ export function OrderDialog({
     } else {
       setError("");
     }
-  }, [open, order, table, restaurantId, loadMenuData]);
+  }, [open, order, table, reservations, restaurantId, loadMenuData]);
+
+  useEffect(() => {
+    if (!open || order || !selectedReservationId) return;
+    const reservation = reservations.find((entry) => entry.id === selectedReservationId);
+    if (!reservation) return;
+
+    if (reservation.table_id) {
+      setSelectedTableId(reservation.table_id);
+      const selectedTable = availableTables.find((entry) => entry.id === reservation.table_id);
+      if (selectedTable) {
+        setPartySize(Math.min(reservation.party_size, selectedTable.capacity));
+      } else {
+        setPartySize(reservation.party_size);
+      }
+      return;
+    }
+
+    setSelectedTableId(null);
+    setPartySize(reservation.party_size);
+  }, [availableTables, open, order, reservations, selectedReservationId]);
 
   const filteredMenuItems = menuItems.filter((item) => {
     if (selectedCategoryId && item.category_id !== selectedCategoryId) return false;
@@ -172,19 +198,27 @@ export function OrderDialog({
       onNotify?.(message, "error");
       return;
     }
+    if (!order && !selectedReservationId) {
+      const message = "Bitte wähle eine Reservierung aus.";
+      setError(message);
+      onNotify?.(message, "error");
+      return;
+    }
     setLoading(true);
 
     try {
       if (order) {
         // Update existing order
         const updateData: OrderUpdate = {
-          table_id: selectedTableId,
           party_size: partySize || undefined,
           notes: notes || undefined,
           special_requests: specialRequests || undefined,
           status: status as any,
           payment_method: paymentMethod || undefined,
         };
+        if (!order.reservation_id) {
+          updateData.table_id = selectedTableId;
+        }
 
         await ordersApi.update(restaurantId, order.id, updateData);
         onNotify?.("Bestellung erfolgreich aktualisiert", "success");
@@ -192,6 +226,7 @@ export function OrderDialog({
       } else {
         // Create new order
         const createData: OrderCreate = {
+          reservation_id: selectedReservationId || undefined,
           table_id: selectedTableId,
           party_size: partySize || undefined,
           notes: notes || undefined,
@@ -262,6 +297,22 @@ export function OrderDialog({
   const subtotal = calculateSubtotal();
   const tax = subtotal * (0.19 / 1.19);
   const total = calculateTotal();
+  const reservationOptions = [...reservations]
+    .sort((a, b) => parseISO(a.start_at).getTime() - parseISO(b.start_at).getTime())
+    .map((reservation) => {
+      const guestLabel = reservation.guest_name || "Gast";
+      const timeLabel = `${format(parseISO(reservation.start_at), "HH:mm", { locale: de })}-${format(parseISO(reservation.end_at), "HH:mm", { locale: de })}`;
+      const tableLabel = reservation.table_id
+        ? availableTables.find((tableOption) => tableOption.id === reservation.table_id)?.number || "Tisch"
+        : "Ohne Tisch";
+      return {
+        id: reservation.id,
+        label: `${guestLabel} · ${timeLabel} · ${tableLabel}`,
+      };
+    });
+  const selectedReservation =
+    reservations.find((reservation) => reservation.id === selectedReservationId) || null;
+  const tableManagedByReservation = Boolean(order?.reservation_id) || (!order && Boolean(selectedReservation));
   const tableOptions = [
     { id: "__none__", label: "Kein Tisch" },
     ...[...availableTables]
@@ -318,7 +369,7 @@ export function OrderDialog({
 
           <div className="space-y-4 px-4 md:px-6">
             {/* KI-Tischvorschläge - nur bei neuen Bestellungen ohne vorausgewählten Tisch */}
-            {!order && !table && (
+            {!order && !table && reservationOptions.length === 0 && (
               <AITableSuggestion
                 restaurantId={restaurantId}
                 selectedTableId={selectedTableId}
@@ -338,6 +389,28 @@ export function OrderDialog({
 
             {/* Grundinformationen */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {!order && (
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-muted-foreground mb-2">
+                    Reservierung *
+                  </label>
+                  <DropdownSelector
+                    options={reservationOptions}
+                    selectedId={selectedReservationId}
+                    onSelect={setSelectedReservationId}
+                    placeholder={
+                      reservationOptions.length > 0
+                        ? "Reservierung auswählen"
+                        : "Keine aktive Reservierung verfügbar"
+                    }
+                    disabled={loading || reservationOptions.length === 0}
+                    triggerClassName="w-full rounded-lg border border-input bg-card text-foreground px-3 py-2 text-sm flex items-center justify-between gap-2 focus:outline-none focus:ring-2 focus:ring-ring touch-manipulation min-h-[40px] disabled:opacity-60 disabled:cursor-not-allowed"
+                    menuClassName="max-h-[60vh] overflow-auto backdrop-blur-sm"
+                    zIndexClassName="z-[110]"
+                  />
+                </div>
+              )}
+
               <div>
                 <label className="block text-sm font-medium text-muted-foreground mb-2">
                   <TableIcon className="w-4 h-4 inline mr-1" />
@@ -347,6 +420,9 @@ export function OrderDialog({
                   options={tableOptions}
                   selectedId={selectedTableId ?? "__none__"}
                   onSelect={(value) => {
+                    if (tableManagedByReservation) {
+                      return;
+                    }
                     if (value === "__none__") {
                       setSelectedTableId(null);
                       return;
@@ -360,11 +436,16 @@ export function OrderDialog({
                     }
                   }}
                   placeholder="Kein Tisch"
-                  disabled={loading}
+                  disabled={loading || tableManagedByReservation}
                   triggerClassName="w-full rounded-lg border border-input bg-card text-foreground px-3 py-2 text-sm flex items-center justify-between gap-2 focus:outline-none focus:ring-2 focus:ring-ring touch-manipulation min-h-[40px] disabled:opacity-60 disabled:cursor-not-allowed"
                   menuClassName="max-h-[60vh] overflow-auto backdrop-blur-sm"
                   zIndexClassName="z-[110]"
                 />
+                {tableManagedByReservation ? (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Tischzuordnung wird aus der Reservierung übernommen.
+                  </p>
+                ) : null}
               </div>
 
               <div>
@@ -672,4 +753,3 @@ export function OrderDialog({
     </Dialog>
   );
 }
-
