@@ -4,10 +4,10 @@ import { useMemo, useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 
 const APP_VERSION_RAW = (process.env.NEXT_PUBLIC_APP_VERSION ?? "0.0.0").trim();
+const BUILD_DATE = process.env.NEXT_PUBLIC_BUILD_DATE ?? (() => { const d = new Date(); return d.toISOString().slice(0, 10).replace(/-/g, "") + "-" + d.toTimeString().slice(0, 8).replace(/:/g, ""); })();
 
 function formatVersion(raw: string): string {
   const bare = raw.startsWith("v") ? raw.slice(1) : raw;
-  // Fallback: Commit-Hash kürzen (sollte durch CI nicht mehr vorkommen)
   if (/^[0-9a-f]{40}$/i.test(bare)) {
     return `v${bare.slice(0, 7)}`;
   }
@@ -16,60 +16,35 @@ function formatVersion(raw: string): string {
 
 const APP_VERSION = formatVersion(APP_VERSION_RAW);
 
-/**
- * Ermittelt das Environment basierend auf der Domain.
- * - localhost → Development
- * - test-dashboard.gpilot.app → Test
- * - stage-dashboard.gpilot.app → Stage
- * - demo-dashboard.gpilot.app → Demo
- * - dashboard.gpilot.app → Production (wird nicht angezeigt)
- */
-function getEnvironment(): string | null {
-  if (typeof window === "undefined") return null;
+function getEnvironment(): string {
+  if (typeof window === "undefined") return "prod";
 
   const hostname = window.location.hostname;
 
   if (hostname === "localhost" || hostname === "127.0.0.1") {
-    return "Development";
+    return "dev";
   }
 
-  // Dashboard-Subdomains: {env}-dashboard.gpilot.app
   const dashboardMatch = hostname.match(/^([^-]+)-dashboard\.gpilot\.app$/);
   if (dashboardMatch) {
     const env = dashboardMatch[1].toLowerCase();
-    if (env === "test") return "Test";
-    if (env === "stage") return "Stage";
-    if (env === "demo") return "Demo";
-    return null;
+    if (["test", "staging", "demo"].includes(env)) return env;
   }
 
-  // Prüfe auf gpilot.app Subdomains
   const gpilotMatch = hostname.match(/^([^.]+)\.gpilot\.app$/);
   if (gpilotMatch) {
-    const subdomain = gpilotMatch[1].toLowerCase();
-    switch (subdomain) {
-      case "test":
-        return "Test";
-      case "stage":
-        return "Stage";
-      case "demo":
-        return "Demo";
-      default:
-        return null;
-    }
+    const sub = gpilotMatch[1].toLowerCase();
+    if (["test", "staging", "demo"].includes(sub)) return sub;
   }
 
-  // Hauptdomain gpilot.app - Production, zeige nichts
-  return null;
+  return "prod";
 }
 
 export function SiteFooter() {
   const pathname = usePathname();
   
-  // Environment wird erst nach dem Client-Mount gesetzt, um Hydration-Fehler zu vermeiden
-  // SSR und initial Client rendern beide null → keine Hydration-Differenz
-  const [environment, setEnvironment] = useState<string | null>(null);
-  
+  const [environment, setEnvironment] = useState("prod");
+
   useEffect(() => {
     setEnvironment(getEnvironment());
   }, []);
@@ -81,20 +56,18 @@ export function SiteFooter() {
 
   const currentYear = new Date().getFullYear();
 
-  const displayVersion = environment
-    ? `${APP_VERSION}-${environment}`
-    : APP_VERSION;
+  const envColors: Record<string, string> = {
+    dev: "text-[#F95100]",
+    test: "text-yellow-500",
+    staging: "text-orange-500",
+    demo: "text-purple-500",
+    prod: "text-muted-foreground",
+  };
 
   const versionContent = (
     <>
-      <span className={environment ? `font-medium ${
-        environment === "Development" ? "text-[#F95100]" :
-        environment === "Test" ? "text-yellow-500" :
-        environment === "Stage" ? "text-orange-500" :
-        environment === "Demo" ? "text-purple-500" :
-        "text-muted-foreground"
-      }` : ""}>
-        Version {displayVersion}
+      <span className={`font-medium ${envColors[environment] ?? "text-muted-foreground"}`}>
+        {APP_VERSION}-{environment} ({BUILD_DATE})
       </span>
       <span className="text-muted-foreground/50">|</span>
       <span className="font-semibold">Servecta @ {currentYear}</span>
