@@ -219,7 +219,7 @@ export default function KitchenPage() {
     if (!restaurant) return;
 
     try {
-      await ordersApi.update(restaurant.id, orderId, { status: newStatus });
+      await ordersApi.updateStatus(restaurant.id, orderId, newStatus);
       
       const statusLabels: Record<KitchenStatus, string> = {
         sent_to_kitchen: "An Küche gesendet",
@@ -615,4 +615,3 @@ function OrderCard({ order, onStatusChange, canChangeTo }: OrderCardProps) {
     </div>
   );
 }
-

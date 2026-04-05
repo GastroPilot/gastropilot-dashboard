@@ -246,6 +246,23 @@ function useDashboardData(restaurantId: string | null, selectedDate: Date) {
       fetchData(restaurantId, selectedDate, true);
     }
   }, [selectedDate]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Keep dashboard data fresh so kitchen updates from other devices become visible.
+  useEffect(() => {
+    if (!restaurantId) return;
+
+    const intervalId = window.setInterval(() => {
+      if (typeof document !== "undefined" && document.hidden) {
+        return;
+      }
+      lastFetchKeyRef.current = ""; // Force refresh
+      fetchData(restaurantId, selectedDate, true);
+    }, 10000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [restaurantId, selectedDate, fetchData]);
   
   const refresh = useCallback((background = false) => {
     if (restaurantId) {

@@ -105,16 +105,11 @@ export function OrderDetailDialog({
   const [sumupPayments, setSumupPayments] = useState<SumUpPayment[]>([]);
   const [isLoadingPayments, setIsLoadingPayments] = useState(false);
   const sumupPaymentsRef = useRef<SumUpPayment[]>([]);
-  const orderRef = useRef<OrderWithItems | null>(null);
   
   // Aktualisiere Refs, wenn sich State ändert
   useEffect(() => {
     sumupPaymentsRef.current = sumupPayments;
   }, [sumupPayments]);
-  
-  useEffect(() => {
-    orderRef.current = order;
-  }, [order]);
 
   useEffect(() => {
     if (open && orderId) {
@@ -126,18 +121,32 @@ export function OrderDetailDialog({
       setTable(null);
       setRestaurant(null);
       setSumupPayments([]);
+      setPaymentDetailsDirty(false);
+      setSplitDetailsDirty(false);
+      setStatusMenuOpen(false);
+      setSplitMethodMenuIndex(null);
     }
   }, [open, orderId, restaurantId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (open && orderId && restaurant?.sumup_enabled) {
+    if (
+      open &&
+      orderId &&
+      restaurant?.sumup_enabled &&
+      (order?.status === "served" || order?.status === "paid")
+    ) {
       loadSumUpPayments();
     }
-  }, [open, orderId, restaurant?.sumup_enabled]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open, orderId, restaurant?.sumup_enabled, order?.status]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Polling für SumUp Payments - aktualisiert automatisch, wenn Zahlungen noch verarbeitet werden
   useEffect(() => {
-    if (!open || !orderId || !restaurant?.sumup_enabled) {
+    if (
+      !open ||
+      !orderId ||
+      !restaurant?.sumup_enabled ||
+      (order?.status !== "served" && order?.status !== "paid")
+    ) {
       return;
     }
 
@@ -164,11 +173,9 @@ export function OrderDetailDialog({
         // Wenn sich der Order-Status geändert hat (z.B. auf "paid"), aktualisiere die Order
         const hasSuccessfulPayment = payments.some((p) => p.status === "successful");
         const hadSuccessfulPayment = previousPayments.some((p) => p.status === "successful");
-        const currentOrder = orderRef.current;
         
-        if (hasSuccessfulPayment && (!hadSuccessfulPayment || (currentOrder && currentOrder.payment_status !== "paid"))) {
+        if (hasSuccessfulPayment && !hadSuccessfulPayment) {
           await loadOrder();
-          onOrderUpdated?.();
         }
         
         // Wenn keine aktiven Zahlungen mehr, stoppe das Polling nach diesem Durchlauf
@@ -202,7 +209,7 @@ export function OrderDetailDialog({
         clearInterval(intervalId);
       }
     };
-  }, [open, orderId, restaurant?.sumup_enabled]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open, orderId, restaurant?.sumup_enabled, order?.status]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!statusMenuOpen) return;
@@ -240,6 +247,8 @@ export function OrderDetailDialog({
       setSplitAssignments(initialSplits.map((split) => split.item_ids ?? []));
       setSplitTips(initialSplits.map((split) => split.tip_amount ?? 0));
       setSplitPaid(initialSplits.map((split) => split.is_paid ?? false));
+      setPaymentDetailsDirty(false);
+      setSplitDetailsDirty(false);
     }
   }, [order]);
 
@@ -257,7 +266,7 @@ export function OrderDetailDialog({
     splitPaid.some(Boolean);
 
   useEffect(() => {
-    if (!order || (!paymentDetailsDirty && !splitDetailsDirty) || loading) return;
+    if (!order || order.status !== "served" || (!paymentDetailsDirty && !splitDetailsDirty) || loading) return;
     const timeoutId = window.setTimeout(() => {
       handleSavePaymentDetails();
     }, 600);
@@ -336,7 +345,13 @@ export function OrderDetailDialog({
   };
 
   const loadSumUpPayments = async () => {
-    if (!orderId || !restaurant?.sumup_enabled) return;
+    if (
+      !orderId ||
+      !restaurant?.sumup_enabled ||
+      (order?.status !== "served" && order?.status !== "paid")
+    ) {
+      return;
+    }
     
     try {
       setIsLoadingPayments(true);
@@ -349,12 +364,10 @@ export function OrderDetailDialog({
       const hasSuccessfulPayment = payments.some((p) => p.status === "successful");
       const hadSuccessfulPayment = previousPayments.some((p) => p.status === "successful");
       
-      // Wenn eine Zahlung erfolgreich wurde oder Order noch nicht als bezahlt markiert ist
-      if (hasSuccessfulPayment && (!hadSuccessfulPayment || (order && order.payment_status !== "paid"))) {
+      // Nur bei neu erfolgreicher Zahlung einmalig nachladen
+      if (hasSuccessfulPayment && !hadSuccessfulPayment) {
         // Lade Order neu, um den aktuellen Status zu erhalten
         await loadOrder();
-        // Benachrichtige über Order-Update
-        onOrderUpdated?.();
       }
     } catch (err) {
       console.error("Fehler beim Laden der SumUp-Zahlungen:", err);
@@ -1859,4 +1872,3 @@ export function OrderDetailDialog({
     </Dialog>
   );
 }
-

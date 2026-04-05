@@ -141,7 +141,7 @@ export const ordersApi = {
     }
   ): Promise<Order[]> => {
     const queryParams = new URLSearchParams();
-    if (params?.status) queryParams.append("status_filter", params.status);
+    if (params?.status) queryParams.append("status", params.status);
     if (params?.table_id) queryParams.append("table_id", params.table_id);
     if (params?.guest_id) queryParams.append("guest_id", params.guest_id);
     if (params?.reservation_id)
