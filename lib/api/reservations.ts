@@ -1,80 +1,127 @@
 import { api } from "./client";
-import type { AllergenId } from "@/lib/utils";
 
-export interface TimeSlot {
-  time: string; // "HH:mm"
-  available: boolean;
-}
-
-export interface AvailabilityResponse {
-  date: string;
-  slots: TimeSlot[];
-}
-
-export interface CreateReservationRequest {
-  date: string; // "YYYY-MM-DD"
-  time: string; // "HH:mm"
-  party_size: number;
-  guest_name: string;
-  guest_email: string;
-  guest_phone?: string;
-  allergen_ids?: AllergenId[];
-  special_requests?: string;
-}
+export type ReservationStatus =
+  | "pending"
+  | "confirmed"
+  | "seated"
+  | "completed"
+  | "canceled"
+  | "no_show";
 
 export interface Reservation {
   id: string;
-  restaurant_name: string;
-  restaurant_slug: string;
-  date: string;
-  time: string;
+  restaurant_id: string;
+  table_id: string | null;
+  guest_id: string | null;
+  start_at: string;
+  end_at: string;
   party_size: number;
-  guest_name: string;
-  guest_email: string;
+  status: ReservationStatus;
+  channel: string;
+  guest_name: string | null;
+  guest_email: string | null;
   guest_phone: string | null;
-  allergen_ids: AllergenId[];
   special_requests: string | null;
-  status: "pending" | "confirmed" | "completed" | "cancelled" | "canceled" | "no_show";
-  confirmation_code: string;
-  created_at: string;
-  updated_at: string;
+  notes: string | null;
+  tags: string[];
+  confirmed_at: string | null;
+  seated_at: string | null;
+  completed_at: string | null;
+  canceled_at: string | null;
+  created_at_utc: string;
+  updated_at_utc: string;
+}
+
+export interface ReservationCreate {
+  table_id?: string | null;
+  guest_id?: string | null;
+  start_at: string;
+  end_at: string;
+  party_size: number;
+  status?: ReservationStatus;
+  channel?: string;
+  guest_name?: string | null;
+  guest_email?: string | null;
+  guest_phone?: string | null;
+  special_requests?: string | null;
+  notes?: string | null;
+  tags?: string[];
+}
+
+export interface ReservationUpdate {
+  table_id?: string | null;
+  guest_id?: string | null;
+  start_at?: string;
+  end_at?: string;
+  party_size?: number;
+  status?: ReservationStatus;
+  guest_name?: string | null;
+  guest_email?: string | null;
+  guest_phone?: string | null;
+  special_requests?: string | null;
+  notes?: string | null;
+  tags?: string[];
 }
 
 export const reservationsApi = {
-  /** Verfügbare Zeitfenster prüfen */
-  checkAvailability: async (slug: string, date: string, partySize: number): Promise<AvailabilityResponse> => {
-    return api.get<AvailabilityResponse>(
-      `/public/restaurants/${slug}/availability?date=${date}&party_size=${partySize}`
-    );
+  list: async (
+    _restaurantId: string,
+    params?: { from?: string; to?: string; status?: ReservationStatus; table_id?: string }
+  ): Promise<Reservation[]> => {
+    const queryParams = new URLSearchParams();
+    if (params?.from) queryParams.append("from", params.from);
+    if (params?.to) queryParams.append("to", params.to);
+    if (params?.status) queryParams.append("status", params.status);
+    if (params?.table_id) queryParams.append("table_id", params.table_id);
+
+    const query = queryParams.toString();
+    return api.get<Reservation[]>(`/reservations/${query ? `?${query}` : ""}`);
   },
 
-  /** Reservierung erstellen (kann auch ohne Login) */
-  create: async (slug: string, data: CreateReservationRequest): Promise<Reservation> => {
-    const body = {
-      desired_date: data.date,
-      desired_time: data.time,
-      party_size: data.party_size,
-      guest_name: data.guest_name,
-      guest_email: data.guest_email,
-      guest_phone: data.guest_phone || "",
-      special_requests: data.special_requests,
-      channel: "web",
+  get: async (_restaurantId: string, reservationId: string): Promise<Reservation> => {
+    return api.get<Reservation>(`/reservations/${reservationId}`);
+  },
+
+  create: async (
+    _restaurantId: string,
+    data: ReservationCreate
+  ): Promise<Reservation> => {
+    const { start_at, end_at, channel, ...rest } = data;
+    const payload = {
+      ...rest,
+      starts_at: start_at,
+      ends_at: end_at,
+      source: channel ?? "manual",
     };
-    return api.post<Reservation>(`/public/restaurants/${slug}/reservations`, body);
+    return api.post<Reservation>("/reservations/", payload);
   },
 
-  /** Eigene Reservierungen laden (erfordert Login) */
-  getMyReservations: async (): Promise<Reservation[]> => {
-    return api.get<Reservation[]>("/public/me/reservations");
+  update: async (
+    _restaurantId: string,
+    reservationId: string,
+    data: ReservationUpdate
+  ): Promise<Reservation> => {
+    const { start_at, end_at, ...rest } = data;
+    const payload = {
+      ...rest,
+      starts_at: start_at,
+      ends_at: end_at,
+    };
+    return api.patch<Reservation>(`/reservations/${reservationId}`, payload);
   },
 
-  /** Reservierung stornieren (erfordert Login) */
-  cancel: async (reservationId: string): Promise<Reservation> => {
-    return api.post<Reservation>(`/public/me/reservations/${reservationId}/cancel`);
+  delete: async (_restaurantId: string, reservationId: string): Promise<void> => {
+    return api.delete(`/reservations/${reservationId}`);
   },
 
-  /** Einzelne Reservierung laden (erfordert Login) */
-  getById: async (reservationId: string): Promise<Reservation> => {
-    return api.get<Reservation>(`/public/me/reservations/${reservationId}`);
+  cancel: async (
+    _restaurantId: string,
+    reservationId: string,
+    canceledReason?: string
+  ): Promise<Reservation> => {
+    return api.post<Reservation>(
+      `/reservations/${reservationId}/cancel`,
+      canceledReason ? { canceled_reason: canceledReason } : {}
+    );
   },
 };
