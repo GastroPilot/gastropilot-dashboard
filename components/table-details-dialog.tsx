@@ -336,8 +336,22 @@ export function TableDetailsDialog({
   const handleMarkSeated = async (reservation: Reservation) => {
     setMarkingSeated(reservation.id);
     try {
+      const originalStart = new Date(reservation.start_at);
+      const originalEnd = new Date(reservation.end_at);
+      let durationMinutes = Math.round(
+        (originalEnd.getTime() - originalStart.getTime()) / 60000
+      );
+      if (!Number.isFinite(durationMinutes) || durationMinutes <= 0) {
+        durationMinutes = 90;
+      }
+      const startAt = new Date();
+      const endAt = new Date(startAt);
+      endAt.setMinutes(endAt.getMinutes() + durationMinutes);
+
       await reservationsApi.update(restaurantId, reservation.id, {
         status: "seated",
+        start_at: startAt.toISOString(),
+        end_at: endAt.toISOString(),
       });
       onNotify?.(
         `${reservation.guest_name || "Gast"} als Gäste da markiert.`,

@@ -82,19 +82,6 @@ export function TableCard({
 
   const [nowTs, setNowTs] = useState(() => getReferenceNow());
 
-  // Nächste anstehende Reservierung finden (bevorzugt in der Zukunft, sonst früheste)
-  const nextReservation = (() => {
-    if (activeReservations.length === 0) return null;
-    const now = new Date();
-    const upcoming = activeReservations
-      .filter((r) => new Date(r.start_at) >= now)
-      .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime());
-    if (upcoming.length > 0) return upcoming[0];
-    return activeReservations
-      .slice()
-      .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime())[0];
-  })();
-
   // Disable table dragging if explicitly disabled, in selection mode, or if there are active reservations (unless allowed)
   const isTableDraggingDisabled =
     selectionMode || !allowDragging || (!allowDraggingWithReservations && activeReservations.length > 0);
@@ -162,11 +149,17 @@ export function TableCard({
     const now = nowTs;
     return (
       activeReservations
-        .filter((r) => {
-          const start = new Date(r.start_at).getTime();
-          return r.status === "seated" || now >= start;
-        })
+        .filter((r) => r.status === "seated")
         .sort((a, b) => new Date(a.end_at).getTime() - new Date(b.end_at).getTime())[0] || null
+    );
+  })();
+
+  const awaitingSeatingReservation = (() => {
+    const now = nowTs;
+    return (
+      activeReservations
+        .filter((r) => r.status === "confirmed" && new Date(r.start_at).getTime() <= now)
+        .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime())[0] || null
     );
   })();
 
@@ -174,10 +167,12 @@ export function TableCard({
     const now = nowTs;
     return (
       activeReservations
-        .filter((r) => new Date(r.start_at).getTime() > now)
+        .filter((r) => r.status === "confirmed" && new Date(r.start_at).getTime() > now)
         .sort((a, b) => new Date(a.start_at).getTime() - new Date(b.start_at).getTime())[0] || null
     );
   })();
+
+  const isAwaitingSeating = Boolean(awaitingSeatingReservation) && !currentReservation;
 
   const remainingMsCurrent =
     currentReservation?.end_at ? new Date(currentReservation.end_at).getTime() - nowTs : null;
@@ -192,13 +187,14 @@ export function TableCard({
     if (isOverdue) return "border-l-destructive";
     if (finishingSoon) return "border-l-amber-500";
     if (currentReservation) return "border-l-primary";
+    if (isAwaitingSeating) return "border-l-emerald-500";
     const upcomingSoon =
       upcomingReservation && new Date(upcomingReservation.start_at).getTime() - nowTs <= 30 * 60 * 1000;
     if (upcomingSoon) return "border-l-emerald-500";
     return "border-l-muted-foreground/40";
   })();
 
-  const tagSource = currentReservation || upcomingReservation;
+  const tagSource = currentReservation || awaitingSeatingReservation || upcomingReservation;
   const tagLabels = tagSource?.tags?.filter(Boolean) ?? [];
 
   const renderTagBadge = (tag?: string, extraClass = "") => {
@@ -279,6 +275,7 @@ export function TableCard({
   const upcomingDisplay = (() => {
     if (remainingInfo) return null;
     const candidate =
+      awaitingSeatingReservation ||
       upcomingReservation ||
       activeReservations
         .filter((r) => r.status === "confirmed")
@@ -300,11 +297,11 @@ export function TableCard({
       viewDate.getMonth() === today.getMonth() &&
       viewDate.getDate() === today.getDate();
 
-    const minutesUntil = Math.max(0, Math.round((start.getTime() - nowTs) / 60000));
+    const minutesUntil = Math.round((start.getTime() - nowTs) / 60000);
     return {
       startLabel: format(start, "HH:mm"),
       endLabel: format(end, "HH:mm"),
-      minutesUntil: isSelectedDateToday ? minutesUntil : undefined,
+      minutesUntil: isSelectedDateToday && minutesUntil > 0 ? minutesUntil : undefined,
     };
   })();
 
@@ -419,6 +416,14 @@ export function TableCard({
           <span className="inline-flex items-center gap-2 text-sm font-semibold tabular-nums text-foreground opacity-85">
             <Clock className="w-4 h-4" />
             {remainingInfo.remainingLabel}
+          </span>
+        </div>
+      )}
+      {!remainingInfo && !blockStatus?.isBlockedNow && isAwaitingSeating && (
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <span className="inline-flex items-center gap-2 text-sm font-semibold tabular-nums text-foreground opacity-85">
+            <Clock className="w-4 h-4" />
+            Reserviert
           </span>
         </div>
       )}
