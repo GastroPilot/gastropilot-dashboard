@@ -241,8 +241,27 @@ export function OrderDialog({
           })),
         };
 
-        await ordersApi.create(restaurantId, createData);
-        onNotify?.("Bestellung erfolgreich erstellt", "success");
+        const createdOrder = await ordersApi.create(restaurantId, createData);
+        try {
+          const sendResult = await ordersApi.sendPendingItems(restaurantId, createdOrder.id);
+          if (sendResult.items_sent > 0) {
+            const ticketLabel = sendResult.kitchen_ticket_no
+              ? ` (Ticket #${sendResult.kitchen_ticket_no})`
+              : "";
+            onNotify?.(`Bestellung erfolgreich erstellt und an die Küche gesendet${ticketLabel}`, "success");
+          } else {
+            onNotify?.("Bestellung erfolgreich erstellt", "success");
+          }
+        } catch (sendErr) {
+          console.error(
+            "Bestellung erstellt, aber automatisches Senden an die Küche fehlgeschlagen:",
+            sendErr,
+          );
+          onNotify?.(
+            "Bestellung wurde erstellt, konnte aber nicht automatisch an die Küche gesendet werden.",
+            "error",
+          );
+        }
         onOrderCreated();
       }
 

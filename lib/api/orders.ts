@@ -120,6 +120,14 @@ export interface OrderUpdate {
   paid_at?: string | null;
 }
 
+export interface SendPendingItemsResponse {
+  order_id: string;
+  order_status: OrderStatus;
+  kitchen_ticket_no: number | null;
+  items_sent: number;
+  item_ids: string[];
+}
+
 export const ordersApi = {
   list: async (
     _restaurantId: string,
@@ -171,6 +179,13 @@ export const ordersApi = {
 
   delete: async (_restaurantId: string, orderId: string): Promise<void> => {
     return api.delete(`/orders/${orderId}`);
+  },
+
+  sendPendingItems: async (
+    _restaurantId: string,
+    orderId: string
+  ): Promise<SendPendingItemsResponse> => {
+    return api.post<SendPendingItemsResponse>(`/orders/${orderId}/send-pending-items`);
   },
 
   // OrderItem endpoints
