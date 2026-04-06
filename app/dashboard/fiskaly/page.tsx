@@ -203,8 +203,8 @@ export default function FiskalyPage() {
             const r = restaurants[0];
             setRestaurantInfo({
               name: r.name || "",
-              address: [r.address, r.city].filter(Boolean).join(", "),
-              tax_number: r.tax_number || "",
+              address: r.address || "",
+              tax_number: "",
             });
           }
         } catch { /* non-critical */ }

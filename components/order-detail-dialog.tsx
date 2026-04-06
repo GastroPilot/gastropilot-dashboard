@@ -806,8 +806,8 @@ export function OrderDetailDialog({
       const resp = await createReceipt({
         order_id: order.id,
         restaurant_name: restaurant.name || "",
-        restaurant_address: [restaurant.address, restaurant.city].filter(Boolean).join(", "),
-        restaurant_tax_number: (restaurant as any).tax_number || "",
+        restaurant_address: restaurant.address || "",
+        restaurant_tax_number: "",
       });
       if (resp.public_url) {
         window.open(resp.public_url, "_blank");
