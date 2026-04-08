@@ -17,6 +17,9 @@ import {
   Users,
   Calendar,
   AlertCircle,
+  ImagePlus,
+  Trash2,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,6 +35,7 @@ import {
   DayHours,
   DEFAULT_TENANT_SETTINGS,
 } from "@/lib/api/tenant-settings";
+import { uploadsApi } from "@/lib/api/uploads";
 
 // ─── Toast ────────────────────────────────────────────────────────────────────
 
@@ -223,6 +227,8 @@ export default function TenantSettingsPage() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [description, setDescription] = useState("");
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [imageUploading, setImageUploading] = useState(false);
 
   // ── Allgemein ────────────────────────────────────────────────────────────
   const [website, setWebsite] = useState("");
@@ -285,6 +291,7 @@ export default function TenantSettingsPage() {
         // Tenant-Settings
         const s: TenantSettings = await tenantSettingsApi.getSettings(String(r.id));
 
+        setLogoUrl((s as any).image_url ?? s.logo_url ?? null);
         setWebsite(typeof s.website === "string" ? s.website : "");
         setTimezone(s.timezone ?? DEFAULT_TENANT_SETTINGS.timezone);
         setCurrency(s.currency ?? DEFAULT_TENANT_SETTINGS.currency);
@@ -350,13 +357,18 @@ export default function TenantSettingsPage() {
     if (!restaurantId || !validateContact()) return;
     setSavingContact(true);
     try {
-      await restaurantsApi.update(restaurantId, {
-        name: name.trim(),
-        address: address.trim() || null,
-        phone: phone.trim() || null,
-        email: email.trim() || null,
-        description: description.trim() || null,
-      });
+      await Promise.all([
+        restaurantsApi.update(restaurantId, {
+          name: name.trim(),
+          address: address.trim() || null,
+          phone: phone.trim() || null,
+          email: email.trim() || null,
+          description: description.trim() || null,
+        }),
+        tenantSettingsApi.updateSettings(String(restaurantId), {
+          image_url: logoUrl,
+        } as any),
+      ]);
       addToast("Stammdaten gespeichert.", "success");
     } catch {
       addToast("Fehler beim Speichern.", "error");
@@ -578,6 +590,71 @@ export default function TenantSettingsPage() {
                 rows={4}
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background resize-none placeholder:text-muted-foreground"
               />
+            </FieldRow>
+
+            <FieldRow
+              label="Titelbild (Web)"
+              hint="Wird auf der öffentlichen Webseite angezeigt. JPEG, PNG oder WebP, max. 10 MB."
+              wide
+            >
+              <div className="space-y-3">
+                <div className="relative group w-full max-w-sm">
+                  <img
+                    src={logoUrl || "/placeholder-restaurant.svg"}
+                    alt="Restaurant-Titelbild"
+                    className="w-full h-40 object-cover rounded-lg border border-border"
+                  />
+                  {logoUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setLogoUrl(null)}
+                      className="absolute top-2 right-2 p-1.5 rounded-md bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+                <label
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-md border border-input text-sm font-medium cursor-pointer transition-colors ${
+                    imageUploading
+                      ? "opacity-50 cursor-not-allowed"
+                      : "hover:bg-accent hover:text-accent-foreground"
+                  }`}
+                >
+                  {imageUploading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <ImagePlus className="w-4 h-4" />
+                  )}
+                  {imageUploading
+                    ? "Wird hochgeladen…"
+                    : logoUrl
+                      ? "Bild ändern"
+                      : "Bild hochladen"}
+                  <input
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    disabled={imageUploading}
+                    className="sr-only"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setImageUploading(true);
+                      try {
+                        const { url } = await uploadsApi.uploadRestaurantImage(file);
+                        setLogoUrl(url);
+                        addToast("Bild hochgeladen.", "success");
+                      } catch (err) {
+                        const msg = err instanceof Error ? err.message : "Upload fehlgeschlagen";
+                        addToast(msg, "error");
+                      } finally {
+                        setImageUploading(false);
+                        e.target.value = "";
+                      }
+                    }}
+                  />
+                </label>
+              </div>
             </FieldRow>
           </Section>
 
