@@ -155,6 +155,7 @@ export function OrderDialog({
     const newItem: OrderItem = {
       id: `temp-${Date.now()}`, // Temporary ID
       order_id: order?.id || "0",
+      menu_item_id: menuItem.id,
       item_name: menuItem.name,
       item_description: menuItem.description,
       category: menuCategories.find((c) => c.id === menuItem.category_id)?.name || null,
@@ -232,11 +233,13 @@ export function OrderDialog({
           notes: notes || undefined,
           special_requests: specialRequests || undefined,
           items: items.map((item) => ({
+            menu_item_id: item.menu_item_id || undefined,
             item_name: item.item_name,
             item_description: item.item_description || undefined,
             category: item.category || undefined,
             quantity: item.quantity,
             unit_price: item.unit_price,
+            tax_rate: item.tax_rate,
             notes: item.notes || undefined,
           })),
         };

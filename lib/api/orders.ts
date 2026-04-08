@@ -22,6 +22,7 @@ export interface SplitPayment {
 export interface OrderItem {
   id: string;
   order_id: string;
+  menu_item_id?: string | null;
   item_name: string;
   item_description: string | null;
   category: string | null;
@@ -69,11 +70,13 @@ export interface OrderWithItems extends Order {
 }
 
 export interface OrderItemCreate {
+  menu_item_id?: string | null;
   item_name: string;
   item_description?: string | null;
   category?: string | null;
   quantity: number;
   unit_price: number;
+  tax_rate?: number;
   notes?: string | null;
   sort_order?: number;
 }

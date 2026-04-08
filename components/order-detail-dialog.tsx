@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { ordersApi, OrderStatus, OrderWithItems, OrderItemCreate, SplitPayment } from "@/lib/api/orders";
 import { tablesApi, Table } from "@/lib/api/tables";
 import { menuApi, MenuItem, MenuCategory } from "@/lib/api/menu";
@@ -395,7 +395,7 @@ export function OrderDetailDialog({
     setError("");
     
     try {
-      const baseTotal = Math.max(0, (order.subtotal || 0) - (discountAmount || 0));
+      const baseTotal = Math.max(0, computedFinancials.subtotal - (discountAmount || 0));
       const amount = baseTotal + (tipAmount || 0);
       
       if (amount <= 0) {
@@ -559,7 +559,7 @@ export function OrderDetailDialog({
     // Validate split payments if they exist
     if (hasSplitPayments && computedSplitPayments.length > 0) {
       const totalSplit = computedSplitPayments.reduce((sum, p) => sum + p.amount, 0);
-      if (Math.abs(totalSplit - order.total) > 0.01) {
+      if (Math.abs(totalSplit - computedFinancials.total) > 0.01) {
         onNotify?.(
           "Split-Payments stimmen nicht mit dem Gesamtbetrag überein (Trinkgeld wird separat gezählt).",
           "error",
@@ -632,11 +632,13 @@ export function OrderDetailDialog({
     if (!order) return;
 
     const itemData: OrderItemCreate = {
+      menu_item_id: menuItem.id,
       item_name: menuItem.name,
       item_description: menuItem.description || undefined,
       category: menuCategories.find((c) => c.id === menuItem.category_id)?.name || undefined,
       quantity: 1,
       unit_price: menuItem.price,
+      tax_rate: menuItem.tax_rate ?? 0.19,
     };
 
     setLoading(true);
@@ -670,7 +672,9 @@ export function OrderDetailDialog({
         .filter((item) => assignedIds.includes(item.id))
         .reduce((sum, item) => sum + item.total_price, 0);
       const amount =
-        itemTotalSum > 0 ? Number(((assignedTotal / itemTotalSum) * order.total).toFixed(2)) : 0;
+        itemTotalSum > 0
+          ? Number(((assignedTotal / itemTotalSum) * computedFinancials.total).toFixed(2))
+          : 0;
       return { ...payment, amount };
     });
   };
@@ -759,6 +763,51 @@ export function OrderDetailDialog({
   });
   const totalSplitTip = splitTotals.reduce((sum, entry) => sum + entry.tip, 0);
   const totalSplitWithExtras = splitTotals.reduce((sum, entry) => sum + entry.total, 0);
+  const computedFinancials = useMemo(() => {
+    if (!order) {
+      return {
+        subtotal: 0,
+        discountAmount: 0,
+        tipAmount: 0,
+        taxAmount: 0,
+        total: 0,
+      };
+    }
+
+    const toNumber = (value: unknown) =>
+      typeof value === "number" && Number.isFinite(value) ? value : 0;
+
+    const itemSubtotal = order.items.reduce((sum, item) => sum + toNumber(item.total_price), 0);
+    const subtotalRaw = toNumber(order.subtotal);
+    const subtotal = subtotalRaw > 0 || itemSubtotal === 0 ? subtotalRaw : itemSubtotal;
+
+    const discountRaw = toNumber(order.discount_amount);
+    const discountAmount = Math.min(Math.max(discountRaw, 0), Math.max(subtotal, 0));
+    const tipAmount = toNumber(order.tip_amount);
+
+    const taxRaw = toNumber(order.tax_amount);
+    const rawTaxFromItems = order.items.reduce((sum, item) => {
+      const totalPrice = toNumber(item.total_price);
+      const taxRate = toNumber(item.tax_rate);
+      if (totalPrice <= 0 || taxRate < 0) return sum;
+      return sum + totalPrice * (taxRate / (1 + taxRate));
+    }, 0);
+    const discountRatio = itemSubtotal > 0 ? discountAmount / itemSubtotal : 0;
+    const taxFromItems = Number(Math.max(0, rawTaxFromItems * (1 - discountRatio)).toFixed(2));
+    const taxAmount = taxRaw > 0 || subtotal === 0 ? taxRaw : taxFromItems;
+
+    const totalRaw = toNumber(order.total);
+    const computedTotal = Number(Math.max(0, subtotal - discountAmount + tipAmount).toFixed(2));
+    const total = totalRaw > 0 || subtotal === 0 ? totalRaw : computedTotal;
+
+    return {
+      subtotal,
+      discountAmount,
+      tipAmount,
+      taxAmount,
+      total,
+    };
+  }, [order]);
   const allSplitsPaid = splitPaid.length > 0 && splitPaid.every(Boolean);
   const canMarkPaid = paymentView === "split" ? allSplitsPaid : true;
 
@@ -1158,11 +1207,11 @@ export function OrderDetailDialog({
                           const nextAmount = raw === "" ? 0 : Number.parseFloat(raw) || 0;
                           setDiscountAmount(nextAmount);
                           setPaymentDetailsDirty(true);
-                          if (!order || order.subtotal <= 0) {
+                          if (!order || computedFinancials.subtotal <= 0) {
                             setDiscountPercentage(null);
                             return;
                           }
-                          const nextPercent = (nextAmount / order.subtotal) * 100;
+                          const nextPercent = (nextAmount / computedFinancials.subtotal) * 100;
                           setDiscountPercentage(Number(nextPercent.toFixed(2)));
                         }}
                         className="bg-muted border-input text-foreground"
@@ -1189,11 +1238,11 @@ export function OrderDetailDialog({
                           const nextPercent = Number.parseFloat(raw) || 0;
                           setDiscountPercentage(nextPercent);
                           setPaymentDetailsDirty(true);
-                          if (!order || order.subtotal <= 0) {
+                          if (!order || computedFinancials.subtotal <= 0) {
                             setDiscountAmount(0);
                             return;
                           }
-                          const nextAmount = (order.subtotal * nextPercent) / 100;
+                          const nextAmount = (computedFinancials.subtotal * nextPercent) / 100;
                           setDiscountAmount(Number(nextAmount.toFixed(2)));
                         }}
                         className="bg-muted border-input text-foreground"
@@ -1231,20 +1280,20 @@ export function OrderDetailDialog({
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between text-muted-foreground">
                   <span>Zwischensumme:</span>
-                  <span>{formatCurrency(order.subtotal)}</span>
+                  <span>{formatCurrency(computedFinancials.subtotal)}</span>
                 </div>
-                {order.discount_amount > 0 && (
+                {computedFinancials.discountAmount > 0 && (
                   <div className="flex justify-between text-muted-foreground">
                     <span className="text-red-400">
                       Rabatt
                       {order.discount_percentage ? ` (${order.discount_percentage}%)` : ""}:
                     </span>
-                    <span className="text-red-400">-{formatCurrency(order.discount_amount)}</span>
+                    <span className="text-red-400">-{formatCurrency(computedFinancials.discountAmount)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-muted-foreground">
                   <span className="text-primary">MwSt. (inkl.):</span>
-                  <span className="text-foreground">{formatCurrency(order.tax_amount)}</span>
+                  <span className="text-foreground">{formatCurrency(computedFinancials.taxAmount)}</span>
                 </div>
                 {(paymentView === "split" ? totalSplitTip : tipAmount) > 0 && (
                   <div className="flex justify-between text-muted-foreground">
@@ -1258,13 +1307,13 @@ export function OrderDetailDialog({
                   <div className="flex justify-between text-lg font-bold text-foreground">
                     <span>Gesamt inkl. Trinkgeld:</span>
                     <span>
-                      {formatCurrency(order.total - (tipAmount || 0) + totalSplitTip)}
+                      {formatCurrency(computedFinancials.total - (tipAmount || 0) + totalSplitTip)}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm text-muted-foreground">
                     <span>Gesamt exkl. Trinkgeld:</span>
                     <span className="text-muted-foreground">
-                      {formatCurrency(order.total - (tipAmount || 0))}
+                      {formatCurrency(computedFinancials.total - (tipAmount || 0))}
                     </span>
                   </div>
                 </div>
@@ -1556,8 +1605,9 @@ export function OrderDetailDialog({
                                       ? assignedTaxRaw * (computedAmount / assignedSubtotal)
                                       : 0;
                                   const discountShare =
-                                    order.discount_amount > 0 && order.total > 0
-                                      ? (order.discount_amount * computedAmount) / order.total
+                                    computedFinancials.discountAmount > 0 && computedFinancials.total > 0
+                                      ? (computedFinancials.discountAmount * computedAmount) /
+                                        computedFinancials.total
                                       : 0;
                                   return (
                                     <div
