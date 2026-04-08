@@ -14,6 +14,7 @@ import { de } from "date-fns/locale";
 import { ShoppingCart, Table as TableIcon, Plus, Trash2, Euro, Users, FileText, X, CheckCircle, Clock, Search, Download, Check, ChevronDown, CreditCard, Banknote, Nfc, Loader2, AlertTriangle, XCircle, } from "lucide-react";
 import { confirmAction } from "@/lib/utils";
 import { buildApiUrl, getApiBaseUrl, API_PREFIX } from "@/lib/api/config";
+import { createReceipt, getTransactionForOrder } from "@/lib/api/fiskaly";
 
 type StatusMeta = { Icon: typeof Clock; tone: string; label: string };
 
@@ -771,7 +772,7 @@ export function OrderDetailDialog({
       }
 
       // Verwende die zentrale API-Konfiguration
-      const pdfUrl = buildApiUrl(getApiBaseUrl(), API_PREFIX, `/restaurants/${restaurantId}/invoices/${order.id}/pdf`);
+      const pdfUrl = buildApiUrl(getApiBaseUrl(), API_PREFIX, `/invoices/${order.id}/pdf`);
       const response = await fetch(
         pdfUrl,
         {
@@ -809,6 +810,29 @@ export function OrderDetailDialog({
     }
   };
 
+  const [receiptLoading, setReceiptLoading] = useState(false);
+
+  const handleCreateReceipt = async () => {
+    if (!order || !restaurant) return;
+    setReceiptLoading(true);
+    try {
+      const resp = await createReceipt({
+        order_id: order.id,
+        restaurant_name: restaurant.name || "",
+        restaurant_address: restaurant.address || "",
+        restaurant_tax_number: "",
+      });
+      if (resp.public_url) {
+        window.open(resp.public_url, "_blank");
+      }
+      onNotify?.(resp.status === "already_exists" ? "eReceipt bereits vorhanden" : "eReceipt erstellt", "success");
+    } catch (err: any) {
+      onNotify?.(err?.message || "eReceipt-Erstellung fehlgeschlagen", "error");
+    } finally {
+      setReceiptLoading(false);
+    }
+  };
+
   if (!order && !loading) {
     return null;
   }
@@ -826,15 +850,33 @@ export function OrderDetailDialog({
                 Bestelldetails und Abrechnung
               </DialogDescription>
             </div>
-            <Button
-              size="sm"
-              onClick={handleDownloadInvoice}
-              variant="outline"
-              className="bg-muted border-input text-foreground hover:bg-accent min-h-[32px]"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Rechnung PDF
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                onClick={handleDownloadInvoice}
+                variant="outline"
+                className="bg-muted border-input text-foreground hover:bg-accent min-h-[32px]"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Rechnung PDF
+              </Button>
+              {order?.payment_status === "paid" && (
+                <Button
+                  size="sm"
+                  onClick={handleCreateReceipt}
+                  disabled={receiptLoading}
+                  variant="outline"
+                  className="bg-muted border-input text-foreground hover:bg-accent min-h-[32px]"
+                >
+                  {receiptLoading ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <FileText className="w-4 h-4 mr-2" />
+                  )}
+                  eReceipt
+                </Button>
+              )}
+            </div>
           </div>
         </DialogHeader>
 
