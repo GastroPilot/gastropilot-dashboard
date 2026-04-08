@@ -310,7 +310,7 @@ export default function DashboardPage() {
   // UI Controls
   const [waitlistSearchQuery, setWaitlistSearchQuery] = useState<string>("");
   const [currentUser, setCurrentUser] = useState<{ role: string } | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
