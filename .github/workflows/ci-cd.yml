@@ -17,6 +17,11 @@ on:
         type: choice
         options:
           - test
+          - staging
+          - demo
+
+permissions:
+  contents: write
 
 env:
   NODE_VERSION: '22'
@@ -155,14 +160,30 @@ jobs:
           INPUT_TAG: ${{ github.event.inputs.tag }}
         run: |
           if [ "$EVENT_NAME" == "workflow_dispatch" ]; then
-            echo "tag=$INPUT_TAG" >> $GITHUB_OUTPUT
+            echo "tag=$INPUT_TAG" >> "$GITHUB_OUTPUT"
           else
-            echo "tag=test" >> $GITHUB_OUTPUT
+            echo "tag=test" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Read package version
-        id: pkg
-        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+      - name: Determine RC version
+        id: rc
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          RC_VERSION="${VERSION}-rc.${{ github.run_number }}"
+          BUILD_DATE=$(date +%Y%m%d-%H%M%S)
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "rc_version=${RC_VERSION}" >> "$GITHUB_OUTPUT"
+          echo "build_date=${BUILD_DATE}" >> "$GITHUB_OUTPUT"
+
+      - name: Create RC tag
+        env:
+          RC_VERSION: ${{ steps.rc.outputs.rc_version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "v${RC_VERSION}" -m "RC ${RC_VERSION}" || true
+          git push origin "v${RC_VERSION}" || true
 
       - name: Build and push
         uses: docker/build-push-action@v5
@@ -175,4 +196,5 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
-            NEXT_PUBLIC_APP_VERSION=${{ steps.pkg.outputs.version }}
+            NEXT_PUBLIC_APP_VERSION=${{ steps.rc.outputs.rc_version }}
+            NEXT_PUBLIC_BUILD_DATE=${{ steps.rc.outputs.build_date }}

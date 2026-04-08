@@ -1,6 +1,6 @@
 {
   "name": "gastropilot-dashboard",
-  "version": "0.14.2",
+  "version": "0.14.3",
   "private": true,
   "scripts": {
     "dev": "next dev --port 3001 --hostname 0.0.0.0",

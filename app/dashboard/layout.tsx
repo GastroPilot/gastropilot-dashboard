@@ -235,6 +235,12 @@ export default function DashboardLayout({
         show: !!isOwner && !isGrundstatus,
       },
       {
+        href: "/dashboard/fiskaly",
+        label: "TSE / KassenSichV",
+        active: pathname?.startsWith("/dashboard/fiskaly"),
+        show: !!isOwner && !isGrundstatus,
+      },
+      {
         href: "/dashboard/hilfecenter",
         label: "Hilfecenter",
         active: pathname?.startsWith("/dashboard/hilfecenter"),
@@ -284,6 +290,7 @@ export default function DashboardLayout({
           pick("/dashboard/owner-insights"),
           pick("/dashboard/ai-insights"),
           pick("/dashboard/billing"),
+          pick("/dashboard/fiskaly"),
         ],
       },
       {
