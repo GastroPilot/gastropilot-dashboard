@@ -29,11 +29,20 @@ import { AreaSelector } from "@/components/area-selector";
 import { Button } from "@/components/ui/button";
 import { useUserSettings } from "@/lib/hooks/use-user-settings";
 import { useDashboardComputations } from "@/lib/hooks/use-dashboard-computations";
-import { Plus, ChevronLeft, ChevronRight, LayoutGrid, MoveRight, ShieldAlert, ZoomIn, ZoomOut, Maximize2, Clock, ShieldCheck, Calendar } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, LayoutGrid, MoveRight, ShieldAlert, ZoomIn, ZoomOut, Clock, ShieldCheck, Calendar } from "lucide-react";
 import { format, parseISO, startOfDay, endOfDay, isSameDay } from "date-fns";
 import { de } from "date-fns/locale";
 
 const DASHBOARD_ZOOM_SETTINGS_KEY = "dashboard_zoom_level";
+const ZOOM_MIN = 0.5;
+const ZOOM_MAX = 3;
+const ZOOM_STEP = 0.1;
+
+const normalizeZoom = (value: number): number => {
+  const snapped = Math.round(value / ZOOM_STEP) * ZOOM_STEP;
+  const clamped = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, snapped));
+  return Number(clamped.toFixed(2));
+};
 
 // ============================================
 // OPTIMIERTE HOOKS
@@ -496,18 +505,18 @@ export default function DashboardPage() {
     const stored = (settings.settings || {})[DASHBOARD_ZOOM_SETTINGS_KEY];
     const storedNumber = typeof stored === "number" ? stored : Number(stored);
     if (Number.isFinite(storedNumber)) {
-      const clamped = Math.min(3, Math.max(0.5, storedNumber));
+      const clamped = normalizeZoom(storedNumber);
       setZoomLevel(clamped);
       lastPersistedZoomRef.current = clamped.toString();
     } else {
-      lastPersistedZoomRef.current = zoomLevel.toString();
+      lastPersistedZoomRef.current = normalizeZoom(zoomLevel).toString();
     }
     settingsInitializedRef.current = true;
   }, [settings, zoomLevel]);
   
   useEffect(() => {
     if (!settingsInitializedRef.current || !settings) return;
-    const rounded = Number(zoomLevel.toFixed(2));
+    const rounded = normalizeZoom(zoomLevel);
     const serialized = rounded.toString();
     if (serialized === lastPersistedZoomRef.current) return;
     lastPersistedZoomRef.current = serialized;
@@ -546,7 +555,7 @@ export default function DashboardPage() {
   const handleZoomIn = useCallback(() => {
     setIsZooming(true);
     setZoomLevel(prev => {
-      const newZoom = Math.min(prev * 1.2, 3);
+      const newZoom = normalizeZoom(prev + ZOOM_STEP);
       setTimeout(() => setIsZooming(false), 150);
       return newZoom;
     });
@@ -555,15 +564,10 @@ export default function DashboardPage() {
   const handleZoomOut = useCallback(() => {
     setIsZooming(true);
     setZoomLevel(prev => {
-      const newZoom = Math.max(prev / 1.2, 0.5);
+      const newZoom = normalizeZoom(prev - ZOOM_STEP);
       setTimeout(() => setIsZooming(false), 150);
       return newZoom;
     });
-  }, []);
-
-  const handleZoomReset = useCallback(() => {
-    setZoomLevel(1);
-    setPanOffset({ x: 0, y: 0 });
   }, []);
 
   // ============================================
@@ -912,7 +916,7 @@ export default function DashboardPage() {
                     
                     if (zoomRef.current.initialDistance > 0) {
                       const scale = distance / zoomRef.current.initialDistance;
-                      const newZoom = Math.max(0.5, Math.min(3, zoomRef.current.initialZoom * scale));
+                      const newZoom = normalizeZoom(zoomRef.current.initialZoom * scale);
                       
                       const centerX = (touch1.clientX + touch2.clientX) / 2;
                       const centerY = (touch1.clientY + touch2.clientY) / 2;
@@ -974,8 +978,12 @@ export default function DashboardPage() {
                     if (rect) {
                       const mouseX = e.clientX - rect.left;
                       const mouseY = e.clientY - rect.top;
-                      const zoomDelta = e.deltaY > 0 ? 0.9 : 1.1;
-                      const newZoom = Math.max(0.5, Math.min(3, zoomLevel * zoomDelta));
+                      const zoomDelta = e.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP;
+                      const newZoom = normalizeZoom(zoomLevel + zoomDelta);
+                      if (newZoom === zoomLevel) {
+                        setTimeout(() => setIsZooming(false), 50);
+                        return;
+                      }
                       const zoomFactor = newZoom / zoomLevel;
                       setPanOffset(prev => ({
                         x: mouseX - (mouseX - prev.x) * zoomFactor,
@@ -1043,35 +1051,26 @@ export default function DashboardPage() {
               )}
 
               {/* Zoom-Controls */}
-              <div className="absolute bottom-4 right-4 z-20 flex flex-col gap-2">
+              <div className="absolute bottom-4 right-4 z-20 flex flex-col items-end gap-2">
                 <Button
                   onClick={handleZoomIn}
                   size="sm"
                   variant="outline"
-                  className="bg-card/90 backdrop-blur-sm border-input hover:bg-accent min-h-[36px] min-w-[36px] p-0"
+                  className="bg-card/90 backdrop-blur-sm border-input hover:bg-accent h-11 w-11 min-h-0 min-w-0 p-0"
                   title="Heranzoomen"
                 >
-                  <ZoomIn className="w-4 h-4" />
+                  <ZoomIn className="w-5 h-5" />
                 </Button>
                 <Button
                   onClick={handleZoomOut}
                   size="sm"
                   variant="outline"
-                  className="bg-card/90 backdrop-blur-sm border-input hover:bg-accent min-h-[36px] min-w-[36px] p-0"
+                  className="bg-card/90 backdrop-blur-sm border-input hover:bg-accent h-11 w-11 min-h-0 min-w-0 p-0"
                   title="Herauszoomen"
                 >
-                  <ZoomOut className="w-4 h-4" />
+                  <ZoomOut className="w-5 h-5" />
                 </Button>
-                <Button
-                  onClick={handleZoomReset}
-                  size="sm"
-                  variant="outline"
-                  className="bg-card/90 backdrop-blur-sm border-input hover:bg-accent min-h-[36px] min-w-[36px] p-0"
-                  title="Zoom zurücksetzen"
-                >
-                  <Maximize2 className="w-4 h-4" />
-                </Button>
-                <div className="text-xs text-foreground bg-card/90 backdrop-blur-sm border border-input rounded px-2 py-1 text-center mt-1">
+                <div className="w-14 text-xs text-foreground bg-card/90 backdrop-blur-sm border border-input rounded px-2 py-1 text-center mt-1 tabular-nums">
                   {Math.round(zoomLevel * 100)}%
                 </div>
               </div>
