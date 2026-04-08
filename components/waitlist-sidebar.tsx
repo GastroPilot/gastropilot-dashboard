@@ -27,6 +27,7 @@ interface WaitlistSidebarProps {
   onNewReservation?: () => void;
   collapsed?: boolean;
   onToggle?: () => void;
+  readOnly?: boolean;
 }
 
 const STATUS_SETTINGS_KEY = "dashboard_status_filters";
@@ -54,6 +55,7 @@ export function WaitlistSidebar({
   onNewReservation,
   collapsed = false,
   onToggle,
+  readOnly = false,
 }: WaitlistSidebarProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: "waitlist",
@@ -475,6 +477,7 @@ export function WaitlistSidebar({
                 key={block.id}
                 block={block}
                 isDragging={activeBlockId === block.id}
+                draggable={!readOnly}
                 tableLabels={getBlockTableLabels?.(block)}
                 onClick={onBlockClick}
               />
@@ -484,6 +487,7 @@ export function WaitlistSidebar({
                 key={reservation.id}
                 reservation={reservation}
                 isDragging={activeReservationId === reservation.id}
+                draggable={!readOnly}
                 getTableName={getTableName}
                 getTableLabel={getReservationTableLabel}
                 onClick={onReservationClick}
@@ -498,7 +502,7 @@ export function WaitlistSidebar({
           </div>
         )}
       </div>
-      {onNewReservation && (
+      {onNewReservation && !readOnly && (
         <div className="p-3 md:p-4 border-t border-border bg-card shrink-0">
           <Button
             onClick={onNewReservation}

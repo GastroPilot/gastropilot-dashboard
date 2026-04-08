@@ -61,6 +61,7 @@ interface OrderDetailDialogProps {
   orderId: string | null;
   onOrderUpdated?: () => void;
   onNotify?: (message: string, variant?: "info" | "success" | "error") => void;
+  readOnly?: boolean;
 }
 
 export function OrderDetailDialog({
@@ -70,6 +71,7 @@ export function OrderDetailDialog({
   orderId,
   onOrderUpdated,
   onNotify,
+  readOnly = false,
 }: OrderDetailDialogProps) {
   const [order, setOrder] = useState<OrderWithItems | null>(null);
   const [table, setTable] = useState<Table | null>(null);
@@ -105,6 +107,7 @@ export function OrderDetailDialog({
   const [sumupPayments, setSumupPayments] = useState<SumUpPayment[]>([]);
   const [isLoadingPayments, setIsLoadingPayments] = useState(false);
   const sumupPaymentsRef = useRef<SumUpPayment[]>([]);
+  const canMutate = !readOnly;
   
   // Aktualisiere Refs, wenn sich State ändert
   useEffect(() => {
@@ -266,13 +269,14 @@ export function OrderDetailDialog({
     splitPaid.some(Boolean);
 
   useEffect(() => {
-    if (!order || order.status !== "served" || (!paymentDetailsDirty && !splitDetailsDirty) || loading) return;
+    if (!canMutate || !order || order.status !== "served" || (!paymentDetailsDirty && !splitDetailsDirty) || loading) return;
     const timeoutId = window.setTimeout(() => {
       handleSavePaymentDetails();
     }, 600);
     return () => window.clearTimeout(timeoutId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
+    canMutate,
     order,
     paymentDetailsDirty,
     splitDetailsDirty,
@@ -377,6 +381,7 @@ export function OrderDetailDialog({
   };
 
   const handleStartSumupPayment = async () => {
+    if (readOnly) return;
     if (!order) return;
     
     const isPaymentReady = order.status === "served" || order.status === "paid";
@@ -465,6 +470,7 @@ export function OrderDetailDialog({
   };
 
   const handleDeleteOrder = async () => {
+    if (readOnly) return;
     if (!order) return;
     if (!confirmAction("Bestellung wirklich löschen?")) return;
     setDeleting(true);
@@ -484,6 +490,7 @@ export function OrderDetailDialog({
   };
 
   const handleUpdateStatus = async (newStatus: string) => {
+    if (readOnly) return;
     if (!order) return;
 
     setLoading(true);
@@ -502,6 +509,7 @@ export function OrderDetailDialog({
   };
 
   const handleSavePaymentDetails = async () => {
+    if (readOnly) return;
     if (!order) return;
 
     const currentDiscountAmount = discountAmount;
@@ -539,6 +547,7 @@ export function OrderDetailDialog({
   };
 
   const handleMarkAsPaid = async () => {
+    if (readOnly) return;
     if (!order) return;
 
     // Check if we have split payments (either in state or in order)
@@ -597,6 +606,7 @@ export function OrderDetailDialog({
   };
 
   const handleDeleteItem = async (itemId: string) => {
+    if (readOnly) return;
     if (!order) return;
 
     const confirmed = confirmAction("Möchten Sie diese Position wirklich löschen?");
@@ -617,6 +627,7 @@ export function OrderDetailDialog({
   };
 
   const handleAddMenuItem = async (menuItem: MenuItem) => {
+    if (readOnly) return;
     if (!order) return;
 
     const itemData: OrderItemCreate = {
@@ -664,6 +675,7 @@ export function OrderDetailDialog({
   };
 
   const handleAddSplitPayment = () => {
+    if (readOnly) return;
     setSplitPayments((prev) => [...prev, { method: "cash", amount: 0 }]);
     setSplitAssignments((prev) => [...prev, []]);
     setSplitTips((prev) => [...prev, 0]);
@@ -679,6 +691,7 @@ export function OrderDetailDialog({
   };
 
   const handleRemoveSplitPayment = (index: number) => {
+    if (readOnly) return;
     if (!confirmAction("Split-Zahlung wirklich entfernen?")) return;
     setSplitPayments((prev) => prev.filter((_, i) => i !== index));
     setSplitAssignments((prev) => prev.filter((_, i) => i !== index));
@@ -694,6 +707,7 @@ export function OrderDetailDialog({
   };
 
   const updateSplitPayment = (index: number, field: "method", value: string) => {
+    if (readOnly) return;
     const updated = [...splitPayments];
     updated[index] = { ...updated[index], [field]: value };
     setSplitPayments(updated);
@@ -701,6 +715,7 @@ export function OrderDetailDialog({
   };
 
   const updateSplitTip = (index: number, value: number) => {
+    if (readOnly) return;
     setSplitTips((prev) => {
       const updated = [...prev];
       updated[index] = value;
@@ -710,6 +725,7 @@ export function OrderDetailDialog({
   };
 
   const toggleSplitPaid = (index: number) => {
+    if (readOnly) return;
     setSplitPaid((prev) => {
       const updated = [...prev];
       updated[index] = !updated[index];
@@ -719,6 +735,7 @@ export function OrderDetailDialog({
   };
 
   const toggleSplitItem = (paymentIndex: number, itemId: string) => {
+    if (readOnly) return;
     setSplitAssignments((prev) => {
       const next = prev.map((list) => list.filter((id) => id !== itemId));
       const alreadyAssigned = (prev[paymentIndex] || []).includes(itemId);
@@ -867,8 +884,11 @@ export function OrderDetailDialog({
                 <div className="relative w-full flex" ref={statusMenuRef}>
                   <button
                     type="button"
-                    onClick={() => setStatusMenuOpen((prev) => !prev)}
-                    disabled={loading}
+                    onClick={() => {
+                      if (!canMutate) return;
+                      setStatusMenuOpen((prev) => !prev);
+                    }}
+                    disabled={loading || !canMutate}
                     className="w-full rounded-md border border-border bg-card text-foreground px-3 py-1 text-sm shadow-inner flex items-center justify-between gap-3 hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring min-h-[32px] touch-manipulation"
                   >
                     <div className="flex items-center gap-2 min-w-0">
@@ -891,7 +911,7 @@ export function OrderDetailDialog({
                       }`}
                     />
                   </button>
-                  {statusMenuOpen && (
+                  {canMutate && statusMenuOpen && (
                     <div className="absolute right-0 mt-1 w-60 rounded-lg border border-border bg-background shadow-xl z-[50] max-h-[70vh] overflow-auto">
                       {Object.entries(STATUS_META).map(([value, meta]) => {
                         const Icon = meta.Icon;
@@ -933,7 +953,7 @@ export function OrderDetailDialog({
                   <ShoppingCart className="w-5 h-5" />
                   Bestellpositionen
                 </h3>
-                {order.status !== "paid" && order.status !== "canceled" && (
+                {canMutate && order.status !== "paid" && order.status !== "canceled" && (
                   <Button
                     size="sm"
                     variant="default"
@@ -947,7 +967,7 @@ export function OrderDetailDialog({
               </div>
 
               {/* Menü-Auswahl */}
-              {isAddingItem && order.status !== "paid" && order.status !== "canceled" && (
+              {canMutate && isAddingItem && order.status !== "paid" && order.status !== "canceled" && (
                 <div className="mb-4 p-4 bg-card/50 border border-border rounded-md">
                   <div className="mb-3">
                     <div className="relative mb-2">
@@ -1057,7 +1077,7 @@ export function OrderDetailDialog({
                         <span className="text-foreground font-medium">
                           {formatCurrency(item.total_price)}
                         </span>
-                        {order.status !== "paid" && order.status !== "canceled" && (
+                        {canMutate && order.status !== "paid" && order.status !== "canceled" && (
                           <Button
                             size="sm"
                             variant="destructive"
@@ -1105,7 +1125,7 @@ export function OrderDetailDialog({
                         }}
                         className="bg-muted border-input text-foreground"
                         placeholder="0.00"
-                        disabled={isPaymentLocked}
+                        disabled={isPaymentLocked || !canMutate}
                       />
                     </div>
                     <div>
@@ -1136,7 +1156,7 @@ export function OrderDetailDialog({
                         }}
                         className="bg-muted border-input text-foreground"
                         placeholder="0"
-                        disabled={isPaymentLocked}
+                        disabled={isPaymentLocked || !canMutate}
                       />
                     </div>
                   </div>
@@ -1153,7 +1173,7 @@ export function OrderDetailDialog({
                         }}
                         className="bg-muted border-input text-foreground"
                         placeholder="0.00"
-                        disabled={isPaymentLocked || paymentView === "split"}
+                        disabled={isPaymentLocked || paymentView === "split" || !canMutate}
                       />
                   </div>
                 </div>
@@ -1361,7 +1381,7 @@ export function OrderDetailDialog({
                                 setPaymentMethod("cash");
                                 setPaymentDetailsDirty(true);
                               }}
-                              disabled={isPaymentLocked}
+                              disabled={isPaymentLocked || !canMutate}
                               className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-sm border min-h-[30px] ${
                                 paymentMethod === "cash"
                                   ? "bg-primary text-white border-primary/80 shadow-inner"
@@ -1378,7 +1398,7 @@ export function OrderDetailDialog({
                                 setPaymentMethod("card");
                                 setPaymentDetailsDirty(true);
                               }}
-                              disabled={isPaymentLocked}
+                              disabled={isPaymentLocked || !canMutate}
                               className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-sm border min-h-[30px] ${
                                 paymentMethod === "card"
                                   ? "bg-primary text-white border-primary/80 shadow-inner"
@@ -1399,7 +1419,7 @@ export function OrderDetailDialog({
                                 setPaymentMethod("sumup_card");
                                 setPaymentDetailsDirty(true);
                               }}
-                              disabled={isPaymentLocked || !restaurant?.sumup_enabled}
+                              disabled={isPaymentLocked || !restaurant?.sumup_enabled || !canMutate}
                               className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-sm border min-h-[30px] ${
                                 paymentMethod === "sumup_card"
                                   ? "bg-primary text-white border-primary/80 shadow-inner"
@@ -1423,7 +1443,7 @@ export function OrderDetailDialog({
                             </div>
                             <Button
                               onClick={handleStartSumupPayment}
-                              disabled={isStartingSumupPayment || isPaymentLocked || (order?.status !== "served" && order?.status !== "paid")}
+                              disabled={!canMutate || isStartingSumupPayment || isPaymentLocked || (order?.status !== "served" && order?.status !== "paid")}
                               className="w-full bg-primary hover:bg-primary/90 text-white"
                             >
                               {isStartingSumupPayment ? (
@@ -1452,8 +1472,8 @@ export function OrderDetailDialog({
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={handleAddSplitPayment}
-                                disabled={isPaymentLocked || (splitPaid.length > 0 && splitPaid.every(Boolean))}
+                              onClick={handleAddSplitPayment}
+                                disabled={!canMutate || isPaymentLocked || (splitPaid.length > 0 && splitPaid.every(Boolean))}
                                 className="bg-primary border-primary text-white hover:bg-primary text-xs shadow-none hover:shadow-[0_10px_24px_rgba(59,130,246,0.35)] disabled:opacity-60 disabled:cursor-not-allowed"
                               >
                                 <Plus className="w-3 h-3 mr-1" />
@@ -1521,7 +1541,7 @@ export function OrderDetailDialog({
                                             size="sm"
                                             variant="outline"
                                             onClick={() => toggleSplitPaid(index)}
-                                            disabled={isPaymentLocked || !hasSelection}
+                                            disabled={!canMutate || isPaymentLocked || !hasSelection}
                                             className={`shadow-none ${
                                               isPaid
                                                 ? "bg-emerald-900/30 border-emerald-600 text-emerald-200 hover:bg-emerald-900/50 hover:border-emerald-500"
@@ -1534,7 +1554,7 @@ export function OrderDetailDialog({
                                             size="sm"
                                             variant="outline"
                                             onClick={() => handleRemoveSplitPayment(index)}
-                                            disabled={isPaymentLocked}
+                                            disabled={!canMutate || isPaymentLocked}
                                             className="bg-red-900/30 border-red-600 text-red-200 shadow-none hover:bg-red-900/50 hover:border-red-500 disabled:opacity-60 disabled:cursor-not-allowed"
                                             title="Split entfernen"
                                           >
@@ -1594,10 +1614,11 @@ export function OrderDetailDialog({
                                             <div className="text-[11px] text-muted-foreground mb-1">Zahlungsart</div>
                                             <button
                                               type="button"
-                                              onClick={() =>
-                                                setSplitMethodMenuIndex((prev) => (prev === index ? null : index))
-                                              }
-                                            disabled={isPaymentLocked || !hasSelection || isPaid}
+                                              onClick={() => {
+                                                if (!canMutate) return;
+                                                setSplitMethodMenuIndex((prev) => (prev === index ? null : index));
+                                              }}
+                                            disabled={!canMutate || isPaymentLocked || !hasSelection || isPaid}
                                             className="w-full flex items-center justify-between gap-2 px-2 py-1 bg-muted border border-input rounded text-foreground text-sm hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring min-h-[32px] disabled:opacity-60 disabled:cursor-not-allowed"
                                             >
                                               <span className="flex items-center gap-2">
@@ -1672,7 +1693,7 @@ export function OrderDetailDialog({
                                             }
                                             className="bg-muted border-input text-foreground h-8 text-sm"
                                             placeholder="0.00"
-                                          disabled={isPaymentLocked || !hasSelection || isPaid}
+                                          disabled={!canMutate || isPaymentLocked || !hasSelection || isPaid}
                                           />
                                         </div>
                                         {hasSelection ? (
@@ -1767,16 +1788,18 @@ export function OrderDetailDialog({
             )}
 
             <div className="flex items-center justify-between pt-2 border-t border-border">
-              <Button
-                size="sm"
-                variant="destructive"
-                onClick={handleDeleteOrder}
-                disabled={loading || deleting}
-                className="shadow-none"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Löschen
-              </Button>
+              {canMutate && (
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={handleDeleteOrder}
+                  disabled={loading || deleting}
+                  className="shadow-none"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Löschen
+                </Button>
+              )}
               <div className="flex items-center gap-2">
                 <Button
                   size="sm"
@@ -1787,7 +1810,7 @@ export function OrderDetailDialog({
                   <X className="w-4 h-4" />
                   Schließen
                 </Button>
-                {order.status !== "paid" && order.status !== "canceled" && (
+                {canMutate && order.status !== "paid" && order.status !== "canceled" && (
                   <>
                     {order.status === "open" && (
                       <Button

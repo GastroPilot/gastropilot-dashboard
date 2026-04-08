@@ -8,6 +8,7 @@ import { Clock, Users, CheckCircle, XCircle, AlertTriangle, Armchair, ShieldChec
 interface ReservationCardProps {
   reservation: Reservation;
   isDragging?: boolean;
+  draggable?: boolean;
   getTableName?: (tableId: string | null) => string;
   getTableLabel?: (reservation: Reservation) => string | null;
   onClick?: (reservation: Reservation) => void;
@@ -17,6 +18,7 @@ interface ReservationCardProps {
 export function ReservationCard({
   reservation,
   isDragging,
+  draggable = true,
   getTableName,
   getTableLabel,
   onClick,
@@ -25,6 +27,7 @@ export function ReservationCard({
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: `reservation-${reservation.id}`,
     data: { type: "reservation", reservationId: reservation.id },
+    disabled: !draggable,
   });
 
   const style = transform
@@ -72,8 +75,8 @@ export function ReservationCard({
         touchAction: 'none',
         WebkitTouchCallout: 'none',
       }}
-      {...listeners}
-      {...attributes}
+      {...(draggable ? listeners : {})}
+      {...(draggable ? attributes : {})}
       onMouseDown={(e) => {
         // Verhindere Text-Selektion beim Maus-Down (Doppelklick)
         if (e.detail > 1) e.preventDefault();
@@ -81,7 +84,7 @@ export function ReservationCard({
       onClick={() => onClick?.(reservation)}
       className={`
         bg-card rounded-lg shadow-md border border-border p-2 md:p-3
-        cursor-grab active:cursor-grabbing
+        ${draggable ? "cursor-grab active:cursor-grabbing" : "cursor-default"}
         hover:shadow-lg hover:bg-accent transition-all
         ${isDragging ? "opacity-50" : ""}
         touch-manipulation

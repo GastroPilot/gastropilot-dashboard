@@ -680,6 +680,7 @@ export default function OrderHistoryPage() {
           orderId={selectedOrder.id}
           restaurantId={restaurant.id}
           onOrderUpdated={loadData}
+          readOnly={true}
         />
       )}
     </div>

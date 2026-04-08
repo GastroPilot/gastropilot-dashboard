@@ -8,14 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LoadingOverlay } from "@/components/loading-overlay";
 import { SkeletonOrderCard } from "@/components/skeletons";
-import { OrderDialog } from "@/components/order-dialog";
 import { OrderDetailDialog } from "@/components/order-detail-dialog";
 import { DropdownSelector } from "@/components/area-selector";
 import { useUserSettings } from "@/lib/hooks/use-user-settings";
 import { format, parseISO } from "date-fns";
 import { de } from "date-fns/locale";
 import {
-  Plus,
   ShoppingCart,
   Filter,
   Search,
@@ -102,10 +100,8 @@ export default function OrdersPage() {
   const [toasts, setToasts] = useState<
     { id: string; message: string; variant?: "info" | "error" | "success" }[]
   >([]);
-  const [orderDialogOpen, setOrderDialogOpen] = useState(false);
   const [orderDetailDialogOpen, setOrderDetailDialogOpen] = useState(false);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
-  const [selectedTableForOrder, setSelectedTableForOrder] = useState<Table | null>(null);
   const { settings, updateSettings, error: settingsError } = useUserSettings();
   const settingsInitializedRef = useRef(false);
   const lastPersistedStatusesRef = useRef<string>("");
@@ -274,18 +270,6 @@ export default function OrdersPage() {
               </div>
             </div>
             <div className="flex items-center gap-2 pt-1.5 md:pt-2">
-              <Button
-                variant="default"
-                size="sm"
-                className="touch-manipulation min-h-[32px] text-sm px-3"
-                onClick={() => {
-                  setSelectedTableForOrder(null);
-                  setOrderDialogOpen(true);
-                }}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Neue Bestellung
-              </Button>
             </div>
           </div>
         </div>
@@ -445,18 +429,6 @@ export default function OrdersPage() {
                 ? "Versuchen Sie andere Suchkriterien"
                 : "Erstellen Sie Ihre erste Bestellung"}
             </p>
-            {!searchQuery && !hasActiveStatusFilter && (
-              <Button
-                className="bg-primary hover:bg-primary/90 text-foreground"
-                onClick={() => {
-                  setSelectedTableForOrder(null);
-                  setOrderDialogOpen(true);
-                }}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Neue Bestellung erstellen
-              </Button>
-            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -567,23 +539,6 @@ export default function OrdersPage() {
       {/* Order Dialog */}
       {restaurant && (
         <>
-          <OrderDialog
-            open={orderDialogOpen}
-            onOpenChange={setOrderDialogOpen}
-            restaurantId={restaurant.id}
-            table={selectedTableForOrder}
-            availableTables={tables}
-            onOrderCreated={() => {
-              refreshData();
-              setOrderDialogOpen(false);
-            }}
-            onOrderUpdated={() => {
-              refreshData();
-              setOrderDialogOpen(false);
-            }}
-            onNotify={(message, variant) => addToast(message, variant)}
-          />
-
           <OrderDetailDialog
             open={orderDetailDialogOpen}
             onOpenChange={setOrderDetailDialogOpen}
@@ -593,6 +548,7 @@ export default function OrdersPage() {
               refreshData();
             }}
             onNotify={(message, variant) => addToast(message, variant)}
+            readOnly={true}
           />
         </>
       )}

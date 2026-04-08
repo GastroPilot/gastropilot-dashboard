@@ -2,20 +2,19 @@
 
 import { useEffect, useState, useMemo, useCallback, useRef, memo } from "react";
 import Link from "next/link";
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, TouchSensor, useSensor, useSensors, closestCenter } from "@dnd-kit/core";
-import { useQueryClient } from "@tanstack/react-query";
+import { DndContext, DragOverlay, PointerSensor, TouchSensor, useSensor, useSensors, closestCenter } from "@dnd-kit/core";
 import { restaurantsApi, Restaurant } from "@/lib/api/restaurants";
-import { tablesApi, Table } from "@/lib/api/tables";
-import { reservationsApi, Reservation } from "@/lib/api/reservations";
-import { ordersApi, Order } from "@/lib/api/orders";
+import { Table } from "@/lib/api/tables";
+import { Reservation } from "@/lib/api/reservations";
+import { Order } from "@/lib/api/orders";
 import { Obstacle } from "@/lib/api/obstacles";
 import { Area } from "@/lib/api/areas";
 import { authApi } from "@/lib/api/auth";
 import { impersonation } from "@/lib/api/admin";
-import { tableDayConfigsApi, TableDayConfig } from "@/lib/api/table-day-configs";
-import { reservationTableDayConfigsApi, ReservationTableDayConfig } from "@/lib/api/reservation-table-day-configs";
-import { blocksApi, Block } from "@/lib/api/blocks";
-import { blockAssignmentsApi, BlockAssignment } from "@/lib/api/block-assignments";
+import { TableDayConfig } from "@/lib/api/table-day-configs";
+import { ReservationTableDayConfig } from "@/lib/api/reservation-table-day-configs";
+import { Block } from "@/lib/api/blocks";
+import { BlockAssignment } from "@/lib/api/block-assignments";
 import { dashboardApi } from "@/lib/api/dashboard";
 import { TableCard } from "@/components/table-card";
 import { ReservationCard } from "@/components/reservation-card";
@@ -24,17 +23,13 @@ import { WaitlistSidebar } from "@/components/waitlist-sidebar";
 import { ReservationDialog } from "@/components/reservation-dialog";
 import { TableDetailsDialog } from "@/components/table-details-dialog";
 import { OrderDetailDialog } from "@/components/order-detail-dialog";
-import { OrderDialog } from "@/components/order-dialog";
-import { CreateTempTableDialog } from "@/components/create-temp-table-dialog";
-import { BlockTableDialog } from "@/components/block-table-dialog";
 import { LoadingOverlay } from "@/components/loading-overlay";
 import { SkeletonTableCard } from "@/components/skeletons";
 import { AreaSelector } from "@/components/area-selector";
 import { Button } from "@/components/ui/button";
 import { useUserSettings } from "@/lib/hooks/use-user-settings";
 import { useDashboardComputations } from "@/lib/hooks/use-dashboard-computations";
-import { confirmAction } from "@/lib/utils";
-import { Plus, ChevronLeft, ChevronRight, LayoutGrid, MoveRight, ShieldAlert, ChevronDown, Check, ZoomIn, ZoomOut, Maximize2, Link as LinkIcon, Unlink, XSquare, RotateCcw, Clock, ShieldCheck, Users, CheckCircle, XCircle, Calendar, EllipsisVertical } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, LayoutGrid, MoveRight, ShieldAlert, ZoomIn, ZoomOut, Maximize2, Clock, ShieldCheck, Calendar } from "lucide-react";
 import { format, parseISO, startOfDay, endOfDay, isSameDay } from "date-fns";
 import { de } from "date-fns/locale";
 
@@ -289,31 +284,21 @@ export default function DashboardPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   
   // UI State
-  const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
-  const actionsMenuRef = useRef<HTMLDivElement | null>(null);
-  
   // Dialog State
   const [reservationDialogOpen, setReservationDialogOpen] = useState(false);
   const [tableDetailsOpen, setTableDetailsOpen] = useState(false);
-  const [createTempTableOpen, setCreateTempTableOpen] = useState(false);
-  const [blockEditOpen, setBlockEditOpen] = useState(false);
   const [orderDetailDialogOpen, setOrderDetailDialogOpen] = useState(false);
-  const [orderDialogOpen, setOrderDialogOpen] = useState(false);
   
   // Selection State
-  const [editingBlock, setEditingBlock] = useState<Block | null>(null);
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
-  const [selectedTableForOrder, setSelectedTableForOrder] = useState<Table | null>(null);
   
-  // Drag State
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [activeReservationId, setActiveReservationId] = useState<string | null>(null);
-  const [activeBlockId, setActiveBlockId] = useState<string | null>(null);
+  const activeId: string | null = null;
+  const activeReservationId: string | null = null;
+  const activeBlockId: string | null = null;
   
   // UI Controls
-  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
   const [waitlistSearchQuery, setWaitlistSearchQuery] = useState<string>("");
   const [currentUser, setCurrentUser] = useState<{ role: string } | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -321,8 +306,6 @@ export default function DashboardPage() {
   const [isPanning, setIsPanning] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
   const [isZooming, setIsZooming] = useState(false);
-  const [selectionMode, setSelectionMode] = useState(false);
-  const [selectedTableIds, setSelectedTableIds] = useState<Set<string>>(new Set());
   const tablePlanRef = useRef<HTMLDivElement | null>(null);
   
   // Toast State
@@ -357,7 +340,6 @@ export default function DashboardPage() {
     blocks,
     blockAssignments,
     orders,
-    tableDayConfigs,
     reservationTableDayConfigs,
     isLoading: isInitialLoading,
     refresh: refreshData,
@@ -410,29 +392,11 @@ export default function DashboardPage() {
     blockTemplates,
     getTableReservations,
     getTableOrders,
-    hasTimeConflict,
-    hasBlockConflict,
     getBlockStatus,
     getTableName,
     getReservationTableLabel,
     getBlockTableLabels,
   } = computations;
-
-  const getOrderEligibleReservations = useCallback(
-    (tableId: string): Reservation[] => {
-      const eligibleStatuses = new Set<Reservation["status"]>(["pending", "confirmed", "seated"]);
-      return reservations
-        .filter((reservation) => eligibleStatuses.has(reservation.status))
-        .filter((reservation) => {
-          if (tableId.startsWith("temp-")) {
-            return reservationToTempTableMap.get(reservation.id) === tableId;
-          }
-          return reservation.table_id === tableId;
-        })
-        .sort((a, b) => parseISO(a.start_at).getTime() - parseISO(b.start_at).getTime());
-    },
-    [reservationToTempTableMap, reservations]
-  );
 
   // ============================================
   // DND SENSORS
@@ -453,18 +417,6 @@ export default function DashboardPage() {
         tolerance: 10,
       },
     })
-  );
-
-  const resolveReservationId = useCallback(
-    (
-      dndId: string | number,
-      activeData?: { reservationId?: string } | null
-    ): string => {
-      if (activeData?.reservationId) return activeData.reservationId;
-      const raw = String(dndId);
-      return raw.startsWith("reservation-") ? raw.replace("reservation-", "") : raw;
-    },
-    []
   );
 
   // ============================================
@@ -585,17 +537,6 @@ export default function DashboardPage() {
     };
   }, []);
   
-  // Click outside handlers
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (actionsMenuRef.current && !actionsMenuRef.current.contains(event.target as Node)) {
-        setActionsMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
   // ============================================
   // ZOOM HANDLERS
   // ============================================
@@ -636,599 +577,14 @@ export default function DashboardPage() {
   }, []);
 
   // ============================================
-  // DRAG & DROP HANDLERS
-  // ============================================
-  
-  const handleDragStart = useCallback((event: DragStartEvent) => {
-    const id = event.active.id;
-    const activeData = event.active.data.current as
-      | { type?: "reservation" | "table" | "block"; reservationId?: string; tableId?: string; blockId?: string }
-      | undefined;
-    const activeType = activeData?.type;
-    
-    panRef.current.isPanning = false;
-    setIsPanning(false);
-    
-    if (activeType === "reservation") {
-      const reservationId = resolveReservationId(id, activeData);
-      setActiveReservationId(reservationId);
-      setTableDetailsOpen(false);
-    } else if (activeType === "block") {
-      const blockId = activeData?.blockId ?? String(id).replace("block-", "");
-      setActiveBlockId(blockId || null);
-    } else {
-      const tableId = activeData?.tableId ?? String(id);
-      setActiveId(tableId);
-    }
-  }, [resolveReservationId]);
-
-  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
-    const { active, over } = event;
-    const activeIdValue = active.id;
-    const activeData = active.data.current as
-      | { type?: "reservation" | "table" | "block"; reservationId?: string; tableId?: string; blockId?: string }
-      | undefined;
-    const activeType = activeData?.type;
-
-    // Block drag handling
-    if (activeType === "block") {
-      const blockId = activeData?.blockId ?? String(activeIdValue).replace("block-", "");
-      const block = blocks.find((item) => item.id === blockId);
-      if (!block || !restaurant) {
-        setActiveBlockId(null);
-        return;
-      }
-
-      if (over && over.id) {
-        const tableId = String(over.id);
-        const table = tables.find((t) => t.id === tableId);
-        if (!table) {
-          setActiveBlockId(null);
-          return;
-        }
-        if (!table.is_active) {
-          addToast(`${table.number} ist deaktiviert und kann nicht blockiert werden.`, "error");
-          setActiveBlockId(null);
-          return;
-        }
-        
-        const alreadyAssigned = blockAssignments.some(
-          (assignment) => assignment.block_id === block.id && assignment.table_id === tableId
-        );
-        if (alreadyAssigned) {
-          addToast(`Block ist bereits auf ${table.number} zugewiesen.`, "info");
-          setActiveBlockId(null);
-          return;
-        }
-
-        if (hasBlockConflict(tableId, block.start_at, block.end_at)) {
-          addToast(`Es existiert bereits eine Blockierung in diesem Zeitraum auf ${table.number}.`, "error");
-          setActiveBlockId(null);
-          return;
-        }
-
-        const tableReservations = getTableReservations(tableId);
-        const blockStart = parseISO(block.start_at);
-        const blockEnd = parseISO(block.end_at);
-        const conflict = tableReservations.some((reservation) => {
-          const isActive =
-            reservation.status !== "canceled" &&
-            reservation.status !== "completed" &&
-            reservation.status !== "no_show";
-          if (!isActive) return false;
-          const resStart = parseISO(reservation.start_at);
-          const resEnd = parseISO(reservation.end_at);
-          return blockStart < resEnd && blockEnd > resStart;
-        });
-        
-        if (conflict) {
-          addToast(`Blockierung überschneidet sich mit einer Reservierung auf ${table.number}.`, "error");
-          setActiveBlockId(null);
-          return;
-        }
-
-        try {
-          await blockAssignmentsApi.create(restaurant.id, {
-            block_id: block.id,
-            table_id: tableId,
-          });
-          addToast(`Blockierung auf ${table.number} erstellt.`, "success");
-          refreshData(true);
-        } catch (error) {
-          console.error("Fehler beim Erstellen der Blockzuordnung:", error);
-          addToast("Fehler beim Erstellen der Blockierung", "error");
-        }
-      }
-
-      setActiveBlockId(null);
-      return;
-    }
-
-    // Reservation drag handling
-    if (activeType === "reservation" || (activeType !== "table" && String(activeIdValue).startsWith("temp-"))) {
-      const reservationId = resolveReservationId(activeIdValue, activeData);
-      const reservation = reservations.find((r) => r.id === reservationId);
-
-      if (!reservation || !restaurant) {
-        setActiveReservationId(null);
-        return;
-      }
-
-      // Drop on waitlist
-      if (over && (over.id === "waitlist" || over.id === "waitlist-dropzone" || String(over.id) === "waitlist")) {
-        try {
-          await reservationsApi.update(restaurant.id, reservation.id, {
-            table_id: null,
-            status: "pending",
-          });
-          const tempTableId = reservationToTempTableMap.get(reservation.id);
-          if (tempTableId !== undefined) {
-            const tableDayConfigId = String(tempTableId).replace('temp-', '');
-            try {
-              await reservationTableDayConfigsApi.delete(restaurant.id, reservation.id, tableDayConfigId);
-            } catch (error) {
-              console.error("Fehler beim Entfernen der Zuordnung zu temporärem Tisch:", error);
-            }
-          }
-          addToast(
-            `${reservation.guest_name || "Gast"} wurde zurück auf die Warteliste verschoben.`,
-            "info"
-          );
-          refreshData(true);
-        } catch (error) {
-          console.error("Fehler beim Entfernen des Tisches:", error);
-          addToast("Fehler beim Entfernen des Tisches", "error");
-        }
-        setActiveReservationId(null);
-        return;
-      }
-
-      // Drop on table
-      if (over && over.id) {
-        const tableId = String(over.id);
-        const table = tables.find((t) => t.id === tableId);
-
-        if (!table) {
-          setActiveReservationId(null);
-          return;
-        }
-
-        if (!table.is_active) {
-          addToast(`${table.number} ist deaktiviert und kann nicht zugewiesen werden.`, "error");
-          setActiveReservationId(null);
-          return;
-        }
-
-        if (table.is_active && table.capacity >= reservation.party_size) {
-          if (String(tableId).startsWith("temp-") !== true && hasBlockConflict(tableId, reservation.start_at, reservation.end_at)) {
-            addToast(`${table.number} ist in diesem Zeitraum blockiert.`, "error");
-            setActiveReservationId(null);
-            return;
-          }
-
-          // Temporary table
-          if (String(tableId).startsWith("temp-")) {
-            try {
-              const tableDayConfigId = String(tableId).replace("temp-", "");
-              await reservationsApi.update(restaurant.id, reservation.id, {
-                table_id: null,
-                status: "confirmed",
-              });
-              await reservationTableDayConfigsApi.create(restaurant.id, {
-                reservation_id: reservation.id,
-                table_day_config_id: tableDayConfigId,
-                start_at: reservation.start_at,
-                end_at: reservation.end_at,
-              });
-              addToast(
-                `Reservierung ${reservation.guest_name || "Gast"} auf temporären Tisch ${table.number} zugewiesen.`,
-                "success"
-              );
-              refreshData(true);
-            } catch (error) {
-              console.error("Fehler beim Zuweisen des temporären Tisches:", error);
-              addToast("Fehler beim Zuweisen des temporären Tisches", "error");
-            }
-            setActiveReservationId(null);
-            return;
-          }
-
-          // Check time conflict
-          if (hasTimeConflict(reservation, tableId)) {
-            addToast(
-              `Konflikt: ${reservation.guest_name || "Gast"} kollidiert mit einer bestehenden Reservierung auf ${table.number}.`,
-              "error"
-            );
-            setActiveReservationId(null);
-            return;
-          }
-
-          // Assign to standard table
-          try {
-            await reservationsApi.update(restaurant.id, reservation.id, {
-              table_id: tableId,
-              status: "confirmed",
-            });
-            addToast(
-              `${table.number} zugewiesen an ${reservation.guest_name || "Gast"}.`,
-              "success"
-            );
-            refreshData(true);
-          } catch (error) {
-            console.error("Fehler beim Zuweisen des Tisches:", error);
-            addToast("Fehler beim Zuweisen des Tisches", "error");
-          }
-        } else {
-          addToast(
-            `${table.number} hat nicht genügend Plätze für ${reservation.guest_name || "diese Reservierung"}.`,
-            "error"
-          );
-        }
-      }
-
-      setActiveReservationId(null);
-      return;
-    }
-
-    // Table drag handling (position change)
-    const tableId = String(activeData?.tableId ?? activeIdValue);
-    const table = tables.find((t) => t.id === tableId);
-    const isTempTable = table?.id ? String(table.id).startsWith("temp-") : false;
-
-    if (!table || !restaurant) {
-      setActiveId(null);
-      return;
-    }
-
-    const deltaX = event.delta?.x || 0;
-    const deltaY = event.delta?.y || 0;
-    
-    if (Math.abs(deltaX) < 1 && Math.abs(deltaY) < 1) {
-      setActiveId(null);
-      return;
-    }
-    
-    const currentX = table.position_x || 0;
-    const currentY = table.position_y || 0;
-    const effectiveZoom = zoomLevel > 0 ? zoomLevel : 1;
-    const newX = currentX + deltaX / effectiveZoom;
-    const newY = currentY + deltaY / effectiveZoom;
-
-    try {
-      if (isTempTable) {
-        const dateStr = format(selectedDate, "yyyy-MM-dd");
-        const existingConfig = tableDayConfigs.find(
-          (c) => c.table_id === null && c.is_temporary && c.number === table.number
-        );
-
-        const updateData: any = {
-          table_id: null,
-          date: dateStr,
-          position_x: Math.max(0, newX),
-          position_y: Math.max(0, newY),
-        };
-
-        updateData.is_temporary = true;
-        updateData.number = table.number;
-        updateData.capacity = table.capacity;
-        updateData.shape = table.shape;
-        updateData.notes = table.notes;
-
-        if (existingConfig) {
-          if (existingConfig.width !== null) updateData.width = existingConfig.width;
-          if (existingConfig.height !== null) updateData.height = existingConfig.height;
-          if (existingConfig.is_active !== null) updateData.is_active = existingConfig.is_active;
-          if (existingConfig.color !== null) updateData.color = existingConfig.color;
-          if (existingConfig.rotation !== null) updateData.rotation = existingConfig.rotation;
-          if (existingConfig.join_group_id !== null) updateData.join_group_id = existingConfig.join_group_id;
-          if (existingConfig.is_joinable !== null) updateData.is_joinable = existingConfig.is_joinable;
-        } else {
-          updateData.width = table.width;
-          updateData.height = table.height;
-          updateData.is_active = table.is_active;
-          updateData.color = table.color;
-          updateData.rotation = table.rotation;
-          updateData.is_joinable = table.is_joinable;
-        }
-
-        await tableDayConfigsApi.createOrUpdate(restaurant.id, updateData);
-      } else {
-        // Persist position globally for regular tables.
-        await tablesApi.update(restaurant.id, table.id, {
-          position_x: Math.max(0, newX),
-          position_y: Math.max(0, newY),
-        });
-      }
-
-      addToast(`Tisch ${table.number} wurde verschoben.`, "success");
-      refreshData(true);
-    } catch (error) {
-      console.error("Fehler beim Speichern der Tischposition:", error);
-      addToast("Fehler beim Speichern der Tischposition", "error");
-    }
-
-    setActiveId(null);
-  }, [
-    blocks, blockAssignments, tables, reservations, restaurant, 
-    reservationToTempTableMap, tableDayConfigs, selectedDate, zoomLevel,
-    addToast, refreshData, hasBlockConflict, hasTimeConflict, getTableReservations,
-    resolveReservationId
-  ]);
-
-  // ============================================
-  // TABLE HANDLERS
+  // TABLE / RESERVATION HANDLERS
   // ============================================
 
-  const handleTableClick = useCallback((table: Table, event?: React.MouseEvent) => {
-    if (selectionMode) {
-      event?.stopPropagation();
-      setSelectedTableIds(prev => {
-        const newSet = new Set(prev);
-        if (newSet.has(table.id)) {
-          newSet.delete(table.id);
-          if (table.join_group_id) {
-            tables.filter(t => t.join_group_id === table.join_group_id && t.id !== table.id)
-              .forEach(t => newSet.delete(t.id));
-          }
-        } else {
-          newSet.add(table.id);
-          if (table.join_group_id) {
-            tables.filter(t => t.join_group_id === table.join_group_id && t.id !== table.id)
-              .forEach(t => newSet.add(t.id));
-          }
-        }
-        return newSet;
-      });
-    } else {
-      setSelectedTable(table);
-      setSelectedReservation(null);
-      setTableDetailsOpen(true);
-    }
-  }, [selectionMode, tables]);
-
-  const handleHideTable = useCallback(async (table: Table) => {
-    if (!restaurant) return;
-    
-    const dateStr = format(selectedDate, "yyyy-MM-dd");
-    const tableId = String(table.id).startsWith("temp-") ? null : table.id;
-    
-    try {
-      const existingConfig = tableDayConfigs.find(c => 
-        c.table_id === tableId || (tableId === null && c.is_temporary && c.number === table.number)
-      );
-      
-      const updateData: any = {
-        table_id: tableId,
-        date: dateStr,
-        is_hidden: true,
-        position_x: existingConfig?.position_x ?? table.position_x,
-        position_y: existingConfig?.position_y ?? table.position_y,
-        width: existingConfig?.width ?? table.width,
-        height: existingConfig?.height ?? table.height,
-        is_active: existingConfig?.is_active ?? table.is_active,
-        color: existingConfig?.color ?? table.color,
-        join_group_id: existingConfig?.join_group_id,
-        is_joinable: existingConfig?.is_joinable ?? table.is_joinable,
-        rotation: existingConfig?.rotation ?? table.rotation,
-        number: existingConfig?.number ?? table.number,
-        capacity: existingConfig?.capacity ?? table.capacity,
-        shape: existingConfig?.shape ?? table.shape,
-        notes: existingConfig?.notes ?? table.notes,
-        is_temporary: existingConfig?.is_temporary || String(table.id).startsWith("temp-"),
-      };
-      
-      await tableDayConfigsApi.createOrUpdate(restaurant.id, updateData);
-      addToast(`Tisch ${table.number} wurde für diesen Tag ausgeblendet.`, "success");
-      refreshData(true);
-    } catch (error) {
-      console.error("Fehler beim Verstecken des Tisches:", error);
-      addToast("Fehler beim Verstecken des Tisches", "error");
-    }
-  }, [restaurant, selectedDate, tableDayConfigs, addToast, refreshData]);
-
-  const handleJoinTables = useCallback(async () => {
-    if (!restaurant || selectedTableIds.size < 2) return;
-    
-    try {
-      const groupId = Array.from(selectedTableIds)[0];
-      const dateStr = format(selectedDate, "yyyy-MM-dd");
-      
-      await Promise.all(
-        Array.from(selectedTableIds).map(tableId => {
-          const table = tables.find(t => t.id === tableId);
-          if (!table) return Promise.resolve();
-          
-          const isTempTable = String(table.id).startsWith("temp-");
-          return tableDayConfigsApi.createOrUpdate(restaurant.id, {
-            table_id: isTempTable ? null : tableId,
-            date: dateStr,
-            position_x: table.position_x,
-            position_y: table.position_y,
-            width: table.width,
-            height: table.height,
-            is_active: table.is_active,
-            color: table.color,
-            rotation: table.rotation,
-            is_joinable: true,
-            join_group_id: groupId,
-            ...(isTempTable
-              ? {
-                  is_temporary: true,
-                  number: table.number,
-                  capacity: table.capacity,
-                  shape: table.shape,
-                  notes: table.notes,
-                }
-              : {}),
-          });
-        })
-      );
-      
-      addToast(`${selectedTableIds.size} Tische wurden zusammengeschoben.`, "success");
-      setSelectedTableIds(new Set());
-      setSelectionMode(false);
-      refreshData(true);
-    } catch (error) {
-      console.error("Fehler beim Zusammenführen der Tische:", error);
-      addToast("Fehler beim Zusammenführen der Tische", "error");
-    }
-  }, [restaurant, selectedTableIds, selectedDate, tables, addToast, refreshData]);
-
-  const handleUnjoinTables = useCallback(async () => {
-    if (!restaurant || selectedTableIds.size === 0) return;
-    
-    try {
-      const dateStr = format(selectedDate, "yyyy-MM-dd");
-      
-      await Promise.all(
-        Array.from(selectedTableIds).map(tableId => {
-          const table = tables.find(t => t.id === tableId);
-          if (!table) return Promise.resolve();
-          
-          const isTempTable = String(table.id).startsWith("temp-");
-          const existingConfig = tableDayConfigs.find(c =>
-            isTempTable
-              ? c.table_id === null && c.is_temporary && c.number === table.number
-              : c.table_id === tableId
-          );
-          
-          return tableDayConfigsApi.createOrUpdate(restaurant.id, {
-            table_id: isTempTable ? null : tableId,
-            date: dateStr,
-            position_x: existingConfig?.position_x ?? table.position_x,
-            position_y: existingConfig?.position_y ?? table.position_y,
-            width: existingConfig?.width ?? table.width,
-            height: existingConfig?.height ?? table.height,
-            is_active: existingConfig?.is_active ?? table.is_active,
-            color: existingConfig?.color ?? table.color,
-            rotation: existingConfig?.rotation ?? table.rotation,
-            is_joinable: false,
-            join_group_id: null,
-            ...(isTempTable
-              ? {
-                  is_temporary: true,
-                  number: existingConfig?.number ?? table.number,
-                  capacity: existingConfig?.capacity ?? table.capacity,
-                  shape: existingConfig?.shape ?? table.shape,
-                  notes: existingConfig?.notes ?? table.notes,
-                }
-              : {}),
-          });
-        })
-      );
-      
-      addToast(`${selectedTableIds.size} Tische wurden getrennt.`, "success");
-      setSelectedTableIds(new Set());
-      setSelectionMode(false);
-      refreshData(true);
-    } catch (error) {
-      console.error("Fehler beim Trennen der Tische:", error);
-      addToast("Fehler beim Trennen der Tische", "error");
-    }
-  }, [restaurant, selectedTableIds, selectedDate, tables, tableDayConfigs, addToast, refreshData]);
-
-  const handleCancelSelection = useCallback(() => {
-    setSelectedTableIds(new Set());
-    setSelectionMode(false);
+  const handleTableClick = useCallback((table: Table) => {
+    setSelectedTable(table);
+    setSelectedReservation(null);
+    setTableDetailsOpen(true);
   }, []);
-
-  const handleCreateTempTable = useCallback(async (tableData: {
-    number: string;
-    capacity: number;
-    shape?: string;
-    position_x?: number;
-    position_y?: number;
-    width?: number;
-    height?: number;
-    color?: string;
-    notes?: string;
-  }) => {
-    if (!restaurant) return;
-    
-    const dateStr = format(selectedDate, "yyyy-MM-dd");
-    
-    try {
-      await tableDayConfigsApi.createOrUpdate(restaurant.id, {
-        table_id: null,
-        date: dateStr,
-        is_temporary: true,
-        is_hidden: false,
-        number: tableData.number,
-        capacity: tableData.capacity,
-        shape: tableData.shape ?? "rectangle",
-        position_x: tableData.position_x ?? 50,
-        position_y: tableData.position_y ?? 50,
-        width: tableData.width ?? 120,
-        height: tableData.height ?? 120,
-        is_active: true,
-        color: tableData.color ?? null,
-        notes: tableData.notes ?? null,
-        is_joinable: false,
-        join_group_id: null,
-      });
-      
-      addToast(`Tisch ${tableData.number} wurde für diesen Tag erstellt.`, "success");
-      refreshData(true);
-    } catch (error) {
-      console.error("Fehler beim Erstellen des temporären Tisches:", error);
-      addToast("Fehler beim Erstellen des temporären Tisches", "error");
-    }
-  }, [restaurant, selectedDate, addToast, refreshData]);
-
-  const handleResetTablesForDate = useCallback(async () => {
-    if (!restaurant) return;
-    
-    if (!confirmAction("Möchten Sie wirklich alle tages-spezifischen Änderungen für diesen Tag zurücksetzen?")) {
-      return;
-    }
-
-    const dateStr = format(selectedDate, "yyyy-MM-dd");
-    try {
-      const tempConfigIds = tableDayConfigs.filter((config) => config.is_temporary).map((config) => config.id);
-      
-      if (tempConfigIds.length > 0) {
-        const tempAssignments = reservationTableDayConfigs.filter((assignment) =>
-          tempConfigIds.includes(assignment.table_day_config_id)
-        );
-        
-        if (tempAssignments.length > 0) {
-          const reservationCount = new Set(tempAssignments.map((a) => a.reservation_id)).size;
-          const ok = confirmAction(
-            `Es gibt ${reservationCount} Reservierung${reservationCount === 1 ? "" : "en"} auf temporären Tischen. Diese werden als "Ausstehend" zurückgesetzt. Fortfahren?`
-          );
-          if (!ok) return;
-          
-          const updatedReservations = new Set<string>();
-          for (const assignment of tempAssignments) {
-            if (!updatedReservations.has(assignment.reservation_id)) {
-              await reservationsApi.update(restaurant.id, assignment.reservation_id, {
-                table_id: null,
-                status: "pending",
-              });
-              updatedReservations.add(assignment.reservation_id);
-            }
-            await reservationTableDayConfigsApi.delete(
-              restaurant.id,
-              assignment.reservation_id,
-              assignment.table_day_config_id
-            );
-          }
-          addToast("Reservierungen wurden zurück in die Reservierungsübersicht verschoben.", "success");
-        }
-      }
-      
-      await tableDayConfigsApi.deleteAllForDate(restaurant.id, dateStr);
-      addToast("Tischanordnung wurde auf die Standard-Anordnung zurückgesetzt.", "success");
-      refreshData(true);
-    } catch (error) {
-      console.error("Fehler beim Zurücksetzen der Tischanordnung:", error);
-      addToast("Fehler beim Zurücksetzen der Tischanordnung.", "error");
-    }
-  }, [restaurant, selectedDate, tableDayConfigs, reservationTableDayConfigs, addToast, refreshData]);
-
-  // ============================================
-  // RESERVATION HANDLERS
-  // ============================================
 
   const handleReservationClick = useCallback((reservation: Reservation, table?: Table) => {
     setSelectedReservation(reservation);
@@ -1236,76 +592,9 @@ export default function DashboardPage() {
     setReservationDialogOpen(true);
   }, [tables]);
 
-  const handleReservationDeleted = useCallback(async (reservation: Reservation) => {
-    if (!restaurant) return;
-    const ok = confirmAction("Reservierung wirklich löschen?");
-    if (!ok) return;
-    try {
-      await reservationsApi.delete(restaurant.id, reservation.id);
-      refreshData(true);
-      setReservationDialogOpen(false);
-    } catch (error) {
-      console.error("Fehler beim Löschen der Reservierung:", error);
-      addToast("Fehler beim Löschen der Reservierung", "error");
-    }
-  }, [restaurant, addToast, refreshData]);
-
-  const handleBlockTemplateEdit = useCallback((block: Block) => {
-    setEditingBlock(block);
-    setBlockEditOpen(true);
-  }, []);
-
   // ============================================
   // HELPER FUNCTIONS
   // ============================================
-
-  const getStatusLabel = useCallback((status: Reservation["status"]) => {
-    switch (status) {
-      case "confirmed": return "Bestätigt";
-      case "seated": return "Platziert";
-      case "completed": return "Abgeschlossen";
-      case "canceled": return "Storniert";
-      case "no_show": return "No-Show";
-      default: return "Ausstehend";
-    }
-  }, []);
-
-  const updateReservationStatus = useCallback(async (
-    reservation: Reservation,
-    newStatus: Reservation["status"]
-  ) => {
-    if (!restaurant) return;
-
-    setUpdatingStatus(reservation.id);
-    try {
-      await reservationsApi.update(restaurant.id, reservation.id, {
-        status: newStatus,
-      });
-      const variant =
-        newStatus === "completed" || newStatus === "no_show" || newStatus === "seated"
-          ? "success"
-          : "info";
-      addToast(
-        `${reservation.guest_name || "Gast"} → Status: ${getStatusLabel(newStatus)}`,
-        variant
-      );
-      refreshData(true);
-    } catch (error) {
-      console.error("Fehler beim Aktualisieren des Status:", error);
-      addToast("Fehler beim Aktualisieren des Status", "error");
-    } finally {
-      setUpdatingStatus(null);
-    }
-  }, [restaurant, addToast, refreshData, getStatusLabel]);
-
-  const STATUS_ICON_MAP: Record<Reservation["status"], { Icon: typeof Clock; tone: string }> = useMemo(() => ({
-    pending: { Icon: Clock, tone: "bg-blue-900/40 border-blue-600 text-blue-100" },
-    confirmed: { Icon: ShieldCheck, tone: "bg-indigo-900/40 border-indigo-600 text-indigo-100" },
-    seated: { Icon: Users, tone: "bg-emerald-900/40 border-emerald-600 text-emerald-100" },
-    completed: { Icon: CheckCircle, tone: "bg-amber-900/30 border-amber-600 text-amber-100" },
-    canceled: { Icon: XCircle, tone: "bg-red-900/30 border-red-600 text-red-100" },
-    no_show: { Icon: XCircle, tone: "bg-orange-900/30 border-orange-600 text-orange-100" },
-  }), []);
 
   const getObstacleLabel = useCallback((type: string) => {
     switch (type) {
@@ -1482,134 +771,33 @@ export default function DashboardPage() {
                 </div>
               </div>
               <div className="flex items-center gap-1 shrink-0">
-                {selectionMode ? (
-                  <>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleCancelSelection}
-                      className="touch-manipulation min-h-[32px] text-xs px-2 py-1"
-                    >
-                      <XSquare className="w-3.5 h-3.5 mr-1" />
-                      <span className="text-xs">Abbrechen</span>
-                    </Button>
-                    {(currentUser?.role === "platform_admin" || currentUser?.role === "owner" || currentUser?.role === "manager") && (
-                      <>
-                        <Button
-                          variant="default"
-                          size="sm"
-                          onClick={handleJoinTables}
-                          disabled={selectedTableIds.size < 2}
-                          className="touch-manipulation min-h-[32px] text-xs px-2 py-1"
-                          title="Tische zusammenschieben"
-                        >
-                          <LinkIcon className="w-3.5 h-3.5 mr-1" />
-                          <span className="text-xs">Zusammenführen</span>
-                          <span className="ml-1 text-xs">({selectedTableIds.size})</span>
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={handleUnjoinTables}
-                          disabled={selectedTableIds.size === 0}
-                          className="touch-manipulation min-h-[32px] text-xs px-2 py-1"
-                          title="Tische trennen"
-                        >
-                          <Unlink className="w-3.5 h-3.5 mr-1" />
-                          <span className="text-xs">Trennen</span>
-                          <span className="ml-1 text-xs">({selectedTableIds.size})</span>
-                        </Button>
-                      </>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    {(currentUser?.role === "platform_admin" || currentUser?.role === "owner" || currentUser?.role === "manager") && (
-                      <div className="relative" ref={actionsMenuRef}>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setActionsMenuOpen((prev) => !prev)}
-                          className="touch-manipulation min-h-[34px] text-xs px-3 py-1"
-                          title="Tageslayout-Aktionen"
-                        >
-                          <EllipsisVertical className="w-4 h-4 mr-2" />
-                          <span className="text-xs">Tageslayout</span>
-                          <ChevronDown className={`w-3.5 h-3.5 ml-2 transition-transform ${actionsMenuOpen ? "rotate-180" : ""}`} />
-                        </Button>
-                        {actionsMenuOpen && (
-                          <div className="absolute right-0 mt-2 w-64 rounded-lg border border-border bg-card shadow-xl z-40 overflow-hidden">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setActionsMenuOpen(false);
-                                setCreateTempTableOpen(true);
-                              }}
-                              disabled={!selectedAreaId || areas.length === 0}
-                              className={`w-full px-3 py-2 text-left text-sm flex items-center gap-2 transition-colors ${
-                                !selectedAreaId || areas.length === 0
-                                  ? "text-muted-foreground cursor-not-allowed bg-background"
-                                  : "text-foreground hover:bg-accent"
-                              }`}
-                            >
-                              <Plus className="w-4 h-4" />
-                              <span>Temporären Tisch hinzufügen</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setActionsMenuOpen(false);
-                                setSelectionMode(true);
-                              }}
-                              className="w-full px-3 py-2 text-left text-sm flex items-center gap-2 text-foreground hover:bg-accent transition-colors"
-                            >
-                              <Check className="w-4 h-4" />
-                              <span>Tische zusammenführen</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setActionsMenuOpen(false);
-                                handleResetTablesForDate();
-                              }}
-                              className="w-full px-3 py-2 text-left text-sm flex items-center gap-2 text-foreground hover:bg-accent transition-colors"
-                            >
-                              <RotateCcw className="w-4 h-4" />
-                              <span>Zurücksetzen</span>
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigateDate(-1)}
-                      className="touch-manipulation min-h-[32px] px-2 py-1"
-                    >
-                      <ChevronLeft className="w-3.5 h-3.5" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setSelectedDate(new Date())}
-                      className="touch-manipulation min-h-[32px] text-xs px-2 py-1 gap-1.5"
-                      title="Heute springen"
-                    >
-                      <Calendar className="w-3.5 h-3.5" />
-                      Heute
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigateDate(1)}
-                      className="touch-manipulation min-h-[32px] px-2 py-1"
-                      title="Nächster Tag"
-                    >
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </Button>
-                  </>
-                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigateDate(-1)}
+                  className="touch-manipulation min-h-[32px] px-2 py-1"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setSelectedDate(new Date())}
+                  className="touch-manipulation min-h-[32px] text-xs px-2 py-1 gap-1.5"
+                  title="Heute springen"
+                >
+                  <Calendar className="w-3.5 h-3.5" />
+                  Heute
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => navigateDate(1)}
+                  className="touch-manipulation min-h-[32px] px-2 py-1"
+                  title="Nächster Tag"
+                >
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </Button>
               </div>
             </div>
           </div>
@@ -1621,8 +809,6 @@ export default function DashboardPage() {
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
         >
           <div className="h-full relative overflow-hidden bg-background flex">
             {/* Warteliste Sidebar */}
@@ -1645,15 +831,9 @@ export default function DashboardPage() {
                 searchQuery={waitlistSearchQuery}
                 onSearchChange={setWaitlistSearchQuery}
                 onReservationClick={(reservation) => handleReservationClick(reservation)}
-                onReservationDelete={handleReservationDeleted}
-                onBlockClick={handleBlockTemplateEdit}
-                onNewReservation={() => {
-                  setSelectedReservation(null);
-                  setSelectedTable(null);
-                  setReservationDialogOpen(true);
-                }}
                 collapsed={!sidebarOpen}
                 onToggle={() => setSidebarOpen(!sidebarOpen)}
+                readOnly={true}
               />
             </div>
             
@@ -1952,32 +1132,11 @@ export default function DashboardPage() {
                       onReservationClick={(reservation) =>
                         handleReservationClick(reservation, table)
                       }
-                      onReservationRemove={async (reservation) => {
-                        if (!restaurant) return;
-                        try {
-                          await reservationsApi.update(restaurant.id, reservation.id, {
-                            table_id: null,
-                            status: "pending",
-                          });
-                          const tempTableId = reservationToTempTableMap.get(reservation.id);
-                          if (tempTableId !== undefined) {
-                            const tableDayConfigId = String(tempTableId).replace('temp-', '');
-                            try {
-                              await reservationTableDayConfigsApi.delete(restaurant.id, reservation.id, tableDayConfigId);
-                            } catch (error) {
-                              console.error("Fehler beim Entfernen der Zuordnung zu temporärem Tisch:", error);
-                            }
-                          }
-                          refreshData(true);
-                        } catch (error) {
-                          console.error("Fehler beim Entfernen des Tisches:", error);
-                          addToast("Fehler beim Entfernen des Tisches", "error");
-                        }
-                      }}
+                      onReservationRemove={undefined}
                       isDragging={isActive}
-                      allowDragging={!selectionMode}
-                      selectionMode={selectionMode}
-                      isSelected={selectedTableIds.has(table.id)}
+                      allowDragging={false}
+                      selectionMode={false}
+                      isSelected={false}
                       selectedDate={selectedDate}
                       blockStatus={getBlockStatus(table.id) || undefined}
                     />
@@ -2068,19 +1227,14 @@ export default function DashboardPage() {
               setSelectedOrderId(orderId);
               setOrderDetailDialogOpen(true);
             }}
-            onCreateOrder={() => {
-              setSelectedTableForOrder(selectedTable);
-              setOrderDialogOpen(true);
-            }}
-            onNewReservation={() => {
-              setSelectedReservation(null);
-              setReservationDialogOpen(true);
-            }}
+            onCreateOrder={undefined}
+            onNewReservation={() => {}}
             onReservationUpdated={() => refreshData(true)}
             allowTableManagement={false}
-            allowDaySpecificActions={true}
-            onHideTable={handleHideTable}
+            allowDaySpecificActions={false}
+            onHideTable={undefined}
             onNotify={addToast}
+            readOnly={true}
           />
 
           <OrderDetailDialog
@@ -2090,39 +1244,7 @@ export default function DashboardPage() {
             orderId={selectedOrderId}
             onOrderUpdated={() => refreshData(true)}
             onNotify={(message, variant) => addToast(message, variant)}
-          />
-
-          <OrderDialog
-            open={orderDialogOpen}
-            onOpenChange={setOrderDialogOpen}
-            restaurantId={restaurant.id}
-            table={selectedTableForOrder}
-            availableTables={tables}
-            reservations={
-              selectedTableForOrder ? getOrderEligibleReservations(selectedTableForOrder.id) : []
-            }
-            onOrderCreated={() => {
-              refreshData(true);
-              setOrderDialogOpen(false);
-            }}
-            onOrderUpdated={() => {
-              refreshData(true);
-              setOrderDialogOpen(false);
-            }}
-            onNotify={(message, variant) => addToast(message, variant)}
-          />
-
-          <CreateTempTableDialog
-            open={createTempTableOpen}
-            onOpenChange={setCreateTempTableOpen}
-            restaurantId={restaurant.id}
-            selectedDate={selectedDate}
-            onTableCreated={() => refreshData(true)}
-            onNotify={addToast}
-            initialPosition={{
-              x: panOffset.x + (tablePlanRef.current?.clientWidth ?? 0) / 2 / zoomLevel - 60,
-              y: panOffset.y + (tablePlanRef.current?.clientHeight ?? 0) / 2 / zoomLevel - 60,
-            }}
+            readOnly={true}
           />
         </DndContext>
       </div>
@@ -2140,24 +1262,7 @@ export default function DashboardPage() {
         onReservationUpdated={() => refreshData(true)}
         availableTables={tables}
         onNotify={addToast}
-      />
-
-      <BlockTableDialog
-        open={blockEditOpen}
-        onOpenChange={(open) => {
-          setBlockEditOpen(open);
-          if (!open) {
-            setEditingBlock(null);
-          }
-        }}
-        restaurantId={restaurant.id}
-        tables={tables}
-        block={editingBlock}
-        blocks={blocks}
-        blockAssignments={blockAssignments}
-        selectedDate={selectedDate}
-        onBlockCreated={() => refreshData(true)}
-        onNotify={addToast}
+        readOnly={true}
       />
     </div>
   );

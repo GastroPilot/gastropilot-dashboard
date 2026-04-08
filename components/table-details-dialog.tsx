@@ -61,14 +61,17 @@ const ORDER_STATUS_META: Record<OrderStatus, { label: string; tone: string; bord
 
 function DraggableReservationItem({
   reservation,
+  draggable = true,
   children,
 }: {
   reservation: Reservation;
+  draggable?: boolean;
   children: ReactNode;
 }) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: `reservation-${reservation.id}`,
     data: { type: "reservation", reservationId: reservation.id },
+    disabled: !draggable,
   });
 
   const style = transform
@@ -81,9 +84,9 @@ function DraggableReservationItem({
     <div
       ref={setNodeRef}
       style={style}
-      {...attributes}
-      {...listeners}
-      className="cursor-grab active:cursor-grabbing"
+      {...(draggable ? attributes : {})}
+      {...(draggable ? listeners : {})}
+      className={draggable ? "cursor-grab active:cursor-grabbing" : "cursor-default"}
     >
       {children}
     </div>
@@ -115,6 +118,7 @@ interface TableDetailsDialogProps {
   selectedAreaId?: string | null;
   onViewOrder?: (orderId: string) => void;
   onCreateOrder?: () => void;
+  readOnly?: boolean;
 }
 
 export function TableDetailsDialog({
@@ -142,6 +146,7 @@ export function TableDetailsDialog({
   selectedAreaId = null,
   onViewOrder,
   onCreateOrder,
+  readOnly = false,
 }: TableDetailsDialogProps) {
   const editFormRef = useRef<HTMLFormElement | null>(null);
   const [number, setNumber] = useState("");
@@ -162,6 +167,7 @@ export function TableDetailsDialog({
   const [editBlockDialogOpen, setEditBlockDialogOpen] = useState(false);
   const [editingBlocks, setEditingBlocks] = useState<Block[]>([]);
   const [currentUser, setCurrentUser] = useState<{ role: string } | null>(null);
+  const canMutate = !readOnly;
 
   useEffect(() => {
     if (table) {
@@ -193,6 +199,7 @@ export function TableDetailsDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (readOnly) return;
     if (!table) return;
 
     setError("");
@@ -231,6 +238,7 @@ export function TableDetailsDialog({
   };
 
   const handleDelete = async () => {
+    if (readOnly) return;
     if (!table) return;
 
     if (!confirmAction(`Möchtest du Tisch ${table.number} wirklich löschen?`)) {
@@ -258,6 +266,7 @@ export function TableDetailsDialog({
   };
 
   const handleDeleteTempTable = async () => {
+    if (readOnly) return;
     if (!table) return;
 
     if (reservations.length > 0) {
@@ -307,6 +316,7 @@ export function TableDetailsDialog({
   };
 
   const handleDeleteBlock = async (assignmentId: string) => {
+    if (readOnly) return;
     if (!confirmAction("Blockierung wirklich entfernen?")) {
       return;
     }
@@ -334,6 +344,7 @@ export function TableDetailsDialog({
   };
 
   const handleMarkSeated = async (reservation: Reservation) => {
+    if (readOnly) return;
     setMarkingSeated(reservation.id);
     try {
       const originalStart = new Date(reservation.start_at);
@@ -371,6 +382,7 @@ export function TableDetailsDialog({
   };
 
   const handleCompleteReservation = async (reservation: Reservation) => {
+    if (readOnly) return;
     setCompletingReservation(reservation.id);
     try {
       await reservationsApi.update(restaurantId, reservation.id, {
@@ -395,6 +407,7 @@ export function TableDetailsDialog({
   };
 
   const handleCancelReservation = async (reservation: Reservation) => {
+    if (readOnly) return;
     setCancelingReservation(reservation.id);
     try {
       await reservationsApi.update(restaurantId, reservation.id, {
@@ -571,7 +584,7 @@ export function TableDetailsDialog({
               ) : (
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-muted-foreground text-sm">Keine aktive Bestellung.</p>
-                  {onCreateOrder && (
+                  {onCreateOrder && canMutate && (
                     <Button
                       type="button"
                       onClick={onCreateOrder}
@@ -585,7 +598,7 @@ export function TableDetailsDialog({
             </div>
           )}
 
-          {allowTableManagement && (isEditing || forceEditMode) && (
+          {allowTableManagement && canMutate && (isEditing || forceEditMode) && (
             <form ref={editFormRef} onSubmit={handleSubmit} className="space-y-3 rounded-xl border border-border bg-card/80 p-4 shadow-[0_10px_30px_rgba(0,0,0,0.3)]">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
@@ -760,7 +773,7 @@ export function TableDetailsDialog({
                       </div>
                     </div>
                     <div className="flex w-full flex-row items-stretch gap-2 self-stretch pt-1">
-                      {primaryReservation.status === "confirmed" && (
+                      {canMutate && primaryReservation.status === "confirmed" && (
                         <Button
                           type="button"
                           onClick={(e) => {
@@ -774,7 +787,7 @@ export function TableDetailsDialog({
                           Gäste da
                         </Button>
                       )}
-                      {(primaryReservation.status === "confirmed" || primaryReservation.status === "pending") && (
+                      {canMutate && (primaryReservation.status === "confirmed" || primaryReservation.status === "pending") && (
                         <Button
                           type="button"
                           variant="destructive"
@@ -792,7 +805,7 @@ export function TableDetailsDialog({
                           Stornieren
                         </Button>
                       )}
-                      {primaryReservation.status === "seated" && (
+                      {canMutate && primaryReservation.status === "seated" && (
                         <Button
                           type="button"
                           onClick={(e) => {
@@ -835,7 +848,7 @@ export function TableDetailsDialog({
                           })()
                         : null;
                     return (
-                    <DraggableReservationItem key={reservation.id} reservation={reservation}>
+                    <DraggableReservationItem key={reservation.id} reservation={reservation} draggable={canMutate}>
                       <div
                         role="button"
                         tabIndex={0}
@@ -865,7 +878,7 @@ export function TableDetailsDialog({
                             {reservation.guest_name || `Gast #${reservation.guest_id || "unbekannt"}`}
                           </span>
                           <div className="flex w-full flex-row items-stretch gap-2 self-stretch">
-                            {reservation.status === "confirmed" && (
+                            {canMutate && reservation.status === "confirmed" && (
                               <Button
                                 type="button"
                                 onClick={(e) => {
@@ -879,7 +892,7 @@ export function TableDetailsDialog({
                                 Gäste da
                               </Button>
                             )}
-                            {reservation.status === "confirmed" && (
+                            {canMutate && reservation.status === "confirmed" && (
                               <Button
                                 type="button"
                                 variant="destructive"
@@ -897,7 +910,7 @@ export function TableDetailsDialog({
                                 Stornieren
                               </Button>
                             )}
-                            {reservation.status === "seated" && (
+                            {canMutate && reservation.status === "seated" && (
                               <Button
                                 type="button"
                                 onClick={(e) => {
@@ -951,22 +964,25 @@ export function TableDetailsDialog({
                     .map(({ assignment, block }) => (
                       <div
                         key={assignment.id}
-                        role="button"
-                        tabIndex={0}
+                        role={canMutate ? "button" : undefined}
+                        tabIndex={canMutate ? 0 : undefined}
                         onClick={() => {
+                          if (!canMutate) return;
                           setEditingBlock(block);
                           setEditingBlocks(getGroupedBlocks(block));
                           setEditBlockDialogOpen(true);
                         }}
                         onKeyDown={(event) => {
-                          if (event.key === "Enter" || event.key === " ") {
+                          if (canMutate && (event.key === "Enter" || event.key === " ")) {
                             event.preventDefault();
                             setEditingBlock(block);
                             setEditingBlocks(getGroupedBlocks(block));
                             setEditBlockDialogOpen(true);
                           }
                         }}
-                        className="flex items-center justify-between gap-3 rounded-lg border border-red-600/70 bg-background/60 px-3 py-2.5 text-sm text-red-50 shadow-md hover:shadow-lg hover:bg-accent transition-all cursor-pointer"
+                        className={`flex items-center justify-between gap-3 rounded-lg border border-red-600/70 bg-background/60 px-3 py-2.5 text-sm text-red-50 shadow-md transition-all ${
+                          canMutate ? "hover:shadow-lg hover:bg-accent cursor-pointer" : ""
+                        }`}
                       >
                         <div className="min-w-0">
                           {block.reason && (
@@ -979,18 +995,20 @@ export function TableDetailsDialog({
                             {format(new Date(block.end_at), "HH:mm")}
                           </div>
                         </div>
-                        <Button
-                          type="button"
-                          variant="destructive"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            handleDeleteBlock(assignment.id);
-                          }}
-                          disabled={deletingBlockId === assignment.id}
-                          className="min-h-[36px] px-3 shadow-none"
-                        >
-                          Entfernen
-                        </Button>
+                        {canMutate && (
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              handleDeleteBlock(assignment.id);
+                            }}
+                            disabled={deletingBlockId === assignment.id}
+                            className="min-h-[36px] px-3 shadow-none"
+                          >
+                            Entfernen
+                          </Button>
+                        )}
                       </div>
                     ))}
                 </div>
@@ -1001,7 +1019,7 @@ export function TableDetailsDialog({
 
         <DialogFooter>
           <div className="flex flex-wrap items-center gap-2 mr-auto">
-            {allowTableManagement && (currentUser?.role === "platform_admin" || currentUser?.role === "owner" || currentUser?.role === "manager") && (
+            {canMutate && allowTableManagement && (currentUser?.role === "platform_admin" || currentUser?.role === "owner" || currentUser?.role === "manager") && (
               <Button
                 type="button"
                 variant="destructive"
@@ -1014,7 +1032,7 @@ export function TableDetailsDialog({
               </Button>
             )}
           </div>
-          {allowTableManagement && (isEditing || forceEditMode) && (
+          {canMutate && allowTableManagement && (isEditing || forceEditMode) && (
             <Button
               type="button"
               onClick={() => editFormRef.current?.requestSubmit()}
@@ -1034,7 +1052,7 @@ export function TableDetailsDialog({
               )}
             </Button>
           )}
-          {allowDaySpecificActions && table && (currentUser?.role === "platform_admin" || currentUser?.role === "owner" || currentUser?.role === "manager") && (
+          {canMutate && allowDaySpecificActions && table && (currentUser?.role === "platform_admin" || currentUser?.role === "owner" || currentUser?.role === "manager") && (
             String(table.id).startsWith("temp-") ? (
               <Button
                 type="button"
@@ -1049,7 +1067,7 @@ export function TableDetailsDialog({
             ) : null
           )}
           <div className="w-full flex flex-wrap items-center gap-2">
-            {allowDaySpecificActions && table && !String(table.id).startsWith("temp-") && onHideTable && (currentUser?.role === "platform_admin" || currentUser?.role === "owner" || currentUser?.role === "manager") && (
+            {canMutate && allowDaySpecificActions && table && !String(table.id).startsWith("temp-") && onHideTable && (currentUser?.role === "platform_admin" || currentUser?.role === "owner" || currentUser?.role === "manager") && (
               <Button
                 type="button"
                 variant="outline"
@@ -1073,7 +1091,7 @@ export function TableDetailsDialog({
                 <X className="w-4 h-4" />
                 Schließen
               </Button>
-              {!allowTableManagement && showReservations && (
+              {canMutate && !allowTableManagement && showReservations && (
                 <Button type="button" onClick={onNewReservation}>
                   <Plus className="w-4 h-4 mr-2" />
                   Neue Reservierung
@@ -1082,7 +1100,7 @@ export function TableDetailsDialog({
             </div>
           </div>
         </DialogFooter>
-        {table && !String(table.id).startsWith("temp-") && (
+        {canMutate && table && !String(table.id).startsWith("temp-") && (
           <BlockTableDialog
             open={editBlockDialogOpen}
             onOpenChange={(open) => {

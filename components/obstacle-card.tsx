@@ -6,11 +6,13 @@ interface ObstacleCardProps {
   obstacle: Obstacle;
   onClick?: () => void;
   isDragging?: boolean;
+  draggable?: boolean;
 }
 
-export function ObstacleCard({ obstacle, onClick, isDragging }: ObstacleCardProps) {
+export function ObstacleCard({ obstacle, onClick, isDragging, draggable = true }: ObstacleCardProps) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: `obstacle-${obstacle.id}`,
+    disabled: !draggable,
   });
 
   const dragTransform = transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : "";
@@ -39,14 +41,14 @@ export function ObstacleCard({ obstacle, onClick, isDragging }: ObstacleCardProp
   return (
     <div
       ref={setNodeRef}
-      {...listeners}
-      {...attributes}
+      {...(draggable ? listeners : {})}
+      {...(draggable ? attributes : {})}
       onClick={onClick}
       data-dnd-draggable="true"
       className={`
         group rounded-lg border border-border bg-card text-card-foreground
         shadow-[0_10px_24px_rgba(0,0,0,0.35)] transition-all duration-200
-        flex items-center justify-center text-xs font-semibold cursor-grab
+        flex items-center justify-center text-xs font-semibold ${draggable ? "cursor-grab" : "cursor-default"}
         hover:shadow-[0_12px_30px_rgba(0,0,0,0.45)] hover:scale-105
         ${obstacle.color ? "border-l-4" : "border-l-4 border-l-muted-foreground/50"}
         ${isDragging ? "opacity-50" : ""}

@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingOverlay } from "@/components/loading-overlay";
 import { format, parseISO, startOfDay, endOfDay, addMinutes } from "date-fns";
 import { de } from "date-fns/locale";
-import { Ban, Calendar, Check, ChevronDown, ChevronLeft, ChevronRight, Clock, LayoutGrid, Plus, Filter } from "lucide-react";
+import { Ban, Calendar, Check, ChevronDown, ChevronLeft, ChevronRight, Clock, LayoutGrid, Filter } from "lucide-react";
 import { ReservationDialog } from "@/components/reservation-dialog";
 import { useUserSettings } from "@/lib/hooks/use-user-settings";
 import { DropdownSelector } from "@/components/area-selector";
@@ -343,12 +343,6 @@ export default function TimelinePage() {
     await loadData(true);
   };
 
-  const handleNewReservation = () => {
-    setSelectedReservation(null);
-    setSelectedTable(null);
-    setReservationDialogOpen(true);
-  };
-
   const getStatusLabel = (status: TimelineFilter) => {
     if (status === "block") return "Block";
     return STATUS_STYLE[status]?.label ?? status;
@@ -516,15 +510,6 @@ export default function TimelinePage() {
               </div>
             </div>
             <div className="flex items-center gap-1 shrink-0">
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleNewReservation}
-                className="touch-manipulation min-h-[32px] text-sm px-3"
-              >
-                <Plus className="w-4 h-4 mr-1" />
-                Neue Reservierung
-              </Button>
               <div className="relative" ref={statusMenuRef}>
                 <button
                   type="button"
@@ -846,6 +831,7 @@ export default function TimelinePage() {
           onReservationUpdated={handleReservationUpdated}
           availableTables={tables}
           onNotify={addToast}
+          readOnly={true}
         />
       )}
     </div>

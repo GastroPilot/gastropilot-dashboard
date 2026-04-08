@@ -2,42 +2,19 @@
 
 import { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
-import {
-  DndContext,
-  DragEndEvent,
-  DragOverlay,
-  DragStartEvent,
-  PointerSensor,
-  TouchSensor,
-  useSensor,
-  useSensors,
-  closestCenter,
-} from "@dnd-kit/core";
+import { DndContext, PointerSensor, TouchSensor, useSensor, useSensors, closestCenter } from "@dnd-kit/core";
 import { restaurantsApi, Restaurant } from "@/lib/api/restaurants";
 import { tablesApi, Table } from "@/lib/api/tables";
 import { obstaclesApi, Obstacle } from "@/lib/api/obstacles";
 import { areasApi, Area } from "@/lib/api/areas";
-import { authApi } from "@/lib/api/auth";
 import { TableCard } from "@/components/table-card";
 import { ObstacleCard } from "@/components/obstacle-card";
-import { CreateTableDialog } from "@/components/create-table-dialog";
-import { CreateObstacleDialog } from "@/components/create-obstacle-dialog";
 import { TableDetailsDialog } from "@/components/table-details-dialog";
 import { LoadingOverlay } from "@/components/loading-overlay";
 import { AreaSelector } from "@/components/area-selector";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useUserSettings } from "@/lib/hooks/use-user-settings";
-import { confirmAction } from "@/lib/utils";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Plus, RefreshCw, MoveLeft, Pencil, Trash2, ZoomIn, ZoomOut, Maximize2, LayoutGrid, AlertTriangle } from "lucide-react";
+import { RefreshCw, MoveLeft, ZoomIn, ZoomOut, Maximize2, LayoutGrid } from "lucide-react";
 
 // Reuse the same settings key as the dashboard view so zoom persists across both pages
 const TABLES_ZOOM_SETTINGS_KEY = "dashboard_zoom_level";
@@ -52,24 +29,15 @@ export default function TableManagementPage() {
   const [allObstacles, setAllObstacles] = useState<Obstacle[]>([]);
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [createTableOpen, setCreateTableOpen] = useState(false);
-  const [createObstacleOpen, setCreateObstacleOpen] = useState(false);
   const [tableDetailsOpen, setTableDetailsOpen] = useState(false);
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
-  const [selectedObstacle, setSelectedObstacle] = useState<Obstacle | null>(null);
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [activeObstacleId, setActiveObstacleId] = useState<string | null>(null);
-  const [currentUser, setCurrentUser] = useState<{ role: string } | null>(null);
+  const activeId: string | null = null;
+  const activeObstacleId: string | null = null;
   const [toasts, setToasts] = useState<{ id: string; message: string; variant?: "info" | "error" | "success" }[]>([]);
   const { settings, updateSettings, error: settingsError } = useUserSettings();
   const settingsInitializedRef = useRef(false);
   const lastPersistedZoomRef = useRef<string>("");
   const zoomSaveTimeoutRef = useRef<number | null>(null);
-  const [areaDialogOpen, setAreaDialogOpen] = useState(false);
-  const [areaName, setAreaName] = useState("");
-  const [areaError, setAreaError] = useState("");
-  const [editingArea, setEditingArea] = useState<Area | null>(null);
-  const [isSavingArea, setIsSavingArea] = useState(false);
   const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
@@ -190,15 +158,6 @@ export default function TableManagementPage() {
     setPanOffset({ x: 0, y: 0 });
   };
 
-  const loadCurrentUser = async () => {
-    try {
-      const user = await authApi.getCurrentUser();
-      setCurrentUser(user);
-    } catch (err) {
-      console.error("Fehler beim Laden des aktuellen Users:", err);
-    }
-  };
-
   const loadData = useCallback(async (background = false, preferredAreaId: string | null = null) => {
     try {
       if (background) {
@@ -245,7 +204,6 @@ export default function TableManagementPage() {
   }, [filterByArea]);
 
   useEffect(() => {
-    loadCurrentUser();
     loadData();
   }, [loadData]);
 
@@ -253,191 +211,6 @@ export default function TableManagementPage() {
     setTables(filterByArea(allTables, selectedAreaId));
     setObstacles(filterByArea(allObstacles, selectedAreaId));
   }, [selectedAreaId, allTables, allObstacles, filterByArea]);
-
-  const openCreateAreaDialog = () => {
-    setEditingArea(null);
-    setAreaName("");
-    setAreaError("");
-    setAreaDialogOpen(true);
-  };
-
-  const openEditAreaDialog = () => {
-    if (!selectedAreaId) return;
-    const area = areas.find((a) => a.id === selectedAreaId);
-    if (!area) return;
-    setEditingArea(area);
-    setAreaName(area.name);
-    setAreaError("");
-    setAreaDialogOpen(true);
-  };
-
-  const handleSaveArea = async () => {
-    if (!restaurant) return;
-    if (!areaName.trim()) {
-      setAreaError("Name darf nicht leer sein.");
-      return;
-    }
-    setIsSavingArea(true);
-    try {
-      let areaIdToKeep = selectedAreaId;
-      if (editingArea) {
-        await areasApi.update(restaurant.id, editingArea.id, { name: areaName.trim() });
-        addToast("Area wurde aktualisiert.", "success");
-        areaIdToKeep = editingArea.id;
-      } else {
-        const newArea = await areasApi.create(restaurant.id, { name: areaName.trim() });
-        areaIdToKeep = newArea.id;
-        setSelectedAreaId(newArea.id);
-        addToast("Area wurde erstellt.", "success");
-      }
-      setAreaDialogOpen(false);
-      setAreaName("");
-      setEditingArea(null);
-      await loadData(true, areaIdToKeep);
-      setSelectedAreaId(areaIdToKeep);
-    } catch (error) {
-      console.error("Fehler beim Speichern der Area:", error);
-      setAreaError("Fehler beim Speichern der Area");
-    } finally {
-      setIsSavingArea(false);
-    }
-  };
-
-  const handleDeleteArea = async () => {
-    if (!restaurant || !selectedAreaId) return;
-    const area = areas.find((a) => a.id === selectedAreaId);
-    if (!area) return;
-    if (!confirmAction(`Area "${area.name}" wirklich löschen?`)) return;
-    try {
-      await areasApi.delete(restaurant.id, selectedAreaId);
-      const remaining = areas.filter((a) => a.id !== selectedAreaId);
-      const nextId = remaining[0]?.id ?? null;
-      setSelectedAreaId(nextId);
-      addToast("Area wurde gelöscht.", "success");
-      await loadData(true, nextId);
-    } catch (error) {
-      console.error("Fehler beim Löschen der Area:", error);
-      addToast("Fehler beim Löschen der Area", "error");
-    }
-  };
-
-  const handleDragStart = (event: DragStartEvent) => {
-    const id = event.active.id;
-    if (typeof id === "string" && id.startsWith("obstacle-")) {
-      setActiveObstacleId(id.replace("obstacle-", ""));
-      return;
-    }
-    setActiveId(String(id));
-  };
-
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, delta } = event;
-    const activeRaw = active.id;
-
-    if (!restaurant) {
-      setActiveId(null);
-      setActiveObstacleId(null);
-      return;
-    }
-
-    // Obstacles drag
-    if (typeof activeRaw === "string" && activeRaw.startsWith("obstacle-")) {
-      const obstacleId = activeRaw.replace("obstacle-", "");
-      const obstacle = obstacles.find((o) => o.id === obstacleId);
-      if (!obstacle) {
-        setActiveObstacleId(null);
-        return;
-      }
-      const effectiveZoom = zoomLevel > 0 ? zoomLevel : 1;
-      const deltaX = delta?.x || 0;
-      const deltaY = delta?.y || 0;
-      const newX = Math.max(0, obstacle.x + deltaX / effectiveZoom);
-      const newY = Math.max(0, obstacle.y + deltaY / effectiveZoom);
-      try {
-        await obstaclesApi.update(restaurant.id, obstacle.id, { x: newX, y: newY });
-        setObstacles((prev) =>
-          prev.map((o) => (o.id === obstacleId ? { ...o, x: newX, y: newY } : o))
-        );
-        setAllObstacles((prev) =>
-          prev.map((o) => (o.id === obstacleId ? { ...o, x: newX, y: newY } : o))
-        );
-      } catch (error) {
-        console.error("Fehler beim Aktualisieren des Hindernisses:", error);
-        addToast("Fehler beim Verschieben des Hindernisses", "error");
-      }
-      setActiveObstacleId(null);
-      return;
-    }
-
-    // Tables drag
-    const tableId = String(activeRaw);
-    const table = tables.find((t) => t.id === tableId);
-    if (!table) {
-      setActiveId(null);
-      return;
-    }
-
-    const effectiveZoom = zoomLevel > 0 ? zoomLevel : 1;
-    const deltaX = delta?.x || 0;
-    const deltaY = delta?.y || 0;
-    const newX = Math.max(0, (table.position_x || 0) + deltaX / effectiveZoom);
-    const newY = Math.max(0, (table.position_y || 0) + deltaY / effectiveZoom);
-
-    try {
-      await tablesApi.update(restaurant.id, table.id, {
-        position_x: newX,
-        position_y: newY,
-      });
-
-      setTables((prev) =>
-        prev.map((t) =>
-          t.id === tableId ? { ...t, position_x: newX, position_y: newY } : t
-        )
-      );
-      setAllTables((prev) =>
-        prev.map((t) =>
-          t.id === tableId ? { ...t, position_x: newX, position_y: newY } : t
-        )
-      );
-    } catch (error) {
-      console.error("Fehler beim Aktualisieren der Tischposition:", error);
-      addToast("Fehler beim Verschieben des Tisches", "error");
-    }
-
-    setActiveId(null);
-  };
-
-  const handleTableCreated = async () => {
-    if (!restaurant) return;
-    try {
-      await loadData(true);
-      addToast("Tisch wurde gespeichert.", "success");
-    } catch (error) {
-      console.error("Fehler beim Anlegen des Tisches:", error);
-      addToast("Fehler beim Anlegen des Tisches", "error");
-    }
-  };
-
-  const handleObstacleSaved = async () => {
-    if (!restaurant) return;
-    try {
-      await loadData(true);
-      addToast("Hindernis wurde gespeichert.", "success");
-    } catch (error) {
-      console.error("Fehler beim Speichern des Hindernisses:", error);
-      addToast("Fehler beim Speichern des Hindernisses", "error");
-    }
-  };
-
-  const handleTableUpdated = async () => {
-    try {
-      await loadData(true);
-      addToast("Tisch wurde aktualisiert.", "success");
-    } catch (error) {
-      console.error("Fehler beim Aktualisieren des Tisches:", error);
-      addToast("Fehler beim Aktualisieren des Tisches", "error");
-    }
-  };
 
   const handleTableClick = (table: Table) => {
     setSelectedTable(table);
@@ -491,39 +264,14 @@ export default function TableManagementPage() {
                 <LayoutGrid className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-foreground">Tische verwalten</h1>
+                <h1 className="text-2xl font-bold text-foreground">Tischplan ansehen</h1>
                 <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
-                  Ziehe Tische oder Hindernisse, um ihre Position zu verändern. Änderungen werden automatisch gespeichert.
+                  Readonly-Ansicht der aktuellen Tisch- und Hindernispositionen.
                 </p>
                 {isRefreshing && <div className="text-xs text-primary mt-0.5">Aktualisiere...</div>}
               </div>
             </div>
-            <div className="flex items-center gap-2 pt-1.5 md:pt-2">
-              {(currentUser?.role === "platform_admin" || currentUser?.role === "owner" || currentUser?.role === "manager") && (
-                <>
-                  <Button
-                    onClick={() => setCreateTableOpen(true)}
-                    className="touch-manipulation min-h-[36px]"
-                    disabled={!selectedAreaId || areas.length === 0}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Tisch hinzufügen
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setSelectedObstacle(null);
-                      setCreateObstacleOpen(true);
-                    }}
-                    variant="outline"
-                    className="touch-manipulation min-h-[36px] gap-2"
-                    disabled={!selectedAreaId || areas.length === 0}
-                  >
-                    <AlertTriangle className="w-4 h-4" />
-                    Hindernis hinzufügen
-                  </Button>
-                </>
-              )}
-            </div>
+            <div className="flex items-center gap-2 pt-1.5 md:pt-2" />
           </div>
 
           <div className="flex flex-wrap items-center gap-3 relative">
@@ -537,42 +285,9 @@ export default function TableManagementPage() {
                 minWidthClassName="min-w-[180px]"
               />
             </div>
-            {(currentUser?.role === "platform_admin" || currentUser?.role === "owner" || currentUser?.role === "manager") && (
-              <div className="flex items-center gap-2">
-                <Button size="sm" variant="outline" onClick={openCreateAreaDialog} className="min-h-[36px]">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Area erstellen
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={openEditAreaDialog}
-                  disabled={!selectedAreaId}
-                  className="min-h-[36px] shadow-none hover:shadow-none"
-                >
-                  <Pencil className="w-4 h-4 mr-2" />
-                  Umbenennen
-                </Button>
-                <Button
-                  size="sm"
-                  variant="destructive"
-                  onClick={handleDeleteArea}
-                  disabled={!selectedAreaId}
-                  className="min-h-[36px] shadow-none"
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Löschen
-                </Button>
-              </div>
-            )}
             {areas.length === 0 && (
               <span className="text-xs text-amber-300">
-                Lege zuerst eine Area an, bevor du Tische oder Hindernisse erstellst.
-              </span>
-            )}
-            {selectedAreaId === null && areas.length > 0 && (
-              <span className="text-xs text-muted-foreground">
-                Wähle eine Area, um neue Tische oder Hindernisse anzulegen.
+                Es sind keine Areas vorhanden.
               </span>
             )}
           </div>
@@ -598,8 +313,6 @@ export default function TableManagementPage() {
         <DndContext 
           sensors={sensors} 
           collisionDetection={closestCenter}
-          onDragStart={handleDragStart} 
-          onDragEnd={handleDragEnd}
         >
           <div 
             className="absolute inset-0 z-0 pointer-events-auto"
@@ -785,10 +498,8 @@ export default function TableManagementPage() {
                 key={obstacle.id}
                 obstacle={obstacle}
                 isDragging={activeObstacleId === obstacle.id}
-                onClick={() => {
-                  setSelectedObstacle(obstacle);
-                  setCreateObstacleOpen(true);
-                }}
+                draggable={false}
+                onClick={undefined}
               />
             ))}
             {tables.map((table) => {
@@ -805,7 +516,7 @@ export default function TableManagementPage() {
                   position={position}
                   onClick={() => handleTableClick(table)}
                   isDragging={activeId === table.id}
-                  allowDragging
+                  allowDragging={false}
                   allowDraggingWithReservations
                 />
               );
@@ -816,17 +527,7 @@ export default function TableManagementPage() {
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center space-y-3">
                 <p className="text-muted-foreground text-lg">Noch keine Tische vorhanden</p>
-                <p className="text-muted-foreground text-sm">Lege hier neue Tische an oder verschiebe bestehende.</p>
-                {(currentUser?.role === "platform_admin" || currentUser?.role === "owner" || currentUser?.role === "manager") && (
-                  <Button
-                    onClick={() => setCreateTableOpen(true)}
-                    className="touch-manipulation min-h-[44px]"
-                    disabled={!selectedAreaId || areas.length === 0}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Ersten Tisch hinzufügen
-                  </Button>
-                )}
+                <p className="text-muted-foreground text-sm">Es sind aktuell keine Tische in diesem Bereich sichtbar.</p>
               </div>
             </div>
           )}
@@ -864,68 +565,8 @@ export default function TableManagementPage() {
             </div>
           </div>
 
-          <DragOverlay>
-            {activeId ? (
-              <div className="opacity-60">
-                {(() => {
-                  const table = tables.find((t) => t.id === activeId);
-                  if (!table) return null;
-                  const position = {
-                    x: table.position_x || 50,
-                    y: table.position_y || 50,
-                  };
-                  return (
-                    <TableCard
-                      table={table}
-                      reservations={[]}
-                      position={position}
-                      onClick={() => {}}
-                      isDragging
-                      allowDragging
-                      allowDraggingWithReservations
-                    />
-                  );
-                })()}
-              </div>
-            ) : null}
-            {activeObstacleId ? (
-              <div className="opacity-60">
-                {(() => {
-                  const obstacle = obstacles.find((o) => o.id === activeObstacleId);
-                  if (!obstacle) return null;
-                  return (
-                    <ObstacleCard
-                      obstacle={obstacle}
-                      isDragging
-                      onClick={() => {}}
-                    />
-                  );
-                })()}
-              </div>
-            ) : null}
-          </DragOverlay>
         </DndContext>
       </div>
-
-      <CreateTableDialog
-        open={createTableOpen}
-        onOpenChange={setCreateTableOpen}
-        restaurantId={restaurant.id}
-        onTableCreated={handleTableCreated}
-        areas={areas}
-        selectedAreaId={selectedAreaId}
-      />
-
-      <CreateObstacleDialog
-        open={createObstacleOpen}
-        onOpenChange={setCreateObstacleOpen}
-        restaurantId={restaurant.id}
-        obstacle={selectedObstacle}
-        onSaved={handleObstacleSaved}
-        onDeleted={handleObstacleSaved}
-        areas={areas}
-        selectedAreaId={selectedAreaId}
-      />
 
       <TableDetailsDialog
         open={tableDetailsOpen}
@@ -940,54 +581,18 @@ export default function TableManagementPage() {
         tables={tables}
         reservations={[]}
         selectedDate={new Date()}
-        onTableUpdated={handleTableUpdated}
+        onTableUpdated={() => {}}
         onReservationClick={() => {}}
         onNewReservation={() => {}}
-        onReservationUpdated={handleTableUpdated}
-        allowTableManagement
-        forceEditMode
+        onReservationUpdated={() => {}}
+        allowTableManagement={false}
+        forceEditMode={false}
         showReservations={false}
         onNotify={addToast}
         areas={areas}
         selectedAreaId={selectedAreaId}
+        readOnly={true}
       />
-
-      <Dialog open={areaDialogOpen} onOpenChange={setAreaDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>{editingArea ? "Area umbenennen" : "Neue Area erstellen"}</DialogTitle>
-            <DialogDescription>
-              Areas helfen dir, Etagen oder Räume zu trennen. Tische und Hindernisse gehören immer zu einer Area.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 px-6 pb-2">
-            {areaError && (
-              <div className="p-3 rounded-md border border-red-600 bg-red-900/60 text-red-100 text-sm shadow-inner">
-                {areaError}
-              </div>
-            )}
-            <div className="space-y-1">
-              <label className="text-sm text-muted-foreground">Name</label>
-              <Input
-                value={areaName}
-                onChange={(e) => {
-                  setAreaName(e.target.value);
-                  setAreaError("");
-                }}
-                placeholder="z. B. Erdgeschoss, Terrasse, 1. OG"
-              />
-            </div>
-          </div>
-          <DialogFooter className="gap-2 px-6 pb-4">
-            <Button variant="outline" onClick={() => setAreaDialogOpen(false)} disabled={isSavingArea}>
-              Abbrechen
-            </Button>
-            <Button onClick={handleSaveArea} disabled={isSavingArea || !areaName.trim()}>
-              {isSavingArea ? "Speichern..." : editingArea ? "Speichern" : "Erstellen"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

@@ -400,6 +400,7 @@ export default function KitchenPage() {
                     order={order}
                     onStatusChange={handleStatusChange}
                     canChangeTo={["in_preparation"]}
+                    readOnly={true}
                   />
                 ))}
                 {groupedOrders.sent_to_kitchen.length === 0 && (
@@ -429,6 +430,7 @@ export default function KitchenPage() {
                     order={order}
                     onStatusChange={handleStatusChange}
                     canChangeTo={["ready"]}
+                    readOnly={true}
                   />
                 ))}
                 {groupedOrders.in_preparation.length === 0 && (
@@ -458,6 +460,7 @@ export default function KitchenPage() {
                     order={order}
                     onStatusChange={handleStatusChange}
                     canChangeTo={[]}
+                    readOnly={true}
                   />
                 ))}
                 {groupedOrders.ready.length === 0 && (
@@ -498,9 +501,10 @@ interface OrderCardProps {
   order: KitchenOrder;
   onStatusChange: (orderId: string, status: KitchenStatus) => void;
   canChangeTo: KitchenStatus[];
+  readOnly?: boolean;
 }
 
-function OrderCard({ order, onStatusChange, canChangeTo }: OrderCardProps) {
+function OrderCard({ order, onStatusChange, canChangeTo, readOnly = false }: OrderCardProps) {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("de-DE", {
       style: "currency",
@@ -582,7 +586,7 @@ function OrderCard({ order, onStatusChange, canChangeTo }: OrderCardProps) {
       )}
 
       {/* Actions */}
-      {canChangeTo.length > 0 && (
+      {!readOnly && canChangeTo.length > 0 && (
         <div className="flex gap-2 pt-3 border-t border-border">
           {canChangeTo.map((status) => (
             <Button

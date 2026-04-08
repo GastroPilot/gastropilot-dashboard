@@ -12,7 +12,6 @@ import { useUserSettings } from "@/lib/hooks/use-user-settings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ReservationDialog } from "@/components/reservation-dialog";
-import { BlockTableDialog } from "@/components/block-table-dialog";
 import { LoadingOverlay } from "@/components/loading-overlay";
 import { SkeletonReservationCard } from "@/components/skeletons";
 import { DropdownSelector } from "@/components/area-selector";
@@ -73,8 +72,6 @@ export default function ReservationsPage() {
   const [statusMenuOpen, setStatusMenuOpen] = useState(false);
   const [reservationDialogOpen, setReservationDialogOpen] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
-  const [blockEditOpen, setBlockEditOpen] = useState(false);
-  const [editingBlock, setEditingBlock] = useState<Block | null>(null);
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
   const [toasts, setToasts] = useState<{ id: string; message: string; variant?: "info" | "error" | "success" }[]>([]);
@@ -341,12 +338,6 @@ export default function ReservationsPage() {
     setReservationDialogOpen(true);
   };
 
-  const handleNewReservation = () => {
-    setSelectedReservation(null);
-    setSelectedTable(null);
-    setReservationDialogOpen(true);
-  };
-
   const handleReservationCreated = async () => {
     await loadData(true);
   };
@@ -410,11 +401,6 @@ export default function ReservationsPage() {
     const entries = blockTableNumbers.get(blockId);
     if (!entries || entries.length === 0) return "Ohne Tisch";
     return entries.length === 1 ? `Tisch ${entries[0]}` : `Tische ${entries.join(", ")}`;
-  };
-
-  const handleBlockClick = (block: Block) => {
-    setEditingBlock(block);
-    setBlockEditOpen(true);
   };
 
   if (isInitialLoading) {
@@ -510,15 +496,6 @@ export default function ReservationsPage() {
             </div>
             <div className="flex items-center gap-1 shrink-0">
                 
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={handleNewReservation}
-                  className="touch-manipulation min-h-[32px] text-sm px-3"
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  Neue Reservierung
-                </Button>
                 <Button
                     variant="outline"
                     size="sm"
@@ -709,8 +686,7 @@ export default function ReservationsPage() {
                 return (
                   <div
                     key={entry.id}
-                    className="bg-card rounded-xl shadow-sm border border-rose-600/40 p-4 hover:shadow-md hover:bg-gray-750 transition-all cursor-pointer"
-                    onClick={() => handleBlockClick(block)}
+                    className="bg-card rounded-xl shadow-sm border border-rose-600/40 p-4 transition-all"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 min-w-0">
@@ -802,23 +778,7 @@ export default function ReservationsPage() {
           onBlockCreated={handleBlockCreated}
           availableTables={tables}
           onNotify={addToast}
-        />
-      )}
-      {restaurant && (
-        <BlockTableDialog
-          open={blockEditOpen}
-          onOpenChange={(open) => {
-            setBlockEditOpen(open);
-            if (!open) setEditingBlock(null);
-          }}
-          restaurantId={restaurant.id}
-          tables={tables}
-          selectedDate={selectedDate}
-          block={editingBlock}
-          blocks={blocks}
-          blockAssignments={blockAssignments}
-          onBlockCreated={handleBlockCreated}
-          onNotify={addToast}
+          readOnly={true}
         />
       )}
     </div>
