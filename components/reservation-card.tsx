@@ -3,7 +3,7 @@
 import { useDraggable } from "@dnd-kit/core";
 import { Reservation } from "@/lib/api/reservations";
 import { format } from "date-fns";
-import { Clock, Users, CheckCircle, XCircle, AlertTriangle, Armchair, ShieldCheck } from "lucide-react";
+import { Clock, Users, CheckCircle, XCircle, AlertTriangle, Armchair, ShieldCheck, MapPin } from "lucide-react";
 
 interface ReservationCardProps {
   reservation: Reservation;
@@ -11,6 +11,7 @@ interface ReservationCardProps {
   draggable?: boolean;
   getTableName?: (tableId: string | null) => string;
   getTableLabel?: (reservation: Reservation) => string | null;
+  getAreaLabel?: (reservation: Reservation) => string;
   onClick?: (reservation: Reservation) => void;
   onDelete?: (reservation: Reservation) => void;
 }
@@ -21,6 +22,7 @@ export function ReservationCard({
   draggable = true,
   getTableName,
   getTableLabel,
+  getAreaLabel,
   onClick,
   onDelete,
 }: ReservationCardProps) {
@@ -61,6 +63,7 @@ export function ReservationCard({
   };
 
   const statusIcon = getStatusIcon(reservation.status);
+  const areaLabel = getAreaLabel?.(reservation);
 
   return (
     <div
@@ -130,6 +133,12 @@ export function ReservationCard({
           );
         })()}
       </div>
+      {areaLabel && (
+        <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+          <MapPin className="w-3 h-3" />
+          <span>Bereich: {areaLabel}</span>
+        </div>
+      )}
 
       {reservation.notes && (
         <p className="mt-2 text-xs md:text-sm text-foreground italic line-clamp-2">
@@ -139,4 +148,3 @@ export function ReservationCard({
     </div>
   );
 }
-

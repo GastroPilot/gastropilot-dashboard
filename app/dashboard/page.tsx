@@ -381,7 +381,8 @@ export default function DashboardPage() {
     reservations,
     blocks,
     blockAssignments,
-    tables,
+    tables: allTables,
+    areas,
     orders,
     selectedDate,
     reservationToTempTableMap,
@@ -395,6 +396,7 @@ export default function DashboardPage() {
     getBlockStatus,
     getTableName,
     getReservationTableLabel,
+    getReservationAreaLabel,
     getBlockTableLabels,
   } = computations;
 
@@ -827,6 +829,7 @@ export default function DashboardPage() {
                 activeBlockId={activeBlockId}
                 getTableName={getTableName}
                 getReservationTableLabel={getReservationTableLabel}
+                getReservationAreaLabel={getReservationAreaLabel}
                 getBlockTableLabels={getBlockTableLabels}
                 searchQuery={waitlistSearchQuery}
                 onSearchChange={setWaitlistSearchQuery}

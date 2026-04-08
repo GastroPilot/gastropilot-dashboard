@@ -18,6 +18,7 @@ interface WaitlistSidebarProps {
   activeBlockId?: string | null;
   getTableName?: (tableId: string | null) => string;
   getReservationTableLabel?: (reservation: Reservation) => string | null;
+  getReservationAreaLabel?: (reservation: Reservation) => string;
   getBlockTableLabels?: (block: Block) => string[];
   searchQuery?: string;
   onSearchChange?: (query: string) => void;
@@ -46,6 +47,7 @@ export function WaitlistSidebar({
   activeBlockId,
   getTableName,
   getReservationTableLabel,
+  getReservationAreaLabel,
   getBlockTableLabels,
   searchQuery: externalSearchQuery,
   onSearchChange: externalOnSearchChange,
@@ -490,6 +492,7 @@ export function WaitlistSidebar({
                 draggable={!readOnly}
                 getTableName={getTableName}
                 getTableLabel={getReservationTableLabel}
+                getAreaLabel={getReservationAreaLabel}
                 onClick={onReservationClick}
                 onDelete={onReservationDelete}
               />
