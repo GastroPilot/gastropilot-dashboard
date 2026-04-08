@@ -145,12 +145,6 @@ export default function DashboardLayout({
         show: true,
       },
       {
-        href: "/dashboard/tables",
-        label: "Tische verwalten",
-        active: pathname?.startsWith("/dashboard/tables"),
-        show: !!canManageTables && !isGrundstatus,
-      },
-      {
         href: "/dashboard/orders",
         label: "Bestellungen",
         active: pathname?.startsWith("/dashboard/orders"),
@@ -269,7 +263,6 @@ export default function DashboardLayout({
         title: "TAGESGESCHÄFT",
         items: [
           pick("/dashboard"),
-          pick("/dashboard/tables"),
           pick("/dashboard/orders"),
           pick("/dashboard/kitchen"),
           pick("/dashboard/menu"),

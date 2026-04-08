@@ -29,7 +29,7 @@ import { AreaSelector } from "@/components/area-selector";
 import { Button } from "@/components/ui/button";
 import { useUserSettings } from "@/lib/hooks/use-user-settings";
 import { useDashboardComputations } from "@/lib/hooks/use-dashboard-computations";
-import { Plus, ChevronLeft, ChevronRight, LayoutGrid, MoveRight, ShieldAlert, ZoomIn, ZoomOut, Clock, ShieldCheck, Calendar } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, LayoutGrid, ShieldAlert, ZoomIn, ZoomOut, Clock, ShieldCheck, Calendar } from "lucide-react";
 import { format, parseISO, startOfDay, endOfDay, isSameDay } from "date-fns";
 import { de } from "date-fns/locale";
 
@@ -49,7 +49,7 @@ const normalizeZoom = (value: number): number => {
 // ============================================
 
 /**
- * Optimierte Uhr - aktualisiert alle 10 Sekunden statt jede Sekunde
+ * Uhr-Hook mit konfigurierbarem Update-Intervall
  */
 function useOptimizedClock(updateInterval = 10000) {
   const [now, setNow] = useState(() => new Date());
@@ -157,7 +157,7 @@ function useDashboardData(restaurantId: string | null, selectedDate: Date) {
         
         visibleTables.push({
           ...table,
-          // Keep canonical coordinates from base table data so /dashboard and /dashboard/tables stay in sync.
+          // Keep canonical coordinates from base table data to preserve layout consistency.
           position_x: table.position_x,
           position_y: table.position_y,
           width: config.width ?? table.width,
@@ -336,8 +336,8 @@ export default function DashboardPage() {
   // OPTIMIERTE HOOKS
   // ============================================
   
-  // Optimierte Uhr (alle 10s statt jede Sekunde)
-  const now = useOptimizedClock(10000);
+  // Uhr für Header (sekundengenau)
+  const now = useOptimizedClock(1000);
   
   // Batch-Daten laden
   const {
@@ -765,7 +765,7 @@ export default function DashboardPage() {
                   {format(now, "EEEE, d. MMMM yyyy", { locale: de })}
                 </div>
                 <div className="text-base md:text-lg lg:text-xl font-bold text-primary tracking-tight whitespace-nowrap">
-                  {format(now, "HH:mm")}
+                  {format(now, "HH:mm:ss")}
                 </div>
               </div>
             </div>
@@ -1149,14 +1149,7 @@ export default function DashboardPage() {
               {tables.length === 0 && (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center">
-                    <p className="text-muted-foreground text-lg mb-4">Noch keine Tische vorhanden</p>
-                    <Link
-                      href="/dashboard/tables"
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors touch-manipulation min-h-[48px]"
-                    >
-                      <MoveRight className="w-4 h-4" />
-                      Tische verwalten
-                    </Link>
+                    <p className="text-muted-foreground text-lg">Noch keine Tische vorhanden</p>
                   </div>
                 </div>
               )}
