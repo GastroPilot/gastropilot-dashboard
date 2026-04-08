@@ -1,0 +1,55 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="400" viewBox="0 0 800 400">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1a0a00"/>
+      <stop offset="100%" stop-color="#2d1200"/>
+    </linearGradient>
+    <linearGradient id="warm" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F95100" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#F95100" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="400" fill="url(#bg)"/>
+  <!-- Warm glow -->
+  <ellipse cx="400" cy="400" rx="500" ry="250" fill="url(#warm)"/>
+  <!-- Table surface -->
+  <ellipse cx="400" cy="310" rx="220" ry="30" fill="#2a1600" opacity="0.6"/>
+  <!-- Plate -->
+  <ellipse cx="400" cy="280" rx="80" ry="16" fill="#333" stroke="#444" stroke-width="1"/>
+  <ellipse cx="400" cy="278" rx="60" ry="12" fill="#2a2a2a"/>
+  <!-- Food on plate -->
+  <ellipse cx="390" cy="272" rx="22" ry="8" fill="#8B4513"/>
+  <ellipse cx="414" cy="274" rx="14" ry="6" fill="#556B2F"/>
+  <ellipse cx="380" cy="276" rx="8" ry="4" fill="#DAA520"/>
+  <!-- Steam lines -->
+  <g stroke="#F95100" stroke-width="1.5" fill="none" opacity="0.25">
+    <path d="M385,255 Q382,240 388,225 Q394,210 390,195"/>
+    <path d="M400,252 Q397,237 403,222 Q409,207 405,192"/>
+    <path d="M415,255 Q412,240 418,225 Q424,210 420,195"/>
+  </g>
+  <!-- Fork -->
+  <g transform="translate(290,250) rotate(-15)" stroke="#888" stroke-width="1.5" fill="none">
+    <line x1="0" y1="0" x2="0" y2="60"/>
+    <line x1="-6" y1="0" x2="-6" y2="18"/>
+    <line x1="-2" y1="0" x2="-2" y2="20"/>
+    <line x1="2" y1="0" x2="2" y2="20"/>
+    <line x1="6" y1="0" x2="6" y2="18"/>
+  </g>
+  <!-- Knife -->
+  <g transform="translate(510,250) rotate(15)" stroke="#888" stroke-width="1.5" fill="none">
+    <line x1="0" y1="0" x2="0" y2="60"/>
+    <path d="M0,0 Q8,8 2,20"/>
+  </g>
+  <!-- Wine glass -->
+  <g transform="translate(560,230)" stroke="#666" stroke-width="1.2" fill="none">
+    <ellipse cx="0" cy="0" rx="12" ry="16"/>
+    <line x1="0" y1="16" x2="0" y2="40"/>
+    <line x1="-10" y1="40" x2="10" y2="40"/>
+    <ellipse cx="0" cy="3" rx="10" ry="6" fill="#5C0A0A" opacity="0.4"/>
+  </g>
+  <!-- Restaurant name -->
+  <text x="400" y="110" text-anchor="middle" font-family="Georgia, serif" font-size="32" font-weight="700" fill="#F95100" opacity="0.9">Testrestaurant</text>
+  <text x="400" y="140" text-anchor="middle" font-family="system-ui, sans-serif" font-size="13" fill="#886644" letter-spacing="4">FINE DINING &amp; BAR</text>
+  <!-- Decorative line -->
+  <line x1="320" y1="155" x2="480" y2="155" stroke="#F95100" stroke-width="0.5" opacity="0.4"/>
+</svg>
