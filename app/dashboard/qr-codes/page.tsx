@@ -180,7 +180,7 @@ export default function QrCodesPage() {
 
   const handleRegenerateToken = async (tableId: string) => {
     const confirmed = confirmAction(
-      "Token neu generieren? Alle bisherigen QR-Codes dieses Tisches werden ungueltig."
+      "Token neu generieren? Alle bisherigen QR-Codes dieses Tisches werden ungültig."
     );
     if (!confirmed) return;
 
@@ -212,7 +212,7 @@ export default function QrCodesPage() {
         }
       }
       addToast(
-        `QR-Codes fuer ${successCount} von ${tableQrDataList.length} Tischen generiert`,
+        `QR-Codes für ${successCount} von ${tableQrDataList.length} Tischen generiert`,
         "success"
       );
     } finally {
@@ -394,8 +394,8 @@ export default function QrCodesPage() {
                               Tisch {item.table.number}
                             </div>
                             <div className="text-xs text-muted-foreground">
-                              {item.table.capacity} Plaetze
-                              {item.table.is_outdoor ? " (Aussen)" : ""}
+                              {item.table.capacity} Plätze
+                              {item.table.is_outdoor ? " (Außen)" : ""}
                             </div>
                           </div>
                         </div>
@@ -507,7 +507,7 @@ export default function QrCodesPage() {
                   QR-Code - Tisch {previewDialog.table_number}
                 </DialogTitle>
                 <DialogDescription>
-                  Gaeste scannen diesen Code, um die Speisekarte aufzurufen und
+                  Gäste scannen diesen Code, um die Speisekarte aufzurufen und
                   zu bestellen.
                 </DialogDescription>
               </DialogHeader>
@@ -550,7 +550,7 @@ export default function QrCodesPage() {
                   onClick={() => setPreviewDialog(null)}
                 >
                   <X className="w-4 h-4 mr-1" />
-                  Schliessen
+                  Schließen
                 </Button>
                 <Button
                   variant="outline"

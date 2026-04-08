@@ -100,7 +100,7 @@ export function buildDashboardNavLinks({
     },
     {
       href: "/dashboard/devices",
-      label: "Geraete / KDS",
+      label: "Geräte / KDS",
       active: currentPath.startsWith("/dashboard/devices"),
       show: isOwner && !isGrundstatus,
     },

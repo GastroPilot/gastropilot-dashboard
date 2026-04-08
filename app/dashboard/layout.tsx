@@ -233,7 +233,7 @@ export default function DashboardLayout({
               <button
                 type="button"
                 className="sm:hidden inline-flex items-center justify-center rounded-md border border-border bg-card h-10 w-10 min-h-[40px] min-w-[40px] text-foreground hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
-                aria-label={isNavOpen ? "Navigation schliessen" : "Navigation öffnen"}
+                aria-label={isNavOpen ? "Navigation schließen" : "Navigation öffnen"}
                 aria-expanded={isNavOpen}
                 onClick={() => setIsNavOpen((prev) => !prev)}
               >

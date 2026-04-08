@@ -118,7 +118,7 @@ export default function AIInsightsPage() {
             {/* Summary */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-card border border-border rounded-lg p-4">
-                <p className="text-sm text-muted-foreground">Erwartete Gaeste gesamt</p>
+                <p className="text-sm text-muted-foreground">Erwartete Gäste gesamt</p>
                 <p className="text-2xl font-bold text-foreground">
                   {data.predictions.reduce((s, p) => s + p.predicted_covers, 0)}
                 </p>
@@ -202,7 +202,7 @@ export default function AIInsightsPage() {
                 <thead className="bg-muted/50">
                   <tr>
                     <th className="text-left px-4 py-2 font-medium text-muted-foreground">Uhrzeit</th>
-                    <th className="text-left px-4 py-2 font-medium text-muted-foreground">Gaeste</th>
+                    <th className="text-left px-4 py-2 font-medium text-muted-foreground">Gäste</th>
                     <th className="text-left px-4 py-2 font-medium text-muted-foreground">Auslastung</th>
                     <th className="text-left px-4 py-2 font-medium text-muted-foreground">Konfidenz</th>
                   </tr>

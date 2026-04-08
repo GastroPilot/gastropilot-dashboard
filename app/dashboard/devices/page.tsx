@@ -76,7 +76,7 @@ export default function DevicesPage() {
       setDevices(devicesData);
     } catch (err) {
       console.error("Error loading devices:", err);
-      addToast("Fehler beim Laden der Geraete", "error");
+      addToast("Fehler beim Laden der Geräte", "error");
     } finally {
       setIsLoading(false);
     }
@@ -99,7 +99,7 @@ export default function DevicesPage() {
 
   const handleCreate = async () => {
     if (!name.trim()) {
-      setError("Geraetename ist erforderlich");
+      setError("Gerätename ist erforderlich");
       return;
     }
 
@@ -111,7 +111,7 @@ export default function DevicesPage() {
         name: name.trim(),
         station,
       });
-      addToast("Geraet erstellt", "success");
+      addToast("Gerät erstellt", "success");
       setCreateDialogOpen(false);
       resetForm();
 
@@ -131,22 +131,22 @@ export default function DevicesPage() {
 
   const handleDelete = async (device: Device) => {
     const confirmed = confirmAction(
-      `Moechten Sie das Geraet "${device.name}" wirklich loeschen? Der Zugang wird sofort gesperrt.`
+      `Möchten Sie das Gerät "${device.name}" wirklich löschen? Der Zugang wird sofort gesperrt.`
     );
     if (!confirmed) return;
 
     try {
       await devicesApi.delete(device.id);
-      addToast("Geraet geloescht", "success");
+      addToast("Gerät gelöscht", "success");
       await loadData();
     } catch (err: any) {
-      addToast(err?.message || "Fehler beim Loeschen", "error");
+      addToast(err?.message || "Fehler beim Löschen", "error");
     }
   };
 
   const handleRegenerateToken = async (device: Device) => {
     const confirmed = confirmAction(
-      `Token fuer "${device.name}" neu generieren? Das alte Token wird ungueltig.`
+      `Token für "${device.name}" neu generieren? Das alte Token wird ungültig.`
     );
     if (!confirmed) return;
 
@@ -232,10 +232,10 @@ export default function DevicesPage() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-foreground">
-                  Geraete / KDS
+                  Geräte / KDS
                 </h1>
                 <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
-                  Kitchen Display System - Geraeteverwaltung
+                  Kitchen Display System - Geräteverwaltung
                 </p>
               </div>
             </div>
@@ -246,7 +246,7 @@ export default function DevicesPage() {
                 onClick={openCreateDialog}
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Neues Geraet
+                Neues Gerät
               </Button>
             </div>
           </div>
@@ -260,10 +260,10 @@ export default function DevicesPage() {
             <div className="text-center py-12">
               <Monitor className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
               <h2 className="text-xl font-semibold text-foreground mb-2">
-                Keine Geraete registriert
+                Keine Geräte registriert
               </h2>
               <p className="text-muted-foreground mb-4">
-                Registrieren Sie Ihr erstes KDS-Geraet, um
+                Registrieren Sie Ihr erstes KDS-Gerät, um
                 Küchenbestellungen anzuzeigen.
               </p>
               <Button
@@ -271,7 +271,7 @@ export default function DevicesPage() {
                 onClick={openCreateDialog}
               >
                 <Plus className="w-4 h-4 mr-2" />
-                Erstes Geraet registrieren
+                Erstes Gerät registrieren
               </Button>
             </div>
           ) : (
@@ -370,9 +370,9 @@ export default function DevicesPage() {
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
         <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto bg-card border-border text-foreground">
           <DialogHeader>
-            <DialogTitle>Neues KDS-Geraet registrieren</DialogTitle>
+            <DialogTitle>Neues KDS-Gerät registrieren</DialogTitle>
             <DialogDescription>
-              Erstellen Sie einen neuen Geraetezugang fuer Ihr Kitchen Display
+              Erstellen Sie einen neuen Gerätezugang für Ihr Kitchen Display
               System.
             </DialogDescription>
           </DialogHeader>
@@ -386,7 +386,7 @@ export default function DevicesPage() {
 
             <div>
               <label className="text-sm font-medium text-foreground mb-1.5 block">
-                Geraetename *
+                Gerätename *
               </label>
               <Input
                 value={name}
@@ -411,8 +411,8 @@ export default function DevicesPage() {
                 ))}
               </select>
               <p className="text-xs text-muted-foreground mt-1">
-                Waehlen Sie die Küchen-Station, deren Bestellungen auf
-                diesem Geraet angezeigt werden sollen.
+                Wählen Sie die Küchen-Station, deren Bestellungen auf
+                diesem Gerät angezeigt werden sollen.
               </p>
             </div>
           </div>
@@ -441,10 +441,10 @@ export default function DevicesPage() {
       <Dialog open={tokenDialogOpen} onOpenChange={setTokenDialogOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto bg-card border-border text-foreground">
           <DialogHeader>
-            <DialogTitle>Geraete-Token</DialogTitle>
+            <DialogTitle>Geräte-Token</DialogTitle>
             <DialogDescription>
-              Kopieren Sie dieses Token und tragen Sie es in Ihrem KDS-Geraet
-              ein. Das Token wird aus Sicherheitsgruenden nur einmal angezeigt.
+              Kopieren Sie dieses Token und tragen Sie es in Ihrem KDS-Gerät
+              ein. Das Token wird aus Sicherheitsgründen nur einmal angezeigt.
             </DialogDescription>
           </DialogHeader>
 
@@ -458,7 +458,7 @@ export default function DevicesPage() {
 
             <div className="bg-background border border-border rounded-lg p-4">
               <label className="text-xs text-muted-foreground uppercase tracking-wide block mb-2">
-                Geraete-Token
+                Geräte-Token
               </label>
               <div className="flex items-center gap-2">
                 <code className="flex-1 text-xs font-mono bg-card px-3 py-2 rounded border border-border break-all">
@@ -478,7 +478,7 @@ export default function DevicesPage() {
             <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 text-sm text-amber-300">
               <strong>Wichtig:</strong> Dieses Token wird nur einmal
               angezeigt. Speichern Sie es jetzt oder tragen Sie es direkt
-              auf dem KDS-Geraet ein.
+              auf dem KDS-Gerät ein.
             </div>
           </div>
 
@@ -491,7 +491,7 @@ export default function DevicesPage() {
                 setShownDeviceName("");
               }}
             >
-              Schliessen
+              Schließen
             </Button>
             <Button
               onClick={() => shownToken && copyToken(shownToken)}
