@@ -359,7 +359,11 @@ export default function DashboardLayout({
             isSidebarCollapsed ? "w-[84px]" : "w-[280px]"
           }`}
         >
-          <div className="h-12 border-b border-border flex items-center justify-between px-3">
+          <div
+            className={`h-12 border-b border-border flex items-center ${
+              isSidebarCollapsed ? "justify-center px-0" : "justify-between px-3"
+            }`}
+          >
             {!isSidebarCollapsed ? (
               <span className="text-xs uppercase tracking-wide text-muted-foreground">Navigation</span>
             ) : (
