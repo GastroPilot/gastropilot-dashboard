@@ -111,12 +111,6 @@ export function buildDashboardNavLinks({
       show: isOwner && !isGrundstatus,
     },
     {
-      href: "/dashboard/ai-insights",
-      label: "KI-Prognosen",
-      active: currentPath.startsWith("/dashboard/ai-insights"),
-      show: isOwner && !isGrundstatus,
-    },
-    {
       href: "/dashboard/billing",
       label: "Abonnement",
       active: currentPath.startsWith("/dashboard/billing"),
@@ -176,7 +170,6 @@ const GROUP_ORDER: Array<{ title: string; hrefs: string[] }> = [
       "/dashboard/operators",
       "/dashboard/devices",
       "/dashboard/owner-insights",
-      "/dashboard/ai-insights",
       "/dashboard/billing",
       "/dashboard/fiskaly",
     ],
