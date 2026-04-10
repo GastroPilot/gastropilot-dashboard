@@ -74,8 +74,23 @@ function buildOverviewQuery(overrides?: Partial<Record<string, unknown>>) {
         occupancyRateNow: 57.1,
         blockedTablesNow: 1,
         totalCapacity: 64,
+        guestsNow: 24,
+        capacityOccupancyRateNow: 37.5,
       },
       revenueByDay: [{ date: "2026-04-09", revenue: 120 }],
+      revenueLast7ByDay: [
+        { date: "2026-04-03", revenue: 52 },
+        { date: "2026-04-04", revenue: 64 },
+        { date: "2026-04-05", revenue: 71 },
+        { date: "2026-04-06", revenue: 88 },
+        { date: "2026-04-07", revenue: 76 },
+        { date: "2026-04-08", revenue: 95 },
+        { date: "2026-04-09", revenue: 120 },
+      ],
+      revenueLast30ByDay: Array.from({ length: 30 }, (_, index) => ({
+        date: new Date(Date.UTC(2026, 2, 11 + index)).toISOString().slice(0, 10),
+        revenue: 40 + index * 3,
+      })),
       ordersByDay: [{ date: "2026-04-09", count: 42 }],
       reservationsByDay: [{ date: "2026-04-09", count: 56 }],
       ordersByStatus: { open: 3, paid: 39 },
@@ -103,6 +118,8 @@ function buildOverviewQuery(overrides?: Partial<Record<string, unknown>>) {
           occupancyRateNow: 57.1,
           blockedTablesNow: 1,
           totalCapacity: 64,
+          guestsNow: 24,
+          capacityOccupancyRateNow: 37.5,
         },
         lastUpdatedAt: "2026-04-09T10:00:00.000Z",
       },
@@ -131,6 +148,19 @@ function buildOverviewQuery(overrides?: Partial<Record<string, unknown>>) {
           guestsServedInRange: 143,
         },
         revenueByDay: [{ date: "2026-04-09", revenue: 120 }],
+        revenueLast7ByDay: [
+          { date: "2026-04-03", revenue: 52 },
+          { date: "2026-04-04", revenue: 64 },
+          { date: "2026-04-05", revenue: 71 },
+          { date: "2026-04-06", revenue: 88 },
+          { date: "2026-04-07", revenue: 76 },
+          { date: "2026-04-08", revenue: 95 },
+          { date: "2026-04-09", revenue: 120 },
+        ],
+        revenueLast30ByDay: Array.from({ length: 30 }, (_, index) => ({
+          date: new Date(Date.UTC(2026, 2, 11 + index)).toISOString().slice(0, 10),
+          revenue: 40 + index * 3,
+        })),
         ordersByDay: [{ date: "2026-04-09", count: 42 }],
         reservationsByDay: [{ date: "2026-04-09", count: 56 }],
         ordersByStatus: { open: 3, paid: 39 },
@@ -190,7 +220,7 @@ describe("dashboard landing page", () => {
     await waitFor(() => expect(screen.getByText("Dashboard-Übersicht")).toBeDefined());
     expect(screen.getByText(/Zuletzt aktualisiert:/i)).toBeDefined();
     expect(screen.queryByRole("link", { name: /Tischplan öffnen/i })).toBeNull();
-    expect(screen.getByText("Umsatz Heute")).toBeDefined();
+    expect(screen.getByText("Umsatz (30 Tage)")).toBeDefined();
     expect(screen.getByText("Top Artikel")).toBeDefined();
   });
 

@@ -101,6 +101,8 @@ interface DashboardOverviewBaseKpis {
   occupancyRateNow: number;
   blockedTablesNow: number;
   totalCapacity: number;
+  guestsNow: number;
+  capacityOccupancyRateNow: number;
 }
 
 export interface DashboardOverviewKpis extends DashboardOverviewBaseKpis {}
@@ -114,8 +116,13 @@ export interface DashboardOverviewData {
   };
   kpis: DashboardOverviewKpis;
   revenueByDay: Array<{ date: string; revenue: number }>;
+  revenueByHour: Array<{ hour: string; revenue: number }>;
+  revenueLast7ByDay: Array<{ date: string; revenue: number }>;
+  revenueLast30ByDay: Array<{ date: string; revenue: number }>;
   ordersByDay: Array<{ date: string; count: number }>;
+  ordersByHour: Array<{ hour: string; count: number }>;
   reservationsByDay: Array<{ date: string; count: number }>;
+  reservationsByHour: Array<{ hour: string; count: number }>;
   ordersByStatus: Record<string, number>;
   topItems: Array<{ name: string; quantity: number; revenue: number }>;
   topCategories: Array<{ category: string; quantity: number; revenue: number }>;
@@ -138,6 +145,8 @@ export interface DashboardOverviewOperationalData {
     | 'occupancyRateNow'
     | 'blockedTablesNow'
     | 'totalCapacity'
+    | 'guestsNow'
+    | 'capacityOccupancyRateNow'
   >;
   lastUpdatedAt: string;
 }
@@ -161,8 +170,13 @@ export interface DashboardOverviewAnalyticsData {
     | 'guestsServedInRange'
   >;
   revenueByDay: Array<{ date: string; revenue: number }>;
+  revenueByHour: Array<{ hour: string; revenue: number }>;
+  revenueLast7ByDay: Array<{ date: string; revenue: number }>;
+  revenueLast30ByDay: Array<{ date: string; revenue: number }>;
   ordersByDay: Array<{ date: string; count: number }>;
+  ordersByHour: Array<{ hour: string; count: number }>;
   reservationsByDay: Array<{ date: string; count: number }>;
+  reservationsByHour: Array<{ hour: string; count: number }>;
   ordersByStatus: Record<string, number>;
   topItems: Array<{ name: string; quantity: number; revenue: number }>;
   topCategories: Array<{ category: string; quantity: number; revenue: number }>;
@@ -266,6 +280,7 @@ export function useDashboardOverviewData({
         .reduce((sum, table) => sum + (table.capacity ?? 0), 0);
 
       const activeReservationTableIds = new Set<string>();
+      let guestsNow = 0;
       for (const reservation of reservations) {
         const status = normalizeStatus((reservation as { status?: string }).status ?? null);
         if (RESERVATION_CLOSED_STATUSES.has(status)) continue;
@@ -280,6 +295,7 @@ export function useDashboardOverviewData({
           tableIds.has(String(reservation.table_id))
         ) {
           activeReservationTableIds.add(String(reservation.table_id));
+          guestsNow += Number((reservation as { party_size?: number }).party_size ?? 0);
         }
       }
 
@@ -306,6 +322,8 @@ export function useDashboardOverviewData({
       const tablesTotal = tableIds.size;
       const freeTablesNow = Math.max(0, tablesTotal - occupiedTablesNow);
       const occupancyRateNow = tablesTotal > 0 ? clampPercent((occupiedTablesNow / tablesTotal) * 100) : 0;
+      const capacityOccupancyRateNow =
+        totalCapacity > 0 ? clampPercent((guestsNow / totalCapacity) * 100) : 0;
 
       const activeBlocks = new Set<string>();
       const blockMap = new Map(blocks.map((block) => [String(block.id), block]));
@@ -350,6 +368,8 @@ export function useDashboardOverviewData({
           occupancyRateNow: roundTo(occupancyRateNow),
           blockedTablesNow: activeBlocks.size,
           totalCapacity,
+          guestsNow,
+          capacityOccupancyRateNow: roundTo(capacityOccupancyRateNow),
         },
         lastUpdatedAt: new Date().toISOString(),
       };
@@ -437,13 +457,42 @@ export function useDashboardOverviewData({
         date: day,
         revenue: Number(revenueStats.daily_revenue?.[day] ?? 0),
       }));
+      const hourlyStatsByHour = new Map<string, { order_count?: number; revenue?: number }>();
+      for (const [hourRaw, values] of Object.entries(hourlyStats)) {
+        const normalizedHour = String(hourRaw).padStart(2, '0');
+        hourlyStatsByHour.set(normalizedHour, values);
+      }
+      const allHours = Array.from({ length: 24 }, (_, hour) => String(hour).padStart(2, '0'));
+      const revenueByHour = allHours.map((hour) => ({
+        hour,
+        revenue: Number(hourlyStatsByHour.get(hour)?.revenue ?? 0),
+      }));
+      const revenueLast7ByDay = Array.from({ length: 7 }, (_, index) => {
+        const day = format(addDays(sevenDaysStart, index), 'yyyy-MM-dd');
+        return {
+          date: day,
+          revenue: Number(revenue7Stats.daily_revenue?.[day] ?? 0),
+        };
+      });
+      const revenueLast30ByDay = Array.from({ length: 30 }, (_, index) => {
+        const day = format(addDays(thirtyDaysStart, index), 'yyyy-MM-dd');
+        return {
+          date: day,
+          revenue: Number(revenue30Stats.daily_revenue?.[day] ?? 0),
+        };
+      });
 
       const ordersByDay = rangeDays.map((day, index) => ({
         date: day,
         count: Number(dailyInsightsRaw[index]?.orders_count ?? 0),
       }));
+      const ordersByHour = allHours.map((hour) => ({
+        hour,
+        count: Number(hourlyStatsByHour.get(hour)?.order_count ?? 0),
+      }));
 
       const reservationsByDayMap = new Map(rangeDays.map((day) => [day, 0]));
+      const reservationsByHourMap = new Map(allHours.map((hour) => [hour, 0]));
       for (const reservation of reservationsInRangeRaw) {
         const reservationDateRaw = (reservation as { start_at?: string }).start_at;
         if (!reservationDateRaw) continue;
@@ -452,10 +501,18 @@ export function useDashboardOverviewData({
         const day = format(parsed, 'yyyy-MM-dd');
         if (!reservationsByDayMap.has(day)) continue;
         reservationsByDayMap.set(day, (reservationsByDayMap.get(day) ?? 0) + 1);
+
+        const hour = String(parsed.getUTCHours()).padStart(2, '0');
+        if (!reservationsByHourMap.has(hour)) continue;
+        reservationsByHourMap.set(hour, (reservationsByHourMap.get(hour) ?? 0) + 1);
       }
       const reservationsByDay = rangeDays.map((day) => ({
         date: day,
         count: reservationsByDayMap.get(day) ?? 0,
+      }));
+      const reservationsByHour = allHours.map((hour) => ({
+        hour,
+        count: reservationsByHourMap.get(hour) ?? 0,
       }));
 
       const ordersByStatus = Object.entries(insights.orders_by_status ?? {}).reduce<Record<string, number>>((acc, [status, count]) => {
@@ -499,8 +556,13 @@ export function useDashboardOverviewData({
           guestsServedInRange: Number(insights.guests_served ?? 0),
         },
         revenueByDay,
+        revenueByHour,
+        revenueLast7ByDay,
+        revenueLast30ByDay,
         ordersByDay,
+        ordersByHour,
         reservationsByDay,
+        reservationsByHour,
         ordersByStatus,
         topItems: topItemsRaw.map((item) => ({
           name: item.item_name,
@@ -561,10 +623,17 @@ export function useDashboardOverviewData({
         occupancyRateNow: operationalKpis?.occupancyRateNow ?? 0,
         blockedTablesNow: operationalKpis?.blockedTablesNow ?? 0,
         totalCapacity: operationalKpis?.totalCapacity ?? 0,
+        guestsNow: operationalKpis?.guestsNow ?? 0,
+        capacityOccupancyRateNow: operationalKpis?.capacityOccupancyRateNow ?? 0,
       },
       revenueByDay: analytics?.revenueByDay ?? [],
+      revenueByHour: analytics?.revenueByHour ?? [],
+      revenueLast7ByDay: analytics?.revenueLast7ByDay ?? [],
+      revenueLast30ByDay: analytics?.revenueLast30ByDay ?? [],
       ordersByDay: analytics?.ordersByDay ?? [],
+      ordersByHour: analytics?.ordersByHour ?? [],
       reservationsByDay: analytics?.reservationsByDay ?? [],
+      reservationsByHour: analytics?.reservationsByHour ?? [],
       ordersByStatus: analytics?.ordersByStatus ?? {},
       topItems: analytics?.topItems ?? [],
       topCategories: analytics?.topCategories ?? [],

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   useEffect,
+  useId,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -20,7 +21,6 @@ import {
   AlertTriangle,
   BarChart3,
   Calendar,
-  Clock,
   CookingPot,
   Euro,
   LayoutGrid,
@@ -214,6 +214,159 @@ function KpiCard({
   );
 }
 
+function RevenueTrendKpiCard({
+  label,
+  value,
+  hint,
+  href,
+  icon,
+  trendData,
+  unavailable,
+  loading,
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+  href?: string;
+  icon?: ReactNode;
+  trendData: Array<{ key: string; shortLabel: string; tooltipLabel: string; revenue: number }>;
+  unavailable: boolean;
+  loading: boolean;
+}) {
+  const gradientId = useId();
+  const hasTrendData = !unavailable && trendData.length > 1;
+  const [hoveredRevenueDate, setHoveredRevenueDate] = useState<string | null>(null);
+  const [trendTooltip, setTrendTooltip] = useState<{
+    anchorX: number;
+    anchorY: number;
+    tooltipLabel: string;
+    revenue: number;
+  } | null>(null);
+  const maxRevenue = hasTrendData ? Math.max(...trendData.map((entry) => entry.revenue), 1) : 1;
+  const minRevenue = hasTrendData ? Math.min(...trendData.map((entry) => entry.revenue), 0) : 0;
+  const spread = Math.max(maxRevenue - minRevenue, 1);
+  const points = hasTrendData
+    ? trendData.map((entry, index) => {
+        const x = trendData.length === 1 ? 50 : (index / (trendData.length - 1)) * 100;
+        const normalized = (entry.revenue - minRevenue) / spread;
+        const y = 80 - normalized * 56;
+        return { x, y };
+      })
+    : [];
+  const polyline = points.map((point) => `${point.x},${point.y}`).join(" ");
+  const areaPath =
+    points.length > 0
+      ? `M ${points[0].x} 80 L ${points.map((point) => `${point.x} ${point.y}`).join(" L ")} L ${points[points.length - 1].x} 80 Z`
+      : "";
+
+  const content = (
+    <Card
+      className={`relative z-0 border-border bg-card/70 h-full hover:z-40 focus-within:z-40 ${DASHBOARD_CARD_HOVER_CLASS} ${
+        href ? "hover:bg-card hover:border-primary/50" : "hover:bg-card/80 hover:border-primary/30"
+      }`}
+    >
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+          {icon ? <span className="text-muted-foreground">{icon}</span> : null}
+        </div>
+      </CardHeader>
+      <CardContent className="relative min-h-[120px] space-y-1 overflow-hidden">
+        {trendTooltip ? (
+          <AdaptiveHoverTooltip anchorX={trendTooltip.anchorX} anchorY={trendTooltip.anchorY}>
+            {trendTooltip.tooltipLabel}: {formatCurrency(trendTooltip.revenue)}
+          </AdaptiveHoverTooltip>
+        ) : null}
+        {hasTrendData ? (
+          <div className="absolute inset-x-3 bottom-2 top-12">
+            <svg
+              viewBox="0 0 100 84"
+              preserveAspectRatio="none"
+              className="pointer-events-none h-full w-full opacity-80"
+              aria-hidden="true"
+            >
+              <defs>
+                <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="currentColor" stopOpacity="0.24" />
+                  <stop offset="100%" stopColor="currentColor" stopOpacity="0.04" />
+                </linearGradient>
+              </defs>
+              <path d={areaPath} fill={`url(#${gradientId})`} className="text-primary" />
+              <polyline
+                fill="none"
+                points={polyline}
+                stroke="currentColor"
+                className="text-primary"
+                strokeWidth="1.6"
+                strokeLinejoin="round"
+                strokeLinecap="round"
+              />
+            </svg>
+            <div
+              className="absolute inset-0 grid gap-x-0"
+              style={{ gridTemplateColumns: `repeat(${trendData.length}, minmax(0, 1fr))` }}
+            >
+              {trendData.map((entry) => (
+                <div
+                  key={entry.key}
+                  className={`h-full rounded-sm transition-colors ${
+                    hoveredRevenueDate === entry.key ? "bg-primary/10" : "hover:bg-accent/40"
+                  }`}
+                  onMouseEnter={(event) => {
+                    setHoveredRevenueDate(entry.key);
+                    setTrendTooltip({
+                      anchorX: event.clientX,
+                      anchorY: event.clientY,
+                      tooltipLabel: entry.tooltipLabel,
+                      revenue: entry.revenue,
+                    });
+                  }}
+                  onMouseMove={(event) => {
+                    setHoveredRevenueDate(entry.key);
+                    setTrendTooltip({
+                      anchorX: event.clientX,
+                      anchorY: event.clientY,
+                      tooltipLabel: entry.tooltipLabel,
+                      revenue: entry.revenue,
+                    });
+                  }}
+                  onMouseLeave={() => {
+                    setHoveredRevenueDate(null);
+                    setTrendTooltip(null);
+                  }}
+                  title={`${entry.tooltipLabel}: ${formatCurrency(entry.revenue)}`}
+                />
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div
+            className={`pointer-events-none absolute inset-x-3 bottom-2 top-12 rounded-md border border-dashed border-border/60 ${
+              loading ? "animate-pulse" : ""
+            }`}
+          />
+        )}
+        <div className="relative z-10 space-y-1">
+          <p className="text-2xl font-bold text-foreground">{value}</p>
+          {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  if (!href) return content;
+
+  return (
+    <Link
+      href={href}
+      className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      title={`Zu ${label}`}
+    >
+      {content}
+    </Link>
+  );
+}
+
 function DistributionKpiCard({
   label,
   value,
@@ -229,7 +382,7 @@ function DistributionKpiCard({
   hint?: string;
   href?: string;
   icon?: ReactNode;
-  distribution: Array<{ date: string; count: number }>;
+  distribution: Array<{ key: string; shortLabel: string; tooltipLabel: string; count: number }>;
   unavailable: boolean;
   loading: boolean;
 }) {
@@ -239,18 +392,18 @@ function DistributionKpiCard({
   const [distributionTooltip, setDistributionTooltip] = useState<{
     anchorX: number;
     anchorY: number;
-    date: string;
+    tooltipLabel: string;
     count: number;
   } | null>(null);
 
   const setDistributionTooltipFromMouse = (
     event: MouseEvent<HTMLDivElement>,
-    entry: { date: string; count: number }
+    entry: { key: string; shortLabel: string; tooltipLabel: string; count: number }
   ) => {
     setDistributionTooltip({
       anchorX: event.clientX,
       anchorY: event.clientY,
-      date: entry.date,
+      tooltipLabel: entry.tooltipLabel,
       count: entry.count,
     });
   };
@@ -277,7 +430,7 @@ function DistributionKpiCard({
                 anchorX={distributionTooltip.anchorX}
                 anchorY={distributionTooltip.anchorY}
               >
-                {formatGermanDate(distributionTooltip.date, true)}: {distributionTooltip.count}
+                {distributionTooltip.tooltipLabel}: {distributionTooltip.count}
               </AdaptiveHoverTooltip>
             ) : null}
             <div className="relative h-10" aria-label={`${label} Verteilung im Zeitraum`}>
@@ -287,9 +440,9 @@ function DistributionKpiCard({
               >
                 {distribution.map((entry) => (
                   <span
-                    key={entry.date}
+                    key={entry.key}
                     className={`block w-3/5 mx-auto rounded-t transition-opacity ${
-                      hoveredDistributionDate === entry.date ? "bg-primary opacity-100" : "bg-primary/75 opacity-90"
+                      hoveredDistributionDate === entry.key ? "bg-primary opacity-100" : "bg-primary/75 opacity-90"
                     }`}
                     style={{ height: `${Math.max(4, (entry.count / maxCount) * 36)}px` }}
                   />
@@ -301,30 +454,30 @@ function DistributionKpiCard({
               >
                 {distribution.map((entry) => (
                   <div
-                    key={entry.date}
+                    key={entry.key}
                     className={`h-full rounded-sm transition-colors ${
-                      hoveredDistributionDate === entry.date ? "bg-primary/10" : "hover:bg-accent/40"
+                      hoveredDistributionDate === entry.key ? "bg-primary/10" : "hover:bg-accent/40"
                     }`}
                     onMouseEnter={(event) => {
-                      setHoveredDistributionDate(entry.date);
+                      setHoveredDistributionDate(entry.key);
                       setDistributionTooltipFromMouse(event, entry);
                     }}
                     onMouseMove={(event) => {
-                      setHoveredDistributionDate(entry.date);
+                      setHoveredDistributionDate(entry.key);
                       setDistributionTooltipFromMouse(event, entry);
                     }}
                     onMouseLeave={() => {
                       setHoveredDistributionDate(null);
                       setDistributionTooltip(null);
                     }}
-                    title={`${formatGermanDate(entry.date, true)}: ${entry.count}`}
+                    title={`${entry.tooltipLabel}: ${entry.count}`}
                   />
                 ))}
               </div>
             </div>
             <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-              <span>{formatGermanDate(distribution[0].date)}</span>
-              <span>{formatGermanDate(distribution[distribution.length - 1].date)}</span>
+              <span>{distribution[0].shortLabel}</span>
+              <span>{distribution[distribution.length - 1].shortLabel}</span>
             </div>
           </div>
         ) : (
@@ -356,6 +509,9 @@ function OccupancyDonutCard({
   occupiedTablesNow,
   totalTables,
   blockedTablesNow,
+  totalCapacity,
+  guestsNow,
+  capacityOccupancyRateNow,
   unavailable,
   loading,
   href,
@@ -364,6 +520,9 @@ function OccupancyDonutCard({
   occupiedTablesNow: number;
   totalTables: number;
   blockedTablesNow: number;
+  totalCapacity: number;
+  guestsNow: number;
+  capacityOccupancyRateNow: number;
   unavailable: boolean;
   loading: boolean;
   href: string;
@@ -427,6 +586,14 @@ function OccupancyDonutCard({
               <p className="text-xs text-muted-foreground">{hint}</p>
               <p className="text-xs text-muted-foreground">
                 Blockiert: {unavailable ? "-" : formatNumber(blockedTablesNow)}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Personen:{" "}
+                {unavailable
+                  ? "-"
+                  : `${formatNumber(guestsNow)} / ${formatNumber(totalCapacity)} (${formatNumber(
+                      capacityOccupancyRateNow
+                    )}%)`}
               </p>
             </div>
           </div>
@@ -530,7 +697,7 @@ export default function DashboardLandingPage() {
   const [revenueTooltip, setRevenueTooltip] = useState<{
     anchorX: number;
     anchorY: number;
-    date: string;
+    tooltipLabel: string;
     revenue: number;
   } | null>(null);
   const [hoveredHourlyHour, setHoveredHourlyHour] = useState<string | null>(null);
@@ -584,12 +751,35 @@ export default function DashboardLandingPage() {
 
   const overview = overviewQuery.data;
 
-  const revenueMax = useMemo(() => {
-    if (!overview || overview.revenueByDay.length === 0) return 1;
-    return Math.max(...overview.revenueByDay.map((entry) => entry.revenue), 1);
-  }, [overview]);
+  const revenueTimeline = useMemo(() => {
+    if (!overview) return [] as Array<{ key: string; axisLabel: string; tooltipLabel: string; revenue: number }>;
 
-  const revenuePointCount = overview?.revenueByDay.length ?? 0;
+    if (rangePreset === "today") {
+      return (overview.revenueByHour ?? []).map((entry) => {
+        const hour = entry.hour.padStart(2, "0");
+        return {
+          key: hour,
+          axisLabel: hour,
+          tooltipLabel: `${hour}:00`,
+          revenue: entry.revenue,
+        };
+      });
+    }
+
+    return overview.revenueByDay.map((entry) => ({
+      key: entry.date,
+      axisLabel: formatGermanDate(entry.date),
+      tooltipLabel: formatGermanDate(entry.date, true),
+      revenue: entry.revenue,
+    }));
+  }, [overview, rangePreset]);
+
+  const revenueMax = useMemo(() => {
+    if (revenueTimeline.length === 0) return 1;
+    return Math.max(...revenueTimeline.map((entry) => entry.revenue), 1);
+  }, [revenueTimeline]);
+
+  const revenuePointCount = revenueTimeline.length;
   const revenueChartGridClass = useMemo(() => {
     if (revenuePointCount <= 7) {
       return "grid grid-cols-7 md:grid-cols-7 lg:grid-cols-7 gap-x-0 gap-y-2 min-h-56";
@@ -599,33 +789,33 @@ export default function DashboardLandingPage() {
   const revenueChartBarMaxHeight = revenuePointCount <= 7 ? 180 : 120;
   const revenueChartHoverZoneMinHeight = revenuePointCount <= 7 ? 180 : 120;
   const activeRevenueEntry = useMemo(() => {
-    if (!overview || overview.revenueByDay.length === 0) return null;
+    if (revenueTimeline.length === 0) return null;
     if (!hoveredRevenueDate) return null;
-    return overview.revenueByDay.find((entry) => entry.date === hoveredRevenueDate) ?? null;
-  }, [overview, hoveredRevenueDate]);
+    return revenueTimeline.find((entry) => entry.key === hoveredRevenueDate) ?? null;
+  }, [revenueTimeline, hoveredRevenueDate]);
 
   const setRevenueTooltipFromMouse = (
     event: MouseEvent<HTMLButtonElement>,
-    entry: { date: string; revenue: number }
+    entry: { key: string; axisLabel: string; tooltipLabel: string; revenue: number }
   ) => {
     setRevenueTooltip({
       anchorX: event.clientX,
       anchorY: event.clientY,
-      date: entry.date,
+      tooltipLabel: entry.tooltipLabel,
       revenue: entry.revenue,
     });
   };
 
   const setRevenueTooltipFromFocus = (
     event: FocusEvent<HTMLButtonElement>,
-    entry: { date: string; revenue: number }
+    entry: { key: string; axisLabel: string; tooltipLabel: string; revenue: number }
   ) => {
     const targetRect = event.currentTarget.getBoundingClientRect();
 
     setRevenueTooltip({
       anchorX: targetRect.left + targetRect.width / 2,
       anchorY: targetRect.top + targetRect.height / 2,
-      date: entry.date,
+      tooltipLabel: entry.tooltipLabel,
       revenue: entry.revenue,
     });
   };
@@ -703,6 +893,75 @@ export default function DashboardLandingPage() {
   const selectedRangeLabel = useMemo(() => {
     return RANGE_PRESETS.find((preset) => preset.id === rangePreset)?.label ?? "Zeitraum";
   }, [rangePreset]);
+
+  const revenueTrendData = useMemo(() => {
+    if (!overview) return [] as Array<{ key: string; shortLabel: string; tooltipLabel: string; revenue: number }>;
+
+    if (rangePreset === "today") {
+      return (overview.revenueByHour ?? []).map((entry) => {
+        const hour = entry.hour.padStart(2, "0");
+        return {
+          key: hour,
+          shortLabel: hour,
+          tooltipLabel: `${hour}:00`,
+          revenue: entry.revenue,
+        };
+      });
+    }
+
+    return overview.revenueByDay.map((entry) => ({
+      key: entry.date,
+      shortLabel: formatGermanDate(entry.date),
+      tooltipLabel: formatGermanDate(entry.date, true),
+      revenue: entry.revenue,
+    }));
+  }, [overview, rangePreset]);
+
+  const ordersDistributionData = useMemo(() => {
+    if (!overview) return [] as Array<{ key: string; shortLabel: string; tooltipLabel: string; count: number }>;
+
+    if (rangePreset === "today") {
+      return (overview.ordersByHour ?? []).map((entry) => {
+        const hour = entry.hour.padStart(2, "0");
+        return {
+          key: hour,
+          shortLabel: hour,
+          tooltipLabel: `${hour}:00`,
+          count: entry.count,
+        };
+      });
+    }
+
+    return overview.ordersByDay.map((entry) => ({
+      key: entry.date,
+      shortLabel: formatGermanDate(entry.date),
+      tooltipLabel: formatGermanDate(entry.date, true),
+      count: entry.count,
+    }));
+  }, [overview, rangePreset]);
+
+  const reservationsDistributionData = useMemo(() => {
+    if (!overview) return [] as Array<{ key: string; shortLabel: string; tooltipLabel: string; count: number }>;
+
+    if (rangePreset === "today") {
+      return (overview.reservationsByHour ?? []).map((entry) => {
+        const hour = entry.hour.padStart(2, "0");
+        return {
+          key: hour,
+          shortLabel: hour,
+          tooltipLabel: `${hour}:00`,
+          count: entry.count,
+        };
+      });
+    }
+
+    return overview.reservationsByDay.map((entry) => ({
+      key: entry.date,
+      shortLabel: formatGermanDate(entry.date),
+      tooltipLabel: formatGermanDate(entry.date, true),
+      count: entry.count,
+    }));
+  }, [overview, rangePreset]);
 
   const getCardNavigationProps = (href: string) => ({
     role: "link" as const,
@@ -956,17 +1215,6 @@ export default function DashboardLandingPage() {
                     href="/dashboard/orders"
                     icon={<CookingPot className="w-4 h-4" />}
                   />
-                  <KpiCard
-                    label="Reservierungen (Tag)"
-                    value={operationsValue(formatNumber(overview.kpis.reservationsToday))}
-                    hint={
-                      operationsUnavailable
-                        ? "Operative Daten laden oder nicht verfügbar"
-                        : `Gäste gesamt: ${formatNumber(overview.kpis.guestsToday)}`
-                    }
-                    href="/dashboard/reservations"
-                    icon={<Calendar className="w-4 h-4" />}
-                  />
                   <NoShowCancellationDonutCard
                     noShowRate={overview.kpis.noShowRate}
                     cancellationRate={overview.kpis.cancellationRate}
@@ -979,27 +1227,12 @@ export default function DashboardLandingPage() {
                     occupiedTablesNow={overview.kpis.occupiedTablesNow}
                     totalTables={overview.kpis.tablesTotal}
                     blockedTablesNow={overview.kpis.blockedTablesNow}
+                    totalCapacity={overview.kpis.totalCapacity}
+                    guestsNow={overview.kpis.guestsNow}
+                    capacityOccupancyRateNow={overview.kpis.capacityOccupancyRateNow}
                     unavailable={operationsUnavailable}
                     loading={operationsInitialLoading}
                     href="/dashboard/tischplan"
-                  />
-                  <KpiCard
-                    label="Freie Tische jetzt"
-                    value={operationsValue(formatNumber(overview.kpis.freeTablesNow))}
-                    hint={
-                      operationsUnavailable
-                        ? "Operative Daten laden oder nicht verfügbar"
-                        : `Blockiert: ${formatNumber(overview.kpis.blockedTablesNow)} · Kapazität: ${formatNumber(overview.kpis.totalCapacity)}`
-                    }
-                    href="/dashboard/tischplan"
-                    icon={<Clock className="w-4 h-4" />}
-                  />
-                  <KpiCard
-                    label="Aktive Blöcke jetzt"
-                    value={operationsValue(formatNumber(overview.kpis.blockedTablesNow))}
-                    hint={operationsUnavailable ? "Operative Daten laden oder nicht verfügbar" : "Tische mit laufender Blockierung"}
-                    href="/dashboard/tischplan"
-                    icon={<ShieldCheck className="w-4 h-4" />}
                   />
                 </div>
               </section>
@@ -1014,45 +1247,14 @@ export default function DashboardLandingPage() {
                   </span>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                  <KpiCard
-                    label="Umsatz Heute"
-                    value={analyticsValue(formatCurrency(overview.kpis.revenueToday))}
-                    hint={
-                      analyticsUnavailable
-                        ? "Analytics lädt oder nicht verfügbar"
-                        : format(selectedDate, "EEEE, d. MMMM yyyy", { locale: de })
-                    }
-                    href="/dashboard/order-statistics"
-                    icon={<Euro className="w-4 h-4" />}
-                  />
-                  <KpiCard
-                    label="Umsatz Letzte 7 Tage"
-                    value={analyticsValue(formatCurrency(overview.kpis.revenueLast7Days))}
-                    hint={
-                      analyticsUnavailable
-                        ? "Analytics lädt oder nicht verfügbar"
-                        : `${format(subDays(selectedDate, 6), "dd.MM.yyyy")} bis ${format(selectedDate, "dd.MM.yyyy")}`
-                    }
-                    href="/dashboard/order-statistics"
-                    icon={<Euro className="w-4 h-4" />}
-                  />
-                  <KpiCard
-                    label="Umsatz Letzte 30 Tage"
-                    value={analyticsValue(formatCurrency(overview.kpis.revenueLast30Days))}
-                    hint={
-                      analyticsUnavailable
-                        ? "Analytics lädt oder nicht verfügbar"
-                        : `${format(subDays(selectedDate, 29), "dd.MM.yyyy")} bis ${format(selectedDate, "dd.MM.yyyy")}`
-                    }
-                    href="/dashboard/order-statistics"
-                    icon={<Euro className="w-4 h-4" />}
-                  />
-                  <KpiCard
+                  <RevenueTrendKpiCard
                     label={`Umsatz (${selectedRangeLabel})`}
                     value={analyticsValue(formatCurrency(overview.kpis.revenueTotal))}
-                    hint={analyticsUnavailable ? "Analytics lädt oder nicht verfügbar" : `${overview.range.from} bis ${overview.range.to}`}
+                    trendData={revenueTrendData}
+                    unavailable={analyticsUnavailable}
+                    loading={analyticsInitialLoading}
                     href="/dashboard/order-statistics"
-                    icon={<BarChart3 className="w-4 h-4" />}
+                    icon={<Euro className="w-4 h-4" />}
                   />
                   <DistributionKpiCard
                     label={`Bestellungen (${selectedRangeLabel})`}
@@ -1062,7 +1264,7 @@ export default function DashboardLandingPage() {
                         ? "Analytics lädt oder nicht verfügbar"
                         : `Ø Bestellwert: ${formatCurrency(overview.kpis.avgOrderValue)}`
                     }
-                    distribution={overview.ordersByDay}
+                    distribution={ordersDistributionData}
                     unavailable={analyticsUnavailable}
                     loading={analyticsInitialLoading}
                     href="/dashboard/orders"
@@ -1076,7 +1278,7 @@ export default function DashboardLandingPage() {
                         ? "Analytics lädt oder nicht verfügbar"
                         : `Gäste im Zeitraum: ${formatNumber(overview.kpis.guestsServedInRange)}`
                     }
-                    distribution={overview.reservationsByDay}
+                    distribution={reservationsDistributionData}
                     unavailable={analyticsUnavailable}
                     loading={analyticsInitialLoading}
                     href="/dashboard/reservations"
@@ -1107,7 +1309,7 @@ export default function DashboardLandingPage() {
                     <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-100">
                       Umsatzverlauf konnte nicht geladen werden.
                     </div>
-                  ) : overview.revenueByDay.length === 0 ? (
+                  ) : revenueTimeline.length === 0 ? (
                     <div className="rounded-lg border border-border bg-background/40 p-4 text-sm text-muted-foreground">
                       Keine Umsatzdaten im ausgewählten Zeitraum.
                     </div>
@@ -1118,29 +1320,29 @@ export default function DashboardLandingPage() {
                           anchorX={revenueTooltip.anchorX}
                           anchorY={revenueTooltip.anchorY}
                         >
-                          {formatGermanDate(revenueTooltip.date, true)}:{" "}
+                          {revenueTooltip.tooltipLabel}:{" "}
                           {formatCurrency(revenueTooltip.revenue)}
                         </AdaptiveHoverTooltip>
                       ) : null}
                       <div className={revenueChartGridClass}>
-                        {overview.revenueByDay.map((entry) => (
-                          <div key={entry.date} className="flex min-h-0 flex-col gap-1">
+                        {revenueTimeline.map((entry, index) => (
+                          <div key={entry.key} className="flex min-h-0 flex-col gap-1">
                             <button
                               type="button"
                               className={`flex w-full cursor-pointer items-end rounded-md border transition-colors ${
-                                activeRevenueEntry?.date === entry.date
+                                activeRevenueEntry?.key === entry.key
                                   ? "border-primary/60 bg-primary/10"
                                   : "border-transparent hover:border-border hover:bg-accent/40"
                               }`}
                               style={{ minHeight: `${revenueChartHoverZoneMinHeight}px` }}
-                              title={`${formatGermanDate(entry.date, true)}: ${formatCurrency(entry.revenue)}`}
-                              aria-label={`Umsatz am ${formatGermanDate(entry.date, true)}: ${formatCurrency(entry.revenue)}`}
+                              title={`${entry.tooltipLabel}: ${formatCurrency(entry.revenue)}`}
+                              aria-label={`Umsatz ${entry.tooltipLabel}: ${formatCurrency(entry.revenue)}`}
                               onMouseEnter={(event) => {
-                                setHoveredRevenueDate(entry.date);
+                                setHoveredRevenueDate(entry.key);
                                 setRevenueTooltipFromMouse(event, entry);
                               }}
                               onMouseMove={(event) => {
-                                setHoveredRevenueDate(entry.date);
+                                setHoveredRevenueDate(entry.key);
                                 setRevenueTooltipFromMouse(event, entry);
                               }}
                               onMouseLeave={() => {
@@ -1148,7 +1350,7 @@ export default function DashboardLandingPage() {
                                 setRevenueTooltip(null);
                               }}
                               onFocus={(event) => {
-                                setHoveredRevenueDate(entry.date);
+                                setHoveredRevenueDate(entry.key);
                                 setRevenueTooltipFromFocus(event, entry);
                               }}
                               onBlur={() => {
@@ -1158,13 +1360,13 @@ export default function DashboardLandingPage() {
                             >
                               <span
                                 className={`w-full rounded-t bg-primary/75 transition-opacity ${
-                                  activeRevenueEntry?.date === entry.date ? "opacity-100" : "opacity-85"
+                                  activeRevenueEntry?.key === entry.key ? "opacity-100" : "opacity-85"
                                 }`}
                                 style={{ height: `${Math.max(6, (entry.revenue / revenueMax) * revenueChartBarMaxHeight)}px` }}
                               />
                             </button>
                             <span className="text-center text-[10px] text-muted-foreground">
-                              {formatGermanDate(entry.date)}
+                              {rangePreset === "today" ? (index % 2 === 0 ? entry.axisLabel : "") : entry.axisLabel}
                             </span>
                           </div>
                         ))}

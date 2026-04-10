@@ -163,7 +163,15 @@ function setupSuccessfulApiMocks() {
       average_order_value: 27.78,
       total_tips: 0,
       total_discounts: 0,
-      daily_revenue: {},
+      daily_revenue: {
+        "2026-04-03": 45,
+        "2026-04-04": 56,
+        "2026-04-05": 62,
+        "2026-04-06": 74,
+        "2026-04-07": 81,
+        "2026-04-08": 90,
+        "2026-04-09": 92,
+      },
     })
     .mockResolvedValueOnce({
       total_revenue: 1400,
@@ -171,7 +179,13 @@ function setupSuccessfulApiMocks() {
       average_order_value: 26.92,
       total_tips: 0,
       total_discounts: 0,
-      daily_revenue: {},
+      daily_revenue: {
+        "2026-03-11": 20,
+        "2026-03-18": 35,
+        "2026-03-25": 41,
+        "2026-04-02": 52,
+        "2026-04-09": 67,
+      },
     });
 
   mockedOrderStatisticsApi.getTopItems.mockResolvedValue([
@@ -217,11 +231,17 @@ describe("useDashboardOverviewData", () => {
     expect(result.current.data?.kpis.kitchenBacklog).toBe(1);
     expect(result.current.data?.kpis.occupiedTablesNow).toBe(1);
     expect(result.current.data?.kpis.blockedTablesNow).toBe(1);
+    expect(result.current.data?.kpis.guestsNow).toBe(2);
+    expect(result.current.data?.kpis.capacityOccupancyRateNow).toBeCloseTo(33.33, 2);
     expect(result.current.data?.kpis.revenueTotal).toBe(320);
     expect(result.current.data?.kpis.revenueToday).toBe(200);
     expect(result.current.data?.kpis.ordersTotal).toBe(12);
     expect(result.current.data?.range.from).toBe("2026-04-02");
     expect(result.current.data?.range.to).toBe("2026-04-09");
+    expect(result.current.data?.revenueLast7ByDay).toHaveLength(7);
+    expect(result.current.data?.revenueLast7ByDay.at(-1)?.date).toBe("2026-04-09");
+    expect(result.current.data?.revenueLast30ByDay).toHaveLength(30);
+    expect(result.current.data?.revenueLast30ByDay.at(-1)?.date).toBe("2026-04-09");
     expect(result.current.data?.ordersByDay.find((entry) => entry.date === "2026-04-09")?.count).toBe(2);
     expect(result.current.data?.reservationsByDay.find((entry) => entry.date === "2026-04-09")?.count).toBe(2);
 
