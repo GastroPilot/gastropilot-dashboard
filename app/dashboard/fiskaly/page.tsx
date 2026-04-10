@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { buildApiUrl, getApiBaseUrl, API_PREFIX } from "@/lib/api/config";
+import { getApiUrlForEndpoint } from "@/lib/api/client";
 import {
   getTssStatus,
   setupTss,
@@ -323,9 +323,12 @@ export default function FiskalyPage() {
   const handleDownloadExport = async (exportId: string) => {
     const token = localStorage.getItem("access_token");
     if (!token) return;
-    const url = buildApiUrl(getApiBaseUrl(), API_PREFIX, `/fiskaly/exports/${exportId}/download`);
+    const url = getApiUrlForEndpoint(`/fiskaly/exports/${exportId}/download`);
     try {
-      const resp = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+      const resp = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+        credentials: "include",
+      });
       if (!resp.ok) throw new Error("Download fehlgeschlagen");
       const blob = await resp.blob();
       const a = document.createElement("a");
