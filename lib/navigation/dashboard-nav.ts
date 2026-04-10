@@ -81,12 +81,6 @@ export function buildDashboardNavLinks({
       show: canManageRestaurant && !isGrundstatus,
     },
     {
-      href: "/dashboard/qr-codes",
-      label: "QR-Codes",
-      active: currentPath.startsWith("/dashboard/qr-codes"),
-      show: canManageRestaurant && !isGrundstatus,
-    },
-    {
       href: "/dashboard/guests",
       label: "Gäste / CRM",
       active: currentPath.startsWith("/dashboard/guests"),
@@ -175,7 +169,6 @@ const GROUP_ORDER: Array<{ title: string; hrefs: string[] }> = [
       "/dashboard/reservations",
       "/dashboard/orders",
       "/dashboard/menu",
-      "/dashboard/qr-codes",
       "/dashboard/order-statistics",
       "/dashboard/order-history",
       "/dashboard/hilfecenter",
