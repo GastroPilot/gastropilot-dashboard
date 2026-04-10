@@ -57,7 +57,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 const DASHBOARD_CARD_HOVER_CLASS =
-  "transform-gpu transition-all duration-200 ease-out motion-reduce:transition-none hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/10";
+  "transform-gpu shadow-md shadow-black/5 transition-all duration-200 ease-out motion-reduce:transition-none hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/10";
 const DASHBOARD_ROW_HOVER_CLASS =
   "transition-colors duration-200 ease-out motion-reduce:transition-none hover:bg-accent/60";
 
@@ -67,6 +67,7 @@ const TOOLTIP_EDGE_PADDING = 12;
 const TOOLTIP_ESTIMATED_WIDTH = 220;
 const TOOLTIP_ESTIMATED_HEIGHT = 38;
 const TOOLTIP_Z_INDEX = 9999;
+const REVENUE_STROKE_WIDTH = 1.2;
 
 function getAdaptiveTooltipPosition(
   anchorX: number,
@@ -143,6 +144,36 @@ function AdaptiveHoverTooltip({
     </div>,
     document.body
   );
+}
+
+function buildSmoothCurvePath(points: Array<{ x: number; y: number }>): string {
+  if (points.length === 0) return "";
+  if (points.length === 1) {
+    const point = points[0];
+    return `M ${point.x} ${point.y}`;
+  }
+
+  let path = `M ${points[0].x} ${points[0].y}`;
+
+  for (let index = 0; index < points.length - 1; index += 1) {
+    const p0 = index === 0 ? points[index] : points[index - 1];
+    const p1 = points[index];
+    const p2 = points[index + 1];
+    const p3 = index + 2 < points.length ? points[index + 2] : p2;
+
+    const cp1x = p1.x + (p2.x - p0.x) / 6;
+    const rawCp1y = p1.y + (p2.y - p0.y) / 6;
+    const cp2x = p2.x - (p3.x - p1.x) / 6;
+    const rawCp2y = p2.y - (p3.y - p1.y) / 6;
+    const segmentMinY = Math.min(p1.y, p2.y);
+    const segmentMaxY = Math.max(p1.y, p2.y);
+    const cp1y = Math.min(segmentMaxY, Math.max(segmentMinY, rawCp1y));
+    const cp2y = Math.min(segmentMaxY, Math.max(segmentMinY, rawCp2y));
+
+    path += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
+  }
+
+  return path;
 }
 
 function formatCurrency(value: number): string {
@@ -235,6 +266,13 @@ function RevenueTrendKpiCard({
 }) {
   const gradientId = useId();
   const hasTrendData = !unavailable && trendData.length > 1;
+  const xAxisLabels = useMemo(() => {
+    if (!hasTrendData || trendData.length === 0) return [] as string[];
+    const first = trendData[0]?.shortLabel ?? "";
+    const middle = trendData[Math.floor((trendData.length - 1) / 2)]?.shortLabel ?? "";
+    const last = trendData[trendData.length - 1]?.shortLabel ?? "";
+    return [first, middle, last];
+  }, [hasTrendData, trendData]);
   const [hoveredRevenueDate, setHoveredRevenueDate] = useState<string | null>(null);
   const [trendTooltip, setTrendTooltip] = useState<{
     anchorX: number;
@@ -279,63 +317,81 @@ function RevenueTrendKpiCard({
         ) : null}
         {hasTrendData ? (
           <div className="absolute inset-x-3 bottom-2 top-12">
-            <svg
-              viewBox="0 0 100 84"
-              preserveAspectRatio="none"
-              className="pointer-events-none h-full w-full opacity-80"
-              aria-hidden="true"
-            >
-              <defs>
-                <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="currentColor" stopOpacity="0.24" />
-                  <stop offset="100%" stopColor="currentColor" stopOpacity="0.04" />
-                </linearGradient>
-              </defs>
-              <path d={areaPath} fill={`url(#${gradientId})`} className="text-primary" />
-              <polyline
-                fill="none"
-                points={polyline}
-                stroke="currentColor"
-                className="text-primary"
-                strokeWidth="1.6"
-                strokeLinejoin="round"
-                strokeLinecap="round"
-              />
-            </svg>
-            <div
-              className="absolute inset-0 grid gap-x-0"
-              style={{ gridTemplateColumns: `repeat(${trendData.length}, minmax(0, 1fr))` }}
-            >
-              {trendData.map((entry) => (
-                <div
-                  key={entry.key}
-                  className={`h-full rounded-sm transition-colors ${
-                    hoveredRevenueDate === entry.key ? "bg-primary/10" : "hover:bg-accent/40"
-                  }`}
-                  onMouseEnter={(event) => {
-                    setHoveredRevenueDate(entry.key);
-                    setTrendTooltip({
-                      anchorX: event.clientX,
-                      anchorY: event.clientY,
-                      tooltipLabel: entry.tooltipLabel,
-                      revenue: entry.revenue,
-                    });
-                  }}
-                  onMouseMove={(event) => {
-                    setHoveredRevenueDate(entry.key);
-                    setTrendTooltip({
-                      anchorX: event.clientX,
-                      anchorY: event.clientY,
-                      tooltipLabel: entry.tooltipLabel,
-                      revenue: entry.revenue,
-                    });
-                  }}
-                  onMouseLeave={() => {
-                    setHoveredRevenueDate(null);
-                    setTrendTooltip(null);
-                  }}
-                  title={`${entry.tooltipLabel}: ${formatCurrency(entry.revenue)}`}
+            <div className="absolute inset-x-0 bottom-4 top-0">
+              <svg
+                viewBox="0 0 100 84"
+                preserveAspectRatio="none"
+                className="pointer-events-none h-full w-full opacity-80"
+                aria-hidden="true"
+              >
+                <defs>
+                  <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="currentColor" stopOpacity="0.24" />
+                    <stop offset="100%" stopColor="currentColor" stopOpacity="0.04" />
+                  </linearGradient>
+                </defs>
+                <line
+                  x1="0"
+                  y1="80"
+                  x2="100"
+                  y2="80"
+                  stroke="currentColor"
+                  className="text-border/90"
+                  strokeWidth={REVENUE_STROKE_WIDTH}
+                  vectorEffect="non-scaling-stroke"
                 />
+                <path d={areaPath} fill={`url(#${gradientId})`} className="text-primary" />
+                <polyline
+                  fill="none"
+                  points={polyline}
+                  stroke="currentColor"
+                  className="text-primary"
+                  strokeWidth={REVENUE_STROKE_WIDTH}
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                  vectorEffect="non-scaling-stroke"
+                />
+              </svg>
+              <div
+                className="absolute inset-0 grid gap-x-0"
+                style={{ gridTemplateColumns: `repeat(${trendData.length}, minmax(0, 1fr))` }}
+              >
+                {trendData.map((entry) => (
+                  <div
+                    key={entry.key}
+                    className={`h-full rounded-sm transition-colors ${
+                      hoveredRevenueDate === entry.key ? "bg-primary/10" : "hover:bg-accent/40"
+                    }`}
+                    onMouseEnter={(event) => {
+                      setHoveredRevenueDate(entry.key);
+                      setTrendTooltip({
+                        anchorX: event.clientX,
+                        anchorY: event.clientY,
+                        tooltipLabel: entry.tooltipLabel,
+                        revenue: entry.revenue,
+                      });
+                    }}
+                    onMouseMove={(event) => {
+                      setHoveredRevenueDate(entry.key);
+                      setTrendTooltip({
+                        anchorX: event.clientX,
+                        anchorY: event.clientY,
+                        tooltipLabel: entry.tooltipLabel,
+                        revenue: entry.revenue,
+                      });
+                    }}
+                    onMouseLeave={() => {
+                      setHoveredRevenueDate(null);
+                      setTrendTooltip(null);
+                    }}
+                    title={`${entry.tooltipLabel}: ${formatCurrency(entry.revenue)}`}
+                  />
+                ))}
+              </div>
+            </div>
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-between text-[10px] text-muted-foreground">
+              {xAxisLabels.map((label, index) => (
+                <span key={`${label}-${index}`}>{label}</span>
               ))}
             </div>
           </div>
@@ -779,20 +835,59 @@ export default function DashboardLandingPage() {
     return Math.max(...revenueTimeline.map((entry) => entry.revenue), 1);
   }, [revenueTimeline]);
 
+  const revenueAreaGradientId = useId();
   const revenuePointCount = revenueTimeline.length;
-  const revenueChartGridClass = useMemo(() => {
-    if (revenuePointCount <= 7) {
-      return "grid grid-cols-7 md:grid-cols-7 lg:grid-cols-7 gap-x-0 gap-y-2 min-h-56";
-    }
-    return "grid grid-cols-7 md:grid-cols-10 lg:grid-cols-12 gap-x-0 gap-y-2 min-h-40";
-  }, [revenuePointCount]);
-  const revenueChartBarMaxHeight = revenuePointCount <= 7 ? 180 : 120;
-  const revenueChartHoverZoneMinHeight = revenuePointCount <= 7 ? 180 : 120;
+  const revenueChartHeightClass = revenuePointCount <= 7 ? "h-64" : "h-48";
+  const revenueAxisLabelStep = useMemo(() => {
+    if (revenuePointCount <= 1) return 1;
+    if (rangePreset === "today") return 3;
+    if (revenuePointCount <= 7) return 1;
+    if (revenuePointCount <= 14) return 2;
+    return Math.ceil(revenuePointCount / 8);
+  }, [revenuePointCount, rangePreset]);
   const activeRevenueEntry = useMemo(() => {
     if (revenueTimeline.length === 0) return null;
     if (!hoveredRevenueDate) return null;
     return revenueTimeline.find((entry) => entry.key === hoveredRevenueDate) ?? null;
   }, [revenueTimeline, hoveredRevenueDate]);
+  const revenueLinePoints = useMemo(() => {
+    if (revenueTimeline.length === 0) {
+      return [] as Array<{
+        key: string;
+        axisLabel: string;
+        tooltipLabel: string;
+        revenue: number;
+        x: number;
+        y: number;
+      }>;
+    }
+
+    const plotTop = 8;
+    const plotBottom = 92;
+    const plotHeight = plotBottom - plotTop;
+
+    if (revenueTimeline.length === 1) {
+      const single = revenueTimeline[0];
+      const y = plotBottom - (single.revenue / revenueMax) * plotHeight;
+      return [{ ...single, x: 50, y }];
+    }
+
+    return revenueTimeline.map((entry, index) => {
+      const x = (index / (revenueTimeline.length - 1)) * 100;
+      const y = plotBottom - (entry.revenue / revenueMax) * plotHeight;
+      return { ...entry, x, y };
+    });
+  }, [revenueMax, revenueTimeline]);
+  const revenueSmoothPath = useMemo(() => {
+    if (revenueLinePoints.length === 0) return "";
+    return buildSmoothCurvePath(revenueLinePoints);
+  }, [revenueLinePoints]);
+  const revenueAreaPath = useMemo(() => {
+    if (revenueLinePoints.length === 0 || !revenueSmoothPath) return "";
+    const firstPoint = revenueLinePoints[0];
+    const lastPoint = revenueLinePoints[revenueLinePoints.length - 1];
+    return `${revenueSmoothPath} L ${lastPoint.x} 92 L ${firstPoint.x} 92 Z`;
+  }, [revenueLinePoints, revenueSmoothPath]);
 
   const setRevenueTooltipFromMouse = (
     event: MouseEvent<HTMLButtonElement>,
@@ -1066,7 +1161,7 @@ export default function DashboardLandingPage() {
 
   return (
     <div className="h-full overflow-y-auto bg-background text-foreground">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-16 space-y-6">
         <Card className={`border-border bg-card/70 ${DASHBOARD_CARD_HOVER_CLASS}`}>
           <CardContent className="pt-6 space-y-4">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -1314,7 +1409,7 @@ export default function DashboardLandingPage() {
                       Keine Umsatzdaten im ausgewählten Zeitraum.
                     </div>
                   ) : (
-                    <div className="relative overflow-x-hidden">
+                    <div className="relative overflow-x-hidden space-y-2">
                       {revenueTooltip ? (
                         <AdaptiveHoverTooltip
                           anchorX={revenueTooltip.anchorX}
@@ -1324,17 +1419,70 @@ export default function DashboardLandingPage() {
                           {formatCurrency(revenueTooltip.revenue)}
                         </AdaptiveHoverTooltip>
                       ) : null}
-                      <div className={revenueChartGridClass}>
-                        {revenueTimeline.map((entry, index) => (
-                          <div key={entry.key} className="flex min-h-0 flex-col gap-1">
+                      <div className={`relative rounded-md border border-border bg-background/40 ${revenueChartHeightClass}`}>
+                        <svg
+                          viewBox="0 0 100 100"
+                          preserveAspectRatio="none"
+                          className="absolute inset-0 h-full w-full"
+                          aria-hidden="true"
+                        >
+                          <defs>
+                            <linearGradient id={revenueAreaGradientId} x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="currentColor" stopOpacity="0.24" />
+                              <stop offset="100%" stopColor="currentColor" stopOpacity="0.05" />
+                            </linearGradient>
+                          </defs>
+                          <line
+                            x1="0"
+                            y1="92"
+                            x2="100"
+                            y2="92"
+                            stroke="currentColor"
+                            className="text-border"
+                            strokeWidth={REVENUE_STROKE_WIDTH}
+                            vectorEffect="non-scaling-stroke"
+                          />
+                          <line
+                            x1="0"
+                            y1="50"
+                            x2="100"
+                            y2="50"
+                            stroke="currentColor"
+                            className="text-border/60"
+                            strokeWidth={REVENUE_STROKE_WIDTH}
+                            vectorEffect="non-scaling-stroke"
+                          />
+                          {revenueAreaPath ? (
+                            <path d={revenueAreaPath} fill={`url(#${revenueAreaGradientId})`} className="text-primary" />
+                          ) : null}
+                          {revenueSmoothPath ? (
+                            <path
+                              d={revenueSmoothPath}
+                              fill="none"
+                              stroke="currentColor"
+                              className="text-primary"
+                              strokeWidth={REVENUE_STROKE_WIDTH}
+                              strokeLinejoin="round"
+                              strokeLinecap="round"
+                              vectorEffect="non-scaling-stroke"
+                            />
+                          ) : null}
+                        </svg>
+                        <div
+                          className="absolute inset-0 grid gap-x-0"
+                          style={{
+                            gridTemplateColumns: `repeat(${Math.max(1, revenueTimeline.length)}, minmax(0, 1fr))`,
+                          }}
+                        >
+                          {revenueTimeline.map((entry) => (
                             <button
+                              key={entry.key}
                               type="button"
-                              className={`flex w-full cursor-pointer items-end rounded-md border transition-colors ${
+                              className={`h-full w-full border-r border-border/40 last:border-r-0 transition-colors ${
                                 activeRevenueEntry?.key === entry.key
-                                  ? "border-primary/60 bg-primary/10"
-                                  : "border-transparent hover:border-border hover:bg-accent/40"
+                                  ? "bg-primary/10"
+                                  : "hover:bg-accent/40"
                               }`}
-                              style={{ minHeight: `${revenueChartHoverZoneMinHeight}px` }}
                               title={`${entry.tooltipLabel}: ${formatCurrency(entry.revenue)}`}
                               aria-label={`Umsatz ${entry.tooltipLabel}: ${formatCurrency(entry.revenue)}`}
                               onMouseEnter={(event) => {
@@ -1357,18 +1505,22 @@ export default function DashboardLandingPage() {
                                 setHoveredRevenueDate(null);
                                 setRevenueTooltip(null);
                               }}
-                            >
-                              <span
-                                className={`w-full rounded-t bg-primary/75 transition-opacity ${
-                                  activeRevenueEntry?.key === entry.key ? "opacity-100" : "opacity-85"
-                                }`}
-                                style={{ height: `${Math.max(6, (entry.revenue / revenueMax) * revenueChartBarMaxHeight)}px` }}
-                              />
-                            </button>
-                            <span className="text-center text-[10px] text-muted-foreground">
-                              {rangePreset === "today" ? (index % 2 === 0 ? entry.axisLabel : "") : entry.axisLabel}
-                            </span>
-                          </div>
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      <div
+                        className="grid gap-x-0 px-0.5"
+                        style={{
+                          gridTemplateColumns: `repeat(${Math.max(1, revenueTimeline.length)}, minmax(0, 1fr))`,
+                        }}
+                      >
+                        {revenueTimeline.map((entry, index) => (
+                          <span key={entry.key} className="text-center text-[10px] text-muted-foreground">
+                            {index % revenueAxisLabelStep === 0 || index === revenueTimeline.length - 1
+                              ? entry.axisLabel
+                              : ""}
+                          </span>
                         ))}
                       </div>
                     </div>

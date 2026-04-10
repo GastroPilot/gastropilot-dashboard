@@ -53,6 +53,10 @@ export function SiteFooter() {
     if (!pathname) return false;
     return ["/login", "/login-nfc"].some((p) => pathname.startsWith(p));
   }, [pathname]);
+  const isDashboardPage = useMemo(() => {
+    if (!pathname) return false;
+    return pathname.startsWith("/dashboard");
+  }, [pathname]);
 
   const currentYear = new Date().getFullYear();
 
@@ -76,7 +80,15 @@ export function SiteFooter() {
 
   if (isAuthPage) {
     return (
-      <footer className="fixed bottom-0 inset-x-0 py-3 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+      <footer className="fixed bottom-0 inset-x-0 z-40 border-t border-border bg-card/95 backdrop-blur px-4 py-2 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+        {versionContent}
+      </footer>
+    );
+  }
+
+  if (isDashboardPage) {
+    return (
+      <footer className="fixed bottom-0 inset-x-0 z-40 border-t border-border bg-card/95 backdrop-blur px-4 py-2 flex items-center justify-start gap-2 text-xs text-muted-foreground">
         {versionContent}
       </footer>
     );
