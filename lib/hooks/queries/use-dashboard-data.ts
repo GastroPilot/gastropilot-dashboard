@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { dashboardApi, DashboardData, KitchenData, InsightsData } from '@/lib/api/dashboard';
+import { dashboardApi, DashboardData, InsightsData } from '@/lib/api/dashboard';
 import { useDashboardDataStore } from '@/lib/stores/dashboard-store';
 import { useEffect } from 'react';
 
@@ -7,8 +7,6 @@ export const dashboardKeys = {
   all: ['dashboard'] as const,
   batch: (restaurantId: string, date?: string) =>
     [...dashboardKeys.all, 'batch', restaurantId, date] as const,
-  kitchen: (restaurantId: string) =>
-    [...dashboardKeys.all, 'kitchen', restaurantId] as const,
   insights: (restaurantId: string, from?: string, to?: string) =>
     [...dashboardKeys.all, 'insights', restaurantId, from, to] as const,
 };
@@ -57,23 +55,6 @@ export function useDashboardData(restaurantId: string | undefined, date?: Date) 
   }, [query.data, setRestaurant, setAreas, setAllTables, setAllObstacles, setReservations, setBlocks, setBlockAssignments, setOrders]);
   
   return query;
-}
-
-/**
- * Hook to fetch kitchen view data.
- * 
- * Optimized for kitchen display with:
- * - More frequent refetching
- * - Only active orders
- */
-export function useKitchenData(restaurantId: string | undefined) {
-  return useQuery({
-    queryKey: dashboardKeys.kitchen(restaurantId!),
-    queryFn: () => dashboardApi.getKitchenData(restaurantId!),
-    enabled: !!restaurantId,
-    staleTime: 5 * 1000, // 5 seconds - kitchen needs fresh data
-    refetchInterval: 15 * 1000, // Refetch every 15 seconds
-  });
 }
 
 /**
