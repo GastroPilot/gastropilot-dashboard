@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
-import Link from "next/link";
 import { restaurantsApi, Restaurant } from "@/lib/api/restaurants";
 import { reservationsApi, Reservation } from "@/lib/api/reservations";
 import { blocksApi, Block } from "@/lib/api/blocks";
@@ -17,7 +16,7 @@ import { SkeletonReservationCard } from "@/components/skeletons";
 import { DropdownSelector } from "@/components/area-selector";
 import { format, parseISO, startOfDay, endOfDay, isToday } from "date-fns";
 import { de } from "date-fns/locale";
-import { Ban, Calendar, Check, CheckCircle, ChevronDown, Clock, Filter, LayoutGrid, Mail, Phone, Users, XCircle, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { Ban, Calendar, Check, CheckCircle, ChevronDown, Clock, Filter, LayoutGrid, Mail, Phone, Users, XCircle, ChevronLeft, ChevronRight, Plus, Search } from "lucide-react";
 
 type ReservationFilter = Reservation["status"] | "block";
 const RESERVATION_STATUSES: Reservation["status"][] = [
@@ -452,33 +451,7 @@ export default function ReservationsPage() {
       <div className="bg-card border-b border-border px-4 py-3 shadow-sm">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2 min-w-0 shrink-0">
-            <div className="inline-flex items-center rounded-lg border border-border/70 bg-card/90 p-0.5 backdrop-blur-sm min-h-[32px] md:min-h-[36px]">
-              <Link
-                href="/dashboard/tischplan"
-                aria-label="Tischplan"
-                title="Tischplan"
-                className="inline-flex items-center justify-center px-3 py-1 rounded-md text-foreground border border-transparent hover:bg-muted min-h-[32px] md:min-h-[36px]"
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </Link>
-              <Link
-                href="/dashboard/timeline"
-                aria-label="Zeitplan"
-                title="Zeitplan"
-                className="inline-flex items-center justify-center px-3 py-1 rounded-md text-foreground border border-transparent hover:bg-muted min-h-[32px] md:min-h-[36px]"
-              >
-                <Clock className="w-4 h-4" />
-              </Link>
-              <button
-                type="button"
-                aria-current="page"
-                className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-primary text-white dark:text-foreground text-sm md:text-base font-semibold border border-primary/80 shadow-inner min-h-[32px] md:min-h-[36px]"
-              >
-                <Calendar className="w-4 h-4" />
-                Reservierungen
-              </button>
-            </div>
-            <div className="text-left ml-2 md:ml-4 border-l border-input pl-2 md:pl-4">
+            <div className="text-left">
               <div className="text-xs md:text-sm font-semibold text-foreground whitespace-nowrap">
                 {format(now, "EEEE, d. MMMM yyyy", { locale: de })}
               </div>
@@ -527,14 +500,15 @@ export default function ReservationsPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-          <div className="flex-1 relative md:col-span-1">
+        <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_14rem_14rem] gap-4 mt-4 items-start">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               type="text"
               placeholder="Suche nach Name, E-Mail, Telefon..."
               value={reservationSearchQuery}
               onChange={(e) => setReservationSearchQuery(e.target.value)}
-              className="pl-3 bg-background border-border text-foreground"
+              className="pl-10 bg-muted border-input text-foreground placeholder-muted-foreground"
             />
           </div>
           <DropdownSelector
@@ -544,7 +518,7 @@ export default function ReservationsPage() {
             placeholder="Alle Tische"
             triggerClassName="w-full rounded-lg border border-border bg-card text-foreground px-3 py-2 text-sm shadow-inner flex items-center justify-between gap-2 hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring min-h-[40px] touch-manipulation"
             menuAlign="right"
-            menuWidthClassName="w-64"
+            menuWidthClassName="w-56"
             menuClassName="max-h-[70vh] overflow-auto"
             zIndexClassName="z-[50]"
             renderSelected={(selected) => (
@@ -554,7 +528,7 @@ export default function ReservationsPage() {
               </div>
             )}
           />
-          <div className="relative md:col-span-1">
+          <div className="relative">
             <button
               type="button"
               onClick={() => setStatusMenuOpen((prev) => !prev)}
@@ -574,7 +548,7 @@ export default function ReservationsPage() {
               </div>
             </button>
             {statusMenuOpen && (
-              <div className="absolute right-0 mt-1 w-64 rounded-lg border border-border bg-background shadow-xl z-[50] max-h-[70vh] overflow-auto">
+              <div className="absolute left-0 mt-1 w-56 rounded-lg border border-border bg-background shadow-xl z-[50] max-h-[70vh] overflow-auto">
                 <button
                   type="button"
                   onClick={() => {

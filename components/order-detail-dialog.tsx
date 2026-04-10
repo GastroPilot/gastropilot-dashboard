@@ -1879,7 +1879,7 @@ export function OrderDetailDialog({
               </div>
             )}
 
-            <div className="flex items-center justify-between pt-2 border-t border-border">
+            <div className="flex items-center gap-2 py-2 border-t border-border">
               {canMutate && (
                 <Button
                   size="sm"
@@ -1892,7 +1892,7 @@ export function OrderDetailDialog({
                   Löschen
                 </Button>
               )}
-              <div className="flex items-center gap-2">
+              <div className="ml-auto flex items-center gap-2">
                 <Button
                   size="sm"
                   variant="outline"

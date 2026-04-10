@@ -1,7 +1,6 @@
 ﻿"use client";
 
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import Link from "next/link";
 import { restaurantsApi, Restaurant } from "@/lib/api/restaurants";
 import { areasApi, Area } from "@/lib/api/areas";
 import { tablesApi, Table } from "@/lib/api/tables";
@@ -12,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { LoadingOverlay } from "@/components/loading-overlay";
 import { format, parseISO, startOfDay, endOfDay, addMinutes } from "date-fns";
 import { de } from "date-fns/locale";
-import { Ban, Calendar, Check, ChevronDown, ChevronLeft, ChevronRight, Clock, LayoutGrid, Filter } from "lucide-react";
+import { Ban, Calendar, Check, ChevronDown, ChevronLeft, ChevronRight, Clock, Filter } from "lucide-react";
 import { ReservationDialog } from "@/components/reservation-dialog";
 import { useUserSettings } from "@/lib/hooks/use-user-settings";
 import { DropdownSelector } from "@/components/area-selector";
@@ -467,33 +466,7 @@ export default function TimelinePage() {
       <div className="bg-card border-b border-border px-4 py-3 shadow-sm shrink-0">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2 min-w-0 shrink-0">
-            <div className="inline-flex items-center rounded-lg border border-border/70 bg-card/90 p-0.5 backdrop-blur-sm min-h-[32px] md:min-h-[36px]">
-              <Link
-                href="/dashboard/tischplan"
-                aria-label="Tischplan"
-                title="Tischplan"
-                className="inline-flex items-center justify-center px-3 py-1 rounded-md text-foreground border border-transparent hover:bg-accent min-h-[32px] md:min-h-[36px]"
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </Link>
-              <button
-                type="button"
-                aria-current="page"
-                className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-primary text-white dark:text-foreground text-sm md:text-base font-semibold border border-primary/80 shadow-inner min-h-[32px] md:min-h-[36px]"
-              >
-                <Clock className="w-4 h-4" />
-                Zeitplan
-              </button>
-              <Link
-                href="/dashboard/reservations"
-                aria-label="Reservierungen"
-                title="Reservierungen"
-                className="inline-flex items-center justify-center px-3 py-1 rounded-md text-foreground border border-transparent hover:bg-accent min-h-[32px] md:min-h-[36px]"
-              >
-                <Calendar className="w-4 h-4" />
-              </Link>
-            </div>
-            <div className="text-left ml-2 md:ml-4 border-l border-input pl-2 md:pl-4">
+            <div className="text-left">
               <div className="text-xs md:text-sm font-semibold text-foreground whitespace-nowrap">
                 {format(now, "EEEE, d. MMMM yyyy", { locale: de })}
               </div>
