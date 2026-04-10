@@ -13,7 +13,7 @@ import { format, parseISO } from "date-fns";
 import { de } from "date-fns/locale";
 import { ShoppingCart, Table as TableIcon, Plus, Trash2, Euro, Users, FileText, X, CheckCircle, Clock, Search, Download, Check, ChevronDown, CreditCard, Banknote, Nfc, Loader2, AlertTriangle, XCircle, } from "lucide-react";
 import { confirmAction } from "@/lib/utils";
-import { buildApiUrl, getApiBaseUrl, API_PREFIX } from "@/lib/api/config";
+import { getApiUrlForEndpoint } from "@/lib/api/client";
 import { createReceipt, getTransactionForOrder } from "@/lib/api/fiskaly";
 
 type StatusMeta = { Icon: typeof Clock; tone: string; label: string };
@@ -837,14 +837,14 @@ export function OrderDetailDialog({
         return;
       }
 
-      // Verwende die zentrale API-Konfiguration
-      const pdfUrl = buildApiUrl(getApiBaseUrl(), API_PREFIX, `/invoices/${order.id}/pdf`);
+      const pdfUrl = getApiUrlForEndpoint(`/invoices/${order.id}/pdf`);
       const response = await fetch(
         pdfUrl,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
+          credentials: "include",
         }
       );
 

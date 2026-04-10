@@ -83,6 +83,11 @@ function resolveBaseUrlForEndpoint(endpoint: string): string {
   return baseUrl;
 }
 
+export function getApiUrlForEndpoint(endpoint: string): string {
+  const baseUrl = resolveBaseUrlForEndpoint(endpoint);
+  return buildApiUrl(baseUrl, API_PREFIX, endpoint);
+}
+
 /**
  * Globale Token-Refresh-Funktion mit Singleton-Pattern.
  * Verhindert Race Conditions bei parallelen API-Calls.
