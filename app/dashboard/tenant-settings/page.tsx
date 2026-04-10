@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Image from "next/image";
 import {
   Settings,
   Clock,
@@ -598,11 +599,14 @@ export default function TenantSettingsPage() {
               wide
             >
               <div className="space-y-3">
-                <div className="relative group w-full max-w-sm">
-                  <img
+                <div className="relative group w-full max-w-sm h-40">
+                  <Image
                     src={logoUrl || "/placeholder-restaurant.svg"}
                     alt="Restaurant-Titelbild"
-                    className="w-full h-40 object-cover rounded-lg border border-border"
+                    fill
+                    unoptimized
+                    sizes="(max-width: 640px) 100vw, 384px"
+                    className="object-cover rounded-lg border border-border"
                   />
                   {logoUrl && (
                     <button

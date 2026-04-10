@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import Image from "next/image";
 import { restaurantsApi, Restaurant } from "@/lib/api/restaurants";
 import { menuApi, MenuItem, MenuCategory } from "@/lib/api/menu";
 import { Button } from "@/components/ui/button";
@@ -723,9 +724,12 @@ export default function MenuPage() {
               </label>
               <div className="flex items-center gap-4">
                 {itemImageUrl && (
-                  <img
+                  <Image
                     src={itemImageUrl}
                     alt="Vorschau"
+                    width={64}
+                    height={64}
+                    unoptimized
                     className="w-16 h-16 rounded-lg object-cover border border-border"
                   />
                 )}
@@ -933,4 +937,3 @@ export default function MenuPage() {
     </div>
   );
 }
-

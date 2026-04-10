@@ -34,6 +34,13 @@ test.describe('Dashboard Access', () => {
     await page.waitForURL(/login/, { timeout: 10000 });
     await expect(page).toHaveURL(/login/);
   });
+
+  test('redirects to login when accessing tischplan without auth', async ({ page }) => {
+    await page.goto('/dashboard/tischplan', { waitUntil: 'domcontentloaded' });
+
+    await page.waitForURL(/login/, { timeout: 10000 });
+    await expect(page).toHaveURL(/login/);
+  });
 });
 
 test.describe('Login Page UI', () => {

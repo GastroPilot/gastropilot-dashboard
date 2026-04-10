@@ -34,9 +34,15 @@ export function buildDashboardNavLinks({
   const links: Array<DashboardNavLink & { show: boolean }> = [
     {
       href: "/dashboard",
-      label: "Dashboard",
+      label: "Übersicht",
       active: currentPath === "/dashboard",
       show: true,
+    },
+    {
+      href: "/dashboard/tischplan",
+      label: "Tischplan",
+      active: currentPath.startsWith("/dashboard/tischplan"),
+      show: !!user && !isGrundstatus,
     },
     {
       href: "/dashboard/orders",
@@ -158,6 +164,7 @@ const GROUP_ORDER: Array<{ title: string; hrefs: string[] }> = [
     title: "TAGESGESCHÄFT",
     hrefs: [
       "/dashboard",
+      "/dashboard/tischplan",
       "/dashboard/orders",
       "/dashboard/kitchen",
       "/dashboard/menu",

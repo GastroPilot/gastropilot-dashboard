@@ -469,7 +469,7 @@ export default function TimelinePage() {
           <div className="flex items-center gap-2 min-w-0 shrink-0">
             <div className="inline-flex items-center rounded-lg border border-border/70 bg-card/90 p-0.5 backdrop-blur-sm min-h-[32px] md:min-h-[36px]">
               <Link
-                href="/dashboard"
+                href="/dashboard/tischplan"
                 aria-label="Tischplan"
                 title="Tischplan"
                 className="inline-flex items-center justify-center px-3 py-1 rounded-md text-foreground border border-transparent hover:bg-accent min-h-[32px] md:min-h-[36px]"

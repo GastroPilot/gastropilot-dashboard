@@ -4,6 +4,7 @@ export * from './use-reservations';
 export * from './use-orders';
 export * from './use-tables';
 export * from './use-dashboard-data';
+export * from './use-dashboard-overview-data';
 
 // Re-export from parent folder
 export { useDashboardComputations } from '../use-dashboard-computations';

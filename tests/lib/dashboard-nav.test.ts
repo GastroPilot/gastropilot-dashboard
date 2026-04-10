@@ -30,6 +30,7 @@ describe("dashboard navigation model", () => {
     expect(allHrefs).toContain("/dashboard/restaurants");
     expect(allHrefs).toContain("/dashboard/user-settings");
     expect(allHrefs).toContain("/dashboard/audit-logs");
+    expect(allHrefs).not.toContain("/dashboard/tischplan");
 
     expect(allHrefs).not.toContain("/dashboard/orders");
     expect(allHrefs).not.toContain("/dashboard/menu");
@@ -45,6 +46,7 @@ describe("dashboard navigation model", () => {
     const allHrefs = hrefs(links);
 
     expect(allHrefs).toContain("/dashboard/orders");
+    expect(allHrefs).toContain("/dashboard/tischplan");
     expect(allHrefs).toContain("/dashboard/order-statistics");
     expect(allHrefs).toContain("/dashboard/tenant-settings");
 
@@ -79,6 +81,7 @@ describe("dashboard navigation model", () => {
     ]);
 
     expect(grouped[0].items[0].href).toBe("/dashboard");
+    expect(grouped[0].items.some((item) => item.href === "/dashboard/tischplan")).toBe(true);
     expect(grouped[0].items.some((item) => item.href === "/dashboard/orders")).toBe(true);
     expect(grouped[1].items.some((item) => item.href === "/dashboard/tenant-settings")).toBe(true);
     expect(grouped[2].items.some((item) => item.href === "/dashboard/user-settings")).toBe(true);
