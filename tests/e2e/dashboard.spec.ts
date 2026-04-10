@@ -28,8 +28,8 @@ test.describe('Dashboard Access', () => {
     await expect(page).toHaveURL(/login/);
   });
   
-  test('redirects to login when accessing orders without auth', async ({ page }) => {
-    await page.goto('/dashboard/orders', { waitUntil: 'domcontentloaded' });
+  test('redirects to login when accessing order history without auth', async ({ page }) => {
+    await page.goto('/dashboard/order-history', { waitUntil: 'domcontentloaded' });
     
     await page.waitForURL(/login/, { timeout: 10000 });
     await expect(page).toHaveURL(/login/);

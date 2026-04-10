@@ -1322,7 +1322,7 @@ export default function DashboardLandingPage() {
                         ? "Operative Daten laden oder nicht verfügbar"
                         : `Kitchen-Backlog: ${formatNumber(overview.kpis.kitchenBacklog)}`
                     }
-                    href="/dashboard/orders"
+                    href="/dashboard/order-history"
                     icon={<CookingPot className="w-4 h-4" />}
                   />
                   <NoShowCancellationDonutCard
@@ -1377,7 +1377,7 @@ export default function DashboardLandingPage() {
                     distribution={ordersDistributionData}
                     unavailable={analyticsUnavailable}
                     loading={analyticsInitialLoading}
-                    href="/dashboard/orders"
+                    href="/dashboard/order-history"
                     icon={<ShoppingCart className="w-4 h-4" />}
                   />
                   <DistributionKpiCard
@@ -1591,7 +1591,7 @@ export default function DashboardLandingPage() {
 
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
               <Card
-                {...getCardNavigationProps("/dashboard/orders")}
+                {...getCardNavigationProps("/dashboard/order-history")}
                 className={`border-border bg-card/70 ${DASHBOARD_CARD_HOVER_CLASS} cursor-pointer hover:bg-card hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
               >
                 <CardHeader>
