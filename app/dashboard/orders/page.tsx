@@ -199,19 +199,21 @@ export default function OrdersPage() {
     [updateSettings, addToast]
   );
 
-  const filteredOrders = orders.filter((order) => {
-    const statusesToUse = selectedStatuses.length ? selectedStatuses : ALL_STATUSES;
-    if (!statusesToUse.includes(order.status)) return false;
-    if (selectedTableId && order.table_id !== selectedTableId) return false;
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      const orderNumber = order.order_number?.toLowerCase() || "";
-      const table = tables.find((t) => t.id === order.table_id);
-      const tableNumber = table?.number.toLowerCase() || "";
-      return orderNumber.includes(query) || tableNumber.includes(query);
-    }
-    return true;
-  });
+  const filteredOrders = orders
+    .filter((order) => {
+      const statusesToUse = selectedStatuses.length ? selectedStatuses : ALL_STATUSES;
+      if (!statusesToUse.includes(order.status)) return false;
+      if (selectedTableId && order.table_id !== selectedTableId) return false;
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        const orderNumber = order.order_number?.toLowerCase() || "";
+        const table = tables.find((t) => t.id === order.table_id);
+        const tableNumber = table?.number.toLowerCase() || "";
+        return orderNumber.includes(query) || tableNumber.includes(query);
+      }
+      return true;
+    })
+    .sort((a, b) => parseISO(b.opened_at).getTime() - parseISO(a.opened_at).getTime());
   const hasActiveStatusFilter =
     selectedStatuses.length > 0 && selectedStatuses.length < ALL_STATUSES.length;
 

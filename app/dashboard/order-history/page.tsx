@@ -12,7 +12,6 @@ import {
   History,
   Calendar,
   Table as TableIcon,
-  User,
   Download,
   Filter,
   ShoppingCart,
@@ -223,22 +222,24 @@ export default function OrderHistoryPage() {
     }
   };
 
-  const filteredOrders = orders.filter((order) => {
-    const statusesToUse = selectedStatuses.length ? selectedStatuses : ALL_STATUSES;
-    if (!statusesToUse.includes(order.status)) return false;
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    const orderNumber = order.order_number?.toLowerCase() || "";
-    const tableNumber =
-      tables.find((table) => table.id === order.table_id)?.number?.toLowerCase() || "";
-    const guest = guests.find((g) => g.id === order.guest_id);
-    const guestName = guest ? `${guest.first_name} ${guest.last_name}`.toLowerCase() : "";
-    return (
-      orderNumber.includes(query) ||
-      tableNumber.includes(query) ||
-      guestName.includes(query)
-    );
-  });
+  const filteredOrders = orders
+    .filter((order) => {
+      const statusesToUse = selectedStatuses.length ? selectedStatuses : ALL_STATUSES;
+      if (!statusesToUse.includes(order.status)) return false;
+      if (!searchQuery) return true;
+      const query = searchQuery.toLowerCase();
+      const orderNumber = order.order_number?.toLowerCase() || "";
+      const tableNumber =
+        tables.find((table) => table.id === order.table_id)?.number?.toLowerCase() || "";
+      const guest = guests.find((g) => g.id === order.guest_id);
+      const guestName = guest ? `${guest.first_name} ${guest.last_name}`.toLowerCase() : "";
+      return (
+        orderNumber.includes(query) ||
+        tableNumber.includes(query) ||
+        guestName.includes(query)
+      );
+    })
+    .sort((a, b) => parseISO(b.opened_at).getTime() - parseISO(a.opened_at).getTime());
   const tableFilterOptions = [
     { id: "__all__", label: "Alle Tische" },
     ...[...tables]
@@ -316,6 +317,11 @@ export default function OrderHistoryPage() {
       style: "currency",
       currency: "EUR",
     }).format(amount);
+  };
+  const getPaymentStatusLabel = (status: Order["payment_status"]) => {
+    if (status === "paid") return "Bezahlt";
+    if (status === "partial") return "Teilweise";
+    return "Offen";
   };
 
 
@@ -548,7 +554,7 @@ export default function OrderHistoryPage() {
                 Bestellungen
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-0">
+            <CardContent className="pt-4">
               {filteredOrders.length === 0 ? (
                 <div className="flex flex-col items-center justify-center text-center py-10">
                   <History className="w-16 h-16 text-muted-foreground mb-4" />
@@ -558,47 +564,63 @@ export default function OrderHistoryPage() {
                   <p className="text-muted-foreground">Passen Sie die Filter an oder wählen Sie einen anderen Zeitraum</p>
                 </div>
               ) : (
-                <div className="space-y-4 py-4">
-                  <div className="space-y-3">
-                    {pagedOrders.map((order) => {
-                    const table = tables.find((t) => t.id === order.table_id);
-                    const guest = guests.find((g) => g.id === order.guest_id);
+                <div className="space-y-4">
+                  <div className="overflow-x-auto rounded-lg border border-border">
+                    <table className="w-full min-w-[980px] text-sm">
+                      <thead className="bg-muted/40">
+                        <tr className="text-left text-muted-foreground">
+                          <th className="px-4 py-3 font-medium">Bestellung</th>
+                          <th className="px-4 py-3 font-medium">Datum</th>
+                          <th className="px-4 py-3 font-medium">Tisch</th>
+                          <th className="px-4 py-3 font-medium">Gast</th>
+                          <th className="px-4 py-3 font-medium">Status</th>
+                          <th className="px-4 py-3 font-medium">Zahlung</th>
+                          <th className="px-4 py-3 font-medium text-right">Personen</th>
+                          <th className="px-4 py-3 font-medium text-right">Gesamt</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border bg-card">
+                        {pagedOrders.map((order) => {
+                          const table = tables.find((t) => t.id === order.table_id);
+                          const guest = guests.find((g) => g.id === order.guest_id);
+                          const statusMeta = STATUS_META[order.status];
+                          const StatusIcon = statusMeta.Icon;
 
-                    return (
-                      <div
-                        key={order.id}
-                        onClick={() => handleOrderClick(order)}
-                        className="bg-card border border-border rounded-lg p-4 hover:border-input transition-colors cursor-pointer"
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <div className="font-semibold text-foreground">
-                                {order.order_number || `#${order.id}`}
-                              </div>
-                              {table && (
-                                <div className="flex items-center gap-1 text-muted-foreground text-sm">
-                                  <TableIcon className="w-4 h-4" />
-                                  {table.number}
-                                </div>
-                              )}
-                              {guest && (
-                                <div className="flex items-center gap-1 text-muted-foreground text-sm">
-                                  <User className="w-4 h-4" />
-                                  {guest.first_name} {guest.last_name}
-                                </div>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                              <div className="flex items-center gap-1">
-                                <Calendar className="w-4 h-4" />
+                          return (
+                            <tr
+                              key={order.id}
+                              onClick={() => handleOrderClick(order)}
+                              onKeyDown={(event) => {
+                                if (event.key === "Enter" || event.key === " ") {
+                                  event.preventDefault();
+                                  void handleOrderClick(order);
+                                }
+                              }}
+                              role="button"
+                              tabIndex={0}
+                              className="cursor-pointer transition-colors hover:bg-accent/40 focus-visible:bg-accent/40 focus-visible:outline-none"
+                            >
+                              <td className="px-4 py-3">
+                                <span className="font-semibold text-foreground">
+                                  {order.order_number || `#${order.id}`}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
                                 {format(parseISO(order.opened_at), "dd.MM.yyyy HH:mm", { locale: de })}
-                              </div>
-                              <div>
-                                Status: <span className="text-muted-foreground">{order.status}</span>
-                              </div>
-                              <div>
-                                Zahlung:{" "}
+                              </td>
+                              <td className="px-4 py-3 text-muted-foreground">
+                                {table ? table.number : "-"}
+                              </td>
+                              <td className="px-4 py-3 text-muted-foreground">
+                                {guest ? `${guest.first_name} ${guest.last_name}` : "-"}
+                              </td>
+                              <td className="px-4 py-3">
+                                <span className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs ${statusMeta.tone}`}>
+                                  <StatusIcon className="h-3.5 w-3.5" />
+                                  {statusMeta.label}
+                                </span>
+                              </td>
+                              <td className="px-4 py-3">
                                 <span
                                   className={
                                     order.payment_status === "paid"
@@ -608,33 +630,33 @@ export default function OrderHistoryPage() {
                                       : "text-red-400"
                                   }
                                 >
-                                  {order.payment_status}
+                                  {getPaymentStatusLabel(order.payment_status)}
                                 </span>
-                              </div>
-                              {order.party_size && (
-                                <div>{order.party_size} Personen</div>
-                              )}
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <div className="text-xl font-bold text-foreground mb-1">
-                              {formatCurrency(order.total)}
-                            </div>
-                            {order.discount_amount > 0 && (
-                              <div className="text-xs text-red-400">
-                                Rabatt: {formatCurrency(order.discount_amount)}
-                              </div>
-                            )}
-                            {order.tip_amount > 0 && (
-                              <div className="text-xs text-green-400">
-                                Trinkgeld: {formatCurrency(order.tip_amount)}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                    })}
+                              </td>
+                              <td className="px-4 py-3 text-right text-muted-foreground">
+                                {order.party_size ?? "-"}
+                              </td>
+                              <td className="px-4 py-3 text-right">
+                                <div className="font-semibold text-foreground">
+                                  {formatCurrency(order.total)}
+                                </div>
+                                {(order.discount_amount > 0 || order.tip_amount > 0) && (
+                                  <div className="mt-0.5 text-xs">
+                                    {order.discount_amount > 0 && (
+                                      <span className="text-red-400">Rabatt: {formatCurrency(order.discount_amount)}</span>
+                                    )}
+                                    {order.discount_amount > 0 && order.tip_amount > 0 && <span className="text-muted-foreground"> · </span>}
+                                    {order.tip_amount > 0 && (
+                                      <span className="text-green-400">Trinkgeld: {formatCurrency(order.tip_amount)}</span>
+                                    )}
+                                  </div>
+                                )}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                   </div>
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-border pt-3 text-xs text-muted-foreground">
                     <div>
