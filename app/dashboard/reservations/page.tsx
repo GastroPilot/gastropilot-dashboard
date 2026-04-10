@@ -223,10 +223,6 @@ export default function ReservationsPage() {
 
   const filteredReservations = useMemo(() => {
     let items = reservations;
-
-    if (isToday(selectedDate)) {
-      items = items.filter((r) => parseISO(r.end_at) >= now);
-    }
     
     const reservationStatuses = selectedStatuses.filter((status): status is Reservation["status"] => status !== "block");
     const statusesToUse =
@@ -253,7 +249,7 @@ export default function ReservationsPage() {
     }
 
     return items;
-  }, [reservations, reservationSearchQuery, selectedStatuses, selectedTableId, selectedDate, now]);
+  }, [reservations, reservationSearchQuery, selectedStatuses, selectedTableId]);
 
   const showBlocks = selectedStatuses.length === 0 || selectedStatuses.includes("block");
   const blockTableNumbers = useMemo(() => {
