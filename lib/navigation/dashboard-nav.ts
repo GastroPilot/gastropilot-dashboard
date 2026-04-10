@@ -81,12 +81,6 @@ export function buildDashboardNavLinks({
       show: canManageRestaurant && !isGrundstatus,
     },
     {
-      href: "/dashboard/guests",
-      label: "Gäste / CRM",
-      active: currentPath.startsWith("/dashboard/guests"),
-      show: canManageRestaurant && !isGrundstatus,
-    },
-    {
       href: "/dashboard/restaurants",
       label: "Tenants",
       active: currentPath === "/dashboard/restaurants",
@@ -180,7 +174,6 @@ const GROUP_ORDER: Array<{ title: string; hrefs: string[] }> = [
       "/dashboard/restaurants",
       "/dashboard/tenant-settings",
       "/dashboard/operators",
-      "/dashboard/guests",
       "/dashboard/devices",
       "/dashboard/owner-insights",
       "/dashboard/ai-insights",
