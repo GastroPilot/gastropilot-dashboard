@@ -32,11 +32,12 @@ const ORDERS_SERVICE_ENDPOINT_PATTERN =
 const AI_SERVICE_ENDPOINT_PATTERN = /^\/ai(\/|$)/;
 
 function resolveBaseUrlForEndpoint(endpoint: string): string {
+  const endpointPath = endpoint.split("?")[0] || endpoint;
   const baseUrl = getApiBaseUrl();
   const isOrdersServiceEndpoint =
-    ORDERS_SERVICE_ENDPOINT_PATTERN.test(endpoint) ||
-    endpoint.startsWith("/webhooks/sumup");
-  const isAiServiceEndpoint = AI_SERVICE_ENDPOINT_PATTERN.test(endpoint);
+    ORDERS_SERVICE_ENDPOINT_PATTERN.test(endpointPath) ||
+    endpointPath.startsWith("/webhooks/sumup");
+  const isAiServiceEndpoint = AI_SERVICE_ENDPOINT_PATTERN.test(endpointPath);
 
   if (isAiServiceEndpoint) {
     const explicitAiBaseUrl = process.env.NEXT_PUBLIC_AI_API_BASE_URL;
