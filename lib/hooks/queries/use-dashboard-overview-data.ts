@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { addDays, differenceInCalendarDays, endOfDay, format, startOfDay, subDays } from 'date-fns';
 import { dashboardApi } from '@/lib/api/dashboard';
 import { orderStatisticsApi } from '@/lib/api/order-statistics';
+import { reservationsApi } from '@/lib/api/reservations';
 
 export type OverviewRangePreset = 'today' | '7d' | '30d' | 'custom';
 
@@ -113,6 +114,8 @@ export interface DashboardOverviewData {
   };
   kpis: DashboardOverviewKpis;
   revenueByDay: Array<{ date: string; revenue: number }>;
+  ordersByDay: Array<{ date: string; count: number }>;
+  reservationsByDay: Array<{ date: string; count: number }>;
   ordersByStatus: Record<string, number>;
   topItems: Array<{ name: string; quantity: number; revenue: number }>;
   topCategories: Array<{ category: string; quantity: number; revenue: number }>;
@@ -158,6 +161,8 @@ export interface DashboardOverviewAnalyticsData {
     | 'guestsServedInRange'
   >;
   revenueByDay: Array<{ date: string; revenue: number }>;
+  ordersByDay: Array<{ date: string; count: number }>;
+  reservationsByDay: Array<{ date: string; count: number }>;
   ordersByStatus: Record<string, number>;
   topItems: Array<{ name: string; quantity: number; revenue: number }>;
   topCategories: Array<{ category: string; quantity: number; revenue: number }>;
@@ -374,8 +379,32 @@ export function useDashboardOverviewData({
       const todayEnd = endOfDay(selectedDate);
       const sevenDaysStart = startOfDay(subDays(selectedDate, 6));
       const thirtyDaysStart = startOfDay(subDays(selectedDate, 29));
+      const rangeStartIso = `${resolvedRange.fromStr}T00:00:00Z`;
+      const rangeEndIso = `${resolvedRange.toStr}T23:59:59Z`;
+      const rangeDays = Array.from({ length: resolvedRange.rangeDays }, (_, index) =>
+        format(addDays(resolvedRange.from, index), 'yyyy-MM-dd')
+      );
+      const dailyInsightsPromise = Promise.all(
+        rangeDays.map((day) =>
+          dashboardApi.getInsightsData(restaurantId, {
+            fromDate: new Date(`${day}T12:00:00Z`),
+            toDate: new Date(`${day}T12:00:00Z`),
+          })
+        )
+      );
 
-      const [insights, revenueStats, revenueTodayStats, revenue7Stats, revenue30Stats, topItemsRaw, categoryStats, hourlyStats] = await Promise.all([
+      const [
+        insights,
+        revenueStats,
+        revenueTodayStats,
+        revenue7Stats,
+        revenue30Stats,
+        topItemsRaw,
+        categoryStats,
+        hourlyStats,
+        dailyInsightsRaw,
+        reservationsInRangeRaw,
+      ] = await Promise.all([
         dashboardApi.getInsightsData(restaurantId, {
           fromDate: resolvedRange.from,
           toDate: resolvedRange.to,
@@ -397,15 +426,37 @@ export function useDashboardOverviewData({
           start_date: `${resolvedRange.fromStr}T00:00:00Z`,
           end_date: `${resolvedRange.toStr}T23:59:59Z`,
         }),
+        dailyInsightsPromise,
+        reservationsApi.list(restaurantId, {
+          from: rangeStartIso,
+          to: rangeEndIso,
+        }),
       ]);
 
-      const revenueByDay = Array.from({ length: resolvedRange.rangeDays }, (_, index) => {
-        const day = format(addDays(resolvedRange.from, index), 'yyyy-MM-dd');
-        return {
-          date: day,
-          revenue: Number(revenueStats.daily_revenue?.[day] ?? 0),
-        };
-      });
+      const revenueByDay = rangeDays.map((day) => ({
+        date: day,
+        revenue: Number(revenueStats.daily_revenue?.[day] ?? 0),
+      }));
+
+      const ordersByDay = rangeDays.map((day, index) => ({
+        date: day,
+        count: Number(dailyInsightsRaw[index]?.orders_count ?? 0),
+      }));
+
+      const reservationsByDayMap = new Map(rangeDays.map((day) => [day, 0]));
+      for (const reservation of reservationsInRangeRaw) {
+        const reservationDateRaw = (reservation as { start_at?: string }).start_at;
+        if (!reservationDateRaw) continue;
+        const parsed = new Date(reservationDateRaw);
+        if (Number.isNaN(parsed.getTime())) continue;
+        const day = format(parsed, 'yyyy-MM-dd');
+        if (!reservationsByDayMap.has(day)) continue;
+        reservationsByDayMap.set(day, (reservationsByDayMap.get(day) ?? 0) + 1);
+      }
+      const reservationsByDay = rangeDays.map((day) => ({
+        date: day,
+        count: reservationsByDayMap.get(day) ?? 0,
+      }));
 
       const ordersByStatus = Object.entries(insights.orders_by_status ?? {}).reduce<Record<string, number>>((acc, [status, count]) => {
         const key = normalizeStatus(status);
@@ -448,6 +499,8 @@ export function useDashboardOverviewData({
           guestsServedInRange: Number(insights.guests_served ?? 0),
         },
         revenueByDay,
+        ordersByDay,
+        reservationsByDay,
         ordersByStatus,
         topItems: topItemsRaw.map((item) => ({
           name: item.item_name,
@@ -510,6 +563,8 @@ export function useDashboardOverviewData({
         totalCapacity: operationalKpis?.totalCapacity ?? 0,
       },
       revenueByDay: analytics?.revenueByDay ?? [],
+      ordersByDay: analytics?.ordersByDay ?? [],
+      reservationsByDay: analytics?.reservationsByDay ?? [],
       ordersByStatus: analytics?.ordersByStatus ?? {},
       topItems: analytics?.topItems ?? [],
       topCategories: analytics?.topCategories ?? [],

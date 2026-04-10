@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -12,6 +13,7 @@ import {
   type MouseEvent,
   type ReactNode,
 } from "react";
+import { createPortal } from "react-dom";
 import { format, subDays } from "date-fns";
 import { de } from "date-fns/locale";
 import {
@@ -59,6 +61,90 @@ const DASHBOARD_CARD_HOVER_CLASS =
 const DASHBOARD_ROW_HOVER_CLASS =
   "transition-colors duration-200 ease-out motion-reduce:transition-none hover:bg-accent/60";
 
+const TOOLTIP_X_OFFSET = 12;
+const TOOLTIP_Y_OFFSET = 12;
+const TOOLTIP_EDGE_PADDING = 12;
+const TOOLTIP_ESTIMATED_WIDTH = 220;
+const TOOLTIP_ESTIMATED_HEIGHT = 38;
+const TOOLTIP_Z_INDEX = 9999;
+
+function getAdaptiveTooltipPosition(
+  anchorX: number,
+  anchorY: number,
+  tooltipWidth: number,
+  tooltipHeight: number
+): { left: number; top: number } {
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+
+  let left = anchorX + TOOLTIP_X_OFFSET;
+  if (left + tooltipWidth > viewportWidth - TOOLTIP_EDGE_PADDING) {
+    left = anchorX - tooltipWidth - TOOLTIP_X_OFFSET;
+  }
+  if (left < TOOLTIP_EDGE_PADDING) {
+    left = Math.max(
+      TOOLTIP_EDGE_PADDING,
+      Math.min(anchorX - tooltipWidth / 2, viewportWidth - tooltipWidth - TOOLTIP_EDGE_PADDING)
+    );
+  }
+
+  let top = anchorY - tooltipHeight - TOOLTIP_Y_OFFSET;
+  if (top < TOOLTIP_EDGE_PADDING) {
+    top = anchorY + TOOLTIP_Y_OFFSET;
+  }
+  if (top + tooltipHeight > viewportHeight - TOOLTIP_EDGE_PADDING) {
+    top = viewportHeight - tooltipHeight - TOOLTIP_EDGE_PADDING;
+  }
+  if (top < TOOLTIP_EDGE_PADDING) {
+    top = TOOLTIP_EDGE_PADDING;
+  }
+
+  return { left, top };
+}
+
+function AdaptiveHoverTooltip({
+  anchorX,
+  anchorY,
+  children,
+}: {
+  anchorX: number;
+  anchorY: number;
+  children: ReactNode;
+}) {
+  const [mounted, setMounted] = useState(false);
+  const [size, setSize] = useState({ width: TOOLTIP_ESTIMATED_WIDTH, height: TOOLTIP_ESTIMATED_HEIGHT });
+  const tooltipRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useLayoutEffect(() => {
+    if (!mounted || !tooltipRef.current) return;
+    const rect = tooltipRef.current.getBoundingClientRect();
+    const nextWidth = Math.ceil(rect.width);
+    const nextHeight = Math.ceil(rect.height);
+    if (nextWidth !== size.width || nextHeight !== size.height) {
+      setSize({ width: nextWidth, height: nextHeight });
+    }
+  }, [mounted, size.height, size.width, anchorX, anchorY, children]);
+
+  if (!mounted) return null;
+
+  const { left, top } = getAdaptiveTooltipPosition(anchorX, anchorY, size.width, size.height);
+
+  return createPortal(
+    <div
+      ref={tooltipRef}
+      className="pointer-events-none fixed max-w-[260px] rounded-md border border-border bg-popover/95 px-2 py-1 text-[11px] font-semibold text-foreground shadow-sm"
+      style={{ left: `${left}px`, top: `${top}px`, zIndex: TOOLTIP_Z_INDEX }}
+    >
+      {children}
+    </div>,
+    document.body
+  );
+}
+
 function formatCurrency(value: number): string {
   return new Intl.NumberFormat("de-DE", {
     style: "currency",
@@ -98,7 +184,7 @@ function KpiCard({
 }) {
   const content = (
     <Card
-      className={`border-border bg-card/70 h-full ${DASHBOARD_CARD_HOVER_CLASS} ${
+      className={`relative z-0 border-border bg-card/70 h-full hover:z-40 focus-within:z-40 ${DASHBOARD_CARD_HOVER_CLASS} ${
         href ? "hover:bg-card hover:border-primary/50" : "hover:bg-card/80 hover:border-primary/30"
       }`}
     >
@@ -111,6 +197,143 @@ function KpiCard({
       <CardContent className="space-y-1">
         <p className="text-2xl font-bold text-foreground">{value}</p>
         {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
+      </CardContent>
+    </Card>
+  );
+
+  if (!href) return content;
+
+  return (
+    <Link
+      href={href}
+      className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      title={`Zu ${label}`}
+    >
+      {content}
+    </Link>
+  );
+}
+
+function DistributionKpiCard({
+  label,
+  value,
+  hint,
+  href,
+  icon,
+  distribution,
+  unavailable,
+  loading,
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+  href?: string;
+  icon?: ReactNode;
+  distribution: Array<{ date: string; count: number }>;
+  unavailable: boolean;
+  loading: boolean;
+}) {
+  const maxCount = distribution.length > 0 ? Math.max(...distribution.map((entry) => entry.count), 1) : 1;
+  const showDistribution = !unavailable && distribution.length > 0;
+  const [hoveredDistributionDate, setHoveredDistributionDate] = useState<string | null>(null);
+  const [distributionTooltip, setDistributionTooltip] = useState<{
+    anchorX: number;
+    anchorY: number;
+    date: string;
+    count: number;
+  } | null>(null);
+
+  const setDistributionTooltipFromMouse = (
+    event: MouseEvent<HTMLDivElement>,
+    entry: { date: string; count: number }
+  ) => {
+    setDistributionTooltip({
+      anchorX: event.clientX,
+      anchorY: event.clientY,
+      date: entry.date,
+      count: entry.count,
+    });
+  };
+
+  const content = (
+    <Card
+      className={`border-border bg-card/70 h-full ${DASHBOARD_CARD_HOVER_CLASS} ${
+        href ? "hover:bg-card hover:border-primary/50" : "hover:bg-card/80 hover:border-primary/30"
+      }`}
+    >
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+          {icon ? <span className="text-muted-foreground">{icon}</span> : null}
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        <p className="text-2xl font-bold text-foreground">{value}</p>
+        {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
+        {showDistribution ? (
+          <div className="relative space-y-1 overflow-x-hidden">
+            {distributionTooltip ? (
+              <AdaptiveHoverTooltip
+                anchorX={distributionTooltip.anchorX}
+                anchorY={distributionTooltip.anchorY}
+              >
+                {formatGermanDate(distributionTooltip.date, true)}: {distributionTooltip.count}
+              </AdaptiveHoverTooltip>
+            ) : null}
+            <div className="relative h-10" aria-label={`${label} Verteilung im Zeitraum`}>
+              <div
+                className="pointer-events-none grid h-full items-end gap-x-0"
+                style={{ gridTemplateColumns: `repeat(${distribution.length}, minmax(0, 1fr))` }}
+              >
+                {distribution.map((entry) => (
+                  <span
+                    key={entry.date}
+                    className={`block w-3/5 mx-auto rounded-t transition-opacity ${
+                      hoveredDistributionDate === entry.date ? "bg-primary opacity-100" : "bg-primary/75 opacity-90"
+                    }`}
+                    style={{ height: `${Math.max(4, (entry.count / maxCount) * 36)}px` }}
+                  />
+                ))}
+              </div>
+              <div
+                className="absolute inset-0 grid gap-x-0"
+                style={{ gridTemplateColumns: `repeat(${distribution.length}, minmax(0, 1fr))` }}
+              >
+                {distribution.map((entry) => (
+                  <div
+                    key={entry.date}
+                    className={`h-full rounded-sm transition-colors ${
+                      hoveredDistributionDate === entry.date ? "bg-primary/10" : "hover:bg-accent/40"
+                    }`}
+                    onMouseEnter={(event) => {
+                      setHoveredDistributionDate(entry.date);
+                      setDistributionTooltipFromMouse(event, entry);
+                    }}
+                    onMouseMove={(event) => {
+                      setHoveredDistributionDate(entry.date);
+                      setDistributionTooltipFromMouse(event, entry);
+                    }}
+                    onMouseLeave={() => {
+                      setHoveredDistributionDate(null);
+                      setDistributionTooltip(null);
+                    }}
+                    title={`${formatGermanDate(entry.date, true)}: ${entry.count}`}
+                  />
+                ))}
+              </div>
+            </div>
+            <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+              <span>{formatGermanDate(distribution[0].date)}</span>
+              <span>{formatGermanDate(distribution[distribution.length - 1].date)}</span>
+            </div>
+          </div>
+        ) : (
+          <div
+            className={`h-10 rounded border border-border bg-background/40 ${
+              loading ? "animate-pulse" : ""
+            }`}
+          />
+        )}
       </CardContent>
     </Card>
   );
@@ -305,20 +528,18 @@ export default function DashboardLandingPage() {
   const [customTo, setCustomTo] = useState<string>(format(new Date(), "yyyy-MM-dd"));
   const [hoveredRevenueDate, setHoveredRevenueDate] = useState<string | null>(null);
   const [revenueTooltip, setRevenueTooltip] = useState<{
-    x: number;
-    y: number;
+    anchorX: number;
+    anchorY: number;
     date: string;
     revenue: number;
   } | null>(null);
   const [hoveredHourlyHour, setHoveredHourlyHour] = useState<string | null>(null);
   const [hourlyTooltip, setHourlyTooltip] = useState<{
-    x: number;
-    y: number;
+    anchorX: number;
+    anchorY: number;
     hour: string;
     orderCount: number;
   } | null>(null);
-  const revenueChartRef = useRef<HTMLDivElement | null>(null);
-  const hourlyChartRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -387,16 +608,9 @@ export default function DashboardLandingPage() {
     event: MouseEvent<HTMLButtonElement>,
     entry: { date: string; revenue: number }
   ) => {
-    const chartElement = revenueChartRef.current;
-    if (!chartElement) return;
-
-    const chartRect = chartElement.getBoundingClientRect();
-    const x = Math.max(8, Math.min(event.clientX - chartRect.left, chartRect.width - 8));
-    const y = Math.max(18, event.clientY - chartRect.top);
-
     setRevenueTooltip({
-      x,
-      y,
+      anchorX: event.clientX,
+      anchorY: event.clientY,
       date: entry.date,
       revenue: entry.revenue,
     });
@@ -406,17 +620,11 @@ export default function DashboardLandingPage() {
     event: FocusEvent<HTMLButtonElement>,
     entry: { date: string; revenue: number }
   ) => {
-    const chartElement = revenueChartRef.current;
-    if (!chartElement) return;
-
-    const chartRect = chartElement.getBoundingClientRect();
     const targetRect = event.currentTarget.getBoundingClientRect();
-    const x = Math.max(8, Math.min(targetRect.left + targetRect.width / 2 - chartRect.left, chartRect.width - 8));
-    const y = Math.max(18, targetRect.top - chartRect.top + 16);
 
     setRevenueTooltip({
-      x,
-      y,
+      anchorX: targetRect.left + targetRect.width / 2,
+      anchorY: targetRect.top + targetRect.height / 2,
       date: entry.date,
       revenue: entry.revenue,
     });
@@ -470,16 +678,9 @@ export default function DashboardLandingPage() {
     event: MouseEvent<HTMLButtonElement>,
     entry: { hour: string; orderCount: number }
   ) => {
-    const chartElement = hourlyChartRef.current;
-    if (!chartElement) return;
-
-    const chartRect = chartElement.getBoundingClientRect();
-    const x = Math.max(8, Math.min(event.clientX - chartRect.left, chartRect.width - 8));
-    const y = Math.max(18, event.clientY - chartRect.top);
-
     setHourlyTooltip({
-      x,
-      y,
+      anchorX: event.clientX,
+      anchorY: event.clientY,
       hour: entry.hour,
       orderCount: entry.orderCount,
     });
@@ -489,17 +690,11 @@ export default function DashboardLandingPage() {
     event: FocusEvent<HTMLButtonElement>,
     entry: { hour: string; orderCount: number }
   ) => {
-    const chartElement = hourlyChartRef.current;
-    if (!chartElement) return;
-
-    const chartRect = chartElement.getBoundingClientRect();
     const targetRect = event.currentTarget.getBoundingClientRect();
-    const x = Math.max(8, Math.min(targetRect.left + targetRect.width / 2 - chartRect.left, chartRect.width - 8));
-    const y = Math.max(18, targetRect.top - chartRect.top + 16);
 
     setHourlyTooltip({
-      x,
-      y,
+      anchorX: targetRect.left + targetRect.width / 2,
+      anchorY: targetRect.top + targetRect.height / 2,
       hour: entry.hour,
       orderCount: entry.orderCount,
     });
@@ -859,7 +1054,7 @@ export default function DashboardLandingPage() {
                     href="/dashboard/order-statistics"
                     icon={<BarChart3 className="w-4 h-4" />}
                   />
-                  <KpiCard
+                  <DistributionKpiCard
                     label={`Bestellungen (${selectedRangeLabel})`}
                     value={analyticsValue(formatNumber(overview.kpis.ordersTotal))}
                     hint={
@@ -867,10 +1062,13 @@ export default function DashboardLandingPage() {
                         ? "Analytics lädt oder nicht verfügbar"
                         : `Ø Bestellwert: ${formatCurrency(overview.kpis.avgOrderValue)}`
                     }
+                    distribution={overview.ordersByDay}
+                    unavailable={analyticsUnavailable}
+                    loading={analyticsInitialLoading}
                     href="/dashboard/orders"
                     icon={<ShoppingCart className="w-4 h-4" />}
                   />
-                  <KpiCard
+                  <DistributionKpiCard
                     label={`Reservierungen (${selectedRangeLabel})`}
                     value={analyticsValue(formatNumber(overview.kpis.reservationsInRange))}
                     hint={
@@ -878,6 +1076,9 @@ export default function DashboardLandingPage() {
                         ? "Analytics lädt oder nicht verfügbar"
                         : `Gäste im Zeitraum: ${formatNumber(overview.kpis.guestsServedInRange)}`
                     }
+                    distribution={overview.reservationsByDay}
+                    unavailable={analyticsUnavailable}
+                    loading={analyticsInitialLoading}
                     href="/dashboard/reservations"
                     icon={<Users className="w-4 h-4" />}
                   />
@@ -888,7 +1089,7 @@ export default function DashboardLandingPage() {
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
               <Card
                 {...getCardNavigationProps("/dashboard/order-statistics")}
-                className={`xl:col-span-2 border-border bg-card/70 ${DASHBOARD_CARD_HOVER_CLASS} cursor-pointer hover:bg-card hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+                className={`relative z-0 xl:col-span-2 border-border bg-card/70 hover:z-40 focus-within:z-40 ${DASHBOARD_CARD_HOVER_CLASS} cursor-pointer hover:bg-card hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
               >
                 <CardHeader>
                   <div className="flex items-center gap-2">
@@ -911,19 +1112,15 @@ export default function DashboardLandingPage() {
                       Keine Umsatzdaten im ausgewählten Zeitraum.
                     </div>
                   ) : (
-                    <div ref={revenueChartRef} className="relative">
+                    <div className="relative overflow-x-hidden">
                       {revenueTooltip ? (
-                        <div
-                          className="pointer-events-none absolute z-20 whitespace-nowrap rounded-md border border-border bg-popover/95 px-2 py-1 text-[11px] font-semibold text-foreground shadow-sm"
-                          style={{
-                            left: `${revenueTooltip.x}px`,
-                            top: `${revenueTooltip.y}px`,
-                            transform: "translate(10px, calc(-100% - 10px))",
-                          }}
+                        <AdaptiveHoverTooltip
+                          anchorX={revenueTooltip.anchorX}
+                          anchorY={revenueTooltip.anchorY}
                         >
                           {formatGermanDate(revenueTooltip.date, true)}:{" "}
                           {formatCurrency(revenueTooltip.revenue)}
-                        </div>
+                        </AdaptiveHoverTooltip>
                       ) : null}
                       <div className={revenueChartGridClass}>
                         {overview.revenueByDay.map((entry) => (
@@ -979,7 +1176,7 @@ export default function DashboardLandingPage() {
 
               <Card
                 {...getCardNavigationProps("/dashboard/order-statistics")}
-                className={`border-border bg-card/70 ${DASHBOARD_CARD_HOVER_CLASS} cursor-pointer hover:bg-card hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+                className={`relative z-0 border-border bg-card/70 hover:z-40 focus-within:z-40 ${DASHBOARD_CARD_HOVER_CLASS} cursor-pointer hover:bg-card hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
               >
                 <CardHeader>
                   <div className="flex items-center gap-2">
@@ -1119,18 +1316,14 @@ export default function DashboardLandingPage() {
                   ) : !analyticsReady && overviewQuery.analytics.error ? (
                     <p className="text-amber-100">Stundenlast konnte nicht geladen werden.</p>
                   ) : hourlyOrdersSorted.length > 0 ? (
-                    <div ref={hourlyChartRef} className="relative space-y-2">
+                    <div className="relative space-y-2 overflow-x-hidden">
                       {hourlyTooltip ? (
-                        <div
-                          className="pointer-events-none absolute z-20 whitespace-nowrap rounded-md border border-border bg-popover/95 px-2 py-1 text-[11px] font-semibold text-foreground shadow-sm"
-                          style={{
-                            left: `${hourlyTooltip.x}px`,
-                            top: `${hourlyTooltip.y}px`,
-                            transform: "translate(10px, calc(-100% - 10px))",
-                          }}
+                        <AdaptiveHoverTooltip
+                          anchorX={hourlyTooltip.anchorX}
+                          anchorY={hourlyTooltip.anchorY}
                         >
                           {hourlyTooltip.hour.padStart(2, "0")}:00 • {hourlyTooltip.orderCount} Bestellungen
-                        </div>
+                        </AdaptiveHoverTooltip>
                       ) : null}
                       <div className="relative h-36 rounded-md border border-border bg-background/40">
                         <svg

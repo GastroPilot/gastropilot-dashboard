@@ -4,6 +4,7 @@ import { type ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { dashboardApi } from "@/lib/api/dashboard";
 import { orderStatisticsApi } from "@/lib/api/order-statistics";
+import { reservationsApi } from "@/lib/api/reservations";
 import { useDashboardOverviewData } from "@/lib/hooks/queries/use-dashboard-overview-data";
 
 vi.mock("@/lib/api/dashboard", () => ({
@@ -22,8 +23,15 @@ vi.mock("@/lib/api/order-statistics", () => ({
   },
 }));
 
+vi.mock("@/lib/api/reservations", () => ({
+  reservationsApi: {
+    list: vi.fn(),
+  },
+}));
+
 const mockedDashboardApi = vi.mocked(dashboardApi);
 const mockedOrderStatisticsApi = vi.mocked(orderStatisticsApi);
+const mockedReservationsApi = vi.mocked(reservationsApi);
 
 function createWrapper() {
   const queryClient = new QueryClient({
@@ -90,19 +98,43 @@ function setupSuccessfulApiMocks() {
     reservation_table_day_configs: [],
   } as any);
 
-  mockedDashboardApi.getInsightsData.mockResolvedValue({
-    total_revenue: 0,
-    orders_count: 12,
-    avg_order_value: 20,
-    reservations_count: 7,
-    guests_served: 18,
-    popular_items: [],
-    revenue_by_day: [],
-    orders_by_status: {
-      open: 3,
-      in_preparation: 2,
-      paid: 7,
-    },
+  mockedDashboardApi.getInsightsData.mockImplementation(async (_restaurantId, options) => {
+    const day = options?.fromDate ? options.fromDate.toISOString().slice(0, 10) : null;
+    const dayTo = options?.toDate ? options.toDate.toISOString().slice(0, 10) : null;
+
+    if (day && dayTo && day === dayTo) {
+      const dailyMap: Record<string, { orders_count: number; reservations_count: number }> = {
+        "2026-04-07": { orders_count: 0, reservations_count: 1 },
+        "2026-04-08": { orders_count: 1, reservations_count: 0 },
+        "2026-04-09": { orders_count: 2, reservations_count: 2 },
+      };
+      const daily = dailyMap[day] ?? { orders_count: 0, reservations_count: 0 };
+      return {
+        total_revenue: 0,
+        orders_count: daily.orders_count,
+        avg_order_value: 0,
+        reservations_count: daily.reservations_count,
+        guests_served: 0,
+        popular_items: [],
+        revenue_by_day: [],
+        orders_by_status: {},
+      };
+    }
+
+    return {
+      total_revenue: 0,
+      orders_count: 12,
+      avg_order_value: 20,
+      reservations_count: 7,
+      guests_served: 18,
+      popular_items: [],
+      revenue_by_day: [],
+      orders_by_status: {
+        open: 3,
+        in_preparation: 2,
+        paid: 7,
+      },
+    };
   });
 
   mockedOrderStatisticsApi.getRevenue
@@ -152,6 +184,12 @@ function setupSuccessfulApiMocks() {
     "12": { order_count: 3, revenue: 90 },
     "18": { order_count: 5, revenue: 180 },
   });
+
+  mockedReservationsApi.list.mockResolvedValue([
+    { id: "res-range-1", start_at: "2026-04-07T18:00:00Z" },
+    { id: "res-range-2", start_at: "2026-04-09T19:00:00Z" },
+    { id: "res-range-3", start_at: "2026-04-09T20:00:00Z" },
+  ] as any);
 }
 
 describe("useDashboardOverviewData", () => {
@@ -184,10 +222,13 @@ describe("useDashboardOverviewData", () => {
     expect(result.current.data?.kpis.ordersTotal).toBe(12);
     expect(result.current.data?.range.from).toBe("2026-04-02");
     expect(result.current.data?.range.to).toBe("2026-04-09");
+    expect(result.current.data?.ordersByDay.find((entry) => entry.date === "2026-04-09")?.count).toBe(2);
+    expect(result.current.data?.reservationsByDay.find((entry) => entry.date === "2026-04-09")?.count).toBe(2);
 
     expect(result.current.operations.lastUpdatedAt).toBeTruthy();
     expect(result.current.analytics.lastUpdatedAt).toBeTruthy();
     expect(mockedOrderStatisticsApi.getRevenue).toHaveBeenCalledTimes(4);
+    expect(mockedReservationsApi.list).toHaveBeenCalledTimes(1);
   });
 
   it("normalizes custom ranges when from-date is after to-date", async () => {
@@ -226,13 +267,13 @@ describe("useDashboardOverviewData", () => {
       wrapper: createWrapper(),
     });
 
-    await waitFor(() => expect(mockedDashboardApi.getInsightsData).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(mockedDashboardApi.getInsightsData).toHaveBeenCalledTimes(8));
 
     rerender({
       ...props,
       selectedDate: new Date("2026-04-10T11:00:00Z"),
     });
 
-    await waitFor(() => expect(mockedDashboardApi.getInsightsData).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(mockedDashboardApi.getInsightsData).toHaveBeenCalledTimes(16));
   });
 });
