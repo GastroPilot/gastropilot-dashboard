@@ -836,6 +836,7 @@ export default function DashboardLandingPage() {
   }, [revenueTimeline]);
 
   const revenueAreaGradientId = useId();
+  const hourlyAreaGradientId = useId();
   const revenuePointCount = revenueTimeline.length;
   const revenueChartHeightClass = revenuePointCount <= 7 ? "h-64" : "h-48";
   const revenueAxisLabelStep = useMemo(() => {
@@ -919,6 +920,14 @@ export default function DashboardLandingPage() {
     if (!overview) return [] as Array<[string, number]>;
     return Object.entries(overview.ordersByStatus).sort((a, b) => b[1] - a[1]);
   }, [overview]);
+  const topItemsMaxRevenue = useMemo(() => {
+    if (!overview || overview.topItems.length === 0) return 1;
+    return Math.max(...overview.topItems.map((item) => item.revenue), 1);
+  }, [overview]);
+  const topCategoriesMaxRevenue = useMemo(() => {
+    if (!overview || overview.topCategories.length === 0) return 1;
+    return Math.max(...overview.topCategories.map((category) => category.revenue), 1);
+  }, [overview]);
   const hourlyOrdersSorted = useMemo(() => {
     if (!overview) return [] as Array<{ hour: string; orderCount: number; revenue: number }>;
     return overview.hourlyOrders.slice().sort((a, b) => Number(a.hour) - Number(b.hour));
@@ -954,10 +963,16 @@ export default function DashboardLandingPage() {
     if (!hoveredHourlyHour || hourlyLinePoints.length === 0) return null;
     return hourlyLinePoints.find((point) => point.hour === hoveredHourlyHour) ?? null;
   }, [hoveredHourlyHour, hourlyLinePoints]);
-  const hourlyPolyline = useMemo(() => {
+  const hourlySmoothPath = useMemo(() => {
     if (hourlyLinePoints.length === 0) return "";
-    return hourlyLinePoints.map((point) => `${point.x},${point.y}`).join(" ");
+    return buildSmoothCurvePath(hourlyLinePoints);
   }, [hourlyLinePoints]);
+  const hourlyAreaPath = useMemo(() => {
+    if (hourlyLinePoints.length === 0 || !hourlySmoothPath) return "";
+    const firstPoint = hourlyLinePoints[0];
+    const lastPoint = hourlyLinePoints[hourlyLinePoints.length - 1];
+    return `${hourlySmoothPath} L ${lastPoint.x} 92 L ${firstPoint.x} 92 Z`;
+  }, [hourlyLinePoints, hourlySmoothPath]);
 
   const setHourlyTooltipFromMouse = (
     event: MouseEvent<HTMLButtonElement>,
@@ -1553,13 +1568,18 @@ export default function DashboardLandingPage() {
                     overview.topItems.map((item) => (
                       <div
                         key={item.name}
-                        className={`flex items-center justify-between rounded-md border border-border bg-background/50 px-3 py-2 ${DASHBOARD_ROW_HOVER_CLASS}`}
+                        className={`relative overflow-hidden flex items-center justify-between rounded-md border border-border bg-background/50 px-3 py-2 ${DASHBOARD_ROW_HOVER_CLASS}`}
                       >
-                        <div className="min-w-0">
+                        <span
+                          aria-hidden="true"
+                          className="pointer-events-none absolute inset-y-0 left-0 bg-primary/10"
+                          style={{ width: `${Math.max(0, Math.min(100, (item.revenue / topItemsMaxRevenue) * 100))}%` }}
+                        />
+                        <div className="relative z-10 min-w-0">
                           <p className="font-medium text-foreground truncate">{item.name}</p>
                           <p className="text-xs text-muted-foreground">{item.quantity} verkauft</p>
                         </div>
-                        <p className="font-semibold text-foreground">{formatCurrency(item.revenue)}</p>
+                        <p className="relative z-10 font-semibold text-foreground">{formatCurrency(item.revenue)}</p>
                       </div>
                     ))
                   ) : (
@@ -1629,9 +1649,16 @@ export default function DashboardLandingPage() {
                     overview.topCategories.map((category) => (
                       <div
                         key={category.category}
-                        className={`flex items-center justify-between rounded-md border border-border bg-background/50 px-3 py-2 ${DASHBOARD_ROW_HOVER_CLASS}`}
+                        className={`relative overflow-hidden flex items-center justify-between rounded-md border border-border bg-background/50 px-3 py-2 ${DASHBOARD_ROW_HOVER_CLASS}`}
                       >
-                        <div>
+                        <span
+                          aria-hidden="true"
+                          className="pointer-events-none absolute inset-y-0 left-0 bg-primary/10"
+                          style={{
+                            width: `${Math.max(0, Math.min(100, (category.revenue / topCategoriesMaxRevenue) * 100))}%`,
+                          }}
+                        />
+                        <div className="relative z-10">
                           <p className="font-medium text-foreground">
                             {!category.category || /^uncategorized$/i.test(category.category)
                               ? "Ohne Kategorie"
@@ -1639,7 +1666,7 @@ export default function DashboardLandingPage() {
                           </p>
                           <p className="text-xs text-muted-foreground">{category.quantity} Artikel</p>
                         </div>
-                        <p className="font-semibold text-foreground">{formatCurrency(category.revenue)}</p>
+                        <p className="relative z-10 font-semibold text-foreground">{formatCurrency(category.revenue)}</p>
                       </div>
                     ))
                   ) : (
@@ -1686,17 +1713,47 @@ export default function DashboardLandingPage() {
                           className="absolute inset-0 h-full w-full"
                           aria-hidden="true"
                         >
-                          <line x1="0" y1="92" x2="100" y2="92" stroke="currentColor" className="text-border" strokeWidth="0.6" />
-                          <line x1="0" y1="50" x2="100" y2="50" stroke="currentColor" className="text-border/60" strokeWidth="0.4" />
-                          <polyline
-                            fill="none"
+                          <defs>
+                            <linearGradient id={hourlyAreaGradientId} x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="currentColor" stopOpacity="0.22" />
+                              <stop offset="100%" stopColor="currentColor" stopOpacity="0.04" />
+                            </linearGradient>
+                          </defs>
+                          <line
+                            x1="0"
+                            y1="92"
+                            x2="100"
+                            y2="92"
                             stroke="currentColor"
-                            className="text-primary"
-                            strokeWidth="1.6"
-                            strokeLinejoin="round"
-                            strokeLinecap="round"
-                            points={hourlyPolyline}
+                            className="text-border"
+                            strokeWidth={REVENUE_STROKE_WIDTH}
+                            vectorEffect="non-scaling-stroke"
                           />
+                          <line
+                            x1="0"
+                            y1="50"
+                            x2="100"
+                            y2="50"
+                            stroke="currentColor"
+                            className="text-border/60"
+                            strokeWidth={REVENUE_STROKE_WIDTH}
+                            vectorEffect="non-scaling-stroke"
+                          />
+                          {hourlyAreaPath ? (
+                            <path d={hourlyAreaPath} fill={`url(#${hourlyAreaGradientId})`} className="text-primary" />
+                          ) : null}
+                          {hourlySmoothPath ? (
+                            <path
+                              d={hourlySmoothPath}
+                              fill="none"
+                              stroke="currentColor"
+                              className="text-primary"
+                              strokeWidth={REVENUE_STROKE_WIDTH}
+                              strokeLinejoin="round"
+                              strokeLinecap="round"
+                              vectorEffect="non-scaling-stroke"
+                            />
+                          ) : null}
                         </svg>
                         <div
                           className="absolute inset-0 grid gap-x-0"
