@@ -29,7 +29,7 @@ import { AreaSelector } from "@/components/area-selector";
 import { Button } from "@/components/ui/button";
 import { useUserSettings } from "@/lib/hooks/use-user-settings";
 import { useDashboardComputations } from "@/lib/hooks/use-dashboard-computations";
-import { Plus, ChevronLeft, ChevronRight, LayoutGrid, ShieldAlert, ZoomIn, ZoomOut, Clock, ShieldCheck, Calendar, BarChart3 } from "lucide-react";
+import { Plus, ChevronLeft, ChevronRight, ShieldAlert, ZoomIn, ZoomOut, ShieldCheck, Calendar } from "lucide-react";
 import { format, parseISO, startOfDay, endOfDay, isSameDay } from "date-fns";
 import { de } from "date-fns/locale";
 
@@ -752,41 +752,7 @@ export default function DashboardPage() {
         <div className="relative px-3 md:px-4 py-2 md:py-3">
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center gap-2 min-w-0 shrink-0">
-              <div className="inline-flex items-center rounded-lg border border-border bg-card p-0.5 backdrop-blur-sm min-h-[32px] md:min-h-[36px]">
-                <Link
-                  href="/dashboard"
-                  aria-label="Übersicht"
-                  title="Übersicht"
-                  className="inline-flex items-center justify-center px-3 py-1 rounded-md text-foreground border border-transparent hover:bg-accent min-h-[32px] md:min-h-[36px]"
-                >
-                  <BarChart3 className="w-4 h-4" />
-                </Link>
-                <button
-                  type="button"
-                  aria-current="page"
-                  className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-primary text-primary-foreground text-sm md:text-base font-semibold border border-primary/80 shadow-inner min-h-[32px] md:min-h-[36px]"
-                >
-                  <LayoutGrid className="w-4 h-4" />
-                  Tischplan
-                </button>
-                <Link
-                  href="/dashboard/timeline"
-                  aria-label="Zeitplan"
-                  title="Zeitplan"
-                  className="inline-flex items-center justify-center px-3 py-1 rounded-md text-foreground border border-transparent hover:bg-accent min-h-[32px] md:min-h-[36px]"
-                >
-                  <Clock className="w-4 h-4" />
-                </Link>
-                <Link
-                  href="/dashboard/reservations"
-                  aria-label="Reservierungen"
-                  title="Reservierungen"
-                  className="inline-flex items-center justify-center px-3 py-1 rounded-md text-foreground border border-transparent hover:bg-accent min-h-[32px] md:min-h-[36px]"
-                >
-                  <Calendar className="w-4 h-4" />
-                </Link>
-              </div>
-              <div className="text-left ml-2 md:ml-4 border-l border-input pl-2 md:pl-4">
+              <div className="text-left">
                 <div className="text-xs md:text-sm font-semibold text-foreground whitespace-nowrap">
                   {format(now, "EEEE, d. MMMM yyyy", { locale: de })}
                 </div>

@@ -80,7 +80,7 @@ export function SiteFooter() {
 
   if (isAuthPage) {
     return (
-      <footer className="fixed bottom-0 inset-x-0 z-40 border-t border-border bg-card/95 backdrop-blur px-4 py-2 flex items-center justify-center gap-2 text-xs text-muted-foreground">
+      <footer className="border-t border-border bg-card/95 backdrop-blur px-4 py-2 flex items-center justify-center gap-2 text-xs text-muted-foreground">
         {versionContent}
       </footer>
     );
@@ -88,7 +88,7 @@ export function SiteFooter() {
 
   if (isDashboardPage) {
     return (
-      <footer className="fixed bottom-0 inset-x-0 z-40 border-t border-border bg-card/95 backdrop-blur px-4 py-2 flex items-center justify-start gap-2 text-xs text-muted-foreground">
+      <footer className="border-t border-border bg-card/95 backdrop-blur px-4 py-2 flex items-center justify-start gap-2 text-xs text-muted-foreground">
         {versionContent}
       </footer>
     );
