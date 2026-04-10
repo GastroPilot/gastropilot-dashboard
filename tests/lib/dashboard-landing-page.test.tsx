@@ -184,10 +184,8 @@ describe("dashboard landing page", () => {
     render(<DashboardLandingPage />);
 
     await waitFor(() => expect(screen.getByText("Dashboard-Übersicht")).toBeDefined());
-    expect(screen.getByText("Sync-Strategie: Operativ alle 15s, Analytics alle 60s")).toBeDefined();
-    expect(screen.getByRole("link", { name: /Tischplan öffnen/i }).getAttribute("href")).toBe(
-      "/dashboard/tischplan"
-    );
+    expect(screen.getByText(/Zuletzt aktualisiert:/i)).toBeDefined();
+    expect(screen.queryByRole("link", { name: /Tischplan öffnen/i })).toBeNull();
     expect(screen.getByText("Umsatz Heute")).toBeDefined();
     expect(screen.getByText("Top Artikel")).toBeDefined();
   });
