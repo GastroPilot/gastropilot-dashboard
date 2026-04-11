@@ -48,7 +48,6 @@ describe("dashboard navigation model", () => {
     expect(allHrefs).toContain("/dashboard/order-history");
     expect(allHrefs).toContain("/dashboard/tischplan");
     expect(allHrefs).toContain("/dashboard/order-statistics");
-    expect(allHrefs).toContain("/dashboard/tenant-settings");
 
     expect(allHrefs).not.toContain("/dashboard/restaurants");
     expect(allHrefs).not.toContain("/dashboard/operators");
@@ -85,7 +84,6 @@ describe("dashboard navigation model", () => {
     expect(grouped[0].items[0].href).toBe("/dashboard");
     expect(grouped[1].items.some((item) => item.href === "/dashboard/tischplan")).toBe(true);
     expect(grouped[2].items.some((item) => item.href === "/dashboard/order-history")).toBe(true);
-    expect(grouped[3].items.some((item) => item.href === "/dashboard/tenant-settings")).toBe(true);
     expect(grouped[4].items.some((item) => item.href === "/dashboard/user-settings")).toBe(true);
   });
 });

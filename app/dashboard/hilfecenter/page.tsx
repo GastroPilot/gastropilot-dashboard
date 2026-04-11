@@ -76,9 +76,8 @@ const quickStartSteps: QuickStep[] = [
   {
     title: "Verwaltung einrichten",
     description:
-      "Restaurant-Einstellungen, Bediener, Geräte/KDS und Compliance-Bereiche (TSE) in der Verwaltung pflegen.",
+      "Bediener, Geräte/KDS und Compliance-Bereiche (TSE) in der Verwaltung pflegen.",
     links: [
-      { label: "Einstellungen", href: "/dashboard/tenant-settings" },
       { label: "Bedienerverwaltung", href: "/dashboard/operators" },
       { label: "Geräte / KDS", href: "/dashboard/devices" },
       { label: "TSE / KassenSichV", href: "/dashboard/fiskaly" },
@@ -144,14 +143,6 @@ const moduleGroups: Array<{ title: string; items: ModuleItem[] }> = [
   {
     title: "Verwaltung & System",
     items: [
-      {
-        title: "Restaurant-Einstellungen",
-        href: "/dashboard/tenant-settings",
-        description: "Stammdaten, Öffnungszeiten, Buchungsregeln, Slug/Links und Benachrichtigungen konfigurieren.",
-        highlights: ["Online-Buchung", "Bestellnummer-Präfix", "Push/E-Mail-Benachrichtigungen"],
-        roleHint: "Owner / Manager / Platform-Admin",
-        icon: Settings,
-      },
       {
         title: "Bedienerverwaltung",
         href: "/dashboard/operators",

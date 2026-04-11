@@ -27,7 +27,6 @@ export function buildDashboardNavLinks({
   isGrundstatus,
 }: DashboardNavBuildParams): DashboardNavLink[] {
   const currentPath = pathname ?? "";
-  const canManageRestaurant = hasAnyRole(user, ["platform_admin", "owner", "manager"]);
   const isOwner = hasAnyRole(user, ["platform_admin", "owner"]);
   const canViewAuditLogs = hasAnyRole(user, ["platform_admin", "owner", "manager"]);
 
@@ -73,12 +72,6 @@ export function buildDashboardNavLinks({
       label: "Tenants",
       active: currentPath === "/dashboard/restaurants",
       show: user?.role === "platform_admin",
-    },
-    {
-      href: "/dashboard/tenant-settings",
-      label: "Restaurant-Einstellungen",
-      active: currentPath === "/dashboard/tenant-settings",
-      show: canManageRestaurant && !isGrundstatus,
     },
     {
       href: "/dashboard/operators",
@@ -161,7 +154,6 @@ const GROUP_ORDER: Array<{ title: string; hrefs: string[] }> = [
     title: "VERWALTUNG",
     hrefs: [
       "/dashboard/restaurants",
-      "/dashboard/tenant-settings",
       "/dashboard/operators",
       "/dashboard/devices",
     ],
