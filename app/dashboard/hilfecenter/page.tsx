@@ -9,7 +9,6 @@ import {
   Calendar,
   CheckCircle2,
   CircleHelp,
-  CreditCard,
   FileClock,
   FileText,
   Filter,
@@ -156,14 +155,6 @@ const moduleGroups: Array<{ title: string; items: ModuleItem[] }> = [
         highlights: ["CSV/PDF-Export", "Statusfilter", "Zeitraum-Presets + Custom"],
         roleHint: "Owner / Platform-Admin",
         icon: BarChart3,
-      },
-      {
-        title: "Abonnement",
-        href: "/dashboard/billing",
-        description: "Plan auswählen, Upgrades starten und Billing-Portal öffnen.",
-        highlights: ["Planvergleich", "Checkout", "Abo-Status"],
-        roleHint: "Owner / Platform-Admin",
-        icon: CreditCard,
       },
       {
         title: "TSE / KassenSichV",

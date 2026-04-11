@@ -86,12 +86,6 @@ export function buildDashboardNavLinks({
       show: isOwner && !isGrundstatus,
     },
     {
-      href: "/dashboard/billing",
-      label: "Abonnement",
-      active: currentPath.startsWith("/dashboard/billing"),
-      show: isOwner && !isGrundstatus,
-    },
-    {
       href: "/dashboard/fiskaly",
       label: "TSE / KassenSichV",
       active: currentPath.startsWith("/dashboard/fiskaly"),
@@ -155,7 +149,6 @@ const GROUP_ORDER: Array<{ title: string; hrefs: string[] }> = [
     title: "CONTROLLING",
     hrefs: [
       "/dashboard/owner-insights",
-      "/dashboard/billing",
     ],
   },
   {
