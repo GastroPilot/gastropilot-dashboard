@@ -16,7 +16,6 @@ import {
   LayoutGrid,
   type LucideIcon,
   Monitor,
-  Package,
   Receipt,
   Settings,
   Shield,
@@ -77,9 +76,8 @@ const quickStartSteps: QuickStep[] = [
   {
     title: "Verwaltung einrichten",
     description:
-      "Menü, Restaurant-Einstellungen, Bediener, Geräte/KDS und Compliance-Bereiche (TSE) in der Verwaltung pflegen.",
+      "Restaurant-Einstellungen, Bediener, Geräte/KDS und Compliance-Bereiche (TSE) in der Verwaltung pflegen.",
     links: [
-      { label: "Menü", href: "/dashboard/menu" },
       { label: "Einstellungen", href: "/dashboard/tenant-settings" },
       { label: "Bedienerverwaltung", href: "/dashboard/operators" },
       { label: "Geräte / KDS", href: "/dashboard/devices" },
@@ -146,14 +144,6 @@ const moduleGroups: Array<{ title: string; items: ModuleItem[] }> = [
   {
     title: "Verwaltung & System",
     items: [
-      {
-        title: "Menü verwalten",
-        href: "/dashboard/menu",
-        description: "Kategorien und Artikel inklusive Bilder, Allergenen und Verfügbarkeit pflegen.",
-        highlights: ["Kategorie-/Artikeldialoge", "Bild-Upload", "Sortierreihenfolge"],
-        roleHint: "Owner / Manager / Platform-Admin",
-        icon: Package,
-      },
       {
         title: "Restaurant-Einstellungen",
         href: "/dashboard/tenant-settings",
@@ -253,7 +243,7 @@ const roleHints = [
   },
   {
     role: "Manager",
-    scope: "Operatives Management inkl. Reservierungen, Menü, Bestellstatistiken und Audit-Logs.",
+    scope: "Operatives Management inkl. Reservierungen, Bestellstatistiken und Audit-Logs.",
   },
   {
     role: "Mitarbeiter",
