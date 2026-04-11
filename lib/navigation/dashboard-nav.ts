@@ -74,12 +74,6 @@ export function buildDashboardNavLinks({
       show: user?.role === "platform_admin",
     },
     {
-      href: "/dashboard/devices",
-      label: "Geräte / KDS",
-      active: currentPath.startsWith("/dashboard/devices"),
-      show: isOwner && !isGrundstatus,
-    },
-    {
       href: "/dashboard/owner-insights",
       label: "Kennzahlen",
       active: currentPath.startsWith("/dashboard/owner-insights"),
@@ -142,7 +136,6 @@ const GROUP_ORDER: Array<{ title: string; hrefs: string[] }> = [
     title: "VERWALTUNG",
     hrefs: [
       "/dashboard/restaurants",
-      "/dashboard/devices",
     ],
   },
   {

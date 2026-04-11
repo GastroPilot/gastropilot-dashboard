@@ -14,7 +14,6 @@ import {
   Filter,
   LayoutGrid,
   type LucideIcon,
-  Monitor,
   Receipt,
   Settings,
   Shield,
@@ -72,13 +71,10 @@ const quickStartSteps: QuickStep[] = [
     icon: LayoutGrid,
   },
   {
-    title: "Verwaltung einrichten",
+    title: "Compliance einrichten",
     description:
-      "Geräte/KDS und Compliance-Bereiche (TSE) in der Verwaltung pflegen.",
-    links: [
-      { label: "Geräte / KDS", href: "/dashboard/devices" },
-      { label: "TSE / KassenSichV", href: "/dashboard/fiskaly" },
-    ],
+      "TSE / KassenSichV im Verwaltungsbereich einrichten und prüfen.",
+    links: [{ label: "TSE / KassenSichV", href: "/dashboard/fiskaly" }],
     icon: Wrench,
   },
 ];
@@ -140,14 +136,6 @@ const moduleGroups: Array<{ title: string; items: ModuleItem[] }> = [
   {
     title: "Verwaltung & System",
     items: [
-      {
-        title: "Geräte / KDS",
-        href: "/dashboard/devices",
-        description: "Kitchen-Display-Geräte registrieren, zuordnen und Tokens verwalten.",
-        highlights: ["Station wählen", "Online/Offline-Status", "Token erneuern"],
-        roleHint: "Owner / Platform-Admin",
-        icon: Monitor,
-      },
       {
         title: "Kennzahlen",
         href: "/dashboard/owner-insights",
