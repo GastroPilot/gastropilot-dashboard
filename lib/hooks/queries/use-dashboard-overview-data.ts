@@ -90,12 +90,14 @@ interface DashboardOverviewBaseKpis {
   revenuePrevious7Days: number;
   revenuePrevious30Days: number;
   ordersTotal: number;
+  ordersPreviousRange: number;
   ordersOpen: number;
   kitchenBacklog: number;
   avgOrderValue: number;
   reservationsToday: number;
   guestsToday: number;
   reservationsInRange: number;
+  reservationsPreviousRange: number;
   guestsServedInRange: number;
   noShowRate: number;
   cancellationRate: number;
@@ -173,8 +175,10 @@ export interface DashboardOverviewAnalyticsData {
     | 'revenuePrevious7Days'
     | 'revenuePrevious30Days'
     | 'ordersTotal'
+    | 'ordersPreviousRange'
     | 'avgOrderValue'
     | 'reservationsInRange'
+    | 'reservationsPreviousRange'
     | 'guestsServedInRange'
   >;
   revenueByDay: Array<{ date: string; revenue: number }>;
@@ -431,6 +435,7 @@ export function useDashboardOverviewData({
 
       const [
         insights,
+        previousRangeInsights,
         revenueStats,
         revenueTodayStats,
         revenue7Stats,
@@ -448,6 +453,10 @@ export function useDashboardOverviewData({
         dashboardApi.getInsightsData(restaurantId, {
           fromDate: resolvedRange.from,
           toDate: resolvedRange.to,
+        }),
+        dashboardApi.getInsightsData(restaurantId, {
+          fromDate: previousRangeStart,
+          toDate: previousRangeEnd,
         }),
         orderStatisticsApi.getRevenue(restaurantId, buildRangeParams(resolvedRange.from, resolvedRange.to)),
         orderStatisticsApi.getRevenue(restaurantId, buildRangeParams(todayStart, todayEnd)),
@@ -579,8 +588,10 @@ export function useDashboardOverviewData({
           revenuePrevious7Days: roundTo(Number(revenuePrevious7Stats.total_revenue ?? 0)),
           revenuePrevious30Days: roundTo(Number(revenuePrevious30Stats.total_revenue ?? 0)),
           ordersTotal: Number(revenueStats.total_orders ?? insights.orders_count ?? 0),
+          ordersPreviousRange: Number(previousRangeInsights.orders_count ?? 0),
           avgOrderValue: roundTo(Number(revenueStats.average_order_value ?? insights.avg_order_value ?? 0)),
           reservationsInRange: Number(insights.reservations_count ?? 0),
+          reservationsPreviousRange: Number(previousRangeInsights.reservations_count ?? 0),
           guestsServedInRange: Number(insights.guests_served ?? 0),
         },
         revenueByDay,
@@ -640,12 +651,14 @@ export function useDashboardOverviewData({
         revenuePrevious7Days: analyticsKpis?.revenuePrevious7Days ?? 0,
         revenuePrevious30Days: analyticsKpis?.revenuePrevious30Days ?? 0,
         ordersTotal: analyticsKpis?.ordersTotal ?? 0,
+        ordersPreviousRange: analyticsKpis?.ordersPreviousRange ?? 0,
         ordersOpen: operationalKpis?.ordersOpen ?? 0,
         kitchenBacklog: operationalKpis?.kitchenBacklog ?? 0,
         avgOrderValue: analyticsKpis?.avgOrderValue ?? 0,
         reservationsToday: operationalKpis?.reservationsToday ?? 0,
         guestsToday: operationalKpis?.guestsToday ?? 0,
         reservationsInRange: analyticsKpis?.reservationsInRange ?? 0,
+        reservationsPreviousRange: analyticsKpis?.reservationsPreviousRange ?? 0,
         guestsServedInRange: analyticsKpis?.guestsServedInRange ?? 0,
         noShowRate: operationalKpis?.noShowRate ?? 0,
         cancellationRate: operationalKpis?.cancellationRate ?? 0,

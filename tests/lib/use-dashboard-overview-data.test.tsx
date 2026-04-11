@@ -186,6 +186,61 @@ function setupSuccessfulApiMocks() {
         "2026-04-02": 52,
         "2026-04-09": 67,
       },
+    })
+    .mockResolvedValueOnce({
+      total_revenue: 280,
+      total_orders: 10,
+      average_order_value: 28,
+      total_tips: 0,
+      total_discounts: 0,
+      daily_revenue: {
+        "2026-03-25": 35,
+        "2026-03-26": 40,
+        "2026-03-27": 28,
+        "2026-03-28": 30,
+        "2026-03-29": 42,
+        "2026-03-30": 50,
+        "2026-03-31": 25,
+        "2026-04-01": 30,
+      },
+    })
+    .mockResolvedValueOnce({
+      total_revenue: 160,
+      total_orders: 5,
+      average_order_value: 32,
+      total_tips: 0,
+      total_discounts: 0,
+      daily_revenue: { "2026-04-08": 160 },
+    })
+    .mockResolvedValueOnce({
+      total_revenue: 430,
+      total_orders: 16,
+      average_order_value: 26.88,
+      total_tips: 0,
+      total_discounts: 0,
+      daily_revenue: {
+        "2026-03-27": 58,
+        "2026-03-28": 62,
+        "2026-03-29": 66,
+        "2026-03-30": 60,
+        "2026-03-31": 61,
+        "2026-04-01": 63,
+        "2026-04-02": 60,
+      },
+    })
+    .mockResolvedValueOnce({
+      total_revenue: 1320,
+      total_orders: 48,
+      average_order_value: 27.5,
+      total_tips: 0,
+      total_discounts: 0,
+      daily_revenue: {
+        "2026-02-10": 18,
+        "2026-02-17": 27,
+        "2026-02-24": 31,
+        "2026-03-03": 44,
+        "2026-03-10": 53,
+      },
     });
 
   mockedOrderStatisticsApi.getTopItems.mockResolvedValue([
@@ -236,6 +291,8 @@ describe("useDashboardOverviewData", () => {
     expect(result.current.data?.kpis.revenueTotal).toBe(320);
     expect(result.current.data?.kpis.revenueToday).toBe(200);
     expect(result.current.data?.kpis.ordersTotal).toBe(12);
+    expect(result.current.data?.kpis.ordersPreviousRange).toBe(12);
+    expect(result.current.data?.kpis.reservationsPreviousRange).toBe(7);
     expect(result.current.data?.range.from).toBe("2026-04-02");
     expect(result.current.data?.range.to).toBe("2026-04-09");
     expect(result.current.data?.revenueLast7ByDay).toHaveLength(7);
@@ -247,7 +304,7 @@ describe("useDashboardOverviewData", () => {
 
     expect(result.current.operations.lastUpdatedAt).toBeTruthy();
     expect(result.current.analytics.lastUpdatedAt).toBeTruthy();
-    expect(mockedOrderStatisticsApi.getRevenue).toHaveBeenCalledTimes(4);
+    expect(mockedOrderStatisticsApi.getRevenue).toHaveBeenCalledTimes(8);
     expect(mockedReservationsApi.list).toHaveBeenCalledTimes(1);
   });
 
@@ -287,13 +344,13 @@ describe("useDashboardOverviewData", () => {
       wrapper: createWrapper(),
     });
 
-    await waitFor(() => expect(mockedDashboardApi.getInsightsData).toHaveBeenCalledTimes(8));
+    await waitFor(() => expect(mockedDashboardApi.getInsightsData).toHaveBeenCalledTimes(9));
 
     rerender({
       ...props,
       selectedDate: new Date("2026-04-10T11:00:00Z"),
     });
 
-    await waitFor(() => expect(mockedDashboardApi.getInsightsData).toHaveBeenCalledTimes(16));
+    await waitFor(() => expect(mockedDashboardApi.getInsightsData).toHaveBeenCalledTimes(18));
   });
 });
