@@ -143,16 +143,25 @@ export function buildDashboardNavLinks({
 
 const GROUP_ORDER: Array<{ title: string; hrefs: string[] }> = [
   {
-    title: "TAGESGESCHÄFT",
+    title: "START",
     hrefs: [
       "/dashboard",
+    ],
+  },
+  {
+    title: "SERVICE",
+    hrefs: [
       "/dashboard/tischplan",
       "/dashboard/timeline",
       "/dashboard/reservations",
+    ],
+  },
+  {
+    title: "VERKAUF",
+    hrefs: [
       "/dashboard/menu",
       "/dashboard/order-statistics",
       "/dashboard/order-history",
-      "/dashboard/hilfecenter",
     ],
   },
   {
@@ -162,14 +171,23 @@ const GROUP_ORDER: Array<{ title: string; hrefs: string[] }> = [
       "/dashboard/tenant-settings",
       "/dashboard/operators",
       "/dashboard/devices",
-      "/dashboard/owner-insights",
-      "/dashboard/billing",
-      "/dashboard/fiskaly",
     ],
   },
   {
-    title: "SYSTEM",
-    hrefs: ["/dashboard/user-settings", "/dashboard/audit-logs"],
+    title: "CONTROLLING",
+    hrefs: [
+      "/dashboard/owner-insights",
+      "/dashboard/billing",
+    ],
+  },
+  {
+    title: "SYSTEM & SUPPORT",
+    hrefs: [
+      "/dashboard/fiskaly",
+      "/dashboard/audit-logs",
+      "/dashboard/user-settings",
+      "/dashboard/hilfecenter",
+    ],
   },
 ];
 

@@ -75,15 +75,17 @@ describe("dashboard navigation model", () => {
     const grouped = groupDashboardNavLinks(links);
 
     expect(grouped.map((group) => group.title)).toEqual([
-      "TAGESGESCHÄFT",
+      "START",
+      "SERVICE",
+      "VERKAUF",
       "VERWALTUNG",
-      "SYSTEM",
+      "SYSTEM & SUPPORT",
     ]);
 
     expect(grouped[0].items[0].href).toBe("/dashboard");
-    expect(grouped[0].items.some((item) => item.href === "/dashboard/tischplan")).toBe(true);
-    expect(grouped[0].items.some((item) => item.href === "/dashboard/order-history")).toBe(true);
-    expect(grouped[1].items.some((item) => item.href === "/dashboard/tenant-settings")).toBe(true);
-    expect(grouped[2].items.some((item) => item.href === "/dashboard/user-settings")).toBe(true);
+    expect(grouped[1].items.some((item) => item.href === "/dashboard/tischplan")).toBe(true);
+    expect(grouped[2].items.some((item) => item.href === "/dashboard/order-history")).toBe(true);
+    expect(grouped[3].items.some((item) => item.href === "/dashboard/tenant-settings")).toBe(true);
+    expect(grouped[4].items.some((item) => item.href === "/dashboard/user-settings")).toBe(true);
   });
 });

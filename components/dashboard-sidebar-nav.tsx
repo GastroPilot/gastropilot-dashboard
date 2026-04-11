@@ -166,7 +166,7 @@ export function SidebarGroup({
         )
       )}
       {expanded && (
-        <div className="space-y-1">
+        <div className="space-y-0">
           {group.items.map((link) => (
             <SidebarItem
               key={link.href}
@@ -243,7 +243,7 @@ export function DashboardSidebar({
   }
 
   return (
-    <div className={cn("py-3 space-y-3", className)} aria-label="Navigation">
+    <div className={cn("py-3 space-y-0", className)} aria-label="Navigation">
       {groups.map((group) => (
         <SidebarGroup
           key={group.title}
@@ -284,7 +284,7 @@ export function DashboardMobileGroupedNav({
       groups={groups}
       itemVariant="mobile"
       enableSubmenus={true}
-      className={cn("py-1 space-y-3", className)}
+      className={cn("py-1 space-y-0", className)}
       onNavigate={onNavigate}
     />
   );
