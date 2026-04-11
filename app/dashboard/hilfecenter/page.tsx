@@ -21,7 +21,6 @@ import {
   Shield,
   ShoppingCart,
   Users,
-  UserCog,
   Wrench,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -76,9 +75,8 @@ const quickStartSteps: QuickStep[] = [
   {
     title: "Verwaltung einrichten",
     description:
-      "Bediener, Geräte/KDS und Compliance-Bereiche (TSE) in der Verwaltung pflegen.",
+      "Geräte/KDS und Compliance-Bereiche (TSE) in der Verwaltung pflegen.",
     links: [
-      { label: "Bedienerverwaltung", href: "/dashboard/operators" },
       { label: "Geräte / KDS", href: "/dashboard/devices" },
       { label: "TSE / KassenSichV", href: "/dashboard/fiskaly" },
     ],
@@ -143,14 +141,6 @@ const moduleGroups: Array<{ title: string; items: ModuleItem[] }> = [
   {
     title: "Verwaltung & System",
     items: [
-      {
-        title: "Bedienerverwaltung",
-        href: "/dashboard/operators",
-        description: "Mitarbeiterkonten, Rollen, PIN und NFC-Tag-Zuordnung verwalten.",
-        highlights: ["Rollen pro Nutzer", "NFC-Login-ID", "Aktiv/Inaktiv-Status"],
-        roleHint: "Owner / Platform-Admin",
-        icon: UserCog,
-      },
       {
         title: "Geräte / KDS",
         href: "/dashboard/devices",
