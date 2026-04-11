@@ -27,7 +27,7 @@ import { classifyPaymentMethod, PAYMENT_BUCKET_LABEL, type PaymentBucket } from 
 const DASHBOARD_CARD_HOVER_CLASS =
   "transform-gpu shadow-md shadow-black/5 transition-all duration-200 ease-out motion-reduce:transition-none hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/10";
 const DASHBOARD_CARD_SURFACE_CLASS =
-  "relative z-0 h-full border-border bg-card/70 hover:z-40 focus-within:z-40 hover:bg-card/80 hover:border-primary/30";
+  "relative z-0 border-border bg-card/70 hover:z-40 focus-within:z-40 hover:bg-card/80 hover:border-primary/30";
 const DASHBOARD_ROW_HOVER_CLASS =
   "transition-colors duration-200 ease-out motion-reduce:transition-none hover:bg-accent/60";
 
@@ -298,7 +298,7 @@ export default function FinanceDailyClosePage() {
           </Card>
         ) : null}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 items-start">
           <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between gap-2">
@@ -353,7 +353,7 @@ export default function FinanceDailyClosePage() {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 items-start">
           <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader>
               <div className="flex items-center justify-between gap-2">
@@ -414,7 +414,7 @@ export default function FinanceDailyClosePage() {
                       title={`${String(entry.hour).padStart(2, "0")}:00 - ${formatCurrency(entry.revenue)} (${entry.count} Belege)`}
                     >
                       <div
-                        className={`h-24 w-full rounded border border-border/70 bg-background/40 overflow-hidden relative transition-colors ${
+                        className={`h-20 w-full rounded border border-border/70 bg-background/40 overflow-hidden relative transition-colors ${
                           hoveredHour === entry.hour ? "bg-accent/40" : ""
                         }`}
                       >

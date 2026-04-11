@@ -303,7 +303,7 @@ export default function OrderStatisticsPage() {
 
                   return (
                     <div key={hour} className="flex flex-col items-center">
-                      <div className="w-full h-32 bg-background/50 rounded-md border border-border relative overflow-hidden">
+                      <div className="w-full h-24 bg-background/50 rounded-md border border-border relative overflow-hidden">
                         {stats.revenue > 0 && (
                           <div
                             className="absolute bottom-0 left-0 right-0 bg-primary transition-all"

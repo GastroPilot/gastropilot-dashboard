@@ -76,7 +76,7 @@ const quickStartSteps: QuickStep[] = [
       "TSE / KassenSichV im Bereich Finanzen einrichten und prüfen.",
     links: [
       { label: "TSE / KassenSichV", href: "/dashboard/finanzen/tse" },
-      { label: "Finanzamt-Export", href: "/dashboard/finanzen/finanzamt-export" },
+      { label: "Finanzamt-Export", href: "/dashboard/finanzen/tse" },
     ],
     icon: Wrench,
   },
@@ -149,7 +149,7 @@ const moduleGroups: Array<{ title: string; items: ModuleItem[] }> = [
       },
       {
         title: "Finanzamt-Export",
-        href: "/dashboard/finanzen/finanzamt-export",
+        href: "/dashboard/finanzen/tse",
         description: "TSE-Exports erzeugen, Status überwachen und TAR-Archive herunterladen.",
         highlights: ["Export-Trigger", "Polling", "Download-Historie"],
         roleHint: "Owner / Platform-Admin",

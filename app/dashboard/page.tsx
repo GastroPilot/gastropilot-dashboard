@@ -197,11 +197,20 @@ function formatCurrency(value: number): string {
 }
 
 function formatCurrencyAxis(value: number): string {
-  return new Intl.NumberFormat("de-DE", {
-    style: "currency",
-    currency: "EUR",
-    maximumFractionDigits: 0,
-  }).format(value);
+  const abs = Math.abs(value);
+  if (abs >= 1_000_000) {
+    const compact = new Intl.NumberFormat("de-DE", {
+      maximumFractionDigits: abs >= 10_000_000 ? 0 : 1,
+    }).format(value / 1_000_000);
+    return `${compact}M€`;
+  }
+  if (abs >= 1000) {
+    const compact = new Intl.NumberFormat("de-DE", {
+      maximumFractionDigits: abs >= 10000 ? 0 : 1,
+    }).format(value / 1000);
+    return `${compact}k€`;
+  }
+  return `${new Intl.NumberFormat("de-DE", { maximumFractionDigits: 0 }).format(value)}€`;
 }
 
 function formatNumber(value: number): string {
@@ -209,9 +218,7 @@ function formatNumber(value: number): string {
 }
 
 function formatOrdersAxis(value: number): string {
-  const rounded = value >= 10 ? Math.round(value) : Math.round(value * 10) / 10;
-  const maximumFractionDigits = rounded >= 10 ? 0 : 1;
-  return new Intl.NumberFormat("de-DE", { maximumFractionDigits }).format(rounded);
+  return new Intl.NumberFormat("de-DE", { maximumFractionDigits: 0 }).format(Math.round(value));
 }
 
 function formatCategoryLabel(category: string | null | undefined): string {
@@ -298,7 +305,7 @@ function KpiCard({
 }) {
   const content = (
     <Card
-      className={`relative z-0 border-border bg-card/70 h-full hover:z-40 focus-within:z-40 ${DASHBOARD_CARD_HOVER_CLASS} ${
+      className={`relative z-0 border-border bg-card/70 hover:z-40 focus-within:z-40 ${DASHBOARD_CARD_HOVER_CLASS} ${
         href ? "hover:bg-card hover:border-primary/50" : "hover:bg-card/80 hover:border-primary/30"
       }`}
     >
@@ -385,7 +392,7 @@ function RevenueTrendKpiCard({
 
   const content = (
     <Card
-      className={`relative z-0 border-border bg-card/70 h-full hover:z-40 focus-within:z-40 ${DASHBOARD_CARD_HOVER_CLASS} ${
+      className={`relative z-0 border-border bg-card/70 hover:z-40 focus-within:z-40 ${DASHBOARD_CARD_HOVER_CLASS} ${
         href ? "hover:bg-card hover:border-primary/50" : "hover:bg-card/80 hover:border-primary/30"
       }`}
     >
@@ -560,7 +567,7 @@ function DistributionKpiCard({
 
   const content = (
     <Card
-      className={`border-border bg-card/70 h-full ${DASHBOARD_CARD_HOVER_CLASS} ${
+      className={`border-border bg-card/70 ${DASHBOARD_CARD_HOVER_CLASS} ${
         href ? "hover:bg-card hover:border-primary/50" : "hover:bg-card/80 hover:border-primary/30"
       }`}
     >
@@ -694,7 +701,7 @@ function OccupancyDonutCard({
       title="Zu Tischauslastung jetzt"
     >
       <Card
-        className={`border-border bg-card/70 h-full ${DASHBOARD_CARD_HOVER_CLASS} hover:bg-card hover:border-primary/50`}
+        className={`border-border bg-card/70 ${DASHBOARD_CARD_HOVER_CLASS} hover:bg-card hover:border-primary/50`}
       >
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between gap-2">
@@ -785,7 +792,7 @@ function NoShowCancellationDonutCard({
       title="Zu No-Show und Storno"
     >
       <Card
-        className={`border-border bg-card/70 h-full ${DASHBOARD_CARD_HOVER_CLASS} hover:bg-card hover:border-primary/50`}
+        className={`border-border bg-card/70 ${DASHBOARD_CARD_HOVER_CLASS} hover:bg-card hover:border-primary/50`}
       >
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between gap-2">
@@ -940,7 +947,7 @@ export default function DashboardLandingPage() {
   const revenueAreaGradientId = useId();
   const hourlyAreaGradientId = useId();
   const revenuePointCount = revenueTimeline.length;
-  const revenueChartHeightClass = revenuePointCount <= 7 ? "h-64" : "h-48";
+  const revenueChartHeightClass = revenuePointCount <= 7 ? "h-52" : "h-40";
   const revenueAxisLabelStep = useMemo(() => {
     if (revenuePointCount <= 1) return 1;
     if (rangePreset === "today") return 3;
@@ -1473,7 +1480,7 @@ export default function DashboardLandingPage() {
                   </h2>
                   <span className="text-xs text-muted-foreground">Unabhängig vom Zeitraum-Filter</span>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 items-start">
                   <KpiCard
                     label="Operativer Status"
                     value={operationsValue(`${formatNumber(overview.kpis.ordersOpen)} offen`)}
@@ -1516,7 +1523,7 @@ export default function DashboardLandingPage() {
                     Filter: {selectedRangeLabel} ({overview.range.from} bis {overview.range.to})
                   </span>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 items-start">
                   <RevenueTrendKpiCard
                     label={`Umsatz (${selectedRangeLabel})`}
                     value={analyticsValue(formatCurrency(overview.kpis.revenueTotal))}
@@ -1561,7 +1568,7 @@ export default function DashboardLandingPage() {
               </section>
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 items-start">
               <Card
                 {...getCardNavigationProps("/dashboard/order-statistics")}
                 className={`relative z-0 xl:col-span-2 border-border bg-card/70 hover:z-40 focus-within:z-40 ${DASHBOARD_CARD_HOVER_CLASS} cursor-pointer hover:bg-card hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
@@ -1576,9 +1583,9 @@ export default function DashboardLandingPage() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {!analyticsReady && analyticsInitialLoading ? (
-                    <div className="grid grid-cols-12 gap-2 items-end min-h-40 animate-pulse">
+                    <div className="grid grid-cols-12 gap-2 items-end min-h-32 animate-pulse">
                       {Array.from({ length: 12 }).map((_, index) => (
-                        <div key={index} className="h-20 rounded bg-muted" />
+                        <div key={index} className="h-16 rounded bg-muted" />
                       ))}
                     </div>
                   ) : !analyticsReady && overviewQuery.analytics.error ? (
@@ -1601,8 +1608,8 @@ export default function DashboardLandingPage() {
                         </AdaptiveHoverTooltip>
                       ) : null}
                       <div className={`rounded-md border border-border bg-background/40 p-2 ${revenueChartHeightClass}`}>
-                        <div className="grid h-full grid-cols-[78px_minmax(0,1fr)] gap-2">
-                          <div className="pointer-events-none flex h-full flex-col justify-between py-1 text-right text-[10px] text-muted-foreground tabular-nums">
+                        <div className="grid h-full grid-cols-[44px_minmax(0,1fr)] gap-1">
+                          <div className="pointer-events-none flex h-full flex-col justify-between py-1 text-right text-[9px] text-muted-foreground tabular-nums">
                             <span className="whitespace-nowrap">{formatCurrencyAxis(revenueYAxisTicks[0])}</span>
                             <span className="whitespace-nowrap">{formatCurrencyAxis(revenueYAxisTicks[1])}</span>
                             <span className="whitespace-nowrap">{formatCurrencyAxis(revenueYAxisTicks[2])}</span>
@@ -1709,7 +1716,7 @@ export default function DashboardLandingPage() {
                           </div>
                         </div>
                       </div>
-                      <div className="grid grid-cols-[78px_minmax(0,1fr)] gap-2 px-0.5">
+                      <div className="grid grid-cols-[44px_minmax(0,1fr)] gap-1 px-0.5">
                         <span aria-hidden="true" />
                         <div
                           className="grid gap-x-0"
@@ -1777,7 +1784,7 @@ export default function DashboardLandingPage() {
               </Card>
             </div>
 
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 items-start">
               <Card
                 {...getCardNavigationProps("/dashboard/order-history")}
                 className={`border-border bg-card/70 ${DASHBOARD_CARD_HOVER_CLASS} cursor-pointer hover:bg-card hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
@@ -1906,12 +1913,12 @@ export default function DashboardLandingPage() {
                           {hourlyTooltip.hour.padStart(2, "0")}:00 • {hourlyTooltip.orderCount} Bestellungen
                         </AdaptiveHoverTooltip>
                       ) : null}
-                      <div className="h-36 rounded-md border border-border bg-background/40 p-2">
-                        <div className="grid h-full grid-cols-[92px_minmax(0,1fr)] gap-2">
-                          <div className="pointer-events-none flex h-full flex-col justify-between py-1 text-right text-[10px] text-muted-foreground tabular-nums">
-                            <span className="whitespace-nowrap">{formatOrdersAxis(hourlyYAxisTicks[0])} Bestellungen</span>
-                            <span className="whitespace-nowrap">{formatOrdersAxis(hourlyYAxisTicks[1])} Bestellungen</span>
-                            <span className="whitespace-nowrap">{formatOrdersAxis(hourlyYAxisTicks[2])} Bestellungen</span>
+                      <div className="h-32 rounded-md border border-border bg-background/40 p-2">
+                        <div className="grid h-full grid-cols-[44px_minmax(0,1fr)] gap-1">
+                          <div className="pointer-events-none flex h-full flex-col justify-between py-1 text-right text-[9px] text-muted-foreground tabular-nums">
+                            <span className="whitespace-nowrap">{formatOrdersAxis(hourlyYAxisTicks[0])}</span>
+                            <span className="whitespace-nowrap">{formatOrdersAxis(hourlyYAxisTicks[1])}</span>
+                            <span className="whitespace-nowrap">{formatOrdersAxis(hourlyYAxisTicks[2])}</span>
                           </div>
                           <div className="relative h-full">
                             <svg
@@ -2015,7 +2022,7 @@ export default function DashboardLandingPage() {
                           </div>
                         </div>
                       </div>
-                      <div className="grid grid-cols-[92px_minmax(0,1fr)] gap-2 px-0.5">
+                      <div className="grid grid-cols-[44px_minmax(0,1fr)] gap-1 px-0.5">
                         <span aria-hidden="true" />
                         <div
                           className="grid gap-x-0"

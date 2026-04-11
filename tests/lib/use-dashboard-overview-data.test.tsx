@@ -63,8 +63,8 @@ function setupSuccessfulApiMocks() {
         status: "confirmed",
         table_id: "t-1",
         party_size: 2,
-        start_at: "2026-04-09T08:00:00Z",
-        end_at: "2026-04-09T22:00:00Z",
+        start_at: "2026-04-08T00:00:00Z",
+        end_at: "2026-04-10T23:59:59Z",
       },
       {
         id: "res-2",
@@ -78,8 +78,8 @@ function setupSuccessfulApiMocks() {
     blocks: [
       {
         id: "block-1",
-        start_at: "2026-04-09T07:00:00Z",
-        end_at: "2026-04-09T23:00:00Z",
+        start_at: "2026-04-08T00:00:00Z",
+        end_at: "2026-04-10T23:59:59Z",
       },
     ],
     block_assignments: [

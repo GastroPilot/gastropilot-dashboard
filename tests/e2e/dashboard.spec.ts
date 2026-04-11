@@ -10,15 +10,13 @@ test.describe('Dashboard Access', () => {
     '/dashboard/reservations',
     '/dashboard/order-history',
     '/dashboard/tischplan',
-    '/dashboard/finanzen',
     '/dashboard/finanzen/umsaetze',
     '/dashboard/finanzen/kartenlesegeraete',
     '/dashboard/finanzen/tse',
     '/dashboard/finanzen/rechnungs-editor',
     '/dashboard/finanzen/tagesabschluss',
-    '/dashboard/finanzen/statistiken',
-    '/dashboard/finanzen/finanzamt-export',
-    '/dashboard/fiskaly',
+    '/dashboard/timeline',
+    '/dashboard/hilfecenter',
   ];
 
   test.beforeEach(async ({ page }) => {

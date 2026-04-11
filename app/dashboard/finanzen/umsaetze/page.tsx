@@ -5,11 +5,16 @@ import { useQuery } from "@tanstack/react-query";
 import { addDays, differenceInCalendarDays, endOfDay, format, parseISO, startOfDay, subDays } from "date-fns";
 import { de } from "date-fns/locale";
 import {
+  BarChart3,
+  CalendarDays,
   CreditCard,
   Euro,
+  LineChart,
+  Package,
   Percent,
   Receipt,
   RefreshCw,
+  Tag,
   TrendingDown,
   TrendingUp,
   Wallet,
@@ -30,15 +35,33 @@ import {
 const DASHBOARD_CARD_HOVER_CLASS =
   "transform-gpu shadow-md shadow-black/5 transition-all duration-200 ease-out motion-reduce:transition-none hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/10";
 const DASHBOARD_CARD_SURFACE_CLASS =
-  "relative z-0 h-full border-border bg-card/70 hover:z-40 focus-within:z-40 hover:bg-card/80 hover:border-primary/30";
+  "relative z-0 border-border bg-card/70 hover:z-40 focus-within:z-40 hover:bg-card/80 hover:border-primary/30";
 const DASHBOARD_ROW_HOVER_CLASS =
   "transition-colors duration-200 ease-out motion-reduce:transition-none hover:bg-accent/60";
+const WEEKDAY_LABELS = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("de-DE", {
     style: "currency",
     currency: "EUR",
   }).format(amount);
+}
+
+function formatCurrencyAxis(value: number): string {
+  const abs = Math.abs(value);
+  if (abs >= 1_000_000) {
+    const compact = new Intl.NumberFormat("de-DE", {
+      maximumFractionDigits: abs >= 10_000_000 ? 0 : 1,
+    }).format(value / 1_000_000);
+    return `${compact}M€`;
+  }
+  if (abs >= 1000) {
+    const compact = new Intl.NumberFormat("de-DE", {
+      maximumFractionDigits: abs >= 10000 ? 0 : 1,
+    }).format(value / 1000);
+    return `${compact}k€`;
+  }
+  return `${new Intl.NumberFormat("de-DE", { maximumFractionDigits: 0 }).format(value)}€`;
 }
 
 function formatCategoryLabel(category: string | null | undefined): string {
@@ -110,6 +133,7 @@ export default function FinanceRevenuePage() {
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
   const [hoveredTimelineDate, setHoveredTimelineDate] = useState<string | null>(null);
+  const [hoveredWeekday, setHoveredWeekday] = useState<number | null>(null);
 
   const resolvedRange = useMemo(
     () =>
@@ -244,6 +268,11 @@ export default function FinanceRevenuePage() {
   }, [timelinePoints]);
 
   const timelineLinePath = useMemo(() => buildSmoothCurvePath(timelinePoints), [timelinePoints]);
+  const revenueMax = useMemo(() => {
+    if (revenueTimeline.length === 0) return 0;
+    return Math.max(...revenueTimeline.map((entry) => entry.amount), 0);
+  }, [revenueTimeline]);
+  const revenueYAxisTicks = useMemo(() => [revenueMax, revenueMax / 2, 0], [revenueMax]);
 
   const activeTimelineEntry = useMemo(() => {
     if (!hoveredTimelineDate) return null;
@@ -267,6 +296,36 @@ export default function FinanceRevenuePage() {
     if (topItems.length === 0) return 1;
     return Math.max(...topItems.map((item) => Number(item.revenue ?? 0)), 1);
   }, [topItemsQuery.data]);
+
+  const weekdayDistribution = useMemo(() => {
+    const buckets = Array.from({ length: 7 }, (_, day) => ({
+      day,
+      label: WEEKDAY_LABELS[day],
+      revenue: 0,
+      count: 0,
+    }));
+
+    for (const entry of revenueTimeline) {
+      const day = parseISO(`${entry.date}T00:00:00`).getDay();
+      buckets[day].revenue += entry.amount;
+      buckets[day].count += 1;
+    }
+
+    return buckets;
+  }, [revenueTimeline]);
+
+  const maxWeekdayRevenue = Math.max(...weekdayDistribution.map((entry) => entry.revenue), 1);
+  const strongestWeekday = useMemo(
+    () => [...weekdayDistribution].sort((a, b) => b.revenue - a.revenue).find((entry) => entry.revenue > 0) ?? null,
+    [weekdayDistribution]
+  );
+  const hasWeekdayRevenue = weekdayDistribution.some((entry) => entry.revenue > 0);
+  const activeWeekday = useMemo(() => {
+    if (hoveredWeekday !== null) {
+      return weekdayDistribution.find((entry) => entry.day === hoveredWeekday) ?? null;
+    }
+    return strongestWeekday;
+  }, [hoveredWeekday, weekdayDistribution, strongestWeekday]);
 
   const maxCategoryRevenue = Math.max(...categories.map((entry) => entry.revenue), 1);
   const revenueChange = getChangePercent(kpis.totalRevenue, Number(previousRevenueQuery.data?.total_revenue ?? 0));
@@ -315,8 +374,8 @@ export default function FinanceRevenuePage() {
 
   return (
     <FinanceModuleLayout
-      title="Umsätze"
-      description="Finanzkennzahlen und Umsatzanalysen mit Vorperiodenvergleich und operativen Treibern."
+      title="Umsatz & Statistiken"
+      description="Zentrale Finanzanalyse mit Kennzahlen, Umsatzverlauf, Kategorien und Top-Artikeln."
       actions={
         <Button
           type="button"
@@ -334,7 +393,10 @@ export default function FinanceRevenuePage() {
       <div className="space-y-6">
         <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
           <CardHeader>
-            <CardTitle className="text-base">Zeitraum</CardTitle>
+            <CardTitle className="text-base flex items-center gap-2">
+              <CalendarDays className="h-4 w-4 text-primary" />
+              Zeitraum
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <FinanceRangeControls
@@ -369,13 +431,13 @@ export default function FinanceRevenuePage() {
           </Card>
         ) : null}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 items-start">
           <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader className="pb-2">
-              <div className="flex items-center justify-between gap-2">
-                <CardTitle className="text-sm">Gesamtumsatz</CardTitle>
+              <CardTitle className="text-sm flex items-center gap-2">
                 <Euro className="h-4 w-4 text-emerald-300" />
-              </div>
+                Gesamtumsatz
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-1">
               <p className="text-2xl font-bold">{formatCurrency(kpis.totalRevenue)}</p>
@@ -396,10 +458,10 @@ export default function FinanceRevenuePage() {
 
           <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader className="pb-2">
-              <div className="flex items-center justify-between gap-2">
-                <CardTitle className="text-sm">Durchschnittsbon</CardTitle>
+              <CardTitle className="text-sm flex items-center gap-2">
                 <Receipt className="h-4 w-4 text-indigo-300" />
-              </div>
+                Durchschnittsbon
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-1">
               <p className="text-2xl font-bold">{formatCurrency(kpis.avgOrderValue)}</p>
@@ -422,10 +484,10 @@ export default function FinanceRevenuePage() {
 
           <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader className="pb-2">
-              <div className="flex items-center justify-between gap-2">
-                <CardTitle className="text-sm">Trinkgeld und Rabatte</CardTitle>
+              <CardTitle className="text-sm flex items-center gap-2">
                 <Percent className="h-4 w-4 text-cyan-300" />
-              </div>
+                Trinkgeld und Rabatte
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-1.5">
               <p className="text-sm">
@@ -441,10 +503,10 @@ export default function FinanceRevenuePage() {
 
           <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader className="pb-2">
-              <div className="flex items-center justify-between gap-2">
-                <CardTitle className="text-sm">Offene Beträge</CardTitle>
+              <CardTitle className="text-sm flex items-center gap-2">
                 <Wallet className="h-4 w-4 text-amber-300" />
-              </div>
+                Offene Beträge
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-1">
               <p className="text-2xl font-bold">{formatCurrency(kpis.outstandingAmount)}</p>
@@ -454,11 +516,14 @@ export default function FinanceRevenuePage() {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 items-start">
           <Card className={`xl:col-span-2 ${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader className="space-y-2">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                <CardTitle className="text-base">Umsatzverlauf</CardTitle>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <LineChart className="h-4 w-4 text-primary" />
+                  Umsatzverlauf
+                </CardTitle>
                 <p className="text-xs text-muted-foreground">
                   Zeitraum: {format(resolvedRange.from, "dd.MM.yyyy", { locale: de })} - {" "}
                   {format(resolvedRange.to, "dd.MM.yyyy", { locale: de })}
@@ -507,86 +572,108 @@ export default function FinanceRevenuePage() {
                     </div>
                   </div>
 
-                  <div className="relative h-64 rounded-xl border border-border/70 bg-background/40 p-3">
-                    <svg viewBox="0 0 100 84" preserveAspectRatio="none" className="absolute inset-3 h-[calc(100%-2.5rem)] w-[calc(100%-1.5rem)]">
-                      <defs>
-                        <linearGradient id="finance-revenue-gradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="currentColor" stopOpacity="0.26" />
-                          <stop offset="100%" stopColor="currentColor" stopOpacity="0.04" />
-                        </linearGradient>
-                      </defs>
+                  <div className="rounded-xl border border-border/70 bg-background/40 p-3">
+                    <div className="grid h-44 grid-cols-[44px_minmax(0,1fr)] gap-1">
+                      <div className="pointer-events-none flex h-full flex-col justify-between py-1 text-right text-[9px] text-muted-foreground tabular-nums">
+                        <span className="whitespace-nowrap">{formatCurrencyAxis(revenueYAxisTicks[0])}</span>
+                        <span className="whitespace-nowrap">{formatCurrencyAxis(revenueYAxisTicks[1])}</span>
+                        <span className="whitespace-nowrap">{formatCurrencyAxis(revenueYAxisTicks[2])}</span>
+                      </div>
 
-                      <line
-                        x1="0"
-                        y1="80"
-                        x2="100"
-                        y2="80"
-                        stroke="currentColor"
-                        className="text-border"
-                        strokeWidth="1.2"
-                        vectorEffect="non-scaling-stroke"
-                      />
-                      <line
-                        x1="0"
-                        y1="50"
-                        x2="100"
-                        y2="50"
-                        stroke="currentColor"
-                        className="text-border/60"
-                        strokeDasharray="2 3"
-                        strokeWidth="1"
-                        vectorEffect="non-scaling-stroke"
-                      />
-                      <line
-                        x1="0"
-                        y1="20"
-                        x2="100"
-                        y2="20"
-                        stroke="currentColor"
-                        className="text-border/60"
-                        strokeDasharray="2 3"
-                        strokeWidth="1"
-                        vectorEffect="non-scaling-stroke"
-                      />
+                      <div className="relative h-full">
+                        <svg viewBox="0 0 100 84" preserveAspectRatio="none" className="absolute inset-0 h-full w-full">
+                          <defs>
+                            <linearGradient id="finance-revenue-gradient" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="currentColor" stopOpacity="0.26" />
+                              <stop offset="100%" stopColor="currentColor" stopOpacity="0.04" />
+                            </linearGradient>
+                          </defs>
 
-                      <path d={timelineAreaPath} fill="url(#finance-revenue-gradient)" className="text-primary" />
-                      <path
-                        d={timelineLinePath}
-                        fill="none"
-                        stroke="currentColor"
-                        className="text-primary"
-                        strokeWidth="1.2"
-                        strokeLinejoin="round"
-                        strokeLinecap="round"
-                        vectorEffect="non-scaling-stroke"
-                      />
+                          <line
+                            x1="0"
+                            y1="20"
+                            x2="0"
+                            y2="80"
+                            stroke="currentColor"
+                            className="text-border/80"
+                            strokeWidth="1.2"
+                            vectorEffect="non-scaling-stroke"
+                          />
+                          <line
+                            x1="0"
+                            y1="80"
+                            x2="100"
+                            y2="80"
+                            stroke="currentColor"
+                            className="text-border"
+                            strokeWidth="1.2"
+                            vectorEffect="non-scaling-stroke"
+                          />
+                          <line
+                            x1="0"
+                            y1="50"
+                            x2="100"
+                            y2="50"
+                            stroke="currentColor"
+                            className="text-border/60"
+                            strokeDasharray="2 3"
+                            strokeWidth="1"
+                            vectorEffect="non-scaling-stroke"
+                          />
+                          <line
+                            x1="0"
+                            y1="20"
+                            x2="100"
+                            y2="20"
+                            stroke="currentColor"
+                            className="text-border/60"
+                            strokeDasharray="2 3"
+                            strokeWidth="1"
+                            vectorEffect="non-scaling-stroke"
+                          />
 
-                    </svg>
+                          <path d={timelineAreaPath} fill="url(#finance-revenue-gradient)" className="text-primary" />
+                          <path
+                            d={timelineLinePath}
+                            fill="none"
+                            stroke="currentColor"
+                            className="text-primary"
+                            strokeWidth="1.2"
+                            strokeLinejoin="round"
+                            strokeLinecap="round"
+                            vectorEffect="non-scaling-stroke"
+                          />
+                        </svg>
 
-                    <div
-                      className="absolute inset-x-3 top-3 bottom-8 grid gap-x-0"
-                      style={{ gridTemplateColumns: `repeat(${Math.max(revenueTimeline.length, 1)}, minmax(0, 1fr))` }}
-                    >
-                      {revenueTimeline.map((entry) => (
-                        <button
-                          key={entry.date}
-                          type="button"
-                          className={`h-full w-full border-r border-border/40 last:border-r-0 transition-colors ${
-                            hoveredTimelineDate === entry.date ? "bg-primary/10" : "hover:bg-accent/40"
-                          }`}
-                          onMouseEnter={() => setHoveredTimelineDate(entry.date)}
-                          onMouseLeave={() => setHoveredTimelineDate(null)}
-                          onFocus={() => setHoveredTimelineDate(entry.date)}
-                          onBlur={() => setHoveredTimelineDate(null)}
-                          title={`${entry.tooltipLabel}: ${formatCurrency(entry.amount)}`}
-                        />
-                      ))}
+                        <div
+                          className="absolute inset-0 grid gap-x-0"
+                          style={{ gridTemplateColumns: `repeat(${Math.max(revenueTimeline.length, 1)}, minmax(0, 1fr))` }}
+                        >
+                          {revenueTimeline.map((entry) => (
+                            <button
+                              key={entry.date}
+                              type="button"
+                              className={`h-full w-full border-r border-border/40 last:border-r-0 transition-colors ${
+                                hoveredTimelineDate === entry.date ? "bg-primary/10" : "hover:bg-accent/40"
+                              }`}
+                              onMouseEnter={() => setHoveredTimelineDate(entry.date)}
+                              onMouseLeave={() => setHoveredTimelineDate(null)}
+                              onFocus={() => setHoveredTimelineDate(entry.date)}
+                              onBlur={() => setHoveredTimelineDate(null)}
+                              title={`${entry.tooltipLabel}: ${formatCurrency(entry.amount)}`}
+                            />
+                          ))}
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="absolute inset-x-3 bottom-2 flex items-center justify-between text-[10px] text-muted-foreground">
-                      {timelineAxisLabels.map((label, index) => (
-                        <span key={`${label}-${index}`}>{label}</span>
-                      ))}
+                    <div className="mt-2 grid grid-cols-[44px_minmax(0,1fr)] gap-1">
+                      <span aria-hidden="true" />
+                      <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                        {timelineAxisLabels.map((label, index) => (
+                          <span key={`${label}-${index}`}>{label}</span>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -596,35 +683,68 @@ export default function FinanceRevenuePage() {
 
           <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader>
-              <div className="flex items-center justify-between gap-2">
-                <CardTitle className="text-base">Zahlungsmix</CardTitle>
-                <CreditCard className="h-4 w-4 text-cyan-300" />
-              </div>
+              <CardTitle className="text-base flex items-center gap-2">
+                <BarChart3 className="h-4 w-4 text-primary" />
+                Wochentagsprofil
+              </CardTitle>
+              <p className="text-xs text-muted-foreground">
+                {strongestWeekday
+                  ? `Stärkster Wochentag: ${strongestWeekday.label} · ${formatCurrency(strongestWeekday.revenue)}`
+                  : "Noch keine Umsätze im gewählten Zeitraum"}
+              </p>
             </CardHeader>
             <CardContent className="space-y-3">
-              {paymentMix.map((entry) => (
-                <div
-                  key={entry.label}
-                  className={`space-y-1.5 rounded-md border border-border/70 bg-background/30 p-2.5 ${DASHBOARD_ROW_HOVER_CLASS}`}
-                >
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-foreground">{entry.label}</span>
-                    <span className="font-medium text-foreground">{formatCurrency(entry.value)}</span>
+              {hasWeekdayRevenue ? (
+                <>
+                  <div className="grid grid-cols-7 gap-2">
+                    {weekdayDistribution.map((entry) => (
+                      <button
+                        key={entry.day}
+                        type="button"
+                        className="flex flex-col items-center gap-1"
+                        onMouseEnter={() => setHoveredWeekday(entry.day)}
+                        onMouseLeave={() => setHoveredWeekday(null)}
+                        onFocus={() => setHoveredWeekday(entry.day)}
+                        onBlur={() => setHoveredWeekday(null)}
+                        title={`${entry.label}: ${formatCurrency(entry.revenue)} (${entry.count} Tage)`}
+                      >
+                        <div
+                          className={`h-24 w-full rounded border border-border/70 bg-background/40 overflow-hidden relative transition-colors ${
+                            hoveredWeekday === entry.day ? "bg-accent/40" : ""
+                          }`}
+                        >
+                          {entry.revenue > 0 ? (
+                            <div
+                              className="absolute bottom-0 left-0 right-0 bg-primary/80"
+                              style={{ height: `${Math.max(4, (entry.revenue / maxWeekdayRevenue) * 100)}%` }}
+                            />
+                          ) : null}
+                        </div>
+                        <span className="text-[11px] text-muted-foreground">{entry.label}</span>
+                      </button>
+                    ))}
                   </div>
-                  <div className="h-2.5 rounded bg-muted overflow-hidden">
-                    <div className={`h-full ${entry.tone}`} style={{ width: `${Math.max(2, entry.pct)}%` }} />
-                  </div>
-                  <p className="text-[11px] text-muted-foreground">{entry.pct.toFixed(1)}%</p>
-                </div>
-              ))}
+                  {activeWeekday ? (
+                    <p className="text-xs text-muted-foreground">
+                      Aktiv: <span className="font-medium text-foreground">{activeWeekday.label}</span> ·{" "}
+                      {formatCurrency(activeWeekday.revenue)} · {activeWeekday.count} Tage
+                    </p>
+                  ) : null}
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">Keine Wochentagsdaten im gewählten Zeitraum.</p>
+              )}
             </CardContent>
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 items-start">
           <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader>
-              <CardTitle className="text-base">Top-Artikel</CardTitle>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Package className="h-4 w-4 text-primary" />
+                Top-Artikel
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
               {(topItemsQuery.data ?? []).length === 0 ? (
@@ -655,7 +775,10 @@ export default function FinanceRevenuePage() {
 
           <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader>
-              <CardTitle className="text-base">Kategorien</CardTitle>
+              <CardTitle className="text-base flex items-center gap-2">
+                <Tag className="h-4 w-4 text-primary" />
+                Kategorien
+              </CardTitle>
             </CardHeader>
             <CardContent>
               {categories.length === 0 ? (
@@ -682,6 +805,32 @@ export default function FinanceRevenuePage() {
                   ))}
                 </div>
               )}
+            </CardContent>
+          </Card>
+
+          <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <CreditCard className="h-4 w-4 text-cyan-300" />
+                Zahlungsmix
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {paymentMix.map((entry) => (
+                <div
+                  key={entry.label}
+                  className={`space-y-1.5 rounded-md border border-border/70 bg-background/30 p-2.5 ${DASHBOARD_ROW_HOVER_CLASS}`}
+                >
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-foreground">{entry.label}</span>
+                    <span className="font-medium text-foreground">{formatCurrency(entry.value)}</span>
+                  </div>
+                  <div className="h-2.5 rounded bg-muted overflow-hidden">
+                    <div className={`h-full ${entry.tone}`} style={{ width: `${Math.max(2, entry.pct)}%` }} />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground">{entry.pct.toFixed(1)}%</p>
+                </div>
+              ))}
             </CardContent>
           </Card>
         </div>

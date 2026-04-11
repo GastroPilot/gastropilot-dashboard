@@ -6,6 +6,10 @@ import {
   CheckCircle2,
   XCircle,
   AlertTriangle,
+  Archive,
+  Calendar,
+  Clock,
+  Download,
   RefreshCw,
   QrCode,
   FileText,
@@ -22,11 +26,16 @@ import {
   listTransactions,
   retryTransaction,
   createReceipt,
+  triggerExport,
+  getExportStatus,
+  listExports,
   type TssStatus,
   type FiskalyTransaction,
+  type ExportListItem,
+  type ExportStatus,
 } from "@/lib/api/fiskaly";
+import { getApiUrlForEndpoint } from "@/lib/api/client";
 import { restaurantsApi } from "@/lib/api/restaurants";
-import Link from "next/link";
 
 // ─── Toast ────────────────────────────────────────────────────────────────────
 
@@ -60,6 +69,30 @@ const DASHBOARD_PANEL_SURFACE_CLASS =
   "relative z-0 border border-border bg-card/70 hover:z-40 focus-within:z-40 hover:bg-card/80 hover:border-primary/30";
 const DASHBOARD_ROW_HOVER_CLASS =
   "transition-colors duration-200 ease-out motion-reduce:transition-none hover:bg-accent/60";
+
+function formatUnixDate(ts: number | null): string {
+  if (!ts) return "-";
+  return new Date(ts * 1000).toLocaleString("de-DE", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function mapExportStateBadge(state: string): { label: string; className: string } {
+  if (state === "COMPLETED") {
+    return { label: "Abgeschlossen", className: "bg-emerald-500/15 text-emerald-300" };
+  }
+  if (state === "PENDING" || state === "WORKING") {
+    return { label: "In Arbeit", className: "bg-blue-500/15 text-blue-300" };
+  }
+  if (state === "ERROR" || state === "CANCELLED") {
+    return { label: state === "ERROR" ? "Fehler" : "Abgebrochen", className: "bg-red-500/15 text-red-300" };
+  }
+  return { label: state, className: "bg-muted text-muted-foreground" };
+}
 
 // ─── Status Badge ─────────────────────────────────────────────────────────────
 
@@ -182,18 +215,26 @@ export default function FiskalyPage() {
   const [disableLoading, setDisableLoading] = useState(false);
   const [adminPin, setAdminPin] = useState("");
   const [retryingId, setRetryingId] = useState<string | null>(null);
+  const [exports, setExports] = useState<ExportListItem[]>([]);
+  const [exportStartDate, setExportStartDate] = useState("");
+  const [exportEndDate, setExportEndDate] = useState("");
+  const [exportTriggering, setExportTriggering] = useState(false);
+  const [pollingExportId, setPollingExportId] = useState<string | null>(null);
+  const [pollingState, setPollingState] = useState<ExportStatus | null>(null);
 
   const [creatingReceiptForOrder, setCreatingReceiptForOrder] = useState<string | null>(null);
   const [restaurantInfo, setRestaurantInfo] = useState<{name: string; address: string; tax_number: string} | null>(null);
 
   const loadData = useCallback(async () => {
     try {
-      const [status, txs] = await Promise.all([
+      const [status, txs, exportsList] = await Promise.all([
         getTssStatus(),
         listTransactions(20).catch(() => []),
+        listExports().catch(() => []),
       ]);
       setTssStatus(status);
       setTransactions(txs);
+      setExports(exportsList);
 
       // Load restaurant info for receipt creation
       if (!restaurantInfo) {
@@ -307,6 +348,87 @@ export default function FiskalyPage() {
     }
   };
 
+  const handleTriggerExport = async () => {
+    setExportTriggering(true);
+    try {
+      const response = await triggerExport({
+        start_date: exportStartDate || undefined,
+        end_date: exportEndDate || undefined,
+      });
+      setPollingExportId(response.export_id);
+      setPollingState({
+        export_id: response.export_id,
+        state: "PENDING",
+        time_start: null,
+        time_end: null,
+        time_expiration: null,
+        estimated_time_of_completion: null,
+      });
+      toast("Export wurde gestartet und wird verarbeitet.", "success");
+    } catch (err: any) {
+      toast(err?.message || "Export konnte nicht gestartet werden.", "error");
+    } finally {
+      setExportTriggering(false);
+    }
+  };
+
+  const handleDownloadExport = async (exportId: string) => {
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      toast("Nicht eingeloggt. Bitte neu anmelden.", "error");
+      return;
+    }
+
+    try {
+      const url = getApiUrlForEndpoint(`/fiskaly/exports/${exportId}/download`);
+      const response = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error("Download fehlgeschlagen");
+      }
+
+      const blob = await response.blob();
+      const downloadUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = `tse-export-${exportId.slice(0, 8)}.tar`;
+      link.click();
+      URL.revokeObjectURL(downloadUrl);
+      toast("Export heruntergeladen.", "success");
+    } catch (err: any) {
+      toast(err?.message || "Download fehlgeschlagen", "error");
+    }
+  };
+
+  useEffect(() => {
+    if (!pollingExportId) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const status = await getExportStatus(pollingExportId);
+        setPollingState(status);
+        if (["COMPLETED", "ERROR", "CANCELLED"].includes(status.state)) {
+          clearInterval(interval);
+          setPollingExportId(null);
+          if (status.state === "COMPLETED") {
+            toast("Export abgeschlossen und downloadbereit.", "success");
+          } else {
+            toast(status.state === "ERROR" ? "Export fehlgeschlagen." : "Export abgebrochen.", "error");
+          }
+          await loadData();
+        }
+      } catch {
+        clearInterval(interval);
+        setPollingExportId(null);
+        toast("Export-Status konnte nicht abgefragt werden.", "error");
+      }
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [pollingExportId, loadData, toast]);
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast("In Zwischenablage kopiert", "info");
@@ -322,6 +444,13 @@ export default function FiskalyPage() {
 
   const isInitialized = tssStatus?.state === "INITIALIZED";
   const isConfigured = tssStatus?.configured === true;
+  const canExport = isConfigured && isInitialized;
+  const exportSummary = {
+    total: exports.length,
+    completed: exports.filter((entry) => entry.state === "COMPLETED").length,
+    working: exports.filter((entry) => entry.state === "WORKING" || entry.state === "PENDING").length,
+    failed: exports.filter((entry) => entry.state === "ERROR").length,
+  };
 
   return (
     <div className="h-full flex flex-col bg-background text-foreground overflow-hidden">
@@ -611,21 +740,150 @@ export default function FiskalyPage() {
             </div>
           </div>
         )}
-        {isConfigured && isInitialized ? (
-          <div className={`rounded-lg overflow-hidden ${DASHBOARD_PANEL_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
-            <div className="px-4 py-3 border-b border-border bg-background/70">
-              <h2 className="text-sm font-semibold text-foreground">Finanzamt-Export</h2>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Die Exportfunktionen wurden in den eigenen Bereich verschoben.
-              </p>
+        {isConfigured ? (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+              <div className={`rounded-lg p-4 ${DASHBOARD_PANEL_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
+                <p className="text-sm text-muted-foreground">Exports gesamt</p>
+                <p className="text-2xl font-bold mt-1">{exportSummary.total}</p>
+              </div>
+              <div className={`rounded-lg p-4 ${DASHBOARD_PANEL_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
+                <p className="text-sm text-muted-foreground">Abgeschlossen</p>
+                <p className="text-2xl font-bold mt-1">{exportSummary.completed}</p>
+              </div>
+              <div className={`rounded-lg p-4 ${DASHBOARD_PANEL_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
+                <p className="text-sm text-muted-foreground">In Arbeit</p>
+                <p className="text-2xl font-bold mt-1">{exportSummary.working}</p>
+              </div>
+              <div className={`rounded-lg p-4 ${DASHBOARD_PANEL_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
+                <p className="text-sm text-muted-foreground">Fehlgeschlagen</p>
+                <p className="text-2xl font-bold mt-1">{exportSummary.failed}</p>
+              </div>
             </div>
-            <div className="p-4">
-              <Link
-                href="/dashboard/finanzen/finanzamt-export"
-                className="inline-flex items-center rounded-md border border-primary/40 bg-primary/10 px-3 py-2 text-sm font-medium text-primary hover:bg-primary/15"
-              >
-                Zum Finanzamt-Export
-              </Link>
+
+            {!canExport ? (
+              <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-100">
+                Für den Finanzamt-Export muss die TSE im Status <strong>Initialisiert</strong> sein.
+              </div>
+            ) : null}
+
+            <div className={`rounded-lg overflow-hidden ${DASHBOARD_PANEL_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
+              <div className="px-4 py-3 border-b border-border bg-background/70">
+                <h2 className="text-sm font-semibold text-foreground">Neuen Export starten</h2>
+              </div>
+              <div className="p-4 space-y-4">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div>
+                    <label className="text-xs font-medium text-foreground block mb-1.5">Von (optional)</label>
+                    <Input
+                      type="date"
+                      value={exportStartDate}
+                      onChange={(event) => setExportStartDate(event.target.value)}
+                      className="text-sm w-44"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-foreground block mb-1.5">Bis (optional)</label>
+                    <Input
+                      type="date"
+                      value={exportEndDate}
+                      onChange={(event) => setExportEndDate(event.target.value)}
+                      className="text-sm w-44"
+                    />
+                  </div>
+                  <div className="flex items-end">
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={handleTriggerExport}
+                      disabled={!canExport || exportTriggering || !!pollingExportId}
+                      className="gap-1.5"
+                    >
+                      {exportTriggering || pollingExportId ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Archive className="w-3.5 h-3.5" />
+                      )}
+                      {pollingExportId ? "Wird erstellt..." : "Export starten"}
+                    </Button>
+                  </div>
+                </div>
+
+                {!exportStartDate && !exportEndDate ? (
+                  <p className="text-xs text-muted-foreground">
+                    Ohne Datumsfilter werden alle signierten Transaktionen exportiert.
+                  </p>
+                ) : null}
+
+                {pollingState && pollingExportId ? (
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
+                    <Loader2 className="w-4 h-4 text-blue-400 animate-spin flex-shrink-0" />
+                    <div className="text-xs text-blue-200">
+                      <p className="font-medium">Export wird verarbeitet...</p>
+                      <p className="mt-0.5 text-blue-300/80">
+                        Status: {pollingState.state}
+                        {pollingState.estimated_time_of_completion ? (
+                          <> — geschätzt fertig: {formatUnixDate(pollingState.estimated_time_of_completion)}</>
+                        ) : null}
+                      </p>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+
+            <div className={`rounded-lg overflow-hidden ${DASHBOARD_PANEL_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
+              <div className="px-4 py-3 border-b border-border bg-background/70">
+                <h2 className="text-sm font-semibold text-foreground">Bisherige Exporte</h2>
+              </div>
+              <div className="divide-y divide-border/50">
+                {exports.length === 0 ? (
+                  <div className="p-8 text-center text-sm text-muted-foreground">
+                    Noch keine Exporte vorhanden.
+                  </div>
+                ) : (
+                  exports.map((exp) => {
+                    const badge = mapExportStateBadge(exp.state);
+                    return (
+                      <div
+                        key={exp.export_id}
+                        className={`px-4 py-3 flex items-center justify-between gap-3 ${DASHBOARD_ROW_HOVER_CLASS}`}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span className={`inline-flex rounded-full px-2 py-1 text-xs ${badge.className}`}>
+                            {badge.label}
+                          </span>
+                          <div className="text-xs text-muted-foreground">
+                            <span className="font-mono">{exp.export_id.slice(0, 8)}...</span>
+                            <span className="ml-2 inline-flex items-center gap-1">
+                              <Calendar className="w-3 h-3" />
+                              {formatUnixDate(exp.time_request)}
+                            </span>
+                            {exp.time_expiration ? (
+                              <span className="ml-2 inline-flex items-center gap-1 text-amber-300/90">
+                                <Clock className="w-3 h-3" />
+                                Ablauf: {formatUnixDate(exp.time_expiration)}
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+
+                        {exp.state === "COMPLETED" ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDownloadExport(exp.export_id)}
+                            className="gap-1 text-xs"
+                          >
+                            <Download className="w-3 h-3" />
+                            TAR
+                          </Button>
+                        ) : null}
+                      </div>
+                    );
+                  })
+                )}
+              </div>
             </div>
           </div>
         ) : null}

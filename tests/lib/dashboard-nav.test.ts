@@ -80,8 +80,8 @@ describe("dashboard navigation model", () => {
     expect(allHrefs).toContain("/dashboard/finanzen/tse");
     expect(allHrefs).toContain("/dashboard/finanzen/rechnungs-editor");
     expect(allHrefs).toContain("/dashboard/finanzen/tagesabschluss");
-    expect(allHrefs).toContain("/dashboard/finanzen/statistiken");
-    expect(allHrefs).toContain("/dashboard/finanzen/finanzamt-export");
+    expect(allHrefs).not.toContain("/dashboard/finanzen/statistiken");
+    expect(allHrefs).not.toContain("/dashboard/finanzen/finanzamt-export");
     expect(allHrefs).not.toContain("/dashboard/fiskaly");
 
     const active = links.find((link) => link.active);
@@ -129,6 +129,7 @@ describe("dashboard navigation model", () => {
     const financeGroup = grouped.find((group) => group.title === "FINANZEN");
     expect(financeGroup).toBeDefined();
     expect(financeGroup?.items.some((item) => item.href === "/dashboard/finanzen/tagesabschluss")).toBe(true);
-    expect(financeGroup?.items.some((item) => item.href === "/dashboard/finanzen/finanzamt-export")).toBe(true);
+    expect(financeGroup?.items.some((item) => item.href === "/dashboard/finanzen/tse")).toBe(true);
+    expect(financeGroup?.items.some((item) => item.href === "/dashboard/finanzen/finanzamt-export")).toBe(false);
   });
 });
