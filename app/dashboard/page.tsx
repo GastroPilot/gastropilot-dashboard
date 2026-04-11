@@ -28,6 +28,7 @@ import {
   RefreshCw,
   ShieldCheck,
   ShoppingCart,
+  Tag,
   Users,
 } from "lucide-react";
 import { authApi, type User } from "@/lib/api/auth";
@@ -920,6 +921,13 @@ export default function DashboardLandingPage() {
     if (!overview) return [] as Array<[string, number]>;
     return Object.entries(overview.ordersByStatus).sort((a, b) => b[1] - a[1]);
   }, [overview]);
+  const topStatusCount = useMemo(() => {
+    if (orderedStatuses.length === 0) return 1;
+    return Math.max(...orderedStatuses.map(([, count]) => count), 1);
+  }, [orderedStatuses]);
+  const totalStatusCount = useMemo(() => {
+    return orderedStatuses.reduce((sum, [, count]) => sum + count, 0);
+  }, [orderedStatuses]);
   const topItemsMaxRevenue = useMemo(() => {
     if (!overview || overview.topItems.length === 0) return 1;
     return Math.max(...overview.topItems.map((item) => item.revenue), 1);
@@ -1405,7 +1413,10 @@ export default function DashboardLandingPage() {
               >
                 <CardHeader>
                   <div className="flex items-center gap-2">
-                    <CardTitle className="text-lg">Umsatzverlauf</CardTitle>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <BarChart3 className="w-5 h-5 text-primary" />
+                      Umsatzverlauf
+                    </CardTitle>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -1615,10 +1626,22 @@ export default function DashboardLandingPage() {
                     orderedStatuses.map(([status, count]) => (
                       <div
                         key={status}
-                        className={`flex items-center justify-between rounded-md border border-border bg-background/50 px-3 py-2 ${DASHBOARD_ROW_HOVER_CLASS}`}
+                        className={`relative overflow-hidden flex items-center justify-between rounded-md border border-border bg-background/50 px-3 py-2 ${DASHBOARD_ROW_HOVER_CLASS}`}
                       >
-                        <span className="text-foreground">{STATUS_LABELS[status] ?? status}</span>
-                        <span className="font-semibold text-foreground">{count}</span>
+                        <span
+                          aria-hidden="true"
+                          className="pointer-events-none absolute inset-y-0 left-0 bg-primary/10"
+                          style={{ width: `${Math.max(0, Math.min(100, (count / topStatusCount) * 100))}%` }}
+                        />
+                        <div className="relative z-10">
+                          <p className="font-medium text-foreground">{STATUS_LABELS[status] ?? status}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {totalStatusCount > 0
+                              ? `${((count / totalStatusCount) * 100).toFixed(1)}% aller Bestellungen`
+                              : "0% aller Bestellungen"}
+                          </p>
+                        </div>
+                        <span className="relative z-10 font-semibold text-foreground">{count}</span>
                       </div>
                     ))
                   ) : (
@@ -1633,7 +1656,10 @@ export default function DashboardLandingPage() {
               >
                 <CardHeader>
                   <div className="flex items-center gap-2">
-                    <CardTitle className="text-lg">Top Kategorien</CardTitle>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Tag className="w-5 h-5 text-primary" />
+                      Top Kategorien
+                    </CardTitle>
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm">

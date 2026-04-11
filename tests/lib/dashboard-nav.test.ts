@@ -75,7 +75,7 @@ describe("dashboard navigation model", () => {
     const grouped = groupDashboardNavLinks(links);
 
     expect(grouped.map((group) => group.title)).toEqual([
-      "START",
+      "",
       "SERVICE",
       "VERKAUF",
       "VERWALTUNG",

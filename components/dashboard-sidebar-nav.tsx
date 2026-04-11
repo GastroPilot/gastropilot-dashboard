@@ -139,7 +139,8 @@ export function SidebarGroup({
   onToggle,
   onNavigate,
 }: SidebarGroupProps) {
-  const showGroupLabel = !(itemVariant === "sidebar" && compact);
+  const hasGroupLabel = group.title.trim().length > 0;
+  const showGroupLabel = hasGroupLabel && !(itemVariant === "sidebar" && compact);
 
   return (
     <div className="px-3">
@@ -208,13 +209,13 @@ export function DashboardSidebar({
 
     if (activeTitles.length === 0) {
       return groups.reduce<Record<string, boolean>>((acc, group, index) => {
-        acc[group.title] = index === 0;
+        acc[group.title] = group.title.trim().length === 0 || index === 0;
         return acc;
       }, {});
     }
 
     return groups.reduce<Record<string, boolean>>((acc, group) => {
-      acc[group.title] = activeTitles.includes(group.title);
+      acc[group.title] = group.title.trim().length === 0 || activeTitles.includes(group.title);
       return acc;
     }, {});
   }, [groups]);
@@ -225,6 +226,10 @@ export function DashboardSidebar({
     setExpandedGroups((prev) => {
       const next: Record<string, boolean> = {};
       groups.forEach((group) => {
+        if (group.title.trim().length === 0) {
+          next[group.title] = true;
+          return;
+        }
         const hasActive = group.items.some((item) => item.active);
         if (hasActive) {
           next[group.title] = true;
@@ -244,16 +249,18 @@ export function DashboardSidebar({
 
   return (
     <div className={cn("py-3 space-y-0", className)} aria-label="Navigation">
-      {groups.map((group) => (
+      {groups.map((group) => {
+        const collapsibleGroup = collapsible && group.title.trim().length > 0;
+        return (
         <SidebarGroup
           key={group.title}
           group={group}
           itemVariant={itemVariant}
           compact={compact}
-          collapsible={collapsible}
-          expanded={collapsible ? !!expandedGroups[group.title] : true}
+          collapsible={collapsibleGroup}
+          expanded={collapsibleGroup ? !!expandedGroups[group.title] : true}
           onToggle={
-            collapsible
+            collapsibleGroup
               ? () =>
                   setExpandedGroups((prev) => ({
                     ...prev,
@@ -263,7 +270,8 @@ export function DashboardSidebar({
           }
           onNavigate={onNavigate}
         />
-      ))}
+        );
+      })}
     </div>
   );
 }

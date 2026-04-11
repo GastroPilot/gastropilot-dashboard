@@ -137,7 +137,7 @@ export function buildDashboardNavLinks({
 
 const GROUP_ORDER: Array<{ title: string; hrefs: string[] }> = [
   {
-    title: "START",
+    title: "",
     hrefs: [
       "/dashboard",
     ],
