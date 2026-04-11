@@ -102,6 +102,20 @@ export default function OrderStatisticsPage() {
     }).format(amount);
   };
 
+  const formatCategoryLabel = (category: string | null | undefined) => {
+    const normalizedCategory = (category ?? "").trim();
+    if (!normalizedCategory || /^uncategorized$/i.test(normalizedCategory)) {
+      return "Ohne Kategorie";
+    }
+    return normalizedCategory;
+  };
+
+  const maxTopItemRevenue = Math.max(...topItems.map((item) => Number(item.revenue) || 0), 1);
+  const maxCategoryRevenue = Math.max(
+    ...Object.values(categoryStats).map((stats) => Number(stats.revenue) || 0),
+    1
+  );
+
   if (isLoading && !restaurant) {
     return <LoadingOverlay />;
   }
@@ -213,29 +227,22 @@ export default function OrderStatisticsPage() {
                   Keine Daten für den ausgewählten Zeitraum
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {topItems.map((item, index) => (
+                <div className="space-y-2">
+                  {topItems.map((item) => (
                     <div
                       key={item.item_name}
-                      className="flex items-center justify-between p-3 bg-background/50 rounded-md border border-border"
+                      className="relative overflow-hidden flex items-center justify-between rounded-md border border-border bg-background/50 px-3 py-2 transition-colors duration-200 ease-out hover:bg-accent/60"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-primary/20 border border-primary flex items-center justify-center text-foreground font-bold">
-                          {index + 1}
-                        </div>
-                        <div>
-                          <div className="font-medium text-foreground">{item.item_name}</div>
-                          <div className="text-sm text-muted-foreground">
-                            {item.quantity_sold}x verkauft
-                          </div>
-                        </div>
+                      <span
+                        aria-hidden="true"
+                        className="pointer-events-none absolute inset-y-0 left-0 bg-primary/10"
+                        style={{ width: `${Math.max(0, Math.min(100, (Number(item.revenue) / maxTopItemRevenue) * 100))}%` }}
+                      />
+                      <div className="relative z-10 min-w-0">
+                        <p className="font-medium text-foreground truncate">{item.item_name}</p>
+                        <p className="text-xs text-muted-foreground">{item.quantity_sold}x verkauft</p>
                       </div>
-                      <div className="text-right">
-                        <div className="font-semibold text-foreground">
-                          {formatCurrency(item.revenue)}
-                        </div>
-                        <div className="text-xs text-muted-foreground">Umsatz</div>
-                      </div>
+                      <p className="relative z-10 font-semibold text-foreground">{formatCurrency(item.revenue)}</p>
                     </div>
                   ))}
                 </div>
@@ -253,27 +260,25 @@ export default function OrderStatisticsPage() {
                   Keine Daten für den ausgewählten Zeitraum
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="space-y-3">
                   {Object.entries(categoryStats)
                     .sort((a, b) => b[1].revenue - a[1].revenue)
                     .map(([category, stats]) => (
                       <div
                         key={category}
-                        className="p-4 bg-background/50 rounded-md border border-border"
+                        className="space-y-1.5 rounded-md border border-border/70 bg-background/30 p-2.5 transition-colors duration-200 ease-out hover:bg-accent/60"
                       >
-                        <div className="font-medium text-foreground mb-2">{category}</div>
-                        <div className="space-y-1 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Menge:</span>
-                            <span className="text-foreground">{stats.quantity}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">Umsatz:</span>
-                            <span className="text-foreground font-semibold">
-                              {formatCurrency(stats.revenue)}
-                            </span>
-                          </div>
+                        <div className="flex items-center justify-between text-sm gap-2">
+                          <span className="text-foreground truncate">{formatCategoryLabel(category)}</span>
+                          <span className="font-medium text-foreground">{formatCurrency(stats.revenue)}</span>
                         </div>
+                        <div className="h-2.5 rounded bg-muted overflow-hidden">
+                          <div
+                            className="h-full bg-primary/80"
+                            style={{ width: `${Math.max(2, (Number(stats.revenue) / maxCategoryRevenue) * 100)}%` }}
+                          />
+                        </div>
+                        <p className="text-[11px] text-muted-foreground">{stats.quantity} Positionen</p>
                       </div>
                     ))}
                 </div>
@@ -336,4 +341,3 @@ export default function OrderStatisticsPage() {
     </div>
   );
 }
-

@@ -23,6 +23,13 @@ type Feedback = {
   message: string;
 } | null;
 
+const DASHBOARD_CARD_HOVER_CLASS =
+  "transform-gpu shadow-md shadow-black/5 transition-all duration-200 ease-out motion-reduce:transition-none hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/10";
+const DASHBOARD_CARD_SURFACE_CLASS =
+  "relative z-0 h-full border-border bg-card/70 hover:z-40 focus-within:z-40 hover:bg-card/80 hover:border-primary/30";
+const DASHBOARD_ROW_HOVER_CLASS =
+  "transition-colors duration-200 ease-out motion-reduce:transition-none hover:bg-accent/60";
+
 function formatUnixDate(ts: number | null): string {
   if (!ts) return "-";
   return new Date(ts * 1000).toLocaleString("de-DE", {
@@ -45,6 +52,15 @@ function mapExportStateBadge(state: string): { label: string; className: string 
     return { label: state, className: "bg-red-500/15 text-red-300" };
   }
   return { label: state, className: "bg-muted text-muted-foreground" };
+}
+
+function mapTssStateLabel(state: string | null | undefined): string {
+  if (!state) return "Nicht konfiguriert";
+  if (state === "INITIALIZED") return "Initialisiert";
+  if (state === "UNINITIALIZED") return "Nicht initialisiert";
+  if (state === "CREATED") return "Erstellt";
+  if (state === "DISABLED") return "Deaktiviert";
+  return state;
 }
 
 export default function FinanceTaxExportPage() {
@@ -210,19 +226,19 @@ export default function FinanceTaxExportPage() {
         ) : null}
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-          <Card className="border-border bg-card/60">
+          <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">TSE Zustand</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-xl font-semibold">{tssStatus?.state ?? "Nicht konfiguriert"}</p>
+              <p className="text-xl font-semibold">{mapTssStateLabel(tssStatus?.state)}</p>
               <p className="text-xs text-muted-foreground mt-1">
                 {tssStatus?.configured ? "Konfiguriert" : "Nicht konfiguriert"}
               </p>
             </CardContent>
           </Card>
 
-          <Card className="border-border bg-card/60">
+          <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">Exports gesamt</CardTitle>
             </CardHeader>
@@ -232,7 +248,7 @@ export default function FinanceTaxExportPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-border bg-card/60">
+          <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">Aktiv verarbeitet</CardTitle>
             </CardHeader>
@@ -242,7 +258,7 @@ export default function FinanceTaxExportPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-border bg-card/60">
+          <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">Fehlgeschlagen</CardTitle>
             </CardHeader>
@@ -260,7 +276,7 @@ export default function FinanceTaxExportPage() {
             </CardHeader>
             <CardContent className="space-y-3 text-sm text-amber-100">
               <p>
-                Für den Finanzamt-Export muss die TSE konfiguriert und im Status <strong>INITIALIZED</strong> sein.
+                Für den Finanzamt-Export muss die TSE konfiguriert und im Status <strong>Initialisiert</strong> sein.
               </p>
               <Link href="/dashboard/finanzen/tse" className="inline-flex text-primary hover:underline">
                 Zur TSE-Konfiguration
@@ -269,7 +285,7 @@ export default function FinanceTaxExportPage() {
           </Card>
         ) : null}
 
-        <Card className="border-border bg-card/60">
+        <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
           <CardHeader>
             <CardTitle className="text-base">Neuen Export starten</CardTitle>
           </CardHeader>
@@ -334,7 +350,7 @@ export default function FinanceTaxExportPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-border bg-card/60">
+        <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
           <CardHeader>
             <CardTitle className="text-base">Bisherige Exporte</CardTitle>
           </CardHeader>
@@ -353,7 +369,7 @@ export default function FinanceTaxExportPage() {
                   return (
                     <div
                       key={exp.export_id}
-                      className="px-3 py-2.5 flex items-center justify-between gap-3 hover:bg-accent/30 transition-colors"
+                      className={`px-3 py-2.5 flex items-center justify-between gap-3 ${DASHBOARD_ROW_HOVER_CLASS}`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <span className={`inline-flex rounded-full px-2 py-1 text-xs ${badge.className}`}>

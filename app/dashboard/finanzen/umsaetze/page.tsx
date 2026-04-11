@@ -23,19 +23,30 @@ import { useFinanceOverview } from "@/lib/hooks/queries/use-finance-overview";
 import {
   orderStatisticsApi,
   type CategoryStatistics,
-  type HourlyStatistics,
   type RevenueStatistics,
   type TopItem,
 } from "@/lib/api/order-statistics";
 
 const DASHBOARD_CARD_HOVER_CLASS =
   "transform-gpu shadow-md shadow-black/5 transition-all duration-200 ease-out motion-reduce:transition-none hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/10";
+const DASHBOARD_CARD_SURFACE_CLASS =
+  "relative z-0 h-full border-border bg-card/70 hover:z-40 focus-within:z-40 hover:bg-card/80 hover:border-primary/30";
+const DASHBOARD_ROW_HOVER_CLASS =
+  "transition-colors duration-200 ease-out motion-reduce:transition-none hover:bg-accent/60";
 
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("de-DE", {
     style: "currency",
     currency: "EUR",
   }).format(amount);
+}
+
+function formatCategoryLabel(category: string | null | undefined): string {
+  const normalizedCategory = (category ?? "").trim();
+  if (!normalizedCategory || /^uncategorized$/i.test(normalizedCategory)) {
+    return "Ohne Kategorie";
+  }
+  return normalizedCategory;
 }
 
 function formatSignedPercent(value: number | null): string {
@@ -99,7 +110,6 @@ export default function FinanceRevenuePage() {
   const [customStartDate, setCustomStartDate] = useState("");
   const [customEndDate, setCustomEndDate] = useState("");
   const [hoveredTimelineDate, setHoveredTimelineDate] = useState<string | null>(null);
-  const [hoveredHour, setHoveredHour] = useState<number | null>(null);
 
   const resolvedRange = useMemo(
     () =>
@@ -149,16 +159,6 @@ export default function FinanceRevenuePage() {
     enabled: Boolean(restaurantId),
     queryFn: async (): Promise<CategoryStatistics> =>
       orderStatisticsApi.getCategoryStatistics(restaurantId!, {
-        start_date: resolvedRange.fromIso,
-        end_date: resolvedRange.toIso,
-      }),
-  });
-
-  const hourlyQuery = useQuery({
-    queryKey: ["finance", "hourly", restaurantId, resolvedRange.fromIso, resolvedRange.toIso],
-    enabled: Boolean(restaurantId),
-    queryFn: async (): Promise<HourlyStatistics> =>
-      orderStatisticsApi.getHourlyStatistics(restaurantId!, {
         start_date: resolvedRange.fromIso,
         end_date: resolvedRange.toIso,
       }),
@@ -246,19 +246,9 @@ export default function FinanceRevenuePage() {
   const timelineLinePath = useMemo(() => buildSmoothCurvePath(timelinePoints), [timelinePoints]);
 
   const activeTimelineEntry = useMemo(() => {
-    if (hoveredTimelineDate) {
-      const hovered = revenueTimeline.find((entry) => entry.date === hoveredTimelineDate);
-      if (hovered) return hovered;
-    }
-    return timelineMetrics.peak;
-  }, [hoveredTimelineDate, revenueTimeline, timelineMetrics.peak]);
-
-  const activeTimelinePoint = useMemo(() => {
-    if (!activeTimelineEntry) return null;
-    const index = revenueTimeline.findIndex((entry) => entry.date === activeTimelineEntry.date);
-    if (index < 0) return null;
-    return timelinePoints[index] ?? null;
-  }, [activeTimelineEntry, revenueTimeline, timelinePoints]);
+    if (!hoveredTimelineDate) return null;
+    return revenueTimeline.find((entry) => entry.date === hoveredTimelineDate) ?? null;
+  }, [hoveredTimelineDate, revenueTimeline]);
 
   const categories = useMemo(() => {
     const entries = Object.entries(categoriesQuery.data ?? {});
@@ -272,29 +262,11 @@ export default function FinanceRevenuePage() {
       .slice(0, 8);
   }, [categoriesQuery.data]);
 
-  const hourlyBars = useMemo(() => {
-    const source = hourlyQuery.data ?? {};
-    const rows = Array.from({ length: 24 }, (_, hour) => {
-      const stats = source[String(hour)] ?? { order_count: 0, revenue: 0 };
-      return {
-        hour,
-        orderCount: Number(stats.order_count ?? 0),
-        revenue: Number(stats.revenue ?? 0),
-      };
-    });
-    const maxRevenue = Math.max(...rows.map((entry) => entry.revenue), 1);
-    return rows.map((entry) => ({
-      ...entry,
-      barHeight: (entry.revenue / maxRevenue) * 100,
-    }));
-  }, [hourlyQuery.data]);
-
-  const activeHourData = useMemo(() => {
-    if (hoveredHour !== null) {
-      return hourlyBars.find((entry) => entry.hour === hoveredHour) ?? null;
-    }
-    return [...hourlyBars].sort((a, b) => b.revenue - a.revenue)[0] ?? null;
-  }, [hourlyBars, hoveredHour]);
+  const topItemsMaxRevenue = useMemo(() => {
+    const topItems = topItemsQuery.data ?? [];
+    if (topItems.length === 0) return 1;
+    return Math.max(...topItems.map((item) => Number(item.revenue ?? 0)), 1);
+  }, [topItemsQuery.data]);
 
   const maxCategoryRevenue = Math.max(...categories.map((entry) => entry.revenue), 1);
   const revenueChange = getChangePercent(kpis.totalRevenue, Number(previousRevenueQuery.data?.total_revenue ?? 0));
@@ -329,7 +301,6 @@ export default function FinanceRevenuePage() {
   const analyticsError =
     (topItemsQuery.error as Error | null) ||
     (categoriesQuery.error as Error | null) ||
-    (hourlyQuery.error as Error | null) ||
     (previousRevenueQuery.error as Error | null) ||
     null;
 
@@ -339,7 +310,6 @@ export default function FinanceRevenuePage() {
       previousRevenueQuery.refetch(),
       topItemsQuery.refetch(),
       categoriesQuery.refetch(),
-      hourlyQuery.refetch(),
     ]);
   };
 
@@ -362,7 +332,7 @@ export default function FinanceRevenuePage() {
       }
     >
       <div className="space-y-6">
-        <Card className={`border-border bg-card/70 ${DASHBOARD_CARD_HOVER_CLASS}`}>
+        <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
           <CardHeader>
             <CardTitle className="text-base">Zeitraum</CardTitle>
           </CardHeader>
@@ -392,7 +362,7 @@ export default function FinanceRevenuePage() {
         </Card>
 
         {error || analyticsError ? (
-          <Card className="border-red-500/40 bg-red-500/10 shadow-lg shadow-red-950/20">
+          <Card className="border-red-500/40 bg-red-500/10">
             <CardContent className="pt-5 text-sm text-red-200">
               Umsatzdaten konnten nicht vollständig geladen werden: {(error ?? analyticsError)?.message}
             </CardContent>
@@ -400,7 +370,7 @@ export default function FinanceRevenuePage() {
         ) : null}
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-          <Card className={`border-border bg-card/70 ${DASHBOARD_CARD_HOVER_CLASS}`}>
+          <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between gap-2">
                 <CardTitle className="text-sm">Gesamtumsatz</CardTitle>
@@ -424,7 +394,7 @@ export default function FinanceRevenuePage() {
             </CardContent>
           </Card>
 
-          <Card className={`border-border bg-card/70 ${DASHBOARD_CARD_HOVER_CLASS}`}>
+          <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between gap-2">
                 <CardTitle className="text-sm">Durchschnittsbon</CardTitle>
@@ -436,13 +406,21 @@ export default function FinanceRevenuePage() {
               <p className="text-xs text-muted-foreground">
                 Vorperiode: {formatCurrency(Number(previousRevenueQuery.data?.average_order_value ?? 0))}
               </p>
-              <p className="text-xs text-muted-foreground">
-                Veränderung: <span className="text-foreground">{formatSignedPercent(avgOrderChange)}</span>
-              </p>
+              <div className="flex items-center gap-1 text-xs">
+                {avgOrderChange !== null && avgOrderChange >= 0 ? (
+                  <TrendingUp className="h-3.5 w-3.5 text-emerald-400" />
+                ) : (
+                  <TrendingDown className="h-3.5 w-3.5 text-amber-400" />
+                )}
+                <span className={avgOrderChange !== null && avgOrderChange >= 0 ? "text-emerald-400" : "text-amber-400"}>
+                  {formatSignedPercent(avgOrderChange)}
+                </span>
+                <span className="text-muted-foreground">vs. Vorperiode</span>
+              </div>
             </CardContent>
           </Card>
 
-          <Card className={`border-border bg-card/70 ${DASHBOARD_CARD_HOVER_CLASS}`}>
+          <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between gap-2">
                 <CardTitle className="text-sm">Trinkgeld und Rabatte</CardTitle>
@@ -461,7 +439,7 @@ export default function FinanceRevenuePage() {
             </CardContent>
           </Card>
 
-          <Card className={`border-border bg-card/70 ${DASHBOARD_CARD_HOVER_CLASS}`}>
+          <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between gap-2">
                 <CardTitle className="text-sm">Offene Beträge</CardTitle>
@@ -477,7 +455,7 @@ export default function FinanceRevenuePage() {
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-          <Card className={`xl:col-span-2 border-border bg-card/70 ${DASHBOARD_CARD_HOVER_CLASS}`}>
+          <Card className={`xl:col-span-2 ${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader className="space-y-2">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <CardTitle className="text-base">Umsatzverlauf</CardTitle>
@@ -507,19 +485,19 @@ export default function FinanceRevenuePage() {
               ) : (
                 <div className="space-y-3">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-xs">
-                    <div className="rounded-md border border-border/70 bg-background/40 px-3 py-2">
+                    <div className={`rounded-md border border-border/70 bg-background/40 px-3 py-2 ${DASHBOARD_ROW_HOVER_CLASS}`}>
                       <p className="text-muted-foreground">Stärkster Tag</p>
                       <p className="font-semibold text-foreground">
                         {timelineMetrics.peak ? `${timelineMetrics.peak.shortLabel} · ${formatCurrency(timelineMetrics.peak.amount)}` : "-"}
                       </p>
                     </div>
-                    <div className="rounded-md border border-border/70 bg-background/40 px-3 py-2">
+                    <div className={`rounded-md border border-border/70 bg-background/40 px-3 py-2 ${DASHBOARD_ROW_HOVER_CLASS}`}>
                       <p className="text-muted-foreground">Schwächster Umsatztag</p>
                       <p className="font-semibold text-foreground">
                         {timelineMetrics.weak ? `${timelineMetrics.weak.shortLabel} · ${formatCurrency(timelineMetrics.weak.amount)}` : "-"}
                       </p>
                     </div>
-                    <div className="rounded-md border border-border/70 bg-background/40 px-3 py-2">
+                    <div className={`rounded-md border border-border/70 bg-background/40 px-3 py-2 ${DASHBOARD_ROW_HOVER_CLASS}`}>
                       <p className="text-muted-foreground">Aktiver Hover</p>
                       <p className="font-semibold text-foreground">
                         {activeTimelineEntry
@@ -538,16 +516,51 @@ export default function FinanceRevenuePage() {
                         </linearGradient>
                       </defs>
 
-                      <line x1="0" y1="80" x2="100" y2="80" stroke="currentColor" className="text-border" strokeWidth="1.2" />
-                      <line x1="0" y1="50" x2="100" y2="50" stroke="currentColor" className="text-border/60" strokeDasharray="2 3" strokeWidth="1" />
-                      <line x1="0" y1="20" x2="100" y2="20" stroke="currentColor" className="text-border/60" strokeDasharray="2 3" strokeWidth="1" />
+                      <line
+                        x1="0"
+                        y1="80"
+                        x2="100"
+                        y2="80"
+                        stroke="currentColor"
+                        className="text-border"
+                        strokeWidth="1.2"
+                        vectorEffect="non-scaling-stroke"
+                      />
+                      <line
+                        x1="0"
+                        y1="50"
+                        x2="100"
+                        y2="50"
+                        stroke="currentColor"
+                        className="text-border/60"
+                        strokeDasharray="2 3"
+                        strokeWidth="1"
+                        vectorEffect="non-scaling-stroke"
+                      />
+                      <line
+                        x1="0"
+                        y1="20"
+                        x2="100"
+                        y2="20"
+                        stroke="currentColor"
+                        className="text-border/60"
+                        strokeDasharray="2 3"
+                        strokeWidth="1"
+                        vectorEffect="non-scaling-stroke"
+                      />
 
                       <path d={timelineAreaPath} fill="url(#finance-revenue-gradient)" className="text-primary" />
-                      <path d={timelineLinePath} fill="none" stroke="currentColor" className="text-primary" strokeWidth="1.4" />
+                      <path
+                        d={timelineLinePath}
+                        fill="none"
+                        stroke="currentColor"
+                        className="text-primary"
+                        strokeWidth="1.2"
+                        strokeLinejoin="round"
+                        strokeLinecap="round"
+                        vectorEffect="non-scaling-stroke"
+                      />
 
-                      {activeTimelinePoint ? (
-                        <circle cx={activeTimelinePoint.x} cy={activeTimelinePoint.y} r="1.8" className="fill-primary" />
-                      ) : null}
                     </svg>
 
                     <div
@@ -558,7 +571,7 @@ export default function FinanceRevenuePage() {
                         <button
                           key={entry.date}
                           type="button"
-                          className={`h-full rounded-sm transition-colors ${
+                          className={`h-full w-full border-r border-border/40 last:border-r-0 transition-colors ${
                             hoveredTimelineDate === entry.date ? "bg-primary/10" : "hover:bg-accent/40"
                           }`}
                           onMouseEnter={() => setHoveredTimelineDate(entry.date)}
@@ -581,7 +594,7 @@ export default function FinanceRevenuePage() {
             </CardContent>
           </Card>
 
-          <Card className={`border-border bg-card/70 ${DASHBOARD_CARD_HOVER_CLASS}`}>
+          <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader>
               <div className="flex items-center justify-between gap-2">
                 <CardTitle className="text-base">Zahlungsmix</CardTitle>
@@ -590,7 +603,10 @@ export default function FinanceRevenuePage() {
             </CardHeader>
             <CardContent className="space-y-3">
               {paymentMix.map((entry) => (
-                <div key={entry.label} className="space-y-1.5 rounded-md border border-border/70 bg-background/30 p-2.5">
+                <div
+                  key={entry.label}
+                  className={`space-y-1.5 rounded-md border border-border/70 bg-background/30 p-2.5 ${DASHBOARD_ROW_HOVER_CLASS}`}
+                >
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-foreground">{entry.label}</span>
                     <span className="font-medium text-foreground">{formatCurrency(entry.value)}</span>
@@ -606,11 +622,11 @@ export default function FinanceRevenuePage() {
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-          <Card className={`border-border bg-card/70 ${DASHBOARD_CARD_HOVER_CLASS}`}>
+          <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader>
               <CardTitle className="text-base">Top-Artikel</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-2 text-sm">
               {(topItemsQuery.data ?? []).length === 0 ? (
                 <p className="text-sm text-muted-foreground">Keine Artikeldaten im Zeitraum.</p>
               ) : (
@@ -618,13 +634,18 @@ export default function FinanceRevenuePage() {
                   {(topItemsQuery.data ?? []).map((item, index) => (
                     <div
                       key={`${item.item_name}-${index}`}
-                      className="flex items-center justify-between rounded-md border border-border/70 bg-background/40 px-3 py-2 transition-colors hover:bg-accent/40"
+                      className={`relative overflow-hidden flex items-center justify-between rounded-md border border-border bg-background/50 px-3 py-2 ${DASHBOARD_ROW_HOVER_CLASS}`}
                     >
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">{item.item_name}</p>
+                      <span
+                        aria-hidden="true"
+                        className="pointer-events-none absolute inset-y-0 left-0 bg-primary/10"
+                        style={{ width: `${Math.max(0, Math.min(100, (Number(item.revenue ?? 0) / topItemsMaxRevenue) * 100))}%` }}
+                      />
+                      <div className="relative z-10 min-w-0">
+                        <p className="font-medium text-foreground truncate">{item.item_name}</p>
                         <p className="text-xs text-muted-foreground">{item.quantity_sold}x verkauft</p>
                       </div>
-                      <p className="text-sm font-semibold text-foreground">{formatCurrency(item.revenue)}</p>
+                      <p className="relative z-10 font-semibold text-foreground">{formatCurrency(item.revenue)}</p>
                     </div>
                   ))}
                 </div>
@@ -632,7 +653,7 @@ export default function FinanceRevenuePage() {
             </CardContent>
           </Card>
 
-          <Card className={`border-border bg-card/70 ${DASHBOARD_CARD_HOVER_CLASS}`}>
+          <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader>
               <CardTitle className="text-base">Kategorien</CardTitle>
             </CardHeader>
@@ -642,9 +663,12 @@ export default function FinanceRevenuePage() {
               ) : (
                 <div className="space-y-3">
                   {categories.map((entry) => (
-                    <div key={entry.name} className="space-y-1.5 rounded-md border border-border/70 bg-background/30 p-2.5">
+                    <div
+                      key={entry.name}
+                      className={`space-y-1.5 rounded-md border border-border/70 bg-background/30 p-2.5 ${DASHBOARD_ROW_HOVER_CLASS}`}
+                    >
                       <div className="flex items-center justify-between text-sm gap-2">
-                        <span className="text-foreground truncate">{entry.name}</span>
+                        <span className="text-foreground truncate">{formatCategoryLabel(entry.name)}</span>
                         <span className="font-medium text-foreground">{formatCurrency(entry.revenue)}</span>
                       </div>
                       <div className="h-2.5 rounded bg-muted overflow-hidden">
@@ -662,53 +686,6 @@ export default function FinanceRevenuePage() {
           </Card>
         </div>
 
-        <Card className={`border-border bg-card/70 ${DASHBOARD_CARD_HOVER_CLASS}`}>
-          <CardHeader className="space-y-2">
-            <div className="flex items-center justify-between gap-2">
-              <CardTitle className="text-base">Umsatz nach Stunde</CardTitle>
-              <span className="text-xs text-muted-foreground">
-                {activeHourData
-                  ? `${String(activeHourData.hour).padStart(2, "0")}:00 · ${formatCurrency(activeHourData.revenue)}`
-                  : "Keine Daten"}
-              </span>
-            </div>
-            {activeHourData ? (
-              <p className="text-xs text-muted-foreground">
-                {activeHourData.orderCount} Bestellungen in der ausgewählten Stunde
-              </p>
-            ) : null}
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-12 gap-2">
-              {hourlyBars.map((entry) => (
-                <button
-                  key={entry.hour}
-                  type="button"
-                  className="flex flex-col items-center gap-1"
-                  onMouseEnter={() => setHoveredHour(entry.hour)}
-                  onMouseLeave={() => setHoveredHour(null)}
-                  onFocus={() => setHoveredHour(entry.hour)}
-                  onBlur={() => setHoveredHour(null)}
-                  title={`${String(entry.hour).padStart(2, "0")}:00 - ${formatCurrency(entry.revenue)} / ${entry.orderCount} Bestellungen`}
-                >
-                  <div
-                    className={`h-24 w-full rounded border border-border/70 bg-background/40 overflow-hidden relative transition-colors ${
-                      hoveredHour === entry.hour ? "bg-accent/40" : ""
-                    }`}
-                  >
-                    {entry.revenue > 0 ? (
-                      <div
-                        className="absolute bottom-0 left-0 right-0 bg-primary/80"
-                        style={{ height: `${Math.max(4, entry.barHeight)}%` }}
-                      />
-                    ) : null}
-                  </div>
-                  <span className="text-[10px] text-muted-foreground">{String(entry.hour).padStart(2, "0")}</span>
-                </button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </FinanceModuleLayout>
   );

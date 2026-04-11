@@ -54,6 +54,13 @@ function useToast() {
   return { toasts, add };
 }
 
+const DASHBOARD_CARD_HOVER_CLASS =
+  "transform-gpu shadow-md shadow-black/5 transition-all duration-200 ease-out motion-reduce:transition-none hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/10";
+const DASHBOARD_PANEL_SURFACE_CLASS =
+  "relative z-0 border border-border bg-card/70 hover:z-40 focus-within:z-40 hover:bg-card/80 hover:border-primary/30";
+const DASHBOARD_ROW_HOVER_CLASS =
+  "transition-colors duration-200 ease-out motion-reduce:transition-none hover:bg-accent/60";
+
 // ─── Status Badge ─────────────────────────────────────────────────────────────
 
 function StatusBadge({ state }: { state: string | null }) {
@@ -64,37 +71,48 @@ function StatusBadge({ state }: { state: string | null }) {
       </span>
     );
 
-  const config: Record<string, { bg: string; text: string; icon: React.ReactNode }> = {
+  const config: Record<string, { label: string; bg: string; text: string; icon: React.ReactNode }> = {
     INITIALIZED: {
+      label: "Initialisiert",
       bg: "bg-emerald-500/15",
       text: "text-emerald-400",
       icon: <CheckCircle2 className="w-3.5 h-3.5" />,
     },
     CREATED: {
+      label: "Erstellt",
       bg: "bg-amber-500/15",
       text: "text-amber-400",
       icon: <AlertTriangle className="w-3.5 h-3.5" />,
     },
     UNINITIALIZED: {
+      label: "Nicht initialisiert",
       bg: "bg-amber-500/15",
       text: "text-amber-400",
       icon: <AlertTriangle className="w-3.5 h-3.5" />,
     },
     DISABLED: {
+      label: "Deaktiviert",
       bg: "bg-red-500/15",
       text: "text-red-400",
       icon: <XCircle className="w-3.5 h-3.5" />,
     },
   };
 
-  const c = config[state] ?? config.CREATED;
+  const c = config[state];
+  const label = c?.label ?? state;
+  const badgeClass = c ?? {
+    label: state,
+    bg: "bg-muted",
+    text: "text-muted-foreground",
+    icon: <AlertTriangle className="w-3.5 h-3.5" />,
+  };
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${c.bg} ${c.text}`}
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${badgeClass.bg} ${badgeClass.text}`}
     >
-      {c.icon}
-      {state}
+      {badgeClass.icon}
+      {label}
     </span>
   );
 }
@@ -338,7 +356,7 @@ export default function FiskalyPage() {
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
         {/* TSS Status Card */}
-        <div className="rounded-lg border border-border bg-card/60 shadow-lg shadow-black/20 overflow-hidden">
+        <div className={`rounded-lg overflow-hidden ${DASHBOARD_PANEL_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
           <div className="flex items-start justify-between px-4 py-3 border-b border-border bg-background/70">
             <div className="flex items-start gap-2">
               <ShieldCheck className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
@@ -456,7 +474,7 @@ export default function FiskalyPage() {
 
         {/* Transactions List */}
         {isConfigured && (
-          <div className="rounded-lg border border-border bg-card/60 shadow-lg shadow-black/20 overflow-hidden">
+          <div className={`rounded-lg overflow-hidden ${DASHBOARD_PANEL_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <div className="flex items-start justify-between px-4 py-3 border-b border-border bg-background/70">
               <div className="flex items-start gap-2">
                 <FileText className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
@@ -480,7 +498,7 @@ export default function FiskalyPage() {
                 transactions.map((tx) => (
                   <div
                     key={tx.id}
-                    className="px-4 py-3 hover:bg-accent/30 transition-colors"
+                    className={`px-4 py-3 ${DASHBOARD_ROW_HOVER_CLASS}`}
                   >
                     <div className="flex items-center justify-between gap-3">
                       <div className="flex items-center gap-3 min-w-0">
@@ -594,7 +612,7 @@ export default function FiskalyPage() {
           </div>
         )}
         {isConfigured && isInitialized ? (
-          <div className="rounded-lg border border-border bg-card/60 shadow-lg shadow-black/20 overflow-hidden">
+          <div className={`rounded-lg overflow-hidden ${DASHBOARD_PANEL_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <div className="px-4 py-3 border-b border-border bg-background/70">
               <h2 className="text-sm font-semibold text-foreground">Finanzamt-Export</h2>
               <p className="text-xs text-muted-foreground mt-0.5">

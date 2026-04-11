@@ -3,12 +3,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { format, parseISO, startOfDay, subDays } from "date-fns";
 import { de } from "date-fns/locale";
-import { Download, FilePenLine, Loader2, RefreshCw, Search } from "lucide-react";
+import { Download, Loader2, RefreshCw, Search } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FinanceModuleLayout } from "@/components/finance/finance-module-layout";
 import { FinanceRangeControls } from "@/components/finance/finance-range-controls";
+import { DropdownSelector } from "@/components/area-selector";
 import { type FinanceRangePreset, resolveFinanceRange } from "@/lib/finance/date-range";
 import { restaurantsApi, type Restaurant } from "@/lib/api/restaurants";
 import { ordersApi, type Order } from "@/lib/api/orders";
@@ -16,6 +17,17 @@ import { getApiUrlForEndpoint } from "@/lib/api/client";
 import { OrderDetailDialog } from "@/components/order-detail-dialog";
 
 type InvoiceFilter = "all" | "paid" | "open";
+const INVOICE_FILTER_OPTIONS: Array<{ id: InvoiceFilter; label: string }> = [
+  { id: "all", label: "Alle Rechnungen" },
+  { id: "paid", label: "Nur bezahlt" },
+  { id: "open", label: "Offen / Teilweise" },
+];
+const DASHBOARD_CARD_HOVER_CLASS =
+  "transform-gpu shadow-md shadow-black/5 transition-all duration-200 ease-out motion-reduce:transition-none hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/10";
+const DASHBOARD_CARD_SURFACE_CLASS =
+  "relative z-0 h-full border-border bg-card/70 hover:z-40 focus-within:z-40 hover:bg-card/80 hover:border-primary/30";
+const DASHBOARD_ROW_HOVER_CLASS =
+  "transition-colors duration-200 ease-out motion-reduce:transition-none hover:bg-accent/60";
 
 interface Toast {
   id: number;
@@ -64,6 +76,7 @@ function paymentStatusTone(status: Order["payment_status"]): string {
 
 export default function FinanceInvoiceEditorPage() {
   const { toasts, notify } = useToast();
+  const pageSize = 20;
 
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
@@ -73,6 +86,7 @@ export default function FinanceInvoiceEditorPage() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [invoiceFilter, setInvoiceFilter] = useState<InvoiceFilter>("all");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const [preset, setPreset] = useState<FinanceRangePreset>("30d");
   const [customStartDate, setCustomStartDate] = useState(
@@ -167,6 +181,15 @@ export default function FinanceInvoiceEditorPage() {
     };
   }, [filteredOrders]);
 
+  const totalPages = Math.max(1, Math.ceil(filteredOrders.length / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const pageStart = (safePage - 1) * pageSize;
+  const pagedOrders = filteredOrders.slice(pageStart, pageStart + pageSize);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [invoiceFilter, searchQuery, resolvedRange.fromIso, resolvedRange.toIso]);
+
   const openEditor = (orderId: string) => {
     setSelectedOrderId(orderId);
     setDialogOpen(true);
@@ -233,7 +256,7 @@ export default function FinanceInvoiceEditorPage() {
       }
     >
       <div className="space-y-6">
-        <Card className="border-border bg-card/60">
+        <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
           <CardHeader>
             <CardTitle className="text-base">Zeitraum und Filter</CardTitle>
           </CardHeader>
@@ -270,21 +293,21 @@ export default function FinanceInvoiceEditorPage() {
                   onChange={(event) => setSearchQuery(event.target.value)}
                 />
               </div>
-              <select
-                value={invoiceFilter}
-                onChange={(event) => setInvoiceFilter(event.target.value as InvoiceFilter)}
-                className="h-10 rounded-md border border-input bg-card px-3 text-sm text-foreground"
-              >
-                <option value="all">Alle Rechnungen</option>
-                <option value="paid">Nur bezahlt</option>
-                <option value="open">Offen / Teilweise</option>
-              </select>
+              <DropdownSelector
+                options={INVOICE_FILTER_OPTIONS}
+                selectedId={invoiceFilter}
+                onSelect={setInvoiceFilter}
+                placeholder="Alle Rechnungen"
+                triggerClassName="w-full inline-flex items-center justify-between gap-2 px-3 py-2 rounded-md border border-input bg-card/50 text-sm text-foreground shadow-inner hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring min-h-[40px]"
+                menuWidthClassName="w-full"
+                zIndexClassName="z-[80]"
+              />
             </div>
           </CardContent>
         </Card>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-          <Card className="border-border bg-card/60">
+          <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">Rechnungen</CardTitle>
             </CardHeader>
@@ -293,7 +316,7 @@ export default function FinanceInvoiceEditorPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-border bg-card/60">
+          <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">Bezahlt</CardTitle>
             </CardHeader>
@@ -303,7 +326,7 @@ export default function FinanceInvoiceEditorPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-border bg-card/60">
+          <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">Offen / Teilweise</CardTitle>
             </CardHeader>
@@ -312,7 +335,7 @@ export default function FinanceInvoiceEditorPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-border bg-card/60">
+          <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">Gesamtvolumen</CardTitle>
             </CardHeader>
@@ -328,7 +351,7 @@ export default function FinanceInvoiceEditorPage() {
           </Card>
         ) : null}
 
-        <Card className="border-border bg-card/60">
+        <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
           <CardHeader>
             <CardTitle className="text-base">Rechnungsliste</CardTitle>
           </CardHeader>
@@ -350,12 +373,25 @@ export default function FinanceInvoiceEditorPage() {
                       <th className="px-4 py-3 font-medium">Status</th>
                       <th className="px-4 py-3 font-medium">Zahlungsart</th>
                       <th className="px-4 py-3 font-medium text-right">Betrag</th>
-                      <th className="px-4 py-3 font-medium text-right">Aktionen</th>
+                      <th className="px-4 py-3 font-medium text-right">PDF</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border bg-card">
-                    {filteredOrders.map((order) => (
-                      <tr key={order.id} className="hover:bg-accent/40 transition-colors">
+                    {pagedOrders.map((order) => (
+                      <tr
+                        key={order.id}
+                        className={`cursor-pointer ${DASHBOARD_ROW_HOVER_CLASS}`}
+                        onClick={() => openEditor(order.id)}
+                        onKeyDown={(event) => {
+                          if (event.target !== event.currentTarget) return;
+                          if (event.key !== "Enter" && event.key !== " ") return;
+                          event.preventDefault();
+                          openEditor(order.id);
+                        }}
+                        tabIndex={0}
+                        role="button"
+                        aria-label={`Rechnung ${order.order_number || `#${order.id.slice(0, 8)}`} bearbeiten`}
+                      >
                         <td className="px-4 py-3">
                           <p className="font-semibold text-foreground">{order.order_number || `#${order.id.slice(0, 8)}`}</p>
                           <p className="text-xs text-muted-foreground font-mono">{order.id}</p>
@@ -373,26 +409,18 @@ export default function FinanceInvoiceEditorPage() {
                           {formatCurrency(order.total)}
                         </td>
                         <td className="px-4 py-3">
-                          <div className="flex items-center justify-end gap-2">
+                          <div className="flex items-center justify-end">
                             <Button
                               variant="outline"
                               size="sm"
                               className="gap-1"
                               onClick={(event) => {
                                 event.preventDefault();
-                                openEditor(order.id);
-                              }}
-                            >
-                              <FilePenLine className="h-3.5 w-3.5" />
-                              Bearbeiten
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="gap-1"
-                              onClick={(event) => {
-                                event.preventDefault();
+                                event.stopPropagation();
                                 void handleDownloadInvoice(order.id, order.order_number);
+                              }}
+                              onKeyDown={(event) => {
+                                event.stopPropagation();
                               }}
                             >
                               <Download className="h-3.5 w-3.5" />
@@ -404,6 +432,35 @@ export default function FinanceInvoiceEditorPage() {
                     ))}
                   </tbody>
                 </table>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-border bg-card px-4 py-3 text-xs text-muted-foreground">
+                  <div>
+                    Zeigt {Math.min(pageStart + 1, filteredOrders.length)}-
+                    {Math.min(pageStart + pageSize, filteredOrders.length)} von {filteredOrders.length} Einträgen
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                      disabled={safePage === 1}
+                      className="bg-muted border-input text-foreground hover:bg-accent"
+                    >
+                      Zurück
+                    </Button>
+                    <span className="text-muted-foreground">
+                      Seite {safePage} von {totalPages}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                      disabled={safePage === totalPages}
+                      className="bg-muted border-input text-foreground hover:bg-accent"
+                    >
+                      Weiter
+                    </Button>
+                  </div>
+                </div>
               </div>
             )}
           </CardContent>

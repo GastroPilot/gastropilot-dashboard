@@ -26,6 +26,10 @@ import { classifyPaymentMethod, PAYMENT_BUCKET_LABEL, type PaymentBucket } from 
 
 const DASHBOARD_CARD_HOVER_CLASS =
   "transform-gpu shadow-md shadow-black/5 transition-all duration-200 ease-out motion-reduce:transition-none hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/10";
+const DASHBOARD_CARD_SURFACE_CLASS =
+  "relative z-0 h-full border-border bg-card/70 hover:z-40 focus-within:z-40 hover:bg-card/80 hover:border-primary/30";
+const DASHBOARD_ROW_HOVER_CLASS =
+  "transition-colors duration-200 ease-out motion-reduce:transition-none hover:bg-accent/60";
 
 function todayIsoDate(): string {
   return format(new Date(), "yyyy-MM-dd");
@@ -259,7 +263,7 @@ export default function FinanceDailyClosePage() {
       }
     >
       <div className="space-y-6">
-        <Card className={`border-border bg-card/70 ${DASHBOARD_CARD_HOVER_CLASS}`}>
+        <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
           <CardHeader>
             <CardTitle className="text-base">Abschlusstag</CardTitle>
           </CardHeader>
@@ -289,13 +293,13 @@ export default function FinanceDailyClosePage() {
         </Card>
 
         {error ? (
-          <Card className="border-red-500/40 bg-red-500/10 shadow-lg shadow-red-950/20">
+          <Card className="border-red-500/40 bg-red-500/10">
             <CardContent className="pt-4 text-sm text-red-200">{error}</CardContent>
           </Card>
         ) : null}
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-          <Card className={`border-border bg-card/70 ${DASHBOARD_CARD_HOVER_CLASS}`}>
+          <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between gap-2">
                 <CardTitle className="text-sm">Umsatz bezahlt</CardTitle>
@@ -308,7 +312,7 @@ export default function FinanceDailyClosePage() {
             </CardContent>
           </Card>
 
-          <Card className={`border-border bg-card/70 ${DASHBOARD_CARD_HOVER_CLASS}`}>
+          <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between gap-2">
                 <CardTitle className="text-sm">Offener Betrag</CardTitle>
@@ -321,7 +325,7 @@ export default function FinanceDailyClosePage() {
             </CardContent>
           </Card>
 
-          <Card className={`border-border bg-card/70 ${DASHBOARD_CARD_HOVER_CLASS}`}>
+          <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between gap-2">
                 <CardTitle className="text-sm">Steuer / Rabatte</CardTitle>
@@ -335,7 +339,7 @@ export default function FinanceDailyClosePage() {
             </CardContent>
           </Card>
 
-          <Card className={`border-border bg-card/70 ${DASHBOARD_CARD_HOVER_CLASS}`}>
+          <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between gap-2">
                 <CardTitle className="text-sm">Bestellungen</CardTitle>
@@ -350,7 +354,7 @@ export default function FinanceDailyClosePage() {
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-          <Card className={`border-border bg-card/70 ${DASHBOARD_CARD_HOVER_CLASS}`}>
+          <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader>
               <div className="flex items-center justify-between gap-2">
                 <CardTitle className="text-base">Zahlungsarten</CardTitle>
@@ -359,7 +363,10 @@ export default function FinanceDailyClosePage() {
             </CardHeader>
             <CardContent className="space-y-3">
               {paymentMix.map((entry) => (
-                <div key={entry.bucket} className="space-y-1.5 rounded-md border border-border/70 bg-background/30 p-2.5">
+                <div
+                  key={entry.bucket}
+                  className={`space-y-1.5 rounded-md border border-border/70 bg-background/30 p-2.5 ${DASHBOARD_ROW_HOVER_CLASS}`}
+                >
                   <div className="flex items-center justify-between text-sm">
                     <span>{PAYMENT_BUCKET_LABEL[entry.bucket]}</span>
                     <span className="font-medium text-foreground">{formatCurrency(entry.value)}</span>
@@ -373,7 +380,7 @@ export default function FinanceDailyClosePage() {
             </CardContent>
           </Card>
 
-          <Card className={`xl:col-span-2 border-border bg-card/70 ${DASHBOARD_CARD_HOVER_CLASS}`}>
+          <Card className={`xl:col-span-2 ${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader className="space-y-2">
               <div className="flex items-center justify-between gap-2">
                 <CardTitle className="text-base">Umsatz nach Stunde</CardTitle>
@@ -427,7 +434,7 @@ export default function FinanceDailyClosePage() {
           </Card>
         </div>
 
-        <Card className={`border-border bg-card/70 ${DASHBOARD_CARD_HOVER_CLASS}`}>
+        <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
           <CardHeader>
             <div className="flex items-center justify-between gap-2">
               <CardTitle className="text-base">Offene Vorgänge</CardTitle>
@@ -457,7 +464,7 @@ export default function FinanceDailyClosePage() {
                     </thead>
                     <tbody className="divide-y divide-border bg-card">
                       {openOrders.map((order) => (
-                        <tr key={order.id} className="transition-colors hover:bg-accent/40">
+                        <tr key={order.id} className={DASHBOARD_ROW_HOVER_CLASS}>
                           <td className="px-4 py-2.5">
                             <div className="font-semibold text-foreground">
                               {order.order_number || `#${order.id.slice(0, 8)}`}
@@ -489,24 +496,24 @@ export default function FinanceDailyClosePage() {
         </Card>
 
         {revenueStats ? (
-          <Card className={`border-border bg-card/70 ${DASHBOARD_CARD_HOVER_CLASS}`}>
+          <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader>
               <CardTitle className="text-base">Statistik-Referenz (Tag)</CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
-              <div className="rounded border border-border/60 bg-background/40 px-3 py-2">
+              <div className={`rounded-md border border-border/70 bg-background/40 px-3 py-2 ${DASHBOARD_ROW_HOVER_CLASS}`}>
                 <p className="text-muted-foreground">API-Umsatz</p>
                 <p className="font-semibold text-foreground">{formatCurrency(revenueStats.total_revenue)}</p>
               </div>
-              <div className="rounded border border-border/60 bg-background/40 px-3 py-2">
+              <div className={`rounded-md border border-border/70 bg-background/40 px-3 py-2 ${DASHBOARD_ROW_HOVER_CLASS}`}>
                 <p className="text-muted-foreground">API-Orders</p>
                 <p className="font-semibold text-foreground">{revenueStats.total_orders}</p>
               </div>
-              <div className="rounded border border-border/60 bg-background/40 px-3 py-2">
+              <div className={`rounded-md border border-border/70 bg-background/40 px-3 py-2 ${DASHBOARD_ROW_HOVER_CLASS}`}>
                 <p className="text-muted-foreground">API-Avg</p>
                 <p className="font-semibold text-foreground">{formatCurrency(revenueStats.average_order_value)}</p>
               </div>
-              <div className="rounded border border-border/60 bg-background/40 px-3 py-2">
+              <div className={`rounded-md border border-border/70 bg-background/40 px-3 py-2 ${DASHBOARD_ROW_HOVER_CLASS}`}>
                 <p className="text-muted-foreground">API-Tips</p>
                 <p className="font-semibold text-foreground">{formatCurrency(revenueStats.total_tips)}</p>
               </div>

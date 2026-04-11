@@ -30,6 +30,13 @@ type Feedback = {
   message: string;
 } | null;
 
+const DASHBOARD_CARD_HOVER_CLASS =
+  "transform-gpu shadow-md shadow-black/5 transition-all duration-200 ease-out motion-reduce:transition-none hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/10";
+const DASHBOARD_CARD_SURFACE_CLASS =
+  "relative z-0 h-full border-border bg-card/70 hover:z-40 focus-within:z-40 hover:bg-card/80 hover:border-primary/30";
+const DASHBOARD_ROW_HOVER_CLASS =
+  "transition-colors duration-200 ease-out motion-reduce:transition-none hover:bg-accent/60";
+
 function formatCurrency(amount: number, currency = "EUR"): string {
   return new Intl.NumberFormat("de-DE", {
     style: "currency",
@@ -291,7 +298,7 @@ export default function FinanceCardReadersPage() {
         ) : null}
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-          <Card className="border-border bg-card/60">
+          <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">Reader gesamt</CardTitle>
             </CardHeader>
@@ -301,7 +308,7 @@ export default function FinanceCardReadersPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-border bg-card/60">
+          <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">Reader-Status</CardTitle>
             </CardHeader>
@@ -311,7 +318,7 @@ export default function FinanceCardReadersPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-border bg-card/60">
+          <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">Erfolgreiche Kartenzahlungen</CardTitle>
             </CardHeader>
@@ -321,7 +328,7 @@ export default function FinanceCardReadersPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-border bg-card/60">
+          <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">Probleme</CardTitle>
             </CardHeader>
@@ -333,7 +340,7 @@ export default function FinanceCardReadersPage() {
         </div>
 
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-          <Card className="xl:col-span-2 border-border bg-card/60">
+          <Card className={`xl:col-span-2 ${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader>
               <CardTitle className="text-base">Kartenlesegeräte</CardTitle>
             </CardHeader>
@@ -351,7 +358,10 @@ export default function FinanceCardReadersPage() {
                     const readerBadge = mapReaderBadge(entry.reader.status);
                     const connectionBadge = mapConnectionBadge(entry.status);
                     return (
-                      <div key={entry.reader.id} className="rounded-md border border-border/70 bg-background/40 p-3">
+                      <div
+                        key={entry.reader.id}
+                        className={`rounded-md border border-border/70 bg-background/40 p-3 ${DASHBOARD_ROW_HOVER_CLASS}`}
+                      >
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                           <div className="space-y-1">
                             <p className="text-sm font-semibold text-foreground">{entry.reader.name}</p>
@@ -402,7 +412,7 @@ export default function FinanceCardReadersPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-border bg-card/60">
+          <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader>
               <CardTitle className="text-base">Reader koppeln</CardTitle>
             </CardHeader>
@@ -457,7 +467,7 @@ export default function FinanceCardReadersPage() {
           </Card>
         </div>
 
-        <Card className="border-border bg-card/60">
+        <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
           <CardHeader>
             <CardTitle className="text-base">Letzte Kartenzahlungen</CardTitle>
           </CardHeader>
@@ -486,7 +496,7 @@ export default function FinanceCardReadersPage() {
                             ? "text-red-300"
                             : "text-amber-300";
                       return (
-                        <tr key={payment.id} className="border-b border-border/60 align-top">
+                        <tr key={payment.id} className={`border-b border-border/60 align-top ${DASHBOARD_ROW_HOVER_CLASS}`}>
                           <td className="py-2 pr-3 whitespace-nowrap">{formatDate(payment.initiated_at)}</td>
                           <td className="py-2 pr-3 font-mono text-xs">{payment.order_id.slice(0, 8)}...</td>
                           <td className="py-2 pr-3 font-mono text-xs">{payment.reader_id ?? "-"}</td>

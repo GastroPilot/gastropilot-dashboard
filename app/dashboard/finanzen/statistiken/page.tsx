@@ -30,6 +30,8 @@ import {
 
 const DASHBOARD_CARD_HOVER_CLASS =
   "transform-gpu shadow-md shadow-black/5 transition-all duration-200 ease-out motion-reduce:transition-none hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/10";
+const DASHBOARD_ROW_HOVER_CLASS =
+  "transition-colors duration-200 ease-out motion-reduce:transition-none hover:bg-accent/60";
 
 const WEEKDAY_LABELS = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
 
@@ -38,6 +40,14 @@ function formatCurrency(amount: number): string {
     style: "currency",
     currency: "EUR",
   }).format(amount);
+}
+
+function formatCategoryLabel(category: string | null | undefined): string {
+  const normalizedCategory = (category ?? "").trim();
+  if (!normalizedCategory || /^uncategorized$/i.test(normalizedCategory)) {
+    return "Ohne Kategorie";
+  }
+  return normalizedCategory;
 }
 
 function formatSignedPercent(value: number | null): string {
@@ -313,6 +323,11 @@ export default function FinancePeriodStatsPage() {
   }, [categoriesQuery.data]);
 
   const maxCategoryRevenue = Math.max(...categories.map((entry) => entry.revenue), 1);
+  const topItemsMaxRevenue = useMemo(() => {
+    const topItems = topItemsQuery.data ?? [];
+    if (topItems.length === 0) return 1;
+    return Math.max(...topItems.map((item) => Number(item.revenue ?? 0)), 1);
+  }, [topItemsQuery.data]);
 
   const weekdayDistribution = useMemo(() => {
     const buckets = Array.from({ length: 7 }, (_, day) => ({
@@ -468,7 +483,7 @@ export default function FinancePeriodStatsPage() {
         </Card>
 
         {statsError ? (
-          <Card className="border-red-500/40 bg-red-500/10 shadow-lg shadow-red-950/20">
+          <Card className="border-red-500/40 bg-red-500/10">
             <CardContent className="pt-4 text-sm text-red-200">{statsError.message}</CardContent>
           </Card>
         ) : null}
@@ -621,7 +636,10 @@ export default function FinancePeriodStatsPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               {weekdayDistribution.map((entry) => (
-                <div key={entry.day} className="space-y-1.5 rounded-md border border-border/70 bg-background/30 p-2.5">
+                <div
+                  key={entry.day}
+                  className={`space-y-1.5 rounded-md border border-border/70 bg-background/30 p-2.5 ${DASHBOARD_ROW_HOVER_CLASS}`}
+                >
                   <div className="flex items-center justify-between text-sm">
                     <span>{entry.label}</span>
                     <span className="font-medium text-foreground">{formatCurrency(entry.revenue)}</span>
@@ -649,14 +667,17 @@ export default function FinancePeriodStatsPage() {
                 <p className="text-sm text-muted-foreground">Keine Kategoriedaten verfügbar.</p>
               ) : (
                 categories.map((entry) => (
-                  <div key={entry.name} className="space-y-1.5 rounded-md border border-border/70 bg-background/30 p-2.5">
-                    <div className="flex items-center justify-between text-sm">
-                      <span>{entry.name}</span>
+                  <div
+                    key={entry.name}
+                    className={`space-y-1.5 rounded-md border border-border/70 bg-background/30 p-2.5 ${DASHBOARD_ROW_HOVER_CLASS}`}
+                  >
+                    <div className="flex items-center justify-between text-sm gap-2">
+                      <span className="text-foreground truncate">{formatCategoryLabel(entry.name)}</span>
                       <span className="font-medium text-foreground">{formatCurrency(entry.revenue)}</span>
                     </div>
                     <div className="h-2.5 rounded bg-muted overflow-hidden">
                       <div
-                        className="h-full bg-primary"
+                        className="h-full bg-primary/80"
                         style={{ width: `${Math.max(2, (entry.revenue / maxCategoryRevenue) * 100)}%` }}
                       />
                     </div>
@@ -671,7 +692,7 @@ export default function FinancePeriodStatsPage() {
             <CardHeader>
               <CardTitle className="text-base">Top-Artikel</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-2 text-sm">
               {(topItemsQuery.data ?? []).length === 0 ? (
                 <p className="text-sm text-muted-foreground">Keine Artikeldaten verfügbar.</p>
               ) : (
@@ -679,13 +700,18 @@ export default function FinancePeriodStatsPage() {
                   {(topItemsQuery.data ?? []).map((item, idx) => (
                     <div
                       key={`${item.item_name}-${idx}`}
-                      className="rounded border border-border/60 bg-background/40 px-3 py-2 transition-colors hover:bg-accent/40"
+                      className={`relative overflow-hidden flex items-center justify-between rounded-md border border-border bg-background/50 px-3 py-2 ${DASHBOARD_ROW_HOVER_CLASS}`}
                     >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-sm font-medium text-foreground truncate">{item.item_name}</span>
-                        <span className="text-sm font-semibold text-foreground">{formatCurrency(item.revenue)}</span>
+                      <span
+                        aria-hidden="true"
+                        className="pointer-events-none absolute inset-y-0 left-0 bg-primary/10"
+                        style={{ width: `${Math.max(0, Math.min(100, (Number(item.revenue ?? 0) / topItemsMaxRevenue) * 100))}%` }}
+                      />
+                      <div className="relative z-10 min-w-0">
+                        <p className="font-medium text-foreground truncate">{item.item_name}</p>
+                        <p className="text-xs text-muted-foreground">{item.quantity_sold}x verkauft</p>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">{item.quantity_sold}x verkauft</p>
+                      <p className="relative z-10 font-semibold text-foreground">{formatCurrency(item.revenue)}</p>
                     </div>
                   ))}
                 </div>

@@ -214,6 +214,14 @@ function formatOrdersAxis(value: number): string {
   return new Intl.NumberFormat("de-DE", { maximumFractionDigits }).format(rounded);
 }
 
+function formatCategoryLabel(category: string | null | undefined): string {
+  const normalizedCategory = (category ?? "").trim();
+  if (!normalizedCategory || /^uncategorized$/i.test(normalizedCategory)) {
+    return "Ohne Kategorie";
+  }
+  return normalizedCategory;
+}
+
 function calculateDeltaPercent(current: number, previous: number): number | null {
   if (!Number.isFinite(current) || !Number.isFinite(previous)) return null;
   if (Math.abs(previous) < Number.EPSILON) {
@@ -1844,24 +1852,21 @@ export default function DashboardLandingPage() {
                     overview.topCategories.map((category) => (
                       <div
                         key={category.category}
-                        className={`relative overflow-hidden flex items-center justify-between rounded-md border border-border bg-background/50 px-3 py-2 ${DASHBOARD_ROW_HOVER_CLASS}`}
+                        className={`space-y-1.5 rounded-md border border-border/70 bg-background/30 p-2.5 ${DASHBOARD_ROW_HOVER_CLASS}`}
                       >
-                        <span
-                          aria-hidden="true"
-                          className="pointer-events-none absolute inset-y-0 left-0 bg-primary/10"
-                          style={{
-                            width: `${Math.max(0, Math.min(100, (category.revenue / topCategoriesMaxRevenue) * 100))}%`,
-                          }}
-                        />
-                        <div className="relative z-10">
-                          <p className="font-medium text-foreground">
-                            {!category.category || /^uncategorized$/i.test(category.category)
-                              ? "Ohne Kategorie"
-                              : category.category}
-                          </p>
-                          <p className="text-xs text-muted-foreground">{category.quantity} Artikel</p>
+                        <div className="flex items-center justify-between text-sm gap-2">
+                          <p className="text-foreground truncate">{formatCategoryLabel(category.category)}</p>
+                          <span className="font-medium text-foreground">{formatCurrency(category.revenue)}</span>
                         </div>
-                        <p className="relative z-10 font-semibold text-foreground">{formatCurrency(category.revenue)}</p>
+                        <div className="h-2.5 rounded bg-muted overflow-hidden">
+                          <div
+                            className="h-full bg-primary/80"
+                            style={{
+                              width: `${Math.max(2, (category.revenue / topCategoriesMaxRevenue) * 100)}%`,
+                            }}
+                          />
+                        </div>
+                        <p className="text-[11px] text-muted-foreground">{category.quantity} Artikel</p>
                       </div>
                     ))
                   ) : (
