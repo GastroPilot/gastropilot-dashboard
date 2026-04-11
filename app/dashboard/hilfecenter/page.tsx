@@ -140,14 +140,6 @@ const moduleGroups: Array<{ title: string; items: ModuleItem[] }> = [
     title: "Verwaltung & System",
     items: [
       {
-        title: "Kennzahlen",
-        href: "/dashboard/owner-insights",
-        description: "Eigentümer-Dashboard mit KPI-Karten, Pipeline, Kanälen und Export.",
-        highlights: ["CSV/PDF-Export", "Statusfilter", "Zeitraum-Presets + Custom"],
-        roleHint: "Owner / Platform-Admin",
-        icon: BarChart3,
-      },
-      {
         title: "TSE / KassenSichV",
         href: "/dashboard/finanzen/tse",
         description: "Cloud-TSE einrichten und signierte Transaktionen prüfen.",
@@ -236,7 +228,7 @@ const faqItems = [
   {
     question: "Wo exportiere ich Daten?",
     answer:
-      "Bestellhistorie exportiert CSV. Kennzahlen exportiert CSV/PDF. Finanzamt-Export liefert TAR-Archive für Prüfzwecke.",
+      "Bestellhistorie exportiert CSV. Bestellstatistiken exportieren Kennzahlen als CSV/PDF. Finanzamt-Export liefert TAR-Archive für Prüfzwecke.",
   },
   {
     question: "Welche Bereiche sind eher Monitoring statt Bearbeitung?",

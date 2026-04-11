@@ -74,12 +74,6 @@ export function buildDashboardNavLinks({
       show: user?.role === "platform_admin",
     },
     {
-      href: "/dashboard/owner-insights",
-      label: "Kennzahlen",
-      active: currentPath.startsWith("/dashboard/owner-insights"),
-      show: isOwner && !isGrundstatus,
-    },
-    {
       href: "/dashboard/finanzen/umsaetze",
       label: "Umsätze",
       active: currentPath.startsWith("/dashboard/finanzen/umsaetze"),
@@ -154,30 +148,13 @@ const GROUP_ORDER: Array<{ title: string; hrefs: string[] }> = [
     ],
   },
   {
-    title: "SERVICE",
+    title: "BETRIEB",
     hrefs: [
       "/dashboard/tischplan",
       "/dashboard/timeline",
       "/dashboard/reservations",
-    ],
-  },
-  {
-    title: "VERKAUF",
-    hrefs: [
-      "/dashboard/order-statistics",
       "/dashboard/order-history",
-    ],
-  },
-  {
-    title: "VERWALTUNG",
-    hrefs: [
-      "/dashboard/restaurants",
-    ],
-  },
-  {
-    title: "CONTROLLING",
-    hrefs: [
-      "/dashboard/owner-insights",
+      "/dashboard/order-statistics",
     ],
   },
   {
@@ -195,6 +172,7 @@ const GROUP_ORDER: Array<{ title: string; hrefs: string[] }> = [
   {
     title: "SYSTEM & SUPPORT",
     hrefs: [
+      "/dashboard/restaurants",
       "/dashboard/audit-logs",
       "/dashboard/user-settings",
       "/dashboard/hilfecenter",

@@ -51,7 +51,6 @@ describe("dashboard navigation model", () => {
 
     expect(allHrefs).not.toContain("/dashboard/restaurants");
     expect(allHrefs).not.toContain("/dashboard/operators");
-    expect(allHrefs).not.toContain("/dashboard/owner-insights");
     expect(allHrefs).not.toContain("/dashboard/finanzen");
     expect(allHrefs).not.toContain("/dashboard/finanzen/tse");
   });
@@ -102,18 +101,17 @@ describe("dashboard navigation model", () => {
 
     expect(grouped.map((group) => group.title)).toEqual([
       "",
-      "SERVICE",
-      "VERKAUF",
+      "BETRIEB",
       "SYSTEM & SUPPORT",
     ]);
 
     expect(grouped[0].items[0].href).toBe("/dashboard");
     expect(grouped[1].items.some((item) => item.href === "/dashboard/tischplan")).toBe(true);
-    expect(grouped[2].items.some((item) => item.href === "/dashboard/order-history")).toBe(true);
-    expect(grouped[3].items.some((item) => item.href === "/dashboard/user-settings")).toBe(true);
+    expect(grouped[1].items.some((item) => item.href === "/dashboard/order-history")).toBe(true);
+    expect(grouped[2].items.some((item) => item.href === "/dashboard/user-settings")).toBe(true);
   });
 
-  it("places FINANZEN between CONTROLLING and SYSTEM groups for owner", () => {
+  it("places FINANZEN before SYSTEM group for owner", () => {
     const links = buildDashboardNavLinks({
       pathname: "/dashboard/finanzen/umsaetze",
       user: buildUser("owner"),
@@ -123,9 +121,7 @@ describe("dashboard navigation model", () => {
 
     expect(grouped.map((group) => group.title)).toEqual([
       "",
-      "SERVICE",
-      "VERKAUF",
-      "CONTROLLING",
+      "BETRIEB",
       "FINANZEN",
       "SYSTEM & SUPPORT",
     ]);
