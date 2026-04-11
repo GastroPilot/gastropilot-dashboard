@@ -69,12 +69,6 @@ export function buildDashboardNavLinks({
       show: !!user && !isGrundstatus,
     },
     {
-      href: "/dashboard/menu",
-      label: "Menü verwalten",
-      active: currentPath.startsWith("/dashboard/menu"),
-      show: canManageRestaurant && !isGrundstatus,
-    },
-    {
       href: "/dashboard/restaurants",
       label: "Tenants",
       active: currentPath === "/dashboard/restaurants",
@@ -159,7 +153,6 @@ const GROUP_ORDER: Array<{ title: string; hrefs: string[] }> = [
   {
     title: "VERKAUF",
     hrefs: [
-      "/dashboard/menu",
       "/dashboard/order-statistics",
       "/dashboard/order-history",
     ],
