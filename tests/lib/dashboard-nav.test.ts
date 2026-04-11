@@ -52,6 +52,8 @@ describe("dashboard navigation model", () => {
     expect(allHrefs).not.toContain("/dashboard/restaurants");
     expect(allHrefs).not.toContain("/dashboard/operators");
     expect(allHrefs).not.toContain("/dashboard/owner-insights");
+    expect(allHrefs).not.toContain("/dashboard/finanzen");
+    expect(allHrefs).not.toContain("/dashboard/finanzen/tse");
   });
 
   it("marks the current path as active", () => {
@@ -63,6 +65,31 @@ describe("dashboard navigation model", () => {
 
     const active = links.find((link) => link.active);
     expect(active?.href).toBe("/dashboard/order-history");
+  });
+
+  it("includes finance routes for owner and marks finance detail pages as active", () => {
+    const links = buildDashboardNavLinks({
+      pathname: "/dashboard/finanzen/tse",
+      user: buildUser("owner"),
+      isGrundstatus: false,
+    });
+    const allHrefs = hrefs(links);
+
+    expect(allHrefs).not.toContain("/dashboard/finanzen");
+    expect(allHrefs).toContain("/dashboard/finanzen/umsaetze");
+    expect(allHrefs).toContain("/dashboard/finanzen/kartenlesegeraete");
+    expect(allHrefs).toContain("/dashboard/finanzen/tse");
+    expect(allHrefs).toContain("/dashboard/finanzen/rechnungs-editor");
+    expect(allHrefs).toContain("/dashboard/finanzen/tagesabschluss");
+    expect(allHrefs).toContain("/dashboard/finanzen/statistiken");
+    expect(allHrefs).toContain("/dashboard/finanzen/finanzamt-export");
+    expect(allHrefs).not.toContain("/dashboard/fiskaly");
+
+    const active = links.find((link) => link.active);
+    expect(active?.href).toBe("/dashboard/finanzen/tse");
+
+    const grouped = groupDashboardNavLinks(links);
+    expect(grouped.some((group) => group.title === "FINANZEN")).toBe(true);
   });
 
   it("groups links in the defined order and omits empty groups", () => {
@@ -84,5 +111,28 @@ describe("dashboard navigation model", () => {
     expect(grouped[1].items.some((item) => item.href === "/dashboard/tischplan")).toBe(true);
     expect(grouped[2].items.some((item) => item.href === "/dashboard/order-history")).toBe(true);
     expect(grouped[3].items.some((item) => item.href === "/dashboard/user-settings")).toBe(true);
+  });
+
+  it("places FINANZEN between CONTROLLING and SYSTEM groups for owner", () => {
+    const links = buildDashboardNavLinks({
+      pathname: "/dashboard/finanzen/umsaetze",
+      user: buildUser("owner"),
+      isGrundstatus: false,
+    });
+    const grouped = groupDashboardNavLinks(links);
+
+    expect(grouped.map((group) => group.title)).toEqual([
+      "",
+      "SERVICE",
+      "VERKAUF",
+      "CONTROLLING",
+      "FINANZEN",
+      "SYSTEM & SUPPORT",
+    ]);
+
+    const financeGroup = grouped.find((group) => group.title === "FINANZEN");
+    expect(financeGroup).toBeDefined();
+    expect(financeGroup?.items.some((item) => item.href === "/dashboard/finanzen/tagesabschluss")).toBe(true);
+    expect(financeGroup?.items.some((item) => item.href === "/dashboard/finanzen/finanzamt-export")).toBe(true);
   });
 });

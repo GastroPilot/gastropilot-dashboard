@@ -85,6 +85,10 @@ interface DashboardOverviewBaseKpis {
   revenueToday: number;
   revenueLast7Days: number;
   revenueLast30Days: number;
+  revenuePreviousRange: number;
+  revenuePreviousDay: number;
+  revenuePrevious7Days: number;
+  revenuePrevious30Days: number;
   ordersTotal: number;
   ordersOpen: number;
   kitchenBacklog: number;
@@ -164,6 +168,10 @@ export interface DashboardOverviewAnalyticsData {
     | 'revenueToday'
     | 'revenueLast7Days'
     | 'revenueLast30Days'
+    | 'revenuePreviousRange'
+    | 'revenuePreviousDay'
+    | 'revenuePrevious7Days'
+    | 'revenuePrevious30Days'
     | 'ordersTotal'
     | 'avgOrderValue'
     | 'reservationsInRange'
@@ -399,6 +407,14 @@ export function useDashboardOverviewData({
       const todayEnd = endOfDay(selectedDate);
       const sevenDaysStart = startOfDay(subDays(selectedDate, 6));
       const thirtyDaysStart = startOfDay(subDays(selectedDate, 29));
+      const previousRangeEnd = endOfDay(subDays(startOfDay(resolvedRange.from), 1));
+      const previousRangeStart = startOfDay(subDays(previousRangeEnd, resolvedRange.rangeDays - 1));
+      const previousDayStart = startOfDay(subDays(selectedDate, 1));
+      const previousDayEnd = endOfDay(subDays(selectedDate, 1));
+      const previousSevenDaysStart = startOfDay(subDays(selectedDate, 13));
+      const previousSevenDaysEnd = endOfDay(subDays(selectedDate, 7));
+      const previousThirtyDaysStart = startOfDay(subDays(selectedDate, 59));
+      const previousThirtyDaysEnd = endOfDay(subDays(selectedDate, 30));
       const rangeStartIso = `${resolvedRange.fromStr}T00:00:00Z`;
       const rangeEndIso = `${resolvedRange.toStr}T23:59:59Z`;
       const rangeDays = Array.from({ length: resolvedRange.rangeDays }, (_, index) =>
@@ -419,6 +435,10 @@ export function useDashboardOverviewData({
         revenueTodayStats,
         revenue7Stats,
         revenue30Stats,
+        revenuePreviousRangeStats,
+        revenuePreviousDayStats,
+        revenuePrevious7Stats,
+        revenuePrevious30Stats,
         topItemsRaw,
         categoryStats,
         hourlyStats,
@@ -433,6 +453,10 @@ export function useDashboardOverviewData({
         orderStatisticsApi.getRevenue(restaurantId, buildRangeParams(todayStart, todayEnd)),
         orderStatisticsApi.getRevenue(restaurantId, buildRangeParams(sevenDaysStart, todayEnd)),
         orderStatisticsApi.getRevenue(restaurantId, buildRangeParams(thirtyDaysStart, todayEnd)),
+        orderStatisticsApi.getRevenue(restaurantId, buildRangeParams(previousRangeStart, previousRangeEnd)),
+        orderStatisticsApi.getRevenue(restaurantId, buildRangeParams(previousDayStart, previousDayEnd)),
+        orderStatisticsApi.getRevenue(restaurantId, buildRangeParams(previousSevenDaysStart, previousSevenDaysEnd)),
+        orderStatisticsApi.getRevenue(restaurantId, buildRangeParams(previousThirtyDaysStart, previousThirtyDaysEnd)),
         orderStatisticsApi.getTopItems(restaurantId, {
           start_date: `${resolvedRange.fromStr}T00:00:00Z`,
           end_date: `${resolvedRange.toStr}T23:59:59Z`,
@@ -550,6 +574,10 @@ export function useDashboardOverviewData({
           revenueToday: roundTo(Number(revenueTodayStats.total_revenue ?? 0)),
           revenueLast7Days: roundTo(Number(revenue7Stats.total_revenue ?? 0)),
           revenueLast30Days: roundTo(Number(revenue30Stats.total_revenue ?? 0)),
+          revenuePreviousRange: roundTo(Number(revenuePreviousRangeStats.total_revenue ?? 0)),
+          revenuePreviousDay: roundTo(Number(revenuePreviousDayStats.total_revenue ?? 0)),
+          revenuePrevious7Days: roundTo(Number(revenuePrevious7Stats.total_revenue ?? 0)),
+          revenuePrevious30Days: roundTo(Number(revenuePrevious30Stats.total_revenue ?? 0)),
           ordersTotal: Number(revenueStats.total_orders ?? insights.orders_count ?? 0),
           avgOrderValue: roundTo(Number(revenueStats.average_order_value ?? insights.avg_order_value ?? 0)),
           reservationsInRange: Number(insights.reservations_count ?? 0),
@@ -607,6 +635,10 @@ export function useDashboardOverviewData({
         revenueToday: analyticsKpis?.revenueToday ?? 0,
         revenueLast7Days: analyticsKpis?.revenueLast7Days ?? 0,
         revenueLast30Days: analyticsKpis?.revenueLast30Days ?? 0,
+        revenuePreviousRange: analyticsKpis?.revenuePreviousRange ?? 0,
+        revenuePreviousDay: analyticsKpis?.revenuePreviousDay ?? 0,
+        revenuePrevious7Days: analyticsKpis?.revenuePrevious7Days ?? 0,
+        revenuePrevious30Days: analyticsKpis?.revenuePrevious30Days ?? 0,
         ordersTotal: analyticsKpis?.ordersTotal ?? 0,
         ordersOpen: operationalKpis?.ordersOpen ?? 0,
         kitchenBacklog: operationalKpis?.kitchenBacklog ?? 0,

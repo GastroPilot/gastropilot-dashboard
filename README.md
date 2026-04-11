@@ -7,6 +7,12 @@ This package contains the web dashboard for daily restaurant operations and admi
 - `/dashboard/tischplan`: operational floor plan workspace
 - `/dashboard/timeline`: timeline view
 - `/dashboard/reservations`: reservation management
+- `/dashboard/finanzen`: redirects to `/dashboard/finanzen/umsaetze`
+- `/dashboard/finanzen/tse`: TSE / KassenSichV operations (setup + transactions)
+- `/dashboard/finanzen/finanzamt-export`: dedicated TAR export workflow for fiscal audits
+
+Legacy migration note:
+- `/dashboard/fiskaly` redirects to `/dashboard/finanzen/tse`
 
 ## Key Files
 - `app/dashboard/page.tsx`: landing page UI

@@ -29,6 +29,8 @@ import {
   ShieldCheck,
   ShoppingCart,
   Tag,
+  TrendingDown,
+  TrendingUp,
   Users,
 } from "lucide-react";
 import { authApi, type User } from "@/lib/api/auth";
@@ -69,6 +71,15 @@ const TOOLTIP_ESTIMATED_WIDTH = 220;
 const TOOLTIP_ESTIMATED_HEIGHT = 38;
 const TOOLTIP_Z_INDEX = 9999;
 const REVENUE_STROKE_WIDTH = 1.2;
+const TREND_DELTA_EPSILON = 0.05;
+
+type TrendDeltaDirection = "up" | "down" | "neutral";
+
+interface RevenueChangeIndicator {
+  label: string;
+  deltaPercent: number | null;
+  direction: TrendDeltaDirection;
+}
 
 function getAdaptiveTooltipPosition(
   anchorX: number,
@@ -189,6 +200,29 @@ function formatNumber(value: number): string {
   return new Intl.NumberFormat("de-DE", { maximumFractionDigits: 1 }).format(value);
 }
 
+function calculateDeltaPercent(current: number, previous: number): number | null {
+  if (!Number.isFinite(current) || !Number.isFinite(previous)) return null;
+  if (Math.abs(previous) < Number.EPSILON) {
+    if (Math.abs(current) < Number.EPSILON) return 0;
+    return null;
+  }
+  return ((current - previous) / previous) * 100;
+}
+
+function resolveTrendDirection(deltaPercent: number | null): TrendDeltaDirection {
+  if (deltaPercent === null || !Number.isFinite(deltaPercent)) return "neutral";
+  if (deltaPercent > TREND_DELTA_EPSILON) return "up";
+  if (deltaPercent < -TREND_DELTA_EPSILON) return "down";
+  return "neutral";
+}
+
+function formatSignedPercent(value: number | null): string {
+  if (value === null || !Number.isFinite(value)) return "n/a";
+  const normalizedValue = Math.abs(value) < TREND_DELTA_EPSILON ? 0 : value;
+  const sign = normalizedValue > 0 ? "+" : "";
+  return `${sign}${normalizedValue.toFixed(1)}%`;
+}
+
 function parseDateInput(value: string): Date | undefined {
   if (!value) return undefined;
   const parsed = new Date(`${value}T12:00:00`);
@@ -253,6 +287,7 @@ function RevenueTrendKpiCard({
   href,
   icon,
   trendData,
+  changeIndicator,
   unavailable,
   loading,
 }: {
@@ -262,11 +297,13 @@ function RevenueTrendKpiCard({
   href?: string;
   icon?: ReactNode;
   trendData: Array<{ key: string; shortLabel: string; tooltipLabel: string; revenue: number }>;
+  changeIndicator?: RevenueChangeIndicator | null;
   unavailable: boolean;
   loading: boolean;
 }) {
   const gradientId = useId();
   const hasTrendData = !unavailable && trendData.length > 1;
+  const hasChangeIndicator = !unavailable && Boolean(changeIndicator);
   const xAxisLabels = useMemo(() => {
     if (!hasTrendData || trendData.length === 0) return [] as string[];
     const first = trendData[0]?.shortLabel ?? "";
@@ -310,14 +347,16 @@ function RevenueTrendKpiCard({
           {icon ? <span className="text-muted-foreground">{icon}</span> : null}
         </div>
       </CardHeader>
-      <CardContent className="relative min-h-[120px] space-y-1 overflow-hidden">
+      <CardContent
+        className={`relative overflow-hidden ${hasChangeIndicator ? "min-h-[136px] space-y-2" : "min-h-[120px] space-y-1"}`}
+      >
         {trendTooltip ? (
           <AdaptiveHoverTooltip anchorX={trendTooltip.anchorX} anchorY={trendTooltip.anchorY}>
             {trendTooltip.tooltipLabel}: {formatCurrency(trendTooltip.revenue)}
           </AdaptiveHoverTooltip>
         ) : null}
         {hasTrendData ? (
-          <div className="absolute inset-x-3 bottom-2 top-12">
+          <div className={`absolute inset-x-3 bottom-2 ${hasChangeIndicator ? "top-16" : "top-12"}`}>
             <div className="absolute inset-x-0 bottom-4 top-0">
               <svg
                 viewBox="0 0 100 84"
@@ -398,14 +437,37 @@ function RevenueTrendKpiCard({
           </div>
         ) : (
           <div
-            className={`pointer-events-none absolute inset-x-3 bottom-2 top-12 rounded-md border border-dashed border-border/60 ${
+            className={`pointer-events-none absolute inset-x-3 bottom-2 ${hasChangeIndicator ? "top-16" : "top-12"} rounded-md border border-dashed border-border/60 ${
               loading ? "animate-pulse" : ""
             }`}
           />
         )}
-        <div className="relative z-10 space-y-1">
+        <div className={`relative z-10 ${hasChangeIndicator ? "space-y-2" : "space-y-1"}`}>
           <p className="text-2xl font-bold text-foreground">{value}</p>
           {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
+          {hasChangeIndicator && changeIndicator ? (
+            <div className="flex items-center gap-1 text-xs">
+              {changeIndicator.direction === "up" ? (
+                <TrendingUp className="h-3.5 w-3.5 text-emerald-400" />
+              ) : changeIndicator.direction === "down" ? (
+                <TrendingDown className="h-3.5 w-3.5 text-red-400" />
+              ) : (
+                <Percent className="h-3.5 w-3.5 text-muted-foreground" />
+              )}
+              <span
+                className={
+                  changeIndicator.direction === "up"
+                    ? "text-emerald-400"
+                    : changeIndicator.direction === "down"
+                      ? "text-red-400"
+                      : "text-muted-foreground"
+                }
+              >
+                {formatSignedPercent(changeIndicator.deltaPercent)}
+              </span>
+              <span className="text-muted-foreground">{changeIndicator.label}</span>
+            </div>
+          ) : null}
         </div>
       </CardContent>
     </Card>
@@ -1035,6 +1097,26 @@ export default function DashboardLandingPage() {
     }));
   }, [overview, rangePreset]);
 
+  const revenueChangeIndicator = useMemo(() => {
+    if (!overview || !overviewQuery.analytics.data) return null;
+
+    const comparisonLabel =
+      rangePreset === "custom"
+        ? "vs. Vorperiode"
+        : rangePreset === "today"
+          ? "vs. 1 Tag"
+          : rangePreset === "7d"
+            ? "vs. 7 Tage"
+            : "vs. 30 Tage";
+
+    const deltaPercent = calculateDeltaPercent(overview.kpis.revenueTotal, overview.kpis.revenuePreviousRange);
+    return {
+      label: comparisonLabel,
+      deltaPercent,
+      direction: resolveTrendDirection(deltaPercent),
+    } satisfies RevenueChangeIndicator;
+  }, [overview, overviewQuery.analytics.data, rangePreset]);
+
   const ordersDistributionData = useMemo(() => {
     if (!overview) return [] as Array<{ key: string; shortLabel: string; tooltipLabel: string; count: number }>;
 
@@ -1369,6 +1451,7 @@ export default function DashboardLandingPage() {
                     label={`Umsatz (${selectedRangeLabel})`}
                     value={analyticsValue(formatCurrency(overview.kpis.revenueTotal))}
                     trendData={revenueTrendData}
+                    changeIndicator={revenueChangeIndicator}
                     unavailable={analyticsUnavailable}
                     loading={analyticsInitialLoading}
                     href="/dashboard/order-statistics"

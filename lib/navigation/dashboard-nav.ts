@@ -80,9 +80,45 @@ export function buildDashboardNavLinks({
       show: isOwner && !isGrundstatus,
     },
     {
-      href: "/dashboard/fiskaly",
+      href: "/dashboard/finanzen/umsaetze",
+      label: "Umsätze",
+      active: currentPath.startsWith("/dashboard/finanzen/umsaetze"),
+      show: isOwner && !isGrundstatus,
+    },
+    {
+      href: "/dashboard/finanzen/kartenlesegeraete",
+      label: "Kartenlesegeräte",
+      active: currentPath.startsWith("/dashboard/finanzen/kartenlesegeraete"),
+      show: isOwner && !isGrundstatus,
+    },
+    {
+      href: "/dashboard/finanzen/tse",
       label: "TSE / KassenSichV",
-      active: currentPath.startsWith("/dashboard/fiskaly"),
+      active: currentPath.startsWith("/dashboard/finanzen/tse"),
+      show: isOwner && !isGrundstatus,
+    },
+    {
+      href: "/dashboard/finanzen/rechnungs-editor",
+      label: "Rechnungs-Editor",
+      active: currentPath.startsWith("/dashboard/finanzen/rechnungs-editor"),
+      show: isOwner && !isGrundstatus,
+    },
+    {
+      href: "/dashboard/finanzen/tagesabschluss",
+      label: "Tagesabschluss",
+      active: currentPath.startsWith("/dashboard/finanzen/tagesabschluss"),
+      show: isOwner && !isGrundstatus,
+    },
+    {
+      href: "/dashboard/finanzen/statistiken",
+      label: "Wochen- und Monatstatistiken",
+      active: currentPath.startsWith("/dashboard/finanzen/statistiken"),
+      show: isOwner && !isGrundstatus,
+    },
+    {
+      href: "/dashboard/finanzen/finanzamt-export",
+      label: "Finanzamt-Export",
+      active: currentPath.startsWith("/dashboard/finanzen/finanzamt-export"),
       show: isOwner && !isGrundstatus,
     },
     {
@@ -145,9 +181,20 @@ const GROUP_ORDER: Array<{ title: string; hrefs: string[] }> = [
     ],
   },
   {
+    title: "FINANZEN",
+    hrefs: [
+      "/dashboard/finanzen/umsaetze",
+      "/dashboard/finanzen/kartenlesegeraete",
+      "/dashboard/finanzen/tse",
+      "/dashboard/finanzen/rechnungs-editor",
+      "/dashboard/finanzen/tagesabschluss",
+      "/dashboard/finanzen/statistiken",
+      "/dashboard/finanzen/finanzamt-export",
+    ],
+  },
+  {
     title: "SYSTEM & SUPPORT",
     hrefs: [
-      "/dashboard/fiskaly",
       "/dashboard/audit-logs",
       "/dashboard/user-settings",
       "/dashboard/hilfecenter",

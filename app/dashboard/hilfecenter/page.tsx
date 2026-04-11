@@ -73,8 +73,11 @@ const quickStartSteps: QuickStep[] = [
   {
     title: "Compliance einrichten",
     description:
-      "TSE / KassenSichV im Verwaltungsbereich einrichten und prüfen.",
-    links: [{ label: "TSE / KassenSichV", href: "/dashboard/fiskaly" }],
+      "TSE / KassenSichV im Bereich Finanzen einrichten und prüfen.",
+    links: [
+      { label: "TSE / KassenSichV", href: "/dashboard/finanzen/tse" },
+      { label: "Finanzamt-Export", href: "/dashboard/finanzen/finanzamt-export" },
+    ],
     icon: Wrench,
   },
 ];
@@ -146,9 +149,17 @@ const moduleGroups: Array<{ title: string; items: ModuleItem[] }> = [
       },
       {
         title: "TSE / KassenSichV",
-        href: "/dashboard/fiskaly",
-        description: "Cloud-TSE einrichten, Transaktionen prüfen, Exporte erzeugen und herunterladen.",
-        highlights: ["TSS-Status", "Transaktionsliste", "Finanzamt-Export (TAR)"],
+        href: "/dashboard/finanzen/tse",
+        description: "Cloud-TSE einrichten und signierte Transaktionen prüfen.",
+        highlights: ["TSS-Status", "Transaktionsliste", "eReceipt-Links"],
+        roleHint: "Owner / Platform-Admin",
+        icon: Shield,
+      },
+      {
+        title: "Finanzamt-Export",
+        href: "/dashboard/finanzen/finanzamt-export",
+        description: "TSE-Exports erzeugen, Status überwachen und TAR-Archive herunterladen.",
+        highlights: ["Export-Trigger", "Polling", "Download-Historie"],
         roleHint: "Owner / Platform-Admin",
         icon: Shield,
       },
@@ -199,7 +210,7 @@ const roleHints = [
   },
   {
     role: "Owner",
-    scope: "Volle Restaurant-Verwaltung inkl. Geräte, Abrechnung, Fiskaly, Bediener.",
+    scope: "Volle Restaurant-Verwaltung inkl. Geräte, Abrechnung, Finanzen und Bediener.",
   },
   {
     role: "Manager",
@@ -225,7 +236,7 @@ const faqItems = [
   {
     question: "Wo exportiere ich Daten?",
     answer:
-      "Bestellhistorie exportiert CSV. Kennzahlen exportiert CSV/PDF. TSE/Fiskaly exportiert TAR-Archive für Prüfzwecke.",
+      "Bestellhistorie exportiert CSV. Kennzahlen exportiert CSV/PDF. Finanzamt-Export liefert TAR-Archive für Prüfzwecke.",
   },
   {
     question: "Welche Bereiche sind eher Monitoring statt Bearbeitung?",
