@@ -55,7 +55,7 @@
     "@vitest/ui": "4.0.18",
     "eslint": "^8",
     "eslint-config-next": "15.5.13",
-    "jsdom": "^28.1.0",
+    "jsdom": "^29.0.2",
     "msw": "^2.7.0",
     "prettier": "^3.2.5",
     "vitest": "^4.0.18"
