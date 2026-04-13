@@ -8,14 +8,16 @@ import type { Block } from "@/lib/api/blocks";
 interface BlockCardProps {
   block: Block;
   isDragging?: boolean;
+  draggable?: boolean;
   tableLabels?: string[];
   onClick?: (block: Block) => void;
 }
 
-export function BlockCard({ block, isDragging, tableLabels, onClick }: BlockCardProps) {
+export function BlockCard({ block, isDragging, draggable = true, tableLabels, onClick }: BlockCardProps) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: `block-${block.id}`,
     data: { type: "block", blockId: block.id },
+    disabled: !draggable,
   });
 
   const style = transform
@@ -49,11 +51,11 @@ export function BlockCard({ block, isDragging, tableLabels, onClick }: BlockCard
         WebkitTouchCallout: "none",
       }}
       onClick={() => onClick?.(block)}
-      {...listeners}
-      {...attributes}
+      {...(draggable ? listeners : {})}
+      {...(draggable ? attributes : {})}
       className={`
         bg-card rounded-lg shadow-md border border-border p-2 md:p-3
-        cursor-grab active:cursor-grabbing
+        ${draggable ? "cursor-grab active:cursor-grabbing" : "cursor-default"}
         hover:shadow-lg hover:bg-accent transition-all
         ${isDragging ? "opacity-50" : ""}
         touch-manipulation

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
-import Link from "next/link";
 import { restaurantsApi, Restaurant } from "@/lib/api/restaurants";
 import { reservationsApi, Reservation } from "@/lib/api/reservations";
 import { blocksApi, Block } from "@/lib/api/blocks";
@@ -12,13 +11,12 @@ import { useUserSettings } from "@/lib/hooks/use-user-settings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ReservationDialog } from "@/components/reservation-dialog";
-import { BlockTableDialog } from "@/components/block-table-dialog";
 import { LoadingOverlay } from "@/components/loading-overlay";
 import { SkeletonReservationCard } from "@/components/skeletons";
 import { DropdownSelector } from "@/components/area-selector";
 import { format, parseISO, startOfDay, endOfDay, isToday } from "date-fns";
 import { de } from "date-fns/locale";
-import { Ban, Calendar, Check, CheckCircle, ChevronDown, Clock, Filter, LayoutGrid, Mail, Phone, Users, XCircle, ChevronLeft, ChevronRight, Plus } from "lucide-react";
+import { Ban, Calendar, Check, CheckCircle, ChevronDown, Clock, Filter, LayoutGrid, Users, XCircle, ChevronLeft, ChevronRight, Search } from "lucide-react";
 
 type ReservationFilter = Reservation["status"] | "block";
 const RESERVATION_STATUSES: Reservation["status"][] = [
@@ -73,8 +71,6 @@ export default function ReservationsPage() {
   const [statusMenuOpen, setStatusMenuOpen] = useState(false);
   const [reservationDialogOpen, setReservationDialogOpen] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
-  const [blockEditOpen, setBlockEditOpen] = useState(false);
-  const [editingBlock, setEditingBlock] = useState<Block | null>(null);
   const [selectedTable, setSelectedTable] = useState<Table | null>(null);
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
   const [toasts, setToasts] = useState<{ id: string; message: string; variant?: "info" | "error" | "success" }[]>([]);
@@ -227,10 +223,6 @@ export default function ReservationsPage() {
 
   const filteredReservations = useMemo(() => {
     let items = reservations;
-
-    if (isToday(selectedDate)) {
-      items = items.filter((r) => parseISO(r.end_at) >= now);
-    }
     
     const reservationStatuses = selectedStatuses.filter((status): status is Reservation["status"] => status !== "block");
     const statusesToUse =
@@ -257,7 +249,7 @@ export default function ReservationsPage() {
     }
 
     return items;
-  }, [reservations, reservationSearchQuery, selectedStatuses, selectedTableId, selectedDate, now]);
+  }, [reservations, reservationSearchQuery, selectedStatuses, selectedTableId]);
 
   const showBlocks = selectedStatuses.length === 0 || selectedStatuses.includes("block");
   const blockTableNumbers = useMemo(() => {
@@ -341,12 +333,6 @@ export default function ReservationsPage() {
     setReservationDialogOpen(true);
   };
 
-  const handleNewReservation = () => {
-    setSelectedReservation(null);
-    setSelectedTable(null);
-    setReservationDialogOpen(true);
-  };
-
   const handleReservationCreated = async () => {
     await loadData(true);
   };
@@ -412,11 +398,6 @@ export default function ReservationsPage() {
     return entries.length === 1 ? `Tisch ${entries[0]}` : `Tische ${entries.join(", ")}`;
   };
 
-  const handleBlockClick = (block: Block) => {
-    setEditingBlock(block);
-    setBlockEditOpen(true);
-  };
-
   if (isInitialLoading) {
     return (
       <div className="h-screen flex flex-col bg-background text-foreground">
@@ -466,33 +447,7 @@ export default function ReservationsPage() {
       <div className="bg-card border-b border-border px-4 py-3 shadow-sm">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2 min-w-0 shrink-0">
-            <div className="inline-flex items-center rounded-lg border border-border/70 bg-card/90 p-0.5 backdrop-blur-sm min-h-[32px] md:min-h-[36px]">
-              <Link
-                href="/dashboard"
-                aria-label="Tischplan"
-                title="Tischplan"
-                className="inline-flex items-center justify-center px-3 py-1 rounded-md text-foreground border border-transparent hover:bg-muted min-h-[32px] md:min-h-[36px]"
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </Link>
-              <Link
-                href="/dashboard/timeline"
-                aria-label="Zeitplan"
-                title="Zeitplan"
-                className="inline-flex items-center justify-center px-3 py-1 rounded-md text-foreground border border-transparent hover:bg-muted min-h-[32px] md:min-h-[36px]"
-              >
-                <Clock className="w-4 h-4" />
-              </Link>
-              <button
-                type="button"
-                aria-current="page"
-                className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-primary text-white dark:text-foreground text-sm md:text-base font-semibold border border-primary/80 shadow-inner min-h-[32px] md:min-h-[36px]"
-              >
-                <Calendar className="w-4 h-4" />
-                Reservierungen
-              </button>
-            </div>
-            <div className="text-left ml-2 md:ml-4 border-l border-input pl-2 md:pl-4">
+            <div className="text-left">
               <div className="text-xs md:text-sm font-semibold text-foreground whitespace-nowrap">
                 {format(now, "EEEE, d. MMMM yyyy", { locale: de })}
               </div>
@@ -510,15 +465,6 @@ export default function ReservationsPage() {
             </div>
             <div className="flex items-center gap-1 shrink-0">
                 
-                <Button
-                  variant="default"
-                  size="sm"
-                  onClick={handleNewReservation}
-                  className="touch-manipulation min-h-[32px] text-sm px-3"
-                >
-                  <Plus className="w-4 h-4 mr-1" />
-                  Neue Reservierung
-                </Button>
                 <Button
                     variant="outline"
                     size="sm"
@@ -550,14 +496,15 @@ export default function ReservationsPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-          <div className="flex-1 relative md:col-span-1">
+        <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_14rem_14rem] gap-4 mt-4 items-start">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               type="text"
               placeholder="Suche nach Name, E-Mail, Telefon..."
               value={reservationSearchQuery}
               onChange={(e) => setReservationSearchQuery(e.target.value)}
-              className="pl-3 bg-background border-border text-foreground"
+              className="pl-10 bg-muted border-input text-foreground placeholder-muted-foreground"
             />
           </div>
           <DropdownSelector
@@ -567,7 +514,7 @@ export default function ReservationsPage() {
             placeholder="Alle Tische"
             triggerClassName="w-full rounded-lg border border-border bg-card text-foreground px-3 py-2 text-sm shadow-inner flex items-center justify-between gap-2 hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring min-h-[40px] touch-manipulation"
             menuAlign="right"
-            menuWidthClassName="w-64"
+            menuWidthClassName="w-56"
             menuClassName="max-h-[70vh] overflow-auto"
             zIndexClassName="z-[50]"
             renderSelected={(selected) => (
@@ -577,7 +524,7 @@ export default function ReservationsPage() {
               </div>
             )}
           />
-          <div className="relative md:col-span-1">
+          <div className="relative">
             <button
               type="button"
               onClick={() => setStatusMenuOpen((prev) => !prev)}
@@ -597,7 +544,7 @@ export default function ReservationsPage() {
               </div>
             </button>
             {statusMenuOpen && (
-              <div className="absolute right-0 mt-1 w-64 rounded-lg border border-border bg-background shadow-xl z-[50] max-h-[70vh] overflow-auto">
+              <div className="absolute left-0 mt-1 w-56 rounded-lg border border-border bg-background shadow-xl z-[50] max-h-[70vh] overflow-auto">
                 <button
                   type="button"
                   onClick={() => {
@@ -699,93 +646,116 @@ export default function ReservationsPage() {
               </p>
             </div>
           ) : (
-            combinedItems.map((entry) => {
-              if (entry.type === "block") {
-                const block = entry.block;
-                const startDate = parseISO(block.start_at);
-                const endDate = parseISO(block.end_at);
-                const label = block.reason || "Blockiert";
-                const status = STATUS_ICON_MAP.block;
-                return (
-                  <div
-                    key={entry.id}
-                    className="bg-card rounded-xl shadow-sm border border-rose-600/40 p-4 hover:shadow-md hover:bg-gray-750 transition-all cursor-pointer"
-                    onClick={() => handleBlockClick(block)}
-                  >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-3 mb-2">
-                          <div className="text-lg font-semibold text-foreground">
-                            {format(startDate, "HH:mm")}–{format(endDate, "HH:mm")} Uhr
-                          </div>
-                          <div className={`inline-flex items-center justify-center w-8 h-8 rounded-md border ${status.tone}`}>
-                            <status.Icon className="w-4 h-4" />
-                          </div>
-                          <div className="text-sm text-muted-foreground">{getBlockTableLabel(block.id)}</div>
-                        </div>
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <span className="font-semibold text-lg text-foreground">{label}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
+            <div className="overflow-x-auto rounded-lg border border-border bg-card">
+              <table className="w-full min-w-[1120px] text-sm">
+                <thead className="bg-muted/40">
+                  <tr className="text-left text-muted-foreground">
+                    <th className="px-4 py-3 font-medium">Zeit</th>
+                    <th className="px-4 py-3 font-medium">Typ</th>
+                    <th className="px-4 py-3 font-medium">Name / Grund</th>
+                    <th className="px-4 py-3 font-medium">Tisch</th>
+                    <th className="px-4 py-3 font-medium text-right">Personen</th>
+                    <th className="px-4 py-3 font-medium">Kontakt</th>
+                    <th className="px-4 py-3 font-medium">Status</th>
+                    <th className="px-4 py-3 font-medium">Notizen</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border bg-card">
+                  {combinedItems.map((entry) => {
+                    if (entry.type === "block") {
+                      const block = entry.block;
+                      const startDate = parseISO(block.start_at);
+                      const endDate = parseISO(block.end_at);
+                      const blockMeta = STATUS_ICON_MAP.block;
+                      const BlockIcon = blockMeta.Icon;
+                      return (
+                        <tr key={entry.id} className="bg-rose-900/10 text-foreground">
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            {format(startDate, "HH:mm")}–{format(endDate, "HH:mm")}
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="inline-flex items-center rounded-md border border-rose-600/60 bg-rose-900/20 px-2 py-1 text-xs font-medium">
+                              Block
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 font-medium">
+                            {block.reason || "Blockiert"}
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground">{getBlockTableLabel(block.id)}</td>
+                          <td className="px-4 py-3 text-right text-muted-foreground">-</td>
+                          <td className="px-4 py-3 text-muted-foreground">-</td>
+                          <td className="px-4 py-3">
+                            <span className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs ${blockMeta.tone}`}>
+                              <BlockIcon className="w-3.5 h-3.5" />
+                              Blockiert
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground">-</td>
+                        </tr>
+                      );
+                    }
 
-              const reservation = entry.reservation;
-              const startDate = parseISO(reservation.start_at);
-              const status = getStatusIcon(reservation.status);
-              return (
-                <div
-                  key={entry.id}
-                  className="bg-card rounded-xl shadow-sm border border-border p-4 hover:shadow-md hover:bg-gray-750 transition-all cursor-pointer"
-                  onClick={() => handleReservationClick(reservation)}
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="text-lg font-semibold text-foreground">{format(startDate, "HH:mm")} Uhr</div>
-                        <div className={status.className} title={status.label} aria-label={status.label}>
-                          {status.icon}
-                        </div>
-                        <div className="text-sm text-muted-foreground">{getTableName(reservation.table_id)}</div>
-                      </div>
+                    const reservation = entry.reservation;
+                    const startDate = parseISO(reservation.start_at);
+                    const endDate = parseISO(reservation.end_at);
+                    const status = getStatusIcon(reservation.status);
+                    const contact = [reservation.guest_phone, reservation.guest_email]
+                      .filter(Boolean)
+                      .join(" · ");
 
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <Users className="w-4 h-4 text-muted-foreground" />
-                          <span className="font-semibold text-lg text-foreground">
+                    return (
+                      <tr
+                        key={entry.id}
+                        onClick={() => handleReservationClick(reservation)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            handleReservationClick(reservation);
+                          }
+                        }}
+                        role="button"
+                        tabIndex={0}
+                        className="cursor-pointer transition-colors hover:bg-accent/40 focus-visible:bg-accent/40 focus-visible:outline-none"
+                      >
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          {format(startDate, "HH:mm")}–{format(endDate, "HH:mm")}
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="inline-flex items-center rounded-md border border-border bg-background/50 px-2 py-1 text-xs font-medium">
+                            Reservierung
+                          </span>
+                        </td>
+                        <td className="px-4 py-3">
+                          <span className="font-semibold text-foreground">
                             {reservation.guest_name || "Unbekannt"}
                           </span>
-                          <span className="text-muted-foreground">· {reservation.party_size} {reservation.party_size === 1 ? "Person" : "Personen"}</span>
-                        </div>
-
-                        <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
-                          {reservation.guest_phone && (
-                            <div className="flex items-center gap-1">
-                              <Phone className="w-4 h-4" />
-                              <span>{reservation.guest_phone}</span>
-                            </div>
-                          )}
-                          {reservation.guest_email && (
-                            <div className="flex items-center gap-1">
-                              <Mail className="w-4 h-4" />
-                              <span className="truncate">{reservation.guest_email}</span>
-                            </div>
-                          )}
-                        </div>
-
-                        {reservation.notes && (
-                          <p className="text-sm text-muted-foreground mt-2 italic">{reservation.notes}</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">{getTableName(reservation.table_id)}</td>
+                        <td className="px-4 py-3 text-right text-muted-foreground">
+                          {reservation.party_size}
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">{contact || "-"}</td>
+                        <td className="px-4 py-3">
+                          <span
+                            className={`${status.className} inline-flex w-auto px-2 py-1 gap-1.5`}
+                            title={status.label}
+                            aria-label={status.label}
+                          >
+                            {status.icon}
+                            <span className="text-xs font-medium">{status.label}</span>
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">
+                          <span className="block max-w-[280px] truncate">
+                            {reservation.notes || "-"}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       </div>
@@ -802,23 +772,7 @@ export default function ReservationsPage() {
           onBlockCreated={handleBlockCreated}
           availableTables={tables}
           onNotify={addToast}
-        />
-      )}
-      {restaurant && (
-        <BlockTableDialog
-          open={blockEditOpen}
-          onOpenChange={(open) => {
-            setBlockEditOpen(open);
-            if (!open) setEditingBlock(null);
-          }}
-          restaurantId={restaurant.id}
-          tables={tables}
-          selectedDate={selectedDate}
-          block={editingBlock}
-          blocks={blocks}
-          blockAssignments={blockAssignments}
-          onBlockCreated={handleBlockCreated}
-          onNotify={addToast}
+          readOnly={true}
         />
       )}
     </div>

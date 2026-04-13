@@ -94,6 +94,7 @@ export interface SumUpPayment {
   id: string;
   order_id: string;
   restaurant_id: string;
+  reader_id?: string | null;
   checkout_id?: string | null;
   client_transaction_id?: string | null;
   transaction_code?: string | null;

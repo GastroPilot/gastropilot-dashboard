@@ -8,10 +8,14 @@ import { restaurantsApi } from "@/lib/api/restaurants";
 import { impersonation } from "@/lib/api/admin";
 import { Button } from "@/components/ui/button";
 import { confirmAction } from "@/lib/utils";
-import { LogOut, Menu, X, ShieldAlert } from "lucide-react";
+import { LogOut, Menu, X, ShieldAlert, ChevronLeft, ChevronRight } from "lucide-react";
 import { LoadingOverlay } from "@/components/loading-overlay";
 import { Logo } from "@/components/logo";
 import { ThemeSwitch } from "@/components/theme-switch";
+import { DashboardMobileGroupedNav, DashboardSidebar } from "@/components/dashboard-sidebar-nav";
+import { buildDashboardNavLinks, groupDashboardNavLinks } from "@/lib/navigation/dashboard-nav";
+
+const DASHBOARD_SIDEBAR_COLLAPSED_KEY = "dashboard_sidebar_collapsed";
 
 export default function DashboardLayout({
   children,
@@ -24,9 +28,11 @@ export default function DashboardLayout({
   const [loading, setLoading] = useState(true);
   const [isNavOpen, setIsNavOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [restaurantName, setRestaurantName] = useState<string>("GastroPilot");
   const [impersonatingName, setImpersonatingName] = useState<string | null>(null);
   const profileMenuRef = useRef<HTMLDivElement | null>(null);
+  const sidebarStateLoadedRef = useRef(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -131,181 +137,56 @@ export default function DashboardLayout({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      if (isProfileMenuOpen) {
+        setIsProfileMenuOpen(false);
+      }
+      if (isNavOpen) {
+        setIsNavOpen(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isProfileMenuOpen, isNavOpen]);
+
   const navLinks = useMemo(() => {
     const isGrundstatus = user?.role === "platform_admin" && !impersonation.isActive();
-    const canManageTables = user && (user.role === "platform_admin" || user.role === "owner" || user.role === "manager");
-    const isOwner = user && (user.role === "platform_admin" || user.role === "owner");
-    const canViewAuditLogs = user && (user.role === "platform_admin" || user.role === "owner" || user.role === "manager");
-
-    return [
-      {
-        href: "/dashboard",
-        label: "Dashboard",
-        active: pathname === "/dashboard",
-        show: true,
-      },
-      {
-        href: "/dashboard/tables",
-        label: "Tische verwalten",
-        active: pathname?.startsWith("/dashboard/tables"),
-        show: !!canManageTables && !isGrundstatus,
-      },
-      {
-        href: "/dashboard/orders",
-        label: "Bestellungen",
-        active: pathname?.startsWith("/dashboard/orders"),
-        show: !!user && !isGrundstatus,
-      },
-      {
-        href: "/dashboard/kitchen",
-        label: "Küchen-Ansicht",
-        active: pathname?.startsWith("/dashboard/kitchen"),
-        show: !!user && !isGrundstatus,
-      },
-      {
-        href: "/dashboard/order-statistics",
-        label: "Bestellstatistiken",
-        active: pathname?.startsWith("/dashboard/order-statistics"),
-        show: !!user && user.role === "manager" && !isGrundstatus,
-      },
-      {
-        href: "/dashboard/order-history",
-        label: "Bestellhistorie",
-        active: pathname?.startsWith("/dashboard/order-history"),
-        show: !!user && !isGrundstatus,
-      },
-      {
-        href: "/dashboard/menu",
-        label: "Menü verwalten",
-        active: pathname?.startsWith("/dashboard/menu"),
-        show: !!canManageTables && !isGrundstatus,
-      },
-      {
-        href: "/dashboard/qr-codes",
-        label: "QR-Codes",
-        active: pathname?.startsWith("/dashboard/qr-codes"),
-        show: !!canManageTables && !isGrundstatus,
-      },
-      {
-        href: "/dashboard/guests",
-        label: "Gäste / CRM",
-        active: pathname?.startsWith("/dashboard/guests"),
-        show: !!(user && (user.role === "platform_admin" || user.role === "owner" || user.role === "manager")) && !isGrundstatus,
-      },
-      {
-        href: "/dashboard/restaurants",
-        label: "Tenants",
-        active: pathname === "/dashboard/restaurants",
-        show: user?.role === "platform_admin",
-      },
-      {
-        href: "/dashboard/tenant-settings",
-        label: "Restaurant-Einstellungen",
-        active: pathname === "/dashboard/tenant-settings",
-        show: !!(user && (user.role === "platform_admin" || user.role === "owner" || user.role === "manager")) && !isGrundstatus,
-      },
-      {
-        href: "/dashboard/operators",
-        label: "Bedienerverwaltung",
-        active: pathname === "/dashboard/operators",
-        show: !!isOwner && !isGrundstatus,
-      },
-      {
-        href: "/dashboard/devices",
-        label: "Geraete / KDS",
-        active: pathname?.startsWith("/dashboard/devices"),
-        show: !!isOwner && !isGrundstatus,
-      },
-      {
-        href: "/dashboard/owner-insights",
-        label: "Kennzahlen",
-        active: pathname?.startsWith("/dashboard/owner-insights"),
-        show: !!isOwner && !isGrundstatus,
-      },
-      {
-        href: "/dashboard/ai-insights",
-        label: "KI-Prognosen",
-        active: pathname?.startsWith("/dashboard/ai-insights"),
-        show: !!isOwner && !isGrundstatus,
-      },
-      {
-        href: "/dashboard/billing",
-        label: "Abonnement",
-        active: pathname?.startsWith("/dashboard/billing"),
-        show: !!isOwner && !isGrundstatus,
-      },
-      {
-        href: "/dashboard/fiskaly",
-        label: "TSE / KassenSichV",
-        active: pathname?.startsWith("/dashboard/fiskaly"),
-        show: !!isOwner && !isGrundstatus,
-      },
-      {
-        href: "/dashboard/hilfecenter",
-        label: "Hilfecenter",
-        active: pathname?.startsWith("/dashboard/hilfecenter"),
-        show: !!user,
-      },
-      {
-        href: "/dashboard/user-settings",
-        label: "Benutzereinstellungen",
-        active: pathname === "/dashboard/user-settings",
-        show: !!user,
-      },
-      {
-        href: "/dashboard/audit-logs",
-        label: "Audit-Logs",
-        active: pathname === "/dashboard/audit-logs",
-        show: !!canViewAuditLogs,
-      },
-    ].filter((link) => link.show);
+    return buildDashboardNavLinks({ pathname, user, isGrundstatus });
   }, [pathname, user]);
 
   const groupedNav = useMemo(() => {
-    const map = new Map(navLinks.map((link) => [link.href, link]));
-    const pick = (href: string) => map.get(href) ?? null;
-    const groups = [
-      {
-        title: "TAGESGESCHÄFT",
-        items: [
-          pick("/dashboard"),
-          pick("/dashboard/tables"),
-          pick("/dashboard/orders"),
-          pick("/dashboard/kitchen"),
-          pick("/dashboard/menu"),
-          pick("/dashboard/qr-codes"),
-          pick("/dashboard/order-statistics"),
-          pick("/dashboard/order-history"),
-          pick("/dashboard/hilfecenter"),
-        ],
-      },
-      {
-        title: "VERWALTUNG",
-        items: [
-          pick("/dashboard/restaurants"),
-          pick("/dashboard/tenant-settings"),
-          pick("/dashboard/operators"),
-          pick("/dashboard/guests"),
-          pick("/dashboard/devices"),
-          pick("/dashboard/owner-insights"),
-          pick("/dashboard/ai-insights"),
-          pick("/dashboard/billing"),
-          pick("/dashboard/fiskaly"),
-        ],
-      },
-      {
-        title: "SYSTEM",
-        items: [
-          pick("/dashboard/user-settings"),
-          pick("/dashboard/audit-logs"),
-        ],
-      },
-    ].map((group) => ({
-      ...group,
-      items: group.items.filter(Boolean) as typeof navLinks,
-    }));
-    return groups.filter((g) => g.items.length > 0);
+    return groupDashboardNavLinks(navLinks);
   }, [navLinks]);
+  const userSettingsLink = useMemo(() => {
+    return navLinks.find((link) => link.href === "/dashboard/user-settings") ?? null;
+  }, [navLinks]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !user?.id) return;
+
+    sidebarStateLoadedRef.current = false;
+    const key = `${DASHBOARD_SIDEBAR_COLLAPSED_KEY}:${user.id}`;
+    const stored = window.localStorage.getItem(key);
+
+    if (stored === "1" || stored === "0") {
+      setIsSidebarCollapsed(stored === "1");
+    } else {
+      setIsSidebarCollapsed(false);
+    }
+
+    sidebarStateLoadedRef.current = true;
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !user?.id) return;
+    if (!sidebarStateLoadedRef.current) return;
+
+    const key = `${DASHBOARD_SIDEBAR_COLLAPSED_KEY}:${user.id}`;
+    window.localStorage.setItem(key, isSidebarCollapsed ? "1" : "0");
+  }, [user?.id, isSidebarCollapsed]);
 
   const userInitials = useMemo(() => {
     if (!user) return "??";
@@ -351,8 +232,8 @@ export default function DashboardLayout({
             <div className="absolute inset-y-0 right-3 sm:right-4 md:right-6 flex items-center space-x-3 md:space-x-4">
               <button
                 type="button"
-                className="sm:hidden inline-flex items-center justify-center rounded-md border border-border bg-card p-2 text-foreground hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring"
-                aria-label={isNavOpen ? "Navigation schliessen" : "Navigation öffnen"}
+                className="sm:hidden inline-flex items-center justify-center rounded-md border border-border bg-card h-10 w-10 min-h-[40px] min-w-[40px] text-foreground hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
+                aria-label={isNavOpen ? "Navigation schließen" : "Navigation öffnen"}
                 aria-expanded={isNavOpen}
                 onClick={() => setIsNavOpen((prev) => !prev)}
               >
@@ -363,7 +244,7 @@ export default function DashboardLayout({
                 variant="outline"
                 size="sm"
                 onClick={handleLogout}
-                className="touch-manipulation min-h-[36px] md:min-h-[40px] gap-2"
+                className="touch-manipulation min-h-[40px] gap-2"
               >
                 <LogOut className="w-4 h-4" />
                 Abmelden
@@ -390,32 +271,27 @@ export default function DashboardLayout({
                         <div className="text-xs text-muted-foreground">#{user.operator_number} • {user.role}</div>
                       )}
                     </div>
-                    <div className="py-3 space-y-3">
-                      {groupedNav.map((group) => (
-                        <div key={group.title} className="px-3">
-                          <div className="text-[11px] uppercase tracking-wide text-muted-foreground px-1 mb-1">
-                            {group.title}
-                          </div>
-                          <div className="space-y-1">
-                            {group.items.map((link) => (
-                              <Link
-                                key={link.href}
-                                href={link.href}
-                                className={`flex items-center justify-between px-3 py-2 rounded-md text-sm transition-all ${
-                                  link.active
-                                    ? "bg-primary/10 text-foreground border border-primary/60 shadow-sm"
-                                    : "text-foreground hover:bg-accent border border-transparent"
-                                }`}
-                              >
-                                <span className="flex items-center gap-2">
-                                  <span className={`h-2 w-2 rounded-full ${link.active ? "bg-[#F95100] shadow-[0_0_0_3px_rgba(249,81,0,0.25)]" : "bg-muted-foreground/40"}`} />
-                                  <span>{link.label}</span>
-                                </span>
-                              </Link>
-                            ))}
-                          </div>
-                        </div>
-                      ))}
+                    <div className="py-2 px-2 space-y-1">
+                      {userSettingsLink && (
+                        <Link
+                          href={userSettingsLink.href}
+                          onClick={() => setIsProfileMenuOpen(false)}
+                          className="flex items-center justify-between rounded-md px-3 py-2 min-h-[40px] text-sm border border-transparent text-foreground hover:bg-accent hover:border-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                        >
+                          <span>{userSettingsLink.label}</span>
+                        </Link>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsProfileMenuOpen(false);
+                          handleLogout();
+                        }}
+                        className="w-full flex items-center justify-between rounded-md px-3 py-2 min-h-[40px] text-sm border border-transparent text-foreground hover:bg-accent hover:border-border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                      >
+                        <span>Abmelden</span>
+                        <LogOut className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
                 )}
@@ -431,22 +307,17 @@ export default function DashboardLayout({
               onClick={() => setIsNavOpen(false)}
               aria-hidden="true"
             />
-            <div className="sm:hidden absolute top-full left-0 w-full z-40 bg-card border-b border-border shadow-lg">
+            <div
+              className="sm:hidden absolute top-full left-0 w-full z-40 bg-card border-b border-border shadow-lg"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Dashboard Navigation"
+            >
               <div className="px-4 py-3 space-y-1">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className={`flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                      link.active
-                        ? "bg-accent text-foreground border border-primary"
-                        : "text-foreground hover:bg-accent border border-transparent"
-                    }`}
-                  >
-                    <span>{link.label}</span>
-                    {link.active && <span className="text-xs text-primary">aktiv</span>}
-                  </Link>
-                ))}
+                <DashboardMobileGroupedNav
+                  groups={groupedNav}
+                  onNavigate={() => setIsNavOpen(false)}
+                />
                 <div className="pt-2">
                   <Button
                     variant="outline"
@@ -482,7 +353,44 @@ export default function DashboardLayout({
         </div>
       )}
 
-      <main className="flex-1 overflow-hidden min-h-0">{children}</main>
+      <div className="flex-1 min-h-0 flex overflow-hidden">
+        <aside
+          className={`hidden sm:flex flex-col border-r border-border bg-card/70 backdrop-blur-sm transition-[width] duration-200 ${
+            isSidebarCollapsed ? "w-[84px]" : "w-[280px]"
+          }`}
+        >
+          <div
+            className={`h-12 border-b border-border flex items-center ${
+              isSidebarCollapsed ? "justify-center px-0" : "justify-between px-3"
+            }`}
+          >
+            {!isSidebarCollapsed ? (
+              <span className="text-xs uppercase tracking-wide text-muted-foreground">Navigation</span>
+            ) : (
+              <span className="sr-only">Navigation</span>
+            )}
+            <button
+              type="button"
+              onClick={() => setIsSidebarCollapsed((prev) => !prev)}
+              className="inline-flex items-center justify-center h-10 w-10 min-h-[40px] min-w-[40px] rounded-md border border-border bg-card text-foreground hover:bg-accent transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
+              aria-label={isSidebarCollapsed ? "Navigation ausklappen" : "Navigation einklappen"}
+              title={isSidebarCollapsed ? "Ausklappen" : "Einklappen"}
+            >
+              {isSidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto overflow-x-hidden">
+            <DashboardSidebar
+              groups={groupedNav}
+              itemVariant="sidebar"
+              compact={isSidebarCollapsed}
+              enableSubmenus={true}
+            />
+          </div>
+        </aside>
+
+        <main className="flex-1 overflow-hidden min-h-0">{children}</main>
+      </div>
     </div>
   );
 }

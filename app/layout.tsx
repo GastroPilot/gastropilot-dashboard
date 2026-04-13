@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Manrope } from "next/font/google";
 import "./globals.css";
 import { SiteFooter } from "@/components/site-footer";
 import { QueryProvider } from "@/lib/providers/query-provider";
@@ -8,6 +9,12 @@ export const metadata: Metadata = {
   title: "Reservierungsmanagement",
   description: "Verwaltung von Tischen und Reservierungen",
 };
+
+const manrope = Manrope({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800"],
+  display: "swap",
+});
 
 const themeScript = `
 (function() {
@@ -35,14 +42,8 @@ export default function RootLayout({
     <html lang="de" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap"
-          rel="stylesheet"
-        />
       </head>
-      <body className="min-h-screen flex flex-col antialiased">
+      <body className={`${manrope.className} min-h-screen flex flex-col antialiased`}>
         <ThemeProvider>
           <QueryProvider>
             <div className="flex-1 flex flex-col">{children}</div>

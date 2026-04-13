@@ -30,29 +30,6 @@ export interface DashboardData {
 }
 
 /**
- * Response from the kitchen batch endpoint
- */
-export interface KitchenData {
-  orders: Order[];
-  order_items: Array<{
-    id: string;
-    order_id: string;
-    menu_item_id: string | null;
-    item_name: string;
-    item_description: string | null;
-    category: string | null;
-    quantity: number;
-    unit_price: number;
-    total_price: number;
-    tax_rate: number;
-    status: string;
-    notes: string | null;
-    sort_order: number;
-  }>;
-  tables: Table[];
-}
-
-/**
  * Response from the insights batch endpoint
  */
 export interface InsightsData {
@@ -85,13 +62,6 @@ export const dashboardApi = {
     const dateStr = date ? date.toISOString().split('T')[0] : undefined;
     const params = dateStr ? `?date=${dateStr}` : '';
     return api.get<DashboardData>(`/dashboard/batch/${restaurantId}${params}`);
-  },
-  
-  /**
-   * Fetch kitchen view data in a single request.
-   */
-  async getKitchenData(restaurantId: string): Promise<KitchenData> {
-    return api.get<KitchenData>(`/dashboard/kitchen/${restaurantId}`);
   },
   
   /**

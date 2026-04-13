@@ -10,12 +10,20 @@ interface ReservationOnTableProps {
   onClick?: (e?: React.MouseEvent) => void;
   onRemove?: () => void;
   isDragging?: boolean;
+  draggable?: boolean;
 }
 
-export function ReservationOnTable({ reservation, onClick, onRemove, isDragging }: ReservationOnTableProps) {
+export function ReservationOnTable({
+  reservation,
+  onClick,
+  onRemove,
+  isDragging,
+  draggable = true,
+}: ReservationOnTableProps) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: `reservation-${reservation.id}`,
     data: { type: "reservation", reservationId: reservation.id },
+    disabled: !draggable,
   });
 
   const style = transform
@@ -30,8 +38,8 @@ export function ReservationOnTable({ reservation, onClick, onRemove, isDragging 
     <div
       ref={setNodeRef}
       style={style}
-      {...listeners}
-      {...attributes}
+      {...(draggable ? listeners : {})}
+      {...(draggable ? attributes : {})}
       onMouseDown={(e) => {
         e.stopPropagation();
       }}
@@ -44,7 +52,7 @@ export function ReservationOnTable({ reservation, onClick, onRemove, isDragging 
       }}
       className={`
         mb-2 pb-2 border-b border-border last:border-0
-        cursor-grab active:cursor-grabbing
+        ${draggable ? "cursor-grab active:cursor-grabbing" : "cursor-default"}
         hover:bg-card rounded px-2 py-1
         ${isDragging ? "opacity-50" : ""}
         touch-manipulation

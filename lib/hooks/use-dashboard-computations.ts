@@ -6,6 +6,7 @@ import type { Reservation } from '@/lib/api/reservations';
 import type { Block } from '@/lib/api/blocks';
 import type { BlockAssignment } from '@/lib/api/block-assignments';
 import type { Table } from '@/lib/api/tables';
+import type { Area } from '@/lib/api/areas';
 import type { Order } from '@/lib/api/orders';
 
 interface UseDashboardComputationsProps {
@@ -13,6 +14,7 @@ interface UseDashboardComputationsProps {
   blocks: Block[];
   blockAssignments: BlockAssignment[];
   tables: Table[];
+  areas: Area[];
   orders: Order[];
   selectedDate: Date;
   reservationToTempTableMap: Map<string, string>;
@@ -27,6 +29,7 @@ export function useDashboardComputations({
   blocks,
   blockAssignments,
   tables,
+  areas,
   orders,
   selectedDate,
   reservationToTempTableMap,
@@ -49,6 +52,11 @@ export function useDashboardComputations({
   const tableMap = useMemo(() => {
     return new Map(tables.map(table => [table.id, table]));
   }, [tables]);
+
+  // Area ID -> Area mapping
+  const areaMap = useMemo(() => {
+    return new Map(areas.map(area => [area.id, area]));
+  }, [areas]);
   
   // Block assignments grouped by table
   const blockAssignmentsByTable = useMemo(() => {
@@ -313,6 +321,18 @@ export function useDashboardComputations({
     const tempTable = tableMap.get(mappedTempTableId);
     return tempTable ? tempTable.number : null;
   }, [getTableName, reservationToTempTableMap, tableMap]);
+
+  // Function to get reservation area label
+  const getReservationAreaLabel = useCallback((reservation: Reservation): string => {
+    const tableId = reservation.table_id ?? reservationToTempTableMap.get(reservation.id) ?? null;
+    if (!tableId) return 'Nicht zugewiesen';
+
+    const table = tableMap.get(tableId);
+    if (!table) return 'Nicht zugewiesen';
+
+    if (!table.area_id) return 'Kein Bereich';
+    return areaMap.get(table.area_id)?.name ?? 'Kein Bereich';
+  }, [reservationToTempTableMap, tableMap, areaMap]);
   
   // Function to get block table labels
   const getBlockTableLabels = useCallback((block: Block): string[] => {
@@ -348,6 +368,7 @@ export function useDashboardComputations({
     getBlockStatus,
     getTableName,
     getReservationTableLabel,
+    getReservationAreaLabel,
     getBlockTableLabels,
   };
 }

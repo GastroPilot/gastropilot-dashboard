@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { ordersApi, OrderStatus, OrderWithItems, OrderItemCreate, SplitPayment } from "@/lib/api/orders";
 import { tablesApi, Table } from "@/lib/api/tables";
 import { menuApi, MenuItem, MenuCategory } from "@/lib/api/menu";
@@ -13,7 +13,7 @@ import { format, parseISO } from "date-fns";
 import { de } from "date-fns/locale";
 import { ShoppingCart, Table as TableIcon, Plus, Trash2, Euro, Users, FileText, X, CheckCircle, Clock, Search, Download, Check, ChevronDown, CreditCard, Banknote, Nfc, Loader2, AlertTriangle, XCircle, } from "lucide-react";
 import { confirmAction } from "@/lib/utils";
-import { buildApiUrl, getApiBaseUrl, API_PREFIX } from "@/lib/api/config";
+import { getApiUrlForEndpoint } from "@/lib/api/client";
 import { createReceipt, getTransactionForOrder } from "@/lib/api/fiskaly";
 
 type StatusMeta = { Icon: typeof Clock; tone: string; label: string };
@@ -62,6 +62,7 @@ interface OrderDetailDialogProps {
   orderId: string | null;
   onOrderUpdated?: () => void;
   onNotify?: (message: string, variant?: "info" | "success" | "error") => void;
+  readOnly?: boolean;
 }
 
 export function OrderDetailDialog({
@@ -71,6 +72,7 @@ export function OrderDetailDialog({
   orderId,
   onOrderUpdated,
   onNotify,
+  readOnly = false,
 }: OrderDetailDialogProps) {
   const [order, setOrder] = useState<OrderWithItems | null>(null);
   const [table, setTable] = useState<Table | null>(null);
@@ -106,6 +108,7 @@ export function OrderDetailDialog({
   const [sumupPayments, setSumupPayments] = useState<SumUpPayment[]>([]);
   const [isLoadingPayments, setIsLoadingPayments] = useState(false);
   const sumupPaymentsRef = useRef<SumUpPayment[]>([]);
+  const canMutate = !readOnly;
   
   // Aktualisiere Refs, wenn sich State ändert
   useEffect(() => {
@@ -267,13 +270,14 @@ export function OrderDetailDialog({
     splitPaid.some(Boolean);
 
   useEffect(() => {
-    if (!order || order.status !== "served" || (!paymentDetailsDirty && !splitDetailsDirty) || loading) return;
+    if (!canMutate || !order || order.status !== "served" || (!paymentDetailsDirty && !splitDetailsDirty) || loading) return;
     const timeoutId = window.setTimeout(() => {
       handleSavePaymentDetails();
     }, 600);
     return () => window.clearTimeout(timeoutId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
+    canMutate,
     order,
     paymentDetailsDirty,
     splitDetailsDirty,
@@ -378,6 +382,7 @@ export function OrderDetailDialog({
   };
 
   const handleStartSumupPayment = async () => {
+    if (readOnly) return;
     if (!order) return;
     
     const isPaymentReady = order.status === "served" || order.status === "paid";
@@ -390,7 +395,7 @@ export function OrderDetailDialog({
     setError("");
     
     try {
-      const baseTotal = Math.max(0, (order.subtotal || 0) - (discountAmount || 0));
+      const baseTotal = Math.max(0, computedFinancials.subtotal - (discountAmount || 0));
       const amount = baseTotal + (tipAmount || 0);
       
       if (amount <= 0) {
@@ -466,6 +471,7 @@ export function OrderDetailDialog({
   };
 
   const handleDeleteOrder = async () => {
+    if (readOnly) return;
     if (!order) return;
     if (!confirmAction("Bestellung wirklich löschen?")) return;
     setDeleting(true);
@@ -485,6 +491,7 @@ export function OrderDetailDialog({
   };
 
   const handleUpdateStatus = async (newStatus: string) => {
+    if (readOnly) return;
     if (!order) return;
 
     setLoading(true);
@@ -503,6 +510,7 @@ export function OrderDetailDialog({
   };
 
   const handleSavePaymentDetails = async () => {
+    if (readOnly) return;
     if (!order) return;
 
     const currentDiscountAmount = discountAmount;
@@ -540,6 +548,7 @@ export function OrderDetailDialog({
   };
 
   const handleMarkAsPaid = async () => {
+    if (readOnly) return;
     if (!order) return;
 
     // Check if we have split payments (either in state or in order)
@@ -550,7 +559,7 @@ export function OrderDetailDialog({
     // Validate split payments if they exist
     if (hasSplitPayments && computedSplitPayments.length > 0) {
       const totalSplit = computedSplitPayments.reduce((sum, p) => sum + p.amount, 0);
-      if (Math.abs(totalSplit - order.total) > 0.01) {
+      if (Math.abs(totalSplit - computedFinancials.total) > 0.01) {
         onNotify?.(
           "Split-Payments stimmen nicht mit dem Gesamtbetrag überein (Trinkgeld wird separat gezählt).",
           "error",
@@ -598,6 +607,7 @@ export function OrderDetailDialog({
   };
 
   const handleDeleteItem = async (itemId: string) => {
+    if (readOnly) return;
     if (!order) return;
 
     const confirmed = confirmAction("Möchten Sie diese Position wirklich löschen?");
@@ -618,14 +628,17 @@ export function OrderDetailDialog({
   };
 
   const handleAddMenuItem = async (menuItem: MenuItem) => {
+    if (readOnly) return;
     if (!order) return;
 
     const itemData: OrderItemCreate = {
+      menu_item_id: menuItem.id,
       item_name: menuItem.name,
       item_description: menuItem.description || undefined,
       category: menuCategories.find((c) => c.id === menuItem.category_id)?.name || undefined,
       quantity: 1,
       unit_price: menuItem.price,
+      tax_rate: menuItem.tax_rate ?? 0.19,
     };
 
     setLoading(true);
@@ -659,12 +672,15 @@ export function OrderDetailDialog({
         .filter((item) => assignedIds.includes(item.id))
         .reduce((sum, item) => sum + item.total_price, 0);
       const amount =
-        itemTotalSum > 0 ? Number(((assignedTotal / itemTotalSum) * order.total).toFixed(2)) : 0;
+        itemTotalSum > 0
+          ? Number(((assignedTotal / itemTotalSum) * computedFinancials.total).toFixed(2))
+          : 0;
       return { ...payment, amount };
     });
   };
 
   const handleAddSplitPayment = () => {
+    if (readOnly) return;
     setSplitPayments((prev) => [...prev, { method: "cash", amount: 0 }]);
     setSplitAssignments((prev) => [...prev, []]);
     setSplitTips((prev) => [...prev, 0]);
@@ -680,6 +696,7 @@ export function OrderDetailDialog({
   };
 
   const handleRemoveSplitPayment = (index: number) => {
+    if (readOnly) return;
     if (!confirmAction("Split-Zahlung wirklich entfernen?")) return;
     setSplitPayments((prev) => prev.filter((_, i) => i !== index));
     setSplitAssignments((prev) => prev.filter((_, i) => i !== index));
@@ -695,6 +712,7 @@ export function OrderDetailDialog({
   };
 
   const updateSplitPayment = (index: number, field: "method", value: string) => {
+    if (readOnly) return;
     const updated = [...splitPayments];
     updated[index] = { ...updated[index], [field]: value };
     setSplitPayments(updated);
@@ -702,6 +720,7 @@ export function OrderDetailDialog({
   };
 
   const updateSplitTip = (index: number, value: number) => {
+    if (readOnly) return;
     setSplitTips((prev) => {
       const updated = [...prev];
       updated[index] = value;
@@ -711,6 +730,7 @@ export function OrderDetailDialog({
   };
 
   const toggleSplitPaid = (index: number) => {
+    if (readOnly) return;
     setSplitPaid((prev) => {
       const updated = [...prev];
       updated[index] = !updated[index];
@@ -720,6 +740,7 @@ export function OrderDetailDialog({
   };
 
   const toggleSplitItem = (paymentIndex: number, itemId: string) => {
+    if (readOnly) return;
     setSplitAssignments((prev) => {
       const next = prev.map((list) => list.filter((id) => id !== itemId));
       const alreadyAssigned = (prev[paymentIndex] || []).includes(itemId);
@@ -742,6 +763,51 @@ export function OrderDetailDialog({
   });
   const totalSplitTip = splitTotals.reduce((sum, entry) => sum + entry.tip, 0);
   const totalSplitWithExtras = splitTotals.reduce((sum, entry) => sum + entry.total, 0);
+  const computedFinancials = useMemo(() => {
+    if (!order) {
+      return {
+        subtotal: 0,
+        discountAmount: 0,
+        tipAmount: 0,
+        taxAmount: 0,
+        total: 0,
+      };
+    }
+
+    const toNumber = (value: unknown) =>
+      typeof value === "number" && Number.isFinite(value) ? value : 0;
+
+    const itemSubtotal = order.items.reduce((sum, item) => sum + toNumber(item.total_price), 0);
+    const subtotalRaw = toNumber(order.subtotal);
+    const subtotal = subtotalRaw > 0 || itemSubtotal === 0 ? subtotalRaw : itemSubtotal;
+
+    const discountRaw = toNumber(order.discount_amount);
+    const discountAmount = Math.min(Math.max(discountRaw, 0), Math.max(subtotal, 0));
+    const tipAmount = toNumber(order.tip_amount);
+
+    const taxRaw = toNumber(order.tax_amount);
+    const rawTaxFromItems = order.items.reduce((sum, item) => {
+      const totalPrice = toNumber(item.total_price);
+      const taxRate = toNumber(item.tax_rate);
+      if (totalPrice <= 0 || taxRate < 0) return sum;
+      return sum + totalPrice * (taxRate / (1 + taxRate));
+    }, 0);
+    const discountRatio = itemSubtotal > 0 ? discountAmount / itemSubtotal : 0;
+    const taxFromItems = Number(Math.max(0, rawTaxFromItems * (1 - discountRatio)).toFixed(2));
+    const taxAmount = taxRaw > 0 || subtotal === 0 ? taxRaw : taxFromItems;
+
+    const totalRaw = toNumber(order.total);
+    const computedTotal = Number(Math.max(0, subtotal - discountAmount + tipAmount).toFixed(2));
+    const total = totalRaw > 0 || subtotal === 0 ? totalRaw : computedTotal;
+
+    return {
+      subtotal,
+      discountAmount,
+      tipAmount,
+      taxAmount,
+      total,
+    };
+  }, [order]);
   const allSplitsPaid = splitPaid.length > 0 && splitPaid.every(Boolean);
   const canMarkPaid = paymentView === "split" ? allSplitsPaid : true;
 
@@ -771,14 +837,14 @@ export function OrderDetailDialog({
         return;
       }
 
-      // Verwende die zentrale API-Konfiguration
-      const pdfUrl = buildApiUrl(getApiBaseUrl(), API_PREFIX, `/invoices/${order.id}/pdf`);
+      const pdfUrl = getApiUrlForEndpoint(`/invoices/${order.id}/pdf`);
       const response = await fetch(
         pdfUrl,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
+          credentials: "include",
         }
       );
 
@@ -909,8 +975,11 @@ export function OrderDetailDialog({
                 <div className="relative w-full flex" ref={statusMenuRef}>
                   <button
                     type="button"
-                    onClick={() => setStatusMenuOpen((prev) => !prev)}
-                    disabled={loading}
+                    onClick={() => {
+                      if (!canMutate) return;
+                      setStatusMenuOpen((prev) => !prev);
+                    }}
+                    disabled={loading || !canMutate}
                     className="w-full rounded-md border border-border bg-card text-foreground px-3 py-1 text-sm shadow-inner flex items-center justify-between gap-3 hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring min-h-[32px] touch-manipulation"
                   >
                     <div className="flex items-center gap-2 min-w-0">
@@ -933,7 +1002,7 @@ export function OrderDetailDialog({
                       }`}
                     />
                   </button>
-                  {statusMenuOpen && (
+                  {canMutate && statusMenuOpen && (
                     <div className="absolute right-0 mt-1 w-60 rounded-lg border border-border bg-background shadow-xl z-[50] max-h-[70vh] overflow-auto">
                       {Object.entries(STATUS_META).map(([value, meta]) => {
                         const Icon = meta.Icon;
@@ -975,7 +1044,7 @@ export function OrderDetailDialog({
                   <ShoppingCart className="w-5 h-5" />
                   Bestellpositionen
                 </h3>
-                {order.status !== "paid" && order.status !== "canceled" && (
+                {canMutate && order.status !== "paid" && order.status !== "canceled" && (
                   <Button
                     size="sm"
                     variant="default"
@@ -989,7 +1058,7 @@ export function OrderDetailDialog({
               </div>
 
               {/* Menü-Auswahl */}
-              {isAddingItem && order.status !== "paid" && order.status !== "canceled" && (
+              {canMutate && isAddingItem && order.status !== "paid" && order.status !== "canceled" && (
                 <div className="mb-4 p-4 bg-card/50 border border-border rounded-md">
                   <div className="mb-3">
                     <div className="relative mb-2">
@@ -1099,7 +1168,7 @@ export function OrderDetailDialog({
                         <span className="text-foreground font-medium">
                           {formatCurrency(item.total_price)}
                         </span>
-                        {order.status !== "paid" && order.status !== "canceled" && (
+                        {canMutate && order.status !== "paid" && order.status !== "canceled" && (
                           <Button
                             size="sm"
                             variant="destructive"
@@ -1138,16 +1207,16 @@ export function OrderDetailDialog({
                           const nextAmount = raw === "" ? 0 : Number.parseFloat(raw) || 0;
                           setDiscountAmount(nextAmount);
                           setPaymentDetailsDirty(true);
-                          if (!order || order.subtotal <= 0) {
+                          if (!order || computedFinancials.subtotal <= 0) {
                             setDiscountPercentage(null);
                             return;
                           }
-                          const nextPercent = (nextAmount / order.subtotal) * 100;
+                          const nextPercent = (nextAmount / computedFinancials.subtotal) * 100;
                           setDiscountPercentage(Number(nextPercent.toFixed(2)));
                         }}
                         className="bg-muted border-input text-foreground"
                         placeholder="0.00"
-                        disabled={isPaymentLocked}
+                        disabled={isPaymentLocked || !canMutate}
                       />
                     </div>
                     <div>
@@ -1169,16 +1238,16 @@ export function OrderDetailDialog({
                           const nextPercent = Number.parseFloat(raw) || 0;
                           setDiscountPercentage(nextPercent);
                           setPaymentDetailsDirty(true);
-                          if (!order || order.subtotal <= 0) {
+                          if (!order || computedFinancials.subtotal <= 0) {
                             setDiscountAmount(0);
                             return;
                           }
-                          const nextAmount = (order.subtotal * nextPercent) / 100;
+                          const nextAmount = (computedFinancials.subtotal * nextPercent) / 100;
                           setDiscountAmount(Number(nextAmount.toFixed(2)));
                         }}
                         className="bg-muted border-input text-foreground"
                         placeholder="0"
-                        disabled={isPaymentLocked}
+                        disabled={isPaymentLocked || !canMutate}
                       />
                     </div>
                   </div>
@@ -1195,7 +1264,7 @@ export function OrderDetailDialog({
                         }}
                         className="bg-muted border-input text-foreground"
                         placeholder="0.00"
-                        disabled={isPaymentLocked || paymentView === "split"}
+                        disabled={isPaymentLocked || paymentView === "split" || !canMutate}
                       />
                   </div>
                 </div>
@@ -1211,20 +1280,20 @@ export function OrderDetailDialog({
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between text-muted-foreground">
                   <span>Zwischensumme:</span>
-                  <span>{formatCurrency(order.subtotal)}</span>
+                  <span>{formatCurrency(computedFinancials.subtotal)}</span>
                 </div>
-                {order.discount_amount > 0 && (
+                {computedFinancials.discountAmount > 0 && (
                   <div className="flex justify-between text-muted-foreground">
                     <span className="text-red-400">
                       Rabatt
                       {order.discount_percentage ? ` (${order.discount_percentage}%)` : ""}:
                     </span>
-                    <span className="text-red-400">-{formatCurrency(order.discount_amount)}</span>
+                    <span className="text-red-400">-{formatCurrency(computedFinancials.discountAmount)}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-muted-foreground">
                   <span className="text-primary">MwSt. (inkl.):</span>
-                  <span className="text-foreground">{formatCurrency(order.tax_amount)}</span>
+                  <span className="text-foreground">{formatCurrency(computedFinancials.taxAmount)}</span>
                 </div>
                 {(paymentView === "split" ? totalSplitTip : tipAmount) > 0 && (
                   <div className="flex justify-between text-muted-foreground">
@@ -1238,13 +1307,13 @@ export function OrderDetailDialog({
                   <div className="flex justify-between text-lg font-bold text-foreground">
                     <span>Gesamt inkl. Trinkgeld:</span>
                     <span>
-                      {formatCurrency(order.total - (tipAmount || 0) + totalSplitTip)}
+                      {formatCurrency(computedFinancials.total - (tipAmount || 0) + totalSplitTip)}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm text-muted-foreground">
                     <span>Gesamt exkl. Trinkgeld:</span>
                     <span className="text-muted-foreground">
-                      {formatCurrency(order.total - (tipAmount || 0))}
+                      {formatCurrency(computedFinancials.total - (tipAmount || 0))}
                     </span>
                   </div>
                 </div>
@@ -1403,7 +1472,7 @@ export function OrderDetailDialog({
                                 setPaymentMethod("cash");
                                 setPaymentDetailsDirty(true);
                               }}
-                              disabled={isPaymentLocked}
+                              disabled={isPaymentLocked || !canMutate}
                               className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-sm border min-h-[30px] ${
                                 paymentMethod === "cash"
                                   ? "bg-primary text-white border-primary/80 shadow-inner"
@@ -1420,7 +1489,7 @@ export function OrderDetailDialog({
                                 setPaymentMethod("card");
                                 setPaymentDetailsDirty(true);
                               }}
-                              disabled={isPaymentLocked}
+                              disabled={isPaymentLocked || !canMutate}
                               className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-sm border min-h-[30px] ${
                                 paymentMethod === "card"
                                   ? "bg-primary text-white border-primary/80 shadow-inner"
@@ -1441,7 +1510,7 @@ export function OrderDetailDialog({
                                 setPaymentMethod("sumup_card");
                                 setPaymentDetailsDirty(true);
                               }}
-                              disabled={isPaymentLocked || !restaurant?.sumup_enabled}
+                              disabled={isPaymentLocked || !restaurant?.sumup_enabled || !canMutate}
                               className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-sm border min-h-[30px] ${
                                 paymentMethod === "sumup_card"
                                   ? "bg-primary text-white border-primary/80 shadow-inner"
@@ -1465,7 +1534,7 @@ export function OrderDetailDialog({
                             </div>
                             <Button
                               onClick={handleStartSumupPayment}
-                              disabled={isStartingSumupPayment || isPaymentLocked || (order?.status !== "served" && order?.status !== "paid")}
+                              disabled={!canMutate || isStartingSumupPayment || isPaymentLocked || (order?.status !== "served" && order?.status !== "paid")}
                               className="w-full bg-primary hover:bg-primary/90 text-white"
                             >
                               {isStartingSumupPayment ? (
@@ -1494,8 +1563,8 @@ export function OrderDetailDialog({
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={handleAddSplitPayment}
-                                disabled={isPaymentLocked || (splitPaid.length > 0 && splitPaid.every(Boolean))}
+                              onClick={handleAddSplitPayment}
+                                disabled={!canMutate || isPaymentLocked || (splitPaid.length > 0 && splitPaid.every(Boolean))}
                                 className="bg-primary border-primary text-white hover:bg-primary text-xs shadow-none hover:shadow-[0_10px_24px_rgba(59,130,246,0.35)] disabled:opacity-60 disabled:cursor-not-allowed"
                               >
                                 <Plus className="w-3 h-3 mr-1" />
@@ -1536,8 +1605,9 @@ export function OrderDetailDialog({
                                       ? assignedTaxRaw * (computedAmount / assignedSubtotal)
                                       : 0;
                                   const discountShare =
-                                    order.discount_amount > 0 && order.total > 0
-                                      ? (order.discount_amount * computedAmount) / order.total
+                                    computedFinancials.discountAmount > 0 && computedFinancials.total > 0
+                                      ? (computedFinancials.discountAmount * computedAmount) /
+                                        computedFinancials.total
                                       : 0;
                                   return (
                                     <div
@@ -1563,7 +1633,7 @@ export function OrderDetailDialog({
                                             size="sm"
                                             variant="outline"
                                             onClick={() => toggleSplitPaid(index)}
-                                            disabled={isPaymentLocked || !hasSelection}
+                                            disabled={!canMutate || isPaymentLocked || !hasSelection}
                                             className={`shadow-none ${
                                               isPaid
                                                 ? "bg-emerald-900/30 border-emerald-600 text-emerald-200 hover:bg-emerald-900/50 hover:border-emerald-500"
@@ -1576,7 +1646,7 @@ export function OrderDetailDialog({
                                             size="sm"
                                             variant="outline"
                                             onClick={() => handleRemoveSplitPayment(index)}
-                                            disabled={isPaymentLocked}
+                                            disabled={!canMutate || isPaymentLocked}
                                             className="bg-red-900/30 border-red-600 text-red-200 shadow-none hover:bg-red-900/50 hover:border-red-500 disabled:opacity-60 disabled:cursor-not-allowed"
                                             title="Split entfernen"
                                           >
@@ -1636,10 +1706,11 @@ export function OrderDetailDialog({
                                             <div className="text-[11px] text-muted-foreground mb-1">Zahlungsart</div>
                                             <button
                                               type="button"
-                                              onClick={() =>
-                                                setSplitMethodMenuIndex((prev) => (prev === index ? null : index))
-                                              }
-                                            disabled={isPaymentLocked || !hasSelection || isPaid}
+                                              onClick={() => {
+                                                if (!canMutate) return;
+                                                setSplitMethodMenuIndex((prev) => (prev === index ? null : index));
+                                              }}
+                                            disabled={!canMutate || isPaymentLocked || !hasSelection || isPaid}
                                             className="w-full flex items-center justify-between gap-2 px-2 py-1 bg-muted border border-input rounded text-foreground text-sm hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring min-h-[32px] disabled:opacity-60 disabled:cursor-not-allowed"
                                             >
                                               <span className="flex items-center gap-2">
@@ -1714,7 +1785,7 @@ export function OrderDetailDialog({
                                             }
                                             className="bg-muted border-input text-foreground h-8 text-sm"
                                             placeholder="0.00"
-                                          disabled={isPaymentLocked || !hasSelection || isPaid}
+                                          disabled={!canMutate || isPaymentLocked || !hasSelection || isPaid}
                                           />
                                         </div>
                                         {hasSelection ? (
@@ -1808,18 +1879,20 @@ export function OrderDetailDialog({
               </div>
             )}
 
-            <div className="flex items-center justify-between pt-2 border-t border-border">
-              <Button
-                size="sm"
-                variant="destructive"
-                onClick={handleDeleteOrder}
-                disabled={loading || deleting}
-                className="shadow-none"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Löschen
-              </Button>
-              <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 py-2 border-t border-border">
+              {canMutate && (
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={handleDeleteOrder}
+                  disabled={loading || deleting}
+                  className="shadow-none"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Löschen
+                </Button>
+              )}
+              <div className="ml-auto flex items-center gap-2">
                 <Button
                   size="sm"
                   variant="outline"
@@ -1829,7 +1902,7 @@ export function OrderDetailDialog({
                   <X className="w-4 h-4" />
                   Schließen
                 </Button>
-                {order.status !== "paid" && order.status !== "canceled" && (
+                {canMutate && order.status !== "paid" && order.status !== "canceled" && (
                   <>
                     {order.status === "open" && (
                       <Button

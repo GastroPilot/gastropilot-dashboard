@@ -5,6 +5,20 @@ import { test, expect } from '@playwright/test';
 // These tests verify the redirect behavior works correctly.
 
 test.describe('Dashboard Access', () => {
+  const protectedRoutes = [
+    '/dashboard',
+    '/dashboard/reservations',
+    '/dashboard/order-history',
+    '/dashboard/tischplan',
+    '/dashboard/finanzen/umsaetze',
+    '/dashboard/finanzen/kartenlesegeraete',
+    '/dashboard/finanzen/tse',
+    '/dashboard/finanzen/rechnungs-editor',
+    '/dashboard/finanzen/tagesabschluss',
+    '/dashboard/timeline',
+    '/dashboard/hilfecenter',
+  ];
+
   test.beforeEach(async ({ page }) => {
     // Clear tokens to ensure redirect to login
     await page.goto('/login', { waitUntil: 'domcontentloaded' });
@@ -12,28 +26,14 @@ test.describe('Dashboard Access', () => {
       localStorage.clear();
     });
   });
-  
-  test('redirects to login when accessing dashboard without auth', async ({ page }) => {
-    await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
-    
-    // Should redirect to login
-    await page.waitForURL(/login/, { timeout: 10000 });
-    await expect(page).toHaveURL(/login/);
-  });
-  
-  test('redirects to login when accessing reservations without auth', async ({ page }) => {
-    await page.goto('/dashboard/reservations', { waitUntil: 'domcontentloaded' });
-    
-    await page.waitForURL(/login/, { timeout: 10000 });
-    await expect(page).toHaveURL(/login/);
-  });
-  
-  test('redirects to login when accessing orders without auth', async ({ page }) => {
-    await page.goto('/dashboard/orders', { waitUntil: 'domcontentloaded' });
-    
-    await page.waitForURL(/login/, { timeout: 10000 });
-    await expect(page).toHaveURL(/login/);
-  });
+
+  for (const route of protectedRoutes) {
+    test(`redirects to login when accessing ${route} without auth`, async ({ page }) => {
+      await page.goto(route, { waitUntil: 'domcontentloaded' });
+      await page.waitForURL(/login/, { timeout: 10000 });
+      await expect(page).toHaveURL(/login/);
+    });
+  }
 });
 
 test.describe('Login Page UI', () => {

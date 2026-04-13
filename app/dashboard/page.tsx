@@ -1,2164 +1,2052 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback, useRef, memo } from "react";
 import Link from "next/link";
-import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, PointerSensor, TouchSensor, useSensor, useSensors, closestCenter } from "@dnd-kit/core";
-import { useQueryClient } from "@tanstack/react-query";
-import { restaurantsApi, Restaurant } from "@/lib/api/restaurants";
-import { tablesApi, Table } from "@/lib/api/tables";
-import { reservationsApi, Reservation } from "@/lib/api/reservations";
-import { ordersApi, Order } from "@/lib/api/orders";
-import { Obstacle } from "@/lib/api/obstacles";
-import { Area } from "@/lib/api/areas";
-import { authApi } from "@/lib/api/auth";
-import { impersonation } from "@/lib/api/admin";
-import { tableDayConfigsApi, TableDayConfig } from "@/lib/api/table-day-configs";
-import { reservationTableDayConfigsApi, ReservationTableDayConfig } from "@/lib/api/reservation-table-day-configs";
-import { blocksApi, Block } from "@/lib/api/blocks";
-import { blockAssignmentsApi, BlockAssignment } from "@/lib/api/block-assignments";
-import { dashboardApi } from "@/lib/api/dashboard";
-import { TableCard } from "@/components/table-card";
-import { ReservationCard } from "@/components/reservation-card";
-import { BlockCard } from "@/components/block-card";
-import { WaitlistSidebar } from "@/components/waitlist-sidebar";
-import { ReservationDialog } from "@/components/reservation-dialog";
-import { TableDetailsDialog } from "@/components/table-details-dialog";
-import { OrderDetailDialog } from "@/components/order-detail-dialog";
-import { OrderDialog } from "@/components/order-dialog";
-import { CreateTempTableDialog } from "@/components/create-temp-table-dialog";
-import { BlockTableDialog } from "@/components/block-table-dialog";
-import { LoadingOverlay } from "@/components/loading-overlay";
-import { SkeletonTableCard } from "@/components/skeletons";
-import { AreaSelector } from "@/components/area-selector";
-import { Button } from "@/components/ui/button";
-import { useUserSettings } from "@/lib/hooks/use-user-settings";
-import { useDashboardComputations } from "@/lib/hooks/use-dashboard-computations";
-import { confirmAction } from "@/lib/utils";
-import { Plus, ChevronLeft, ChevronRight, LayoutGrid, MoveRight, ShieldAlert, ChevronDown, Check, ZoomIn, ZoomOut, Maximize2, Link as LinkIcon, Unlink, XSquare, RotateCcw, Clock, ShieldCheck, Users, CheckCircle, XCircle, Calendar, EllipsisVertical } from "lucide-react";
-import { format, parseISO, startOfDay, endOfDay, isSameDay } from "date-fns";
+import { useRouter } from "next/navigation";
+import {
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FocusEvent,
+  type KeyboardEvent,
+  type MouseEvent,
+  type ReactNode,
+} from "react";
+import { createPortal } from "react-dom";
+import { format, subDays } from "date-fns";
 import { de } from "date-fns/locale";
+import {
+  AlertTriangle,
+  BarChart3,
+  Calendar,
+  CookingPot,
+  Euro,
+  LayoutGrid,
+  Percent,
+  RefreshCw,
+  ShieldCheck,
+  ShoppingCart,
+  Tag,
+  TrendingDown,
+  TrendingUp,
+  Users,
+} from "lucide-react";
+import { authApi, type User } from "@/lib/api/auth";
+import { impersonation } from "@/lib/api/admin";
+import { restaurantsApi } from "@/lib/api/restaurants";
+import { useDashboardOverviewData, type OverviewRangePreset } from "@/lib/hooks/queries";
+import { LoadingOverlay } from "@/components/loading-overlay";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-const DASHBOARD_ZOOM_SETTINGS_KEY = "dashboard_zoom_level";
+const RANGE_PRESETS: Array<{ id: OverviewRangePreset; label: string }> = [
+  { id: "today", label: "Heute" },
+  { id: "7d", label: "7 Tage" },
+  { id: "30d", label: "30 Tage" },
+  { id: "custom", label: "Benutzerdefiniert" },
+];
 
-// ============================================
-// OPTIMIERTE HOOKS
-// ============================================
+const STATUS_LABELS: Record<string, string> = {
+  open: "Offen",
+  sent_to_kitchen: "An Küche gesendet",
+  in_preparation: "In Zubereitung",
+  ready: "Bereit",
+  served: "Serviert",
+  paid: "Bezahlt",
+  canceled: "Storniert",
+  unknown: "Unbekannt",
+};
 
-/**
- * Optimierte Uhr - aktualisiert alle 10 Sekunden statt jede Sekunde
- */
-function useOptimizedClock(updateInterval = 10000) {
-  const [now, setNow] = useState(() => new Date());
-  
-  useEffect(() => {
-    // Initiale Aktualisierung
-    setNow(new Date());
-    
-    const interval = setInterval(() => {
-      setNow(new Date());
-    }, updateInterval);
-    
-    return () => clearInterval(interval);
-  }, [updateInterval]);
-  
-  return now;
+const DASHBOARD_CARD_HOVER_CLASS =
+  "transform-gpu shadow-md shadow-black/5 transition-all duration-200 ease-out motion-reduce:transition-none hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/10";
+const DASHBOARD_ROW_HOVER_CLASS =
+  "transition-colors duration-200 ease-out motion-reduce:transition-none hover:bg-accent/60";
+
+const TOOLTIP_X_OFFSET = 12;
+const TOOLTIP_Y_OFFSET = 12;
+const TOOLTIP_EDGE_PADDING = 12;
+const TOOLTIP_ESTIMATED_WIDTH = 220;
+const TOOLTIP_ESTIMATED_HEIGHT = 38;
+const TOOLTIP_Z_INDEX = 9999;
+const REVENUE_STROKE_WIDTH = 1.2;
+const TREND_DELTA_EPSILON = 0.05;
+
+type TrendDeltaDirection = "up" | "down" | "neutral";
+
+interface RevenueChangeIndicator {
+  label: string;
+  deltaPercent: number | null;
+  direction: TrendDeltaDirection;
 }
 
-/**
- * Hook für Batch-API-Aufrufe mit Caching
- */
-function useDashboardData(restaurantId: string | null, selectedDate: Date) {
-  const [data, setData] = useState<{
-    restaurant: Restaurant | null;
-    areas: Area[];
-    tables: Table[];
-    obstacles: Obstacle[];
-    reservations: Reservation[];
-    blocks: Block[];
-    blockAssignments: BlockAssignment[];
-    orders: Order[];
-    tableDayConfigs: TableDayConfig[];
-    reservationTableDayConfigs: ReservationTableDayConfig[];
-  }>({
-    restaurant: null,
-    areas: [],
-    tables: [],
-    obstacles: [],
-    reservations: [],
-    blocks: [],
-    blockAssignments: [],
-    orders: [],
-    tableDayConfigs: [],
-    reservationTableDayConfigs: [],
-  });
-  
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  
-  // Cache-Key für Deduplizierung
-  const lastFetchKeyRef = useRef<string>("");
-  const abortControllerRef = useRef<AbortController | null>(null);
-  
-  const fetchData = useCallback(async (restId: string, date: Date, background = false) => {
-    const cacheKey = `${restId}-${format(date, 'yyyy-MM-dd')}`;
-    
-    // Skip duplicate requests
-    if (background && lastFetchKeyRef.current === cacheKey) {
-      return;
-    }
-    
-    // Cancel previous request
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    abortControllerRef.current = new AbortController();
-    
-    if (!background) {
-      setIsLoading(true);
-    }
-    
-    try {
-      // Single batch request instead of 10+ individual requests
-      const batchData = await dashboardApi.getDashboardData(restId, date);
-      
-      lastFetchKeyRef.current = cacheKey;
-      
-      // Process table day configs to apply to tables
-      const configMap = new Map<string, TableDayConfig>();
-      const tempConfigMap = new Map<string, TableDayConfig>();
-      
-      (batchData.table_day_configs || []).forEach((config: any) => {
-        if (config.table_id !== null && config.table_id !== undefined) {
-          configMap.set(config.table_id, config);
-        } else if (config.is_temporary && config.number) {
-          tempConfigMap.set(config.number, config);
-        }
-      });
-      
-      // Apply day configs to tables
-      const visibleTables: Table[] = [];
-      const tablesData = batchData.tables || [];
-      
-      tablesData.forEach((table: any) => {
-        const config = configMap.get(table.id);
-        
-        if (config?.is_hidden) {
-          return;
-        }
-        
-        if (!config) {
-          visibleTables.push(table as Table);
-          return;
-        }
-        
-        visibleTables.push({
-          ...table,
-          // Keep canonical coordinates from base table data so /dashboard and /dashboard/tables stay in sync.
-          position_x: table.position_x,
-          position_y: table.position_y,
-          width: config.width ?? table.width,
-          height: config.height ?? table.height,
-          is_active: config.is_active ?? table.is_active,
-          color: config.color ?? table.color,
-          join_group_id: config.join_group_id,
-          is_joinable: config.is_joinable ?? table.is_joinable,
-          rotation: config.rotation ?? table.rotation,
-        } as Table);
-      });
-      
-      // Add temporary tables
-      tempConfigMap.forEach(config => {
-        if (!config.is_hidden && config.number && config.capacity) {
-          const tempTable: Table = {
-            id: `temp-${config.id}`,
-            restaurant_id: config.restaurant_id ?? restId,
-            number: config.number,
-            capacity: config.capacity,
-            shape: config.shape ?? "rectangle",
-            position_x: config.position_x ?? 50,
-            position_y: config.position_y ?? 50,
-            width: config.width ?? 120,
-            height: config.height ?? 120,
-            is_active: config.is_active ?? true,
-            notes: config.notes ?? null,
-            color: config.color ?? null,
-            is_joinable: config.is_joinable ?? false,
-            join_group_id: config.join_group_id ?? null,
-            is_outdoor: false,
-            rotation: config.rotation ?? null,
-            created_at_utc: config.created_at_utc ?? new Date().toISOString(),
-            updated_at_utc: config.updated_at_utc ?? new Date().toISOString(),
-            area_id: null,
-          };
-          visibleTables.push(tempTable);
-        }
-      });
-      
-      // Filter active orders
-      const activeOrders = (batchData.orders || []).filter(
-        (o: any) => o.status !== "paid" && o.status !== "canceled"
-      );
-      
-      setData({
-        restaurant: batchData.restaurant as Restaurant,
-        areas: batchData.areas as Area[],
-        tables: visibleTables,
-        obstacles: batchData.obstacles as Obstacle[],
-        reservations: batchData.reservations as Reservation[],
-        blocks: batchData.blocks as Block[],
-        blockAssignments: batchData.block_assignments as BlockAssignment[],
-        orders: activeOrders as Order[],
-        tableDayConfigs: batchData.table_day_configs as TableDayConfig[],
-        reservationTableDayConfigs: batchData.reservation_table_day_configs as ReservationTableDayConfig[],
-      });
-      
-      setError(null);
-    } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') {
-        return;
-      }
-      console.error("Fehler beim Laden der Dashboard-Daten:", err);
-      setError(err instanceof Error ? err : new Error('Unknown error'));
-    } finally {
-      if (!background) {
-        setIsLoading(false);
-      }
-    }
+function getAdaptiveTooltipPosition(
+  anchorX: number,
+  anchorY: number,
+  tooltipWidth: number,
+  tooltipHeight: number
+): { left: number; top: number } {
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+
+  let left = anchorX + TOOLTIP_X_OFFSET;
+  if (left + tooltipWidth > viewportWidth - TOOLTIP_EDGE_PADDING) {
+    left = anchorX - tooltipWidth - TOOLTIP_X_OFFSET;
+  }
+  if (left < TOOLTIP_EDGE_PADDING) {
+    left = Math.max(
+      TOOLTIP_EDGE_PADDING,
+      Math.min(anchorX - tooltipWidth / 2, viewportWidth - tooltipWidth - TOOLTIP_EDGE_PADDING)
+    );
+  }
+
+  let top = anchorY - tooltipHeight - TOOLTIP_Y_OFFSET;
+  if (top < TOOLTIP_EDGE_PADDING) {
+    top = anchorY + TOOLTIP_Y_OFFSET;
+  }
+  if (top + tooltipHeight > viewportHeight - TOOLTIP_EDGE_PADDING) {
+    top = viewportHeight - tooltipHeight - TOOLTIP_EDGE_PADDING;
+  }
+  if (top < TOOLTIP_EDGE_PADDING) {
+    top = TOOLTIP_EDGE_PADDING;
+  }
+
+  return { left, top };
+}
+
+function AdaptiveHoverTooltip({
+  anchorX,
+  anchorY,
+  children,
+}: {
+  anchorX: number;
+  anchorY: number;
+  children: ReactNode;
+}) {
+  const [mounted, setMounted] = useState(false);
+  const [size, setSize] = useState({ width: TOOLTIP_ESTIMATED_WIDTH, height: TOOLTIP_ESTIMATED_HEIGHT });
+  const tooltipRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    setMounted(true);
   }, []);
-  
-  // Initial load
-  useEffect(() => {
-    if (restaurantId) {
-      fetchData(restaurantId, selectedDate);
-    }
-    
-    return () => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    };
-  }, [restaurantId]); // eslint-disable-line react-hooks/exhaustive-deps -- Only on restaurantId change
-  
-  // Date change - background refresh
-  useEffect(() => {
-    if (restaurantId && !isLoading) {
-      lastFetchKeyRef.current = ""; // Force refresh
-      fetchData(restaurantId, selectedDate, true);
-    }
-  }, [selectedDate]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Keep dashboard data fresh so kitchen updates from other devices become visible.
-  useEffect(() => {
-    if (!restaurantId) return;
-
-    const intervalId = window.setInterval(() => {
-      if (typeof document !== "undefined" && document.hidden) {
-        return;
-      }
-      lastFetchKeyRef.current = ""; // Force refresh
-      fetchData(restaurantId, selectedDate, true);
-    }, 10000);
-
-    return () => {
-      window.clearInterval(intervalId);
-    };
-  }, [restaurantId, selectedDate, fetchData]);
-  
-  const refresh = useCallback((background = false) => {
-    if (restaurantId) {
-      lastFetchKeyRef.current = ""; // Force refresh
-      fetchData(restaurantId, selectedDate, background);
+  useLayoutEffect(() => {
+    if (!mounted || !tooltipRef.current) return;
+    const rect = tooltipRef.current.getBoundingClientRect();
+    const nextWidth = Math.ceil(rect.width);
+    const nextHeight = Math.ceil(rect.height);
+    if (nextWidth !== size.width || nextHeight !== size.height) {
+      setSize({ width: nextWidth, height: nextHeight });
     }
-  }, [restaurantId, selectedDate, fetchData]);
-  
-  return { ...data, isLoading, error, refresh };
+  }, [mounted, size.height, size.width, anchorX, anchorY, children]);
+
+  if (!mounted) return null;
+
+  const { left, top } = getAdaptiveTooltipPosition(anchorX, anchorY, size.width, size.height);
+
+  return createPortal(
+    <div
+      ref={tooltipRef}
+      className="pointer-events-none fixed max-w-[260px] rounded-md border border-border bg-popover/95 px-2 py-1 text-[11px] font-semibold text-foreground shadow-sm"
+      style={{ left: `${left}px`, top: `${top}px`, zIndex: TOOLTIP_Z_INDEX }}
+    >
+      {children}
+    </div>,
+    document.body
+  );
 }
 
-// ============================================
-// HAUPTKOMPONENTE
-// ============================================
+function buildSmoothCurvePath(points: Array<{ x: number; y: number }>): string {
+  if (points.length === 0) return "";
+  if (points.length === 1) {
+    const point = points[0];
+    return `M ${point.x} ${point.y}`;
+  }
 
-export default function DashboardPage() {
-  // ============================================
-  // STATE - Reduziert auf das Wesentliche
-  // ============================================
-  
+  let path = `M ${points[0].x} ${points[0].y}`;
+
+  for (let index = 0; index < points.length - 1; index += 1) {
+    const p0 = index === 0 ? points[index] : points[index - 1];
+    const p1 = points[index];
+    const p2 = points[index + 1];
+    const p3 = index + 2 < points.length ? points[index + 2] : p2;
+
+    const cp1x = p1.x + (p2.x - p0.x) / 6;
+    const rawCp1y = p1.y + (p2.y - p0.y) / 6;
+    const cp2x = p2.x - (p3.x - p1.x) / 6;
+    const rawCp2y = p2.y - (p3.y - p1.y) / 6;
+    const segmentMinY = Math.min(p1.y, p2.y);
+    const segmentMaxY = Math.max(p1.y, p2.y);
+    const cp1y = Math.min(segmentMaxY, Math.max(segmentMinY, rawCp1y));
+    const cp2y = Math.min(segmentMaxY, Math.max(segmentMinY, rawCp2y));
+
+    path += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${p2.x} ${p2.y}`;
+  }
+
+  return path;
+}
+
+function formatCurrency(value: number): string {
+  return new Intl.NumberFormat("de-DE", {
+    style: "currency",
+    currency: "EUR",
+    maximumFractionDigits: 2,
+  }).format(value);
+}
+
+function formatCurrencyAxis(value: number): string {
+  const abs = Math.abs(value);
+  if (abs >= 1_000_000) {
+    const compact = new Intl.NumberFormat("de-DE", {
+      maximumFractionDigits: abs >= 10_000_000 ? 0 : 1,
+    }).format(value / 1_000_000);
+    return `${compact}M€`;
+  }
+  if (abs >= 1000) {
+    const compact = new Intl.NumberFormat("de-DE", {
+      maximumFractionDigits: abs >= 10000 ? 0 : 1,
+    }).format(value / 1000);
+    return `${compact}k€`;
+  }
+  return `${new Intl.NumberFormat("de-DE", { maximumFractionDigits: 0 }).format(value)}€`;
+}
+
+function formatNumber(value: number): string {
+  return new Intl.NumberFormat("de-DE", { maximumFractionDigits: 1 }).format(value);
+}
+
+function formatOrdersAxis(value: number): string {
+  return new Intl.NumberFormat("de-DE", { maximumFractionDigits: 0 }).format(Math.round(value));
+}
+
+function formatCategoryLabel(category: string | null | undefined): string {
+  const normalizedCategory = (category ?? "").trim();
+  if (!normalizedCategory || /^uncategorized$/i.test(normalizedCategory)) {
+    return "Ohne Kategorie";
+  }
+  return normalizedCategory;
+}
+
+function calculateDeltaPercent(current: number, previous: number): number | null {
+  if (!Number.isFinite(current) || !Number.isFinite(previous)) return null;
+  if (Math.abs(previous) < Number.EPSILON) {
+    if (Math.abs(current) < Number.EPSILON) return 0;
+    return null;
+  }
+  return ((current - previous) / previous) * 100;
+}
+
+function resolveTrendDirection(deltaPercent: number | null): TrendDeltaDirection {
+  if (deltaPercent === null || !Number.isFinite(deltaPercent)) return "neutral";
+  if (deltaPercent > TREND_DELTA_EPSILON) return "up";
+  if (deltaPercent < -TREND_DELTA_EPSILON) return "down";
+  return "neutral";
+}
+
+function formatSignedPercent(value: number | null): string {
+  if (value === null || !Number.isFinite(value)) return "n/a";
+  const normalizedValue = Math.abs(value) < TREND_DELTA_EPSILON ? 0 : value;
+  const sign = normalizedValue > 0 ? "+" : "";
+  return `${sign}${normalizedValue.toFixed(1)}%`;
+}
+
+function TrendDeltaIndicator({ changeIndicator }: { changeIndicator: RevenueChangeIndicator }) {
+  return (
+    <div className="flex items-center gap-1 text-xs">
+      {changeIndicator.direction === "up" ? (
+        <TrendingUp className="h-3.5 w-3.5 text-emerald-400" />
+      ) : changeIndicator.direction === "down" ? (
+        <TrendingDown className="h-3.5 w-3.5 text-red-400" />
+      ) : (
+        <Percent className="h-3.5 w-3.5 text-muted-foreground" />
+      )}
+      <span
+        className={
+          changeIndicator.direction === "up"
+            ? "text-emerald-400"
+            : changeIndicator.direction === "down"
+              ? "text-red-400"
+              : "text-muted-foreground"
+        }
+      >
+        {formatSignedPercent(changeIndicator.deltaPercent)}
+      </span>
+      <span className="text-muted-foreground">{changeIndicator.label}</span>
+    </div>
+  );
+}
+
+function parseDateInput(value: string): Date | undefined {
+  if (!value) return undefined;
+  const parsed = new Date(`${value}T12:00:00`);
+  return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+}
+
+function formatGermanDate(value: string, includeYear = false): string {
+  const parsed = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) return value;
+  return format(parsed, includeYear ? "dd.MM.yyyy" : "dd.MM", { locale: de });
+}
+
+function KpiCard({
+  label,
+  value,
+  hint,
+  href,
+  icon,
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+  href?: string;
+  icon?: ReactNode;
+}) {
+  const content = (
+    <Card
+      className={`relative z-0 border-border bg-card/70 hover:z-40 focus-within:z-40 ${DASHBOARD_CARD_HOVER_CLASS} ${
+        href ? "hover:bg-card hover:border-primary/50" : "hover:bg-card/80 hover:border-primary/30"
+      }`}
+    >
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+          {icon ? <span className="text-muted-foreground">{icon}</span> : null}
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-1">
+        <p className="text-2xl font-bold text-foreground">{value}</p>
+        {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
+      </CardContent>
+    </Card>
+  );
+
+  if (!href) return content;
+
+  return (
+    <Link
+      href={href}
+      className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      title={`Zu ${label}`}
+    >
+      {content}
+    </Link>
+  );
+}
+
+function RevenueTrendKpiCard({
+  label,
+  value,
+  hint,
+  href,
+  icon,
+  trendData,
+  changeIndicator,
+  unavailable,
+  loading,
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+  href?: string;
+  icon?: ReactNode;
+  trendData: Array<{ key: string; shortLabel: string; tooltipLabel: string; revenue: number }>;
+  changeIndicator?: RevenueChangeIndicator | null;
+  unavailable: boolean;
+  loading: boolean;
+}) {
+  const gradientId = useId();
+  const hasTrendData = !unavailable && trendData.length > 1;
+  const hasChangeIndicator = !unavailable && Boolean(changeIndicator);
+  const xAxisLabels = useMemo(() => {
+    if (!hasTrendData || trendData.length === 0) return [] as string[];
+    const first = trendData[0]?.shortLabel ?? "";
+    const middle = trendData[Math.floor((trendData.length - 1) / 2)]?.shortLabel ?? "";
+    const last = trendData[trendData.length - 1]?.shortLabel ?? "";
+    return [first, middle, last];
+  }, [hasTrendData, trendData]);
+  const [hoveredRevenueDate, setHoveredRevenueDate] = useState<string | null>(null);
+  const [trendTooltip, setTrendTooltip] = useState<{
+    anchorX: number;
+    anchorY: number;
+    tooltipLabel: string;
+    revenue: number;
+  } | null>(null);
+  const maxRevenue = hasTrendData ? Math.max(...trendData.map((entry) => entry.revenue), 1) : 1;
+  const minRevenue = hasTrendData ? Math.min(...trendData.map((entry) => entry.revenue), 0) : 0;
+  const spread = Math.max(maxRevenue - minRevenue, 1);
+  const points = hasTrendData
+    ? trendData.map((entry, index) => {
+        const x = trendData.length === 1 ? 50 : (index / (trendData.length - 1)) * 100;
+        const normalized = (entry.revenue - minRevenue) / spread;
+        const y = 80 - normalized * 56;
+        return { x, y };
+      })
+    : [];
+  const polyline = points.map((point) => `${point.x},${point.y}`).join(" ");
+  const areaPath =
+    points.length > 0
+      ? `M ${points[0].x} 80 L ${points.map((point) => `${point.x} ${point.y}`).join(" L ")} L ${points[points.length - 1].x} 80 Z`
+      : "";
+
+  const content = (
+    <Card
+      className={`relative z-0 border-border bg-card/70 hover:z-40 focus-within:z-40 ${DASHBOARD_CARD_HOVER_CLASS} ${
+        href ? "hover:bg-card hover:border-primary/50" : "hover:bg-card/80 hover:border-primary/30"
+      }`}
+    >
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+          {icon ? <span className="text-muted-foreground">{icon}</span> : null}
+        </div>
+      </CardHeader>
+      <CardContent
+        className={`relative overflow-hidden ${hasChangeIndicator ? "min-h-[136px] space-y-2" : "min-h-[120px] space-y-1"}`}
+      >
+        {trendTooltip ? (
+          <AdaptiveHoverTooltip anchorX={trendTooltip.anchorX} anchorY={trendTooltip.anchorY}>
+            {trendTooltip.tooltipLabel}: {formatCurrency(trendTooltip.revenue)}
+          </AdaptiveHoverTooltip>
+        ) : null}
+        {hasTrendData ? (
+          <div className={`absolute inset-x-3 bottom-2 ${hasChangeIndicator ? "top-16" : "top-12"}`}>
+            <div className="absolute inset-x-0 bottom-4 top-0">
+              <svg
+                viewBox="0 0 100 84"
+                preserveAspectRatio="none"
+                className="pointer-events-none h-full w-full opacity-80"
+                aria-hidden="true"
+              >
+                <defs>
+                  <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="currentColor" stopOpacity="0.24" />
+                    <stop offset="100%" stopColor="currentColor" stopOpacity="0.04" />
+                  </linearGradient>
+                </defs>
+                <line
+                  x1="0"
+                  y1="80"
+                  x2="100"
+                  y2="80"
+                  stroke="currentColor"
+                  className="text-border/90"
+                  strokeWidth={REVENUE_STROKE_WIDTH}
+                  vectorEffect="non-scaling-stroke"
+                />
+                <path d={areaPath} fill={`url(#${gradientId})`} className="text-primary" />
+                <polyline
+                  fill="none"
+                  points={polyline}
+                  stroke="currentColor"
+                  className="text-primary"
+                  strokeWidth={REVENUE_STROKE_WIDTH}
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                  vectorEffect="non-scaling-stroke"
+                />
+              </svg>
+              <div
+                className="absolute inset-0 grid gap-x-0"
+                style={{ gridTemplateColumns: `repeat(${trendData.length}, minmax(0, 1fr))` }}
+              >
+                {trendData.map((entry) => (
+                  <div
+                    key={entry.key}
+                    className={`h-full rounded-sm transition-colors ${
+                      hoveredRevenueDate === entry.key ? "bg-primary/10" : "hover:bg-accent/40"
+                    }`}
+                    onMouseEnter={(event) => {
+                      setHoveredRevenueDate(entry.key);
+                      setTrendTooltip({
+                        anchorX: event.clientX,
+                        anchorY: event.clientY,
+                        tooltipLabel: entry.tooltipLabel,
+                        revenue: entry.revenue,
+                      });
+                    }}
+                    onMouseMove={(event) => {
+                      setHoveredRevenueDate(entry.key);
+                      setTrendTooltip({
+                        anchorX: event.clientX,
+                        anchorY: event.clientY,
+                        tooltipLabel: entry.tooltipLabel,
+                        revenue: entry.revenue,
+                      });
+                    }}
+                    onMouseLeave={() => {
+                      setHoveredRevenueDate(null);
+                      setTrendTooltip(null);
+                    }}
+                    title={`${entry.tooltipLabel}: ${formatCurrency(entry.revenue)}`}
+                  />
+                ))}
+              </div>
+            </div>
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-center justify-between text-[10px] text-muted-foreground">
+              {xAxisLabels.map((label, index) => (
+                <span key={`${label}-${index}`}>{label}</span>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div
+            className={`pointer-events-none absolute inset-x-3 bottom-2 ${hasChangeIndicator ? "top-16" : "top-12"} rounded-md border border-dashed border-border/60 ${
+              loading ? "animate-pulse" : ""
+            }`}
+          />
+        )}
+        <div className={`relative z-10 ${hasChangeIndicator ? "space-y-2" : "space-y-1"}`}>
+          <p className="text-2xl font-bold text-foreground">{value}</p>
+          {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
+          {hasChangeIndicator && changeIndicator ? (
+            <TrendDeltaIndicator changeIndicator={changeIndicator} />
+          ) : null}
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  if (!href) return content;
+
+  return (
+    <Link
+      href={href}
+      className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      title={`Zu ${label}`}
+    >
+      {content}
+    </Link>
+  );
+}
+
+function DistributionKpiCard({
+  label,
+  value,
+  hint,
+  href,
+  icon,
+  distribution,
+  changeIndicator,
+  unavailable,
+  loading,
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+  href?: string;
+  icon?: ReactNode;
+  distribution: Array<{ key: string; shortLabel: string; tooltipLabel: string; count: number }>;
+  changeIndicator?: RevenueChangeIndicator | null;
+  unavailable: boolean;
+  loading: boolean;
+}) {
+  const maxCount = distribution.length > 0 ? Math.max(...distribution.map((entry) => entry.count), 1) : 1;
+  const showDistribution = !unavailable && distribution.length > 0;
+  const hasChangeIndicator = !unavailable && Boolean(changeIndicator);
+  const [hoveredDistributionDate, setHoveredDistributionDate] = useState<string | null>(null);
+  const [distributionTooltip, setDistributionTooltip] = useState<{
+    anchorX: number;
+    anchorY: number;
+    tooltipLabel: string;
+    count: number;
+  } | null>(null);
+
+  const setDistributionTooltipFromMouse = (
+    event: MouseEvent<HTMLDivElement>,
+    entry: { key: string; shortLabel: string; tooltipLabel: string; count: number }
+  ) => {
+    setDistributionTooltip({
+      anchorX: event.clientX,
+      anchorY: event.clientY,
+      tooltipLabel: entry.tooltipLabel,
+      count: entry.count,
+    });
+  };
+
+  const content = (
+    <Card
+      className={`border-border bg-card/70 ${DASHBOARD_CARD_HOVER_CLASS} ${
+        href ? "hover:bg-card hover:border-primary/50" : "hover:bg-card/80 hover:border-primary/30"
+      }`}
+    >
+      <CardHeader className="pb-2">
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-xs uppercase tracking-wide text-muted-foreground">{label}</p>
+          {icon ? <span className="text-muted-foreground">{icon}</span> : null}
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        <p className="text-2xl font-bold text-foreground">{value}</p>
+        {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
+        {hasChangeIndicator && changeIndicator ? <TrendDeltaIndicator changeIndicator={changeIndicator} /> : null}
+        {showDistribution ? (
+          <div className="relative space-y-1 overflow-x-hidden">
+            {distributionTooltip ? (
+              <AdaptiveHoverTooltip
+                anchorX={distributionTooltip.anchorX}
+                anchorY={distributionTooltip.anchorY}
+              >
+                {distributionTooltip.tooltipLabel}: {distributionTooltip.count}
+              </AdaptiveHoverTooltip>
+            ) : null}
+            <div className="relative h-10" aria-label={`${label} Verteilung im Zeitraum`}>
+              <div
+                className="pointer-events-none grid h-full items-end gap-x-0"
+                style={{ gridTemplateColumns: `repeat(${distribution.length}, minmax(0, 1fr))` }}
+              >
+                {distribution.map((entry) => (
+                  <span
+                    key={entry.key}
+                    className={`block w-3/5 mx-auto rounded-t transition-opacity ${
+                      hoveredDistributionDate === entry.key ? "bg-primary opacity-100" : "bg-primary/75 opacity-90"
+                    }`}
+                    style={{ height: `${Math.max(4, (entry.count / maxCount) * 36)}px` }}
+                  />
+                ))}
+              </div>
+              <div
+                className="absolute inset-0 grid gap-x-0"
+                style={{ gridTemplateColumns: `repeat(${distribution.length}, minmax(0, 1fr))` }}
+              >
+                {distribution.map((entry) => (
+                  <div
+                    key={entry.key}
+                    className={`h-full rounded-sm transition-colors ${
+                      hoveredDistributionDate === entry.key ? "bg-primary/10" : "hover:bg-accent/40"
+                    }`}
+                    onMouseEnter={(event) => {
+                      setHoveredDistributionDate(entry.key);
+                      setDistributionTooltipFromMouse(event, entry);
+                    }}
+                    onMouseMove={(event) => {
+                      setHoveredDistributionDate(entry.key);
+                      setDistributionTooltipFromMouse(event, entry);
+                    }}
+                    onMouseLeave={() => {
+                      setHoveredDistributionDate(null);
+                      setDistributionTooltip(null);
+                    }}
+                    title={`${entry.tooltipLabel}: ${entry.count}`}
+                  />
+                ))}
+              </div>
+            </div>
+            <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+              <span>{distribution[0].shortLabel}</span>
+              <span>{distribution[distribution.length - 1].shortLabel}</span>
+            </div>
+          </div>
+        ) : (
+          <div
+            className={`h-10 rounded border border-border bg-background/40 ${
+              loading ? "animate-pulse" : ""
+            }`}
+          />
+        )}
+      </CardContent>
+    </Card>
+  );
+
+  if (!href) return content;
+
+  return (
+    <Link
+      href={href}
+      className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      title={`Zu ${label}`}
+    >
+      {content}
+    </Link>
+  );
+}
+
+function OccupancyDonutCard({
+  occupancyRateNow,
+  occupiedTablesNow,
+  totalTables,
+  blockedTablesNow,
+  totalCapacity,
+  guestsNow,
+  capacityOccupancyRateNow,
+  unavailable,
+  loading,
+  href,
+}: {
+  occupancyRateNow: number;
+  occupiedTablesNow: number;
+  totalTables: number;
+  blockedTablesNow: number;
+  totalCapacity: number;
+  guestsNow: number;
+  capacityOccupancyRateNow: number;
+  unavailable: boolean;
+  loading: boolean;
+  href: string;
+}) {
+  const progress = unavailable ? 0 : Math.max(0, Math.min(100, occupancyRateNow));
+  const radius = 36;
+  const circumference = 2 * Math.PI * radius;
+  const progressLength = (progress / 100) * circumference;
+  const progressValue = unavailable ? (loading ? "..." : "-") : `${formatNumber(progress)}%`;
+  const hint = unavailable
+    ? "Operative Daten laden oder nicht verfügbar"
+    : `${occupiedTablesNow} von ${totalTables} Tischen belegt`;
+
+  return (
+    <Link
+      href={href}
+      className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      title="Zu Tischauslastung jetzt"
+    >
+      <Card
+        className={`border-border bg-card/70 ${DASHBOARD_CARD_HOVER_CLASS} hover:bg-card hover:border-primary/50`}
+      >
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Tischauslastung jetzt</p>
+            <span className="text-muted-foreground">
+              <LayoutGrid className="w-4 h-4" />
+            </span>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <div className="flex items-center gap-3">
+            <div className="relative h-24 w-24 shrink-0">
+              <svg viewBox="0 0 100 100" className="h-24 w-24 -rotate-90" aria-hidden="true">
+                <circle
+                  cx="50"
+                  cy="50"
+                  r={radius}
+                  stroke="currentColor"
+                  className="text-muted-foreground/30"
+                  strokeWidth="10"
+                  fill="none"
+                />
+                <circle
+                  cx="50"
+                  cy="50"
+                  r={radius}
+                  stroke="currentColor"
+                  className="text-primary transition-all duration-200"
+                  strokeWidth="10"
+                  strokeLinecap="round"
+                  fill="none"
+                  strokeDasharray={`${progressLength} ${Math.max(0, circumference - progressLength)}`}
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <p className="text-base font-bold text-foreground">{progressValue}</p>
+              </div>
+            </div>
+            <div className="space-y-1">
+              <p className="text-xs text-muted-foreground">{hint}</p>
+              <p className="text-xs text-muted-foreground">
+                Blockiert: {unavailable ? "-" : formatNumber(blockedTablesNow)}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Personen:{" "}
+                {unavailable
+                  ? "-"
+                  : `${formatNumber(guestsNow)} / ${formatNumber(totalCapacity)} (${formatNumber(
+                      capacityOccupancyRateNow
+                    )}%)`}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
+  );
+}
+
+function NoShowCancellationDonutCard({
+  noShowRate,
+  cancellationRate,
+  unavailable,
+  loading,
+  href,
+}: {
+  noShowRate: number;
+  cancellationRate: number;
+  unavailable: boolean;
+  loading: boolean;
+  href: string;
+}) {
+  const noShow = unavailable ? 0 : Math.max(0, Math.min(100, noShowRate));
+  const cancellation = unavailable ? 0 : Math.max(0, Math.min(100, cancellationRate));
+  const combined = Math.max(0, Math.min(100, noShow + cancellation));
+  const noShowValue = unavailable ? (loading ? "..." : "-") : `${formatNumber(noShow)}%`;
+  const cancellationValue = unavailable ? (loading ? "..." : "-") : `${formatNumber(cancellation)}%`;
+  const combinedValue = unavailable ? (loading ? "..." : "-") : `${formatNumber(combined)}%`;
+  const stackTotal = Math.max(100, noShow + cancellation);
+  const noShowSegment = unavailable ? 0 : (noShow / stackTotal) * 100;
+  const cancellationSegment = unavailable ? 0 : (cancellation / stackTotal) * 100;
+  const restSegment = Math.max(0, 100 - noShowSegment - cancellationSegment);
+
+  return (
+    <Link
+      href={href}
+      className="block rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      title="Zu No-Show und Storno"
+    >
+      <Card
+        className={`border-border bg-card/70 ${DASHBOARD_CARD_HOVER_CLASS} hover:bg-card hover:border-primary/50`}
+      >
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">No-Show / Storno</p>
+            <span className="text-muted-foreground">
+              <Percent className="w-4 h-4" />
+            </span>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          <div className="space-y-2">
+            <div className="h-4 w-full overflow-hidden rounded-full bg-muted-foreground/20">
+              <div className="flex h-full w-full">
+                <span
+                  className="h-full bg-amber-500 transition-all duration-200"
+                  style={{ width: `${noShowSegment}%` }}
+                  title={`No-Show: ${noShowValue}`}
+                />
+                <span
+                  className="h-full bg-rose-500 transition-all duration-200"
+                  style={{ width: `${cancellationSegment}%` }}
+                  title={`Storno: ${cancellationValue}`}
+                />
+                <span className="h-full bg-muted-foreground/20" style={{ width: `${restSegment}%` }} />
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-xs">
+              <p className="text-muted-foreground">
+                <span className="inline-block h-2 w-2 rounded-full bg-amber-500 mr-1.5" />
+                No-Show: <span className="font-semibold text-foreground">{noShowValue}</span>
+              </p>
+              <p className="text-muted-foreground">
+                <span className="inline-block h-2 w-2 rounded-full bg-rose-500 mr-1.5" />
+                Storno: <span className="font-semibold text-foreground">{cancellationValue}</span>
+              </p>
+              <p className="text-muted-foreground text-right">
+                Gesamt: <span className="font-semibold text-foreground">{combinedValue}</span>
+              </p>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {unavailable ? "Operative Daten laden oder nicht verfügbar" : "Anteil auf Tagesreservierungen"}
+          </p>
+        </CardContent>
+      </Card>
+    </Link>
+  );
+}
+
+export default function DashboardLandingPage() {
+  const router = useRouter();
   const [restaurantId, setRestaurantId] = useState<string | null>(null);
   const [restaurantsLoaded, setRestaurantsLoaded] = useState(false);
-  const [selectedAreaId, setSelectedAreaId] = useState<string | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  
-  // UI State
-  const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
-  const actionsMenuRef = useRef<HTMLDivElement | null>(null);
-  
-  // Dialog State
-  const [reservationDialogOpen, setReservationDialogOpen] = useState(false);
-  const [tableDetailsOpen, setTableDetailsOpen] = useState(false);
-  const [createTempTableOpen, setCreateTempTableOpen] = useState(false);
-  const [blockEditOpen, setBlockEditOpen] = useState(false);
-  const [orderDetailDialogOpen, setOrderDetailDialogOpen] = useState(false);
-  const [orderDialogOpen, setOrderDialogOpen] = useState(false);
-  
-  // Selection State
-  const [editingBlock, setEditingBlock] = useState<Block | null>(null);
-  const [selectedTable, setSelectedTable] = useState<Table | null>(null);
-  const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
-  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
-  const [selectedTableForOrder, setSelectedTableForOrder] = useState<Table | null>(null);
-  
-  // Drag State
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [activeReservationId, setActiveReservationId] = useState<string | null>(null);
-  const [activeBlockId, setActiveBlockId] = useState<string | null>(null);
-  
-  // UI Controls
-  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
-  const [waitlistSearchQuery, setWaitlistSearchQuery] = useState<string>("");
-  const [currentUser, setCurrentUser] = useState<{ role: string } | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
-  const [isPanning, setIsPanning] = useState(false);
-  const [zoomLevel, setZoomLevel] = useState(1);
-  const [isZooming, setIsZooming] = useState(false);
-  const [selectionMode, setSelectionMode] = useState(false);
-  const [selectedTableIds, setSelectedTableIds] = useState<Set<string>>(new Set());
-  const tablePlanRef = useRef<HTMLDivElement | null>(null);
-  
-  // Toast State
-  const [toasts, setToasts] = useState<{ id: string; message: string; variant?: "info" | "error" | "success" }[]>([]);
-  
-  // Settings
-  const { settings, updateSettings, error: settingsError } = useUserSettings();
-  const settingsInitializedRef = useRef(false);
-  const lastPersistedZoomRef = useRef<string>("");
-  const zoomSaveTimeoutRef = useRef<number | null>(null);
-  
-  // Refs für Pan/Zoom
-  const panRef = useRef({ isPanning: false, startX: 0, startY: 0 });
-  const zoomRef = useRef({ initialDistance: 0, initialZoom: 1 });
-  const panRafRef = useRef<number | null>(null);
-  const pendingPanRef = useRef<{ x: number; y: number } | null>(null);
+  const [rangePreset, setRangePreset] = useState<OverviewRangePreset>("30d");
+  const [customFrom, setCustomFrom] = useState<string>(format(subDays(new Date(), 29), "yyyy-MM-dd"));
+  const [customTo, setCustomTo] = useState<string>(format(new Date(), "yyyy-MM-dd"));
+  const [hoveredRevenueDate, setHoveredRevenueDate] = useState<string | null>(null);
+  const [revenueTooltip, setRevenueTooltip] = useState<{
+    anchorX: number;
+    anchorY: number;
+    tooltipLabel: string;
+    revenue: number;
+  } | null>(null);
+  const [hoveredHourlyHour, setHoveredHourlyHour] = useState<string | null>(null);
+  const [hourlyTooltip, setHourlyTooltip] = useState<{
+    anchorX: number;
+    anchorY: number;
+    hour: string;
+    orderCount: number;
+  } | null>(null);
 
-  // ============================================
-  // OPTIMIERTE HOOKS
-  // ============================================
-  
-  // Optimierte Uhr (alle 10s statt jede Sekunde)
-  const now = useOptimizedClock(10000);
-  
-  // Batch-Daten laden
-  const {
-    restaurant,
-    areas,
-    tables: allTables,
-    obstacles: allObstacles,
-    reservations,
-    blocks,
-    blockAssignments,
-    orders,
-    tableDayConfigs,
-    reservationTableDayConfigs,
-    isLoading: isInitialLoading,
-    refresh: refreshData,
-  } = useDashboardData(restaurantId, selectedDate);
-  
-  // Reservation to temp table mapping
-  const reservationToTempTableMap = useMemo(() => {
-    const mapping = new Map<string, string>();
-    reservationTableDayConfigs.forEach(rtdc => {
-      const tempTable = allTables.find(t => t.id === `temp-${rtdc.table_day_config_id}`);
-      if (tempTable) {
-        mapping.set(rtdc.reservation_id, tempTable.id);
-      }
-    });
-    return mapping;
-  }, [reservationTableDayConfigs, allTables]);
-  
-  // Filter by area
-  const filterByArea = useCallback(<T extends { area_id?: string | null }>(items: T[], areaId: string | null) => {
-    if (!areaId) return items;
-    return items.filter((item) => (item.area_id ?? null) === areaId);
-  }, []);
-  
-  // Gefilterte Daten nach Area
-  const tables = useMemo(
-    () =>
-      allTables.filter((table) => {
-        if (!selectedAreaId) return true;
-        // Temp-Tische haben keine area_id und sollen trotzdem sichtbar bleiben.
-        if (String(table.id).startsWith("temp-")) return true;
-        return (table.area_id ?? null) === selectedAreaId;
-      }),
-    [allTables, selectedAreaId]
-  );
-  const obstacles = useMemo(() => filterByArea(allObstacles, selectedAreaId), [allObstacles, selectedAreaId, filterByArea]);
-  
-  // Alle Berechnungen gecached
-  const computations = useDashboardComputations({
-    reservations,
-    blocks,
-    blockAssignments,
-    tables,
-    orders,
-    selectedDate,
-    reservationToTempTableMap,
-  });
-  
-  const {
-    waitlistReservations,
-    blockTemplates,
-    getTableReservations,
-    getTableOrders,
-    hasTimeConflict,
-    hasBlockConflict,
-    getBlockStatus,
-    getTableName,
-    getReservationTableLabel,
-    getBlockTableLabels,
-  } = computations;
-
-  const getOrderEligibleReservations = useCallback(
-    (tableId: string): Reservation[] => {
-      const eligibleStatuses = new Set<Reservation["status"]>(["pending", "confirmed", "seated"]);
-      return reservations
-        .filter((reservation) => eligibleStatuses.has(reservation.status))
-        .filter((reservation) => {
-          if (tableId.startsWith("temp-")) {
-            return reservationToTempTableMap.get(reservation.id) === tableId;
-          }
-          return reservation.table_id === tableId;
-        })
-        .sort((a, b) => parseISO(a.start_at).getTime() - parseISO(b.start_at).getTime());
-    },
-    [reservationToTempTableMap, reservations]
-  );
-
-  // ============================================
-  // DND SENSORS
-  // ============================================
-  
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-        delay: 150,
-        tolerance: 5,
-      },
-    }),
-    useSensor(TouchSensor, {
-      activationConstraint: {
-        distance: 5,
-        delay: 100,
-        tolerance: 10,
-      },
-    })
-  );
-
-  const resolveReservationId = useCallback(
-    (
-      dndId: string | number,
-      activeData?: { reservationId?: string } | null
-    ): string => {
-      if (activeData?.reservationId) return activeData.reservationId;
-      const raw = String(dndId);
-      return raw.startsWith("reservation-") ? raw.replace("reservation-", "") : raw;
-    },
-    []
-  );
-
-  // ============================================
-  // CALLBACKS
-  // ============================================
-  
-  const addToast = useCallback(
-    (message: string, variant: "info" | "error" | "success" = "info") => {
-      const id = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-      setToasts((prev) => [...prev, { id, message, variant }]);
-      setTimeout(() => {
-        setToasts((prev) => prev.filter((t) => t.id !== id));
-      }, 5000);
-    },
-    []
-  );
-  
-  // Initial Restaurant Load
   useEffect(() => {
-    async function loadRestaurant() {
+    let mounted = true;
+
+    async function loadContext() {
       try {
-        // Grundstatus: platform_admin ohne Impersonation → kein Tenant-Kontext
         const user = await authApi.getCurrentUser();
+        if (!mounted) return;
         setCurrentUser(user);
+
         if (user.role === "platform_admin" && !impersonation.isActive()) {
-          return; // restaurantId bleibt null → Grundstatus-Screen wird gezeigt
+          setRestaurantId(null);
+          return;
         }
+
         const restaurants = await restaurantsApi.list();
-        if (restaurants.length > 0) {
-          setRestaurantId(restaurants[0].id);
-        }
-      } catch (error) {
-        console.error("Fehler beim Laden der Restaurants:", error);
+        if (!mounted) return;
+        setRestaurantId(restaurants[0]?.id ?? null);
+      } catch {
+        if (!mounted) return;
+        setRestaurantId(null);
       } finally {
-        setRestaurantsLoaded(true);
+        if (mounted) setRestaurantsLoaded(true);
       }
     }
-    loadRestaurant();
-  }, []);
-  
-  // Load current user
-  useEffect(() => {
-    async function loadCurrentUser() {
-      try {
-        const user = await authApi.getCurrentUser();
-        setCurrentUser(user);
-      } catch (err) {
-        console.error("Fehler beim Laden des aktuellen Users:", err);
-      }
-    }
-    loadCurrentUser();
-  }, []);
-  
-  // Set initial area when areas load
-  useEffect(() => {
-    if (areas.length > 0 && !selectedAreaId) {
-      setSelectedAreaId(areas[0].id);
-    } else if (areas.length > 0 && selectedAreaId && !areas.some(a => a.id === selectedAreaId)) {
-      setSelectedAreaId(areas[0].id);
-    } else if (areas.length === 0) {
-      setSelectedAreaId(null);
-    }
-  }, [areas, selectedAreaId]);
-  
-  // Settings error toast
-  useEffect(() => {
-    if (settingsError) {
-      addToast(settingsError, "error");
-    }
-  }, [settingsError, addToast]);
-  
-  // Zoom settings persistence
-  useEffect(() => {
-    if (settingsInitializedRef.current || !settings) return;
-    const stored = (settings.settings || {})[DASHBOARD_ZOOM_SETTINGS_KEY];
-    const storedNumber = typeof stored === "number" ? stored : Number(stored);
-    if (Number.isFinite(storedNumber)) {
-      const clamped = Math.min(3, Math.max(0.5, storedNumber));
-      setZoomLevel(clamped);
-      lastPersistedZoomRef.current = clamped.toString();
-    } else {
-      lastPersistedZoomRef.current = zoomLevel.toString();
-    }
-    settingsInitializedRef.current = true;
-  }, [settings, zoomLevel]);
-  
-  useEffect(() => {
-    if (!settingsInitializedRef.current || !settings) return;
-    const rounded = Number(zoomLevel.toFixed(2));
-    const serialized = rounded.toString();
-    if (serialized === lastPersistedZoomRef.current) return;
-    lastPersistedZoomRef.current = serialized;
-    if (zoomSaveTimeoutRef.current !== null) {
-      window.clearTimeout(zoomSaveTimeoutRef.current);
-    }
-    zoomSaveTimeoutRef.current = window.setTimeout(() => {
-      updateSettings({ [DASHBOARD_ZOOM_SETTINGS_KEY]: rounded }).catch((err) => {
-        console.error("Fehler beim Speichern des Zoom-Levels:", err);
-        addToast("Zoom-Einstellung konnte nicht gespeichert werden.", "error");
-        lastPersistedZoomRef.current = "";
-      });
-    }, 300);
+
+    loadContext();
+
     return () => {
-      if (zoomSaveTimeoutRef.current !== null) {
-        window.clearTimeout(zoomSaveTimeoutRef.current);
-        zoomSaveTimeoutRef.current = null;
-      }
-    };
-  }, [zoomLevel, settings, updateSettings, addToast]);
-  
-  // Cleanup RAF
-  useEffect(() => {
-    return () => {
-      if (panRafRef.current !== null) {
-        cancelAnimationFrame(panRafRef.current);
-        panRafRef.current = null;
-      }
+      mounted = false;
     };
   }, []);
-  
-  // Click outside handlers
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (actionsMenuRef.current && !actionsMenuRef.current.contains(event.target as Node)) {
-        setActionsMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
-  // ============================================
-  // ZOOM HANDLERS
-  // ============================================
-  
-  const handleZoomIn = useCallback(() => {
-    setIsZooming(true);
-    setZoomLevel(prev => {
-      const newZoom = Math.min(prev * 1.2, 3);
-      setTimeout(() => setIsZooming(false), 150);
-      return newZoom;
-    });
-  }, []);
+  const overviewQuery = useDashboardOverviewData({
+    restaurantId: restaurantId ?? undefined,
+    selectedDate,
+    rangePreset,
+    customFromDate: parseDateInput(customFrom),
+    customToDate: parseDateInput(customTo),
+    enabled: restaurantsLoaded && Boolean(restaurantId),
+  });
 
-  const handleZoomOut = useCallback(() => {
-    setIsZooming(true);
-    setZoomLevel(prev => {
-      const newZoom = Math.max(prev / 1.2, 0.5);
-      setTimeout(() => setIsZooming(false), 150);
-      return newZoom;
-    });
-  }, []);
+  const overview = overviewQuery.data;
 
-  const handleZoomReset = useCallback(() => {
-    setZoomLevel(1);
-    setPanOffset({ x: 0, y: 0 });
-  }, []);
+  const revenueTimeline = useMemo(() => {
+    if (!overview) return [] as Array<{ key: string; axisLabel: string; tooltipLabel: string; revenue: number }>;
 
-  // ============================================
-  // DATE NAVIGATION
-  // ============================================
-  
-  const navigateDate = useCallback((days: number) => {
-    setSelectedDate(prev => {
-      const newDate = new Date(prev);
-      newDate.setDate(newDate.getDate() + days);
-      return newDate;
-    });
-  }, []);
-
-  // ============================================
-  // DRAG & DROP HANDLERS
-  // ============================================
-  
-  const handleDragStart = useCallback((event: DragStartEvent) => {
-    const id = event.active.id;
-    const activeData = event.active.data.current as
-      | { type?: "reservation" | "table" | "block"; reservationId?: string; tableId?: string; blockId?: string }
-      | undefined;
-    const activeType = activeData?.type;
-    
-    panRef.current.isPanning = false;
-    setIsPanning(false);
-    
-    if (activeType === "reservation") {
-      const reservationId = resolveReservationId(id, activeData);
-      setActiveReservationId(reservationId);
-      setTableDetailsOpen(false);
-    } else if (activeType === "block") {
-      const blockId = activeData?.blockId ?? String(id).replace("block-", "");
-      setActiveBlockId(blockId || null);
-    } else {
-      const tableId = activeData?.tableId ?? String(id);
-      setActiveId(tableId);
-    }
-  }, [resolveReservationId]);
-
-  const handleDragEnd = useCallback(async (event: DragEndEvent) => {
-    const { active, over } = event;
-    const activeIdValue = active.id;
-    const activeData = active.data.current as
-      | { type?: "reservation" | "table" | "block"; reservationId?: string; tableId?: string; blockId?: string }
-      | undefined;
-    const activeType = activeData?.type;
-
-    // Block drag handling
-    if (activeType === "block") {
-      const blockId = activeData?.blockId ?? String(activeIdValue).replace("block-", "");
-      const block = blocks.find((item) => item.id === blockId);
-      if (!block || !restaurant) {
-        setActiveBlockId(null);
-        return;
-      }
-
-      if (over && over.id) {
-        const tableId = String(over.id);
-        const table = tables.find((t) => t.id === tableId);
-        if (!table) {
-          setActiveBlockId(null);
-          return;
-        }
-        if (!table.is_active) {
-          addToast(`${table.number} ist deaktiviert und kann nicht blockiert werden.`, "error");
-          setActiveBlockId(null);
-          return;
-        }
-        
-        const alreadyAssigned = blockAssignments.some(
-          (assignment) => assignment.block_id === block.id && assignment.table_id === tableId
-        );
-        if (alreadyAssigned) {
-          addToast(`Block ist bereits auf ${table.number} zugewiesen.`, "info");
-          setActiveBlockId(null);
-          return;
-        }
-
-        if (hasBlockConflict(tableId, block.start_at, block.end_at)) {
-          addToast(`Es existiert bereits eine Blockierung in diesem Zeitraum auf ${table.number}.`, "error");
-          setActiveBlockId(null);
-          return;
-        }
-
-        const tableReservations = getTableReservations(tableId);
-        const blockStart = parseISO(block.start_at);
-        const blockEnd = parseISO(block.end_at);
-        const conflict = tableReservations.some((reservation) => {
-          const isActive =
-            reservation.status !== "canceled" &&
-            reservation.status !== "completed" &&
-            reservation.status !== "no_show";
-          if (!isActive) return false;
-          const resStart = parseISO(reservation.start_at);
-          const resEnd = parseISO(reservation.end_at);
-          return blockStart < resEnd && blockEnd > resStart;
-        });
-        
-        if (conflict) {
-          addToast(`Blockierung überschneidet sich mit einer Reservierung auf ${table.number}.`, "error");
-          setActiveBlockId(null);
-          return;
-        }
-
-        try {
-          await blockAssignmentsApi.create(restaurant.id, {
-            block_id: block.id,
-            table_id: tableId,
-          });
-          addToast(`Blockierung auf ${table.number} erstellt.`, "success");
-          refreshData(true);
-        } catch (error) {
-          console.error("Fehler beim Erstellen der Blockzuordnung:", error);
-          addToast("Fehler beim Erstellen der Blockierung", "error");
-        }
-      }
-
-      setActiveBlockId(null);
-      return;
-    }
-
-    // Reservation drag handling
-    if (activeType === "reservation" || (activeType !== "table" && String(activeIdValue).startsWith("temp-"))) {
-      const reservationId = resolveReservationId(activeIdValue, activeData);
-      const reservation = reservations.find((r) => r.id === reservationId);
-
-      if (!reservation || !restaurant) {
-        setActiveReservationId(null);
-        return;
-      }
-
-      // Drop on waitlist
-      if (over && (over.id === "waitlist" || over.id === "waitlist-dropzone" || String(over.id) === "waitlist")) {
-        try {
-          await reservationsApi.update(restaurant.id, reservation.id, {
-            table_id: null,
-            status: "pending",
-          });
-          const tempTableId = reservationToTempTableMap.get(reservation.id);
-          if (tempTableId !== undefined) {
-            const tableDayConfigId = String(tempTableId).replace('temp-', '');
-            try {
-              await reservationTableDayConfigsApi.delete(restaurant.id, reservation.id, tableDayConfigId);
-            } catch (error) {
-              console.error("Fehler beim Entfernen der Zuordnung zu temporärem Tisch:", error);
-            }
-          }
-          addToast(
-            `${reservation.guest_name || "Gast"} wurde zurück auf die Warteliste verschoben.`,
-            "info"
-          );
-          refreshData(true);
-        } catch (error) {
-          console.error("Fehler beim Entfernen des Tisches:", error);
-          addToast("Fehler beim Entfernen des Tisches", "error");
-        }
-        setActiveReservationId(null);
-        return;
-      }
-
-      // Drop on table
-      if (over && over.id) {
-        const tableId = String(over.id);
-        const table = tables.find((t) => t.id === tableId);
-
-        if (!table) {
-          setActiveReservationId(null);
-          return;
-        }
-
-        if (!table.is_active) {
-          addToast(`${table.number} ist deaktiviert und kann nicht zugewiesen werden.`, "error");
-          setActiveReservationId(null);
-          return;
-        }
-
-        if (table.is_active && table.capacity >= reservation.party_size) {
-          if (String(tableId).startsWith("temp-") !== true && hasBlockConflict(tableId, reservation.start_at, reservation.end_at)) {
-            addToast(`${table.number} ist in diesem Zeitraum blockiert.`, "error");
-            setActiveReservationId(null);
-            return;
-          }
-
-          // Temporary table
-          if (String(tableId).startsWith("temp-")) {
-            try {
-              const tableDayConfigId = String(tableId).replace("temp-", "");
-              await reservationsApi.update(restaurant.id, reservation.id, {
-                table_id: null,
-                status: "confirmed",
-              });
-              await reservationTableDayConfigsApi.create(restaurant.id, {
-                reservation_id: reservation.id,
-                table_day_config_id: tableDayConfigId,
-                start_at: reservation.start_at,
-                end_at: reservation.end_at,
-              });
-              addToast(
-                `Reservierung ${reservation.guest_name || "Gast"} auf temporären Tisch ${table.number} zugewiesen.`,
-                "success"
-              );
-              refreshData(true);
-            } catch (error) {
-              console.error("Fehler beim Zuweisen des temporären Tisches:", error);
-              addToast("Fehler beim Zuweisen des temporären Tisches", "error");
-            }
-            setActiveReservationId(null);
-            return;
-          }
-
-          // Check time conflict
-          if (hasTimeConflict(reservation, tableId)) {
-            addToast(
-              `Konflikt: ${reservation.guest_name || "Gast"} kollidiert mit einer bestehenden Reservierung auf ${table.number}.`,
-              "error"
-            );
-            setActiveReservationId(null);
-            return;
-          }
-
-          // Assign to standard table
-          try {
-            await reservationsApi.update(restaurant.id, reservation.id, {
-              table_id: tableId,
-              status: "confirmed",
-            });
-            addToast(
-              `${table.number} zugewiesen an ${reservation.guest_name || "Gast"}.`,
-              "success"
-            );
-            refreshData(true);
-          } catch (error) {
-            console.error("Fehler beim Zuweisen des Tisches:", error);
-            addToast("Fehler beim Zuweisen des Tisches", "error");
-          }
-        } else {
-          addToast(
-            `${table.number} hat nicht genügend Plätze für ${reservation.guest_name || "diese Reservierung"}.`,
-            "error"
-          );
-        }
-      }
-
-      setActiveReservationId(null);
-      return;
-    }
-
-    // Table drag handling (position change)
-    const tableId = String(activeData?.tableId ?? activeIdValue);
-    const table = tables.find((t) => t.id === tableId);
-    const isTempTable = table?.id ? String(table.id).startsWith("temp-") : false;
-
-    if (!table || !restaurant) {
-      setActiveId(null);
-      return;
-    }
-
-    const deltaX = event.delta?.x || 0;
-    const deltaY = event.delta?.y || 0;
-    
-    if (Math.abs(deltaX) < 1 && Math.abs(deltaY) < 1) {
-      setActiveId(null);
-      return;
-    }
-    
-    const currentX = table.position_x || 0;
-    const currentY = table.position_y || 0;
-    const effectiveZoom = zoomLevel > 0 ? zoomLevel : 1;
-    const newX = currentX + deltaX / effectiveZoom;
-    const newY = currentY + deltaY / effectiveZoom;
-
-    try {
-      if (isTempTable) {
-        const dateStr = format(selectedDate, "yyyy-MM-dd");
-        const existingConfig = tableDayConfigs.find(
-          (c) => c.table_id === null && c.is_temporary && c.number === table.number
-        );
-
-        const updateData: any = {
-          table_id: null,
-          date: dateStr,
-          position_x: Math.max(0, newX),
-          position_y: Math.max(0, newY),
+    if (rangePreset === "today") {
+      return (overview.revenueByHour ?? []).map((entry) => {
+        const hour = entry.hour.padStart(2, "0");
+        return {
+          key: hour,
+          axisLabel: hour,
+          tooltipLabel: `${hour}:00`,
+          revenue: entry.revenue,
         };
-
-        updateData.is_temporary = true;
-        updateData.number = table.number;
-        updateData.capacity = table.capacity;
-        updateData.shape = table.shape;
-        updateData.notes = table.notes;
-
-        if (existingConfig) {
-          if (existingConfig.width !== null) updateData.width = existingConfig.width;
-          if (existingConfig.height !== null) updateData.height = existingConfig.height;
-          if (existingConfig.is_active !== null) updateData.is_active = existingConfig.is_active;
-          if (existingConfig.color !== null) updateData.color = existingConfig.color;
-          if (existingConfig.rotation !== null) updateData.rotation = existingConfig.rotation;
-          if (existingConfig.join_group_id !== null) updateData.join_group_id = existingConfig.join_group_id;
-          if (existingConfig.is_joinable !== null) updateData.is_joinable = existingConfig.is_joinable;
-        } else {
-          updateData.width = table.width;
-          updateData.height = table.height;
-          updateData.is_active = table.is_active;
-          updateData.color = table.color;
-          updateData.rotation = table.rotation;
-          updateData.is_joinable = table.is_joinable;
-        }
-
-        await tableDayConfigsApi.createOrUpdate(restaurant.id, updateData);
-      } else {
-        // Persist position globally for regular tables.
-        await tablesApi.update(restaurant.id, table.id, {
-          position_x: Math.max(0, newX),
-          position_y: Math.max(0, newY),
-        });
-      }
-
-      addToast(`Tisch ${table.number} wurde verschoben.`, "success");
-      refreshData(true);
-    } catch (error) {
-      console.error("Fehler beim Speichern der Tischposition:", error);
-      addToast("Fehler beim Speichern der Tischposition", "error");
-    }
-
-    setActiveId(null);
-  }, [
-    blocks, blockAssignments, tables, reservations, restaurant, 
-    reservationToTempTableMap, tableDayConfigs, selectedDate, zoomLevel,
-    addToast, refreshData, hasBlockConflict, hasTimeConflict, getTableReservations,
-    resolveReservationId
-  ]);
-
-  // ============================================
-  // TABLE HANDLERS
-  // ============================================
-
-  const handleTableClick = useCallback((table: Table, event?: React.MouseEvent) => {
-    if (selectionMode) {
-      event?.stopPropagation();
-      setSelectedTableIds(prev => {
-        const newSet = new Set(prev);
-        if (newSet.has(table.id)) {
-          newSet.delete(table.id);
-          if (table.join_group_id) {
-            tables.filter(t => t.join_group_id === table.join_group_id && t.id !== table.id)
-              .forEach(t => newSet.delete(t.id));
-          }
-        } else {
-          newSet.add(table.id);
-          if (table.join_group_id) {
-            tables.filter(t => t.join_group_id === table.join_group_id && t.id !== table.id)
-              .forEach(t => newSet.add(t.id));
-          }
-        }
-        return newSet;
       });
-    } else {
-      setSelectedTable(table);
-      setSelectedReservation(null);
-      setTableDetailsOpen(true);
-    }
-  }, [selectionMode, tables]);
-
-  const handleHideTable = useCallback(async (table: Table) => {
-    if (!restaurant) return;
-    
-    const dateStr = format(selectedDate, "yyyy-MM-dd");
-    const tableId = String(table.id).startsWith("temp-") ? null : table.id;
-    
-    try {
-      const existingConfig = tableDayConfigs.find(c => 
-        c.table_id === tableId || (tableId === null && c.is_temporary && c.number === table.number)
-      );
-      
-      const updateData: any = {
-        table_id: tableId,
-        date: dateStr,
-        is_hidden: true,
-        position_x: existingConfig?.position_x ?? table.position_x,
-        position_y: existingConfig?.position_y ?? table.position_y,
-        width: existingConfig?.width ?? table.width,
-        height: existingConfig?.height ?? table.height,
-        is_active: existingConfig?.is_active ?? table.is_active,
-        color: existingConfig?.color ?? table.color,
-        join_group_id: existingConfig?.join_group_id,
-        is_joinable: existingConfig?.is_joinable ?? table.is_joinable,
-        rotation: existingConfig?.rotation ?? table.rotation,
-        number: existingConfig?.number ?? table.number,
-        capacity: existingConfig?.capacity ?? table.capacity,
-        shape: existingConfig?.shape ?? table.shape,
-        notes: existingConfig?.notes ?? table.notes,
-        is_temporary: existingConfig?.is_temporary || String(table.id).startsWith("temp-"),
-      };
-      
-      await tableDayConfigsApi.createOrUpdate(restaurant.id, updateData);
-      addToast(`Tisch ${table.number} wurde für diesen Tag ausgeblendet.`, "success");
-      refreshData(true);
-    } catch (error) {
-      console.error("Fehler beim Verstecken des Tisches:", error);
-      addToast("Fehler beim Verstecken des Tisches", "error");
-    }
-  }, [restaurant, selectedDate, tableDayConfigs, addToast, refreshData]);
-
-  const handleJoinTables = useCallback(async () => {
-    if (!restaurant || selectedTableIds.size < 2) return;
-    
-    try {
-      const groupId = Array.from(selectedTableIds)[0];
-      const dateStr = format(selectedDate, "yyyy-MM-dd");
-      
-      await Promise.all(
-        Array.from(selectedTableIds).map(tableId => {
-          const table = tables.find(t => t.id === tableId);
-          if (!table) return Promise.resolve();
-          
-          const isTempTable = String(table.id).startsWith("temp-");
-          return tableDayConfigsApi.createOrUpdate(restaurant.id, {
-            table_id: isTempTable ? null : tableId,
-            date: dateStr,
-            position_x: table.position_x,
-            position_y: table.position_y,
-            width: table.width,
-            height: table.height,
-            is_active: table.is_active,
-            color: table.color,
-            rotation: table.rotation,
-            is_joinable: true,
-            join_group_id: groupId,
-            ...(isTempTable
-              ? {
-                  is_temporary: true,
-                  number: table.number,
-                  capacity: table.capacity,
-                  shape: table.shape,
-                  notes: table.notes,
-                }
-              : {}),
-          });
-        })
-      );
-      
-      addToast(`${selectedTableIds.size} Tische wurden zusammengeschoben.`, "success");
-      setSelectedTableIds(new Set());
-      setSelectionMode(false);
-      refreshData(true);
-    } catch (error) {
-      console.error("Fehler beim Zusammenführen der Tische:", error);
-      addToast("Fehler beim Zusammenführen der Tische", "error");
-    }
-  }, [restaurant, selectedTableIds, selectedDate, tables, addToast, refreshData]);
-
-  const handleUnjoinTables = useCallback(async () => {
-    if (!restaurant || selectedTableIds.size === 0) return;
-    
-    try {
-      const dateStr = format(selectedDate, "yyyy-MM-dd");
-      
-      await Promise.all(
-        Array.from(selectedTableIds).map(tableId => {
-          const table = tables.find(t => t.id === tableId);
-          if (!table) return Promise.resolve();
-          
-          const isTempTable = String(table.id).startsWith("temp-");
-          const existingConfig = tableDayConfigs.find(c =>
-            isTempTable
-              ? c.table_id === null && c.is_temporary && c.number === table.number
-              : c.table_id === tableId
-          );
-          
-          return tableDayConfigsApi.createOrUpdate(restaurant.id, {
-            table_id: isTempTable ? null : tableId,
-            date: dateStr,
-            position_x: existingConfig?.position_x ?? table.position_x,
-            position_y: existingConfig?.position_y ?? table.position_y,
-            width: existingConfig?.width ?? table.width,
-            height: existingConfig?.height ?? table.height,
-            is_active: existingConfig?.is_active ?? table.is_active,
-            color: existingConfig?.color ?? table.color,
-            rotation: existingConfig?.rotation ?? table.rotation,
-            is_joinable: false,
-            join_group_id: null,
-            ...(isTempTable
-              ? {
-                  is_temporary: true,
-                  number: existingConfig?.number ?? table.number,
-                  capacity: existingConfig?.capacity ?? table.capacity,
-                  shape: existingConfig?.shape ?? table.shape,
-                  notes: existingConfig?.notes ?? table.notes,
-                }
-              : {}),
-          });
-        })
-      );
-      
-      addToast(`${selectedTableIds.size} Tische wurden getrennt.`, "success");
-      setSelectedTableIds(new Set());
-      setSelectionMode(false);
-      refreshData(true);
-    } catch (error) {
-      console.error("Fehler beim Trennen der Tische:", error);
-      addToast("Fehler beim Trennen der Tische", "error");
-    }
-  }, [restaurant, selectedTableIds, selectedDate, tables, tableDayConfigs, addToast, refreshData]);
-
-  const handleCancelSelection = useCallback(() => {
-    setSelectedTableIds(new Set());
-    setSelectionMode(false);
-  }, []);
-
-  const handleCreateTempTable = useCallback(async (tableData: {
-    number: string;
-    capacity: number;
-    shape?: string;
-    position_x?: number;
-    position_y?: number;
-    width?: number;
-    height?: number;
-    color?: string;
-    notes?: string;
-  }) => {
-    if (!restaurant) return;
-    
-    const dateStr = format(selectedDate, "yyyy-MM-dd");
-    
-    try {
-      await tableDayConfigsApi.createOrUpdate(restaurant.id, {
-        table_id: null,
-        date: dateStr,
-        is_temporary: true,
-        is_hidden: false,
-        number: tableData.number,
-        capacity: tableData.capacity,
-        shape: tableData.shape ?? "rectangle",
-        position_x: tableData.position_x ?? 50,
-        position_y: tableData.position_y ?? 50,
-        width: tableData.width ?? 120,
-        height: tableData.height ?? 120,
-        is_active: true,
-        color: tableData.color ?? null,
-        notes: tableData.notes ?? null,
-        is_joinable: false,
-        join_group_id: null,
-      });
-      
-      addToast(`Tisch ${tableData.number} wurde für diesen Tag erstellt.`, "success");
-      refreshData(true);
-    } catch (error) {
-      console.error("Fehler beim Erstellen des temporären Tisches:", error);
-      addToast("Fehler beim Erstellen des temporären Tisches", "error");
-    }
-  }, [restaurant, selectedDate, addToast, refreshData]);
-
-  const handleResetTablesForDate = useCallback(async () => {
-    if (!restaurant) return;
-    
-    if (!confirmAction("Möchten Sie wirklich alle tages-spezifischen Änderungen für diesen Tag zurücksetzen?")) {
-      return;
     }
 
-    const dateStr = format(selectedDate, "yyyy-MM-dd");
-    try {
-      const tempConfigIds = tableDayConfigs.filter((config) => config.is_temporary).map((config) => config.id);
-      
-      if (tempConfigIds.length > 0) {
-        const tempAssignments = reservationTableDayConfigs.filter((assignment) =>
-          tempConfigIds.includes(assignment.table_day_config_id)
-        );
-        
-        if (tempAssignments.length > 0) {
-          const reservationCount = new Set(tempAssignments.map((a) => a.reservation_id)).size;
-          const ok = confirmAction(
-            `Es gibt ${reservationCount} Reservierung${reservationCount === 1 ? "" : "en"} auf temporären Tischen. Diese werden als "Ausstehend" zurückgesetzt. Fortfahren?`
-          );
-          if (!ok) return;
-          
-          const updatedReservations = new Set<string>();
-          for (const assignment of tempAssignments) {
-            if (!updatedReservations.has(assignment.reservation_id)) {
-              await reservationsApi.update(restaurant.id, assignment.reservation_id, {
-                table_id: null,
-                status: "pending",
-              });
-              updatedReservations.add(assignment.reservation_id);
-            }
-            await reservationTableDayConfigsApi.delete(
-              restaurant.id,
-              assignment.reservation_id,
-              assignment.table_day_config_id
-            );
-          }
-          addToast("Reservierungen wurden zurück in die Reservierungsübersicht verschoben.", "success");
-        }
-      }
-      
-      await tableDayConfigsApi.deleteAllForDate(restaurant.id, dateStr);
-      addToast("Tischanordnung wurde auf die Standard-Anordnung zurückgesetzt.", "success");
-      refreshData(true);
-    } catch (error) {
-      console.error("Fehler beim Zurücksetzen der Tischanordnung:", error);
-      addToast("Fehler beim Zurücksetzen der Tischanordnung.", "error");
+    return overview.revenueByDay.map((entry) => ({
+      key: entry.date,
+      axisLabel: formatGermanDate(entry.date),
+      tooltipLabel: formatGermanDate(entry.date, true),
+      revenue: entry.revenue,
+    }));
+  }, [overview, rangePreset]);
+
+  const revenueMax = useMemo(() => {
+    if (revenueTimeline.length === 0) return 0;
+    return Math.max(...revenueTimeline.map((entry) => entry.revenue), 0);
+  }, [revenueTimeline]);
+  const revenueScaleMax = useMemo(() => {
+    return Math.max(revenueMax, 1);
+  }, [revenueMax]);
+  const revenueYAxisTicks = useMemo(() => {
+    const half = revenueMax / 2;
+    return [revenueMax, half, 0];
+  }, [revenueMax]);
+
+  const revenueAreaGradientId = useId();
+  const hourlyAreaGradientId = useId();
+  const revenuePointCount = revenueTimeline.length;
+  const revenueChartHeightClass = revenuePointCount <= 7 ? "h-52" : "h-40";
+  const revenueAxisLabelStep = useMemo(() => {
+    if (revenuePointCount <= 1) return 1;
+    if (rangePreset === "today") return 3;
+    if (revenuePointCount <= 7) return 1;
+    if (revenuePointCount <= 14) return 2;
+    return Math.ceil(revenuePointCount / 8);
+  }, [revenuePointCount, rangePreset]);
+  const activeRevenueEntry = useMemo(() => {
+    if (revenueTimeline.length === 0) return null;
+    if (!hoveredRevenueDate) return null;
+    return revenueTimeline.find((entry) => entry.key === hoveredRevenueDate) ?? null;
+  }, [revenueTimeline, hoveredRevenueDate]);
+  const revenueLinePoints = useMemo(() => {
+    if (revenueTimeline.length === 0) {
+      return [] as Array<{
+        key: string;
+        axisLabel: string;
+        tooltipLabel: string;
+        revenue: number;
+        x: number;
+        y: number;
+      }>;
     }
-  }, [restaurant, selectedDate, tableDayConfigs, reservationTableDayConfigs, addToast, refreshData]);
 
-  // ============================================
-  // RESERVATION HANDLERS
-  // ============================================
+    const plotTop = 8;
+    const plotBottom = 92;
+    const plotHeight = plotBottom - plotTop;
 
-  const handleReservationClick = useCallback((reservation: Reservation, table?: Table) => {
-    setSelectedReservation(reservation);
-    setSelectedTable(table || tables.find((t) => t.id === reservation.table_id) || null);
-    setReservationDialogOpen(true);
-  }, [tables]);
-
-  const handleReservationDeleted = useCallback(async (reservation: Reservation) => {
-    if (!restaurant) return;
-    const ok = confirmAction("Reservierung wirklich löschen?");
-    if (!ok) return;
-    try {
-      await reservationsApi.delete(restaurant.id, reservation.id);
-      refreshData(true);
-      setReservationDialogOpen(false);
-    } catch (error) {
-      console.error("Fehler beim Löschen der Reservierung:", error);
-      addToast("Fehler beim Löschen der Reservierung", "error");
+    if (revenueTimeline.length === 1) {
+      const single = revenueTimeline[0];
+      const y = plotBottom - (single.revenue / revenueScaleMax) * plotHeight;
+      return [{ ...single, x: 50, y }];
     }
-  }, [restaurant, addToast, refreshData]);
 
-  const handleBlockTemplateEdit = useCallback((block: Block) => {
-    setEditingBlock(block);
-    setBlockEditOpen(true);
-  }, []);
+    return revenueTimeline.map((entry, index) => {
+      const x = (index / (revenueTimeline.length - 1)) * 100;
+      const y = plotBottom - (entry.revenue / revenueScaleMax) * plotHeight;
+      return { ...entry, x, y };
+    });
+  }, [revenueScaleMax, revenueTimeline]);
+  const revenueSmoothPath = useMemo(() => {
+    if (revenueLinePoints.length === 0) return "";
+    return buildSmoothCurvePath(revenueLinePoints);
+  }, [revenueLinePoints]);
+  const revenueAreaPath = useMemo(() => {
+    if (revenueLinePoints.length === 0 || !revenueSmoothPath) return "";
+    const firstPoint = revenueLinePoints[0];
+    const lastPoint = revenueLinePoints[revenueLinePoints.length - 1];
+    return `${revenueSmoothPath} L ${lastPoint.x} 92 L ${firstPoint.x} 92 Z`;
+  }, [revenueLinePoints, revenueSmoothPath]);
 
-  // ============================================
-  // HELPER FUNCTIONS
-  // ============================================
-
-  const getStatusLabel = useCallback((status: Reservation["status"]) => {
-    switch (status) {
-      case "confirmed": return "Bestätigt";
-      case "seated": return "Platziert";
-      case "completed": return "Abgeschlossen";
-      case "canceled": return "Storniert";
-      case "no_show": return "No-Show";
-      default: return "Ausstehend";
-    }
-  }, []);
-
-  const updateReservationStatus = useCallback(async (
-    reservation: Reservation,
-    newStatus: Reservation["status"]
+  const setRevenueTooltipFromMouse = (
+    event: MouseEvent<HTMLButtonElement>,
+    entry: { key: string; axisLabel: string; tooltipLabel: string; revenue: number }
   ) => {
-    if (!restaurant) return;
+    setRevenueTooltip({
+      anchorX: event.clientX,
+      anchorY: event.clientY,
+      tooltipLabel: entry.tooltipLabel,
+      revenue: entry.revenue,
+    });
+  };
 
-    setUpdatingStatus(reservation.id);
-    try {
-      await reservationsApi.update(restaurant.id, reservation.id, {
-        status: newStatus,
+  const setRevenueTooltipFromFocus = (
+    event: FocusEvent<HTMLButtonElement>,
+    entry: { key: string; axisLabel: string; tooltipLabel: string; revenue: number }
+  ) => {
+    const targetRect = event.currentTarget.getBoundingClientRect();
+
+    setRevenueTooltip({
+      anchorX: targetRect.left + targetRect.width / 2,
+      anchorY: targetRect.top + targetRect.height / 2,
+      tooltipLabel: entry.tooltipLabel,
+      revenue: entry.revenue,
+    });
+  };
+
+  const orderedStatuses = useMemo(() => {
+    if (!overview) return [] as Array<[string, number]>;
+    return Object.entries(overview.ordersByStatus).sort((a, b) => b[1] - a[1]);
+  }, [overview]);
+  const topStatusCount = useMemo(() => {
+    if (orderedStatuses.length === 0) return 1;
+    return Math.max(...orderedStatuses.map(([, count]) => count), 1);
+  }, [orderedStatuses]);
+  const totalStatusCount = useMemo(() => {
+    return orderedStatuses.reduce((sum, [, count]) => sum + count, 0);
+  }, [orderedStatuses]);
+  const topItemsMaxRevenue = useMemo(() => {
+    if (!overview || overview.topItems.length === 0) return 1;
+    return Math.max(...overview.topItems.map((item) => item.revenue), 1);
+  }, [overview]);
+  const topCategoriesMaxRevenue = useMemo(() => {
+    if (!overview || overview.topCategories.length === 0) return 1;
+    return Math.max(...overview.topCategories.map((category) => category.revenue), 1);
+  }, [overview]);
+  const hourlyOrdersSorted = useMemo(() => {
+    if (!overview) return [] as Array<{ hour: string; orderCount: number; revenue: number }>;
+    return overview.hourlyOrders.slice().sort((a, b) => Number(a.hour) - Number(b.hour));
+  }, [overview]);
+  const hourlyOrdersMax = useMemo(() => {
+    if (hourlyOrdersSorted.length === 0) return 0;
+    return Math.max(...hourlyOrdersSorted.map((entry) => entry.orderCount), 0);
+  }, [hourlyOrdersSorted]);
+  const hourlyOrdersScaleMax = useMemo(() => {
+    return Math.max(hourlyOrdersMax, 1);
+  }, [hourlyOrdersMax]);
+  const hourlyYAxisTicks = useMemo(() => {
+    const half = hourlyOrdersMax / 2;
+    return [hourlyOrdersMax, half, 0];
+  }, [hourlyOrdersMax]);
+  const hourlyLinePoints = useMemo(() => {
+    if (hourlyOrdersSorted.length === 0) return [] as Array<{ hour: string; orderCount: number; x: number; y: number }>;
+    const plotTop = 8;
+    const plotBottom = 92;
+    const plotHeight = plotBottom - plotTop;
+
+    if (hourlyOrdersSorted.length === 1) {
+      const single = hourlyOrdersSorted[0];
+      const y = plotBottom - (single.orderCount / hourlyOrdersScaleMax) * plotHeight;
+      return [{ hour: single.hour, orderCount: single.orderCount, x: 50, y }];
+    }
+
+    return hourlyOrdersSorted.map((entry, index) => {
+      const x = (index / (hourlyOrdersSorted.length - 1)) * 100;
+      const y = plotBottom - (entry.orderCount / hourlyOrdersScaleMax) * plotHeight;
+      return {
+        hour: entry.hour,
+        orderCount: entry.orderCount,
+        x,
+        y,
+      };
+    });
+  }, [hourlyOrdersScaleMax, hourlyOrdersSorted]);
+  const activeHourlyPoint = useMemo(() => {
+    if (!hoveredHourlyHour || hourlyLinePoints.length === 0) return null;
+    return hourlyLinePoints.find((point) => point.hour === hoveredHourlyHour) ?? null;
+  }, [hoveredHourlyHour, hourlyLinePoints]);
+  const hourlySmoothPath = useMemo(() => {
+    if (hourlyLinePoints.length === 0) return "";
+    return buildSmoothCurvePath(hourlyLinePoints);
+  }, [hourlyLinePoints]);
+  const hourlyAreaPath = useMemo(() => {
+    if (hourlyLinePoints.length === 0 || !hourlySmoothPath) return "";
+    const firstPoint = hourlyLinePoints[0];
+    const lastPoint = hourlyLinePoints[hourlyLinePoints.length - 1];
+    return `${hourlySmoothPath} L ${lastPoint.x} 92 L ${firstPoint.x} 92 Z`;
+  }, [hourlyLinePoints, hourlySmoothPath]);
+
+  const setHourlyTooltipFromMouse = (
+    event: MouseEvent<HTMLButtonElement>,
+    entry: { hour: string; orderCount: number }
+  ) => {
+    setHourlyTooltip({
+      anchorX: event.clientX,
+      anchorY: event.clientY,
+      hour: entry.hour,
+      orderCount: entry.orderCount,
+    });
+  };
+
+  const setHourlyTooltipFromFocus = (
+    event: FocusEvent<HTMLButtonElement>,
+    entry: { hour: string; orderCount: number }
+  ) => {
+    const targetRect = event.currentTarget.getBoundingClientRect();
+
+    setHourlyTooltip({
+      anchorX: targetRect.left + targetRect.width / 2,
+      anchorY: targetRect.top + targetRect.height / 2,
+      hour: entry.hour,
+      orderCount: entry.orderCount,
+    });
+  };
+
+  const selectedRangeLabel = useMemo(() => {
+    return RANGE_PRESETS.find((preset) => preset.id === rangePreset)?.label ?? "Zeitraum";
+  }, [rangePreset]);
+
+  const comparisonLabel = useMemo(() => {
+    return rangePreset === "custom"
+      ? "vs. Vorperiode"
+      : rangePreset === "today"
+        ? "vs. 1 Tag"
+        : rangePreset === "7d"
+          ? "vs. 7 Tage"
+          : "vs. 30 Tage";
+  }, [rangePreset]);
+
+  const revenueTrendData = useMemo(() => {
+    if (!overview) return [] as Array<{ key: string; shortLabel: string; tooltipLabel: string; revenue: number }>;
+
+    if (rangePreset === "today") {
+      return (overview.revenueByHour ?? []).map((entry) => {
+        const hour = entry.hour.padStart(2, "0");
+        return {
+          key: hour,
+          shortLabel: hour,
+          tooltipLabel: `${hour}:00`,
+          revenue: entry.revenue,
+        };
       });
-      const variant =
-        newStatus === "completed" || newStatus === "no_show" || newStatus === "seated"
-          ? "success"
-          : "info";
-      addToast(
-        `${reservation.guest_name || "Gast"} → Status: ${getStatusLabel(newStatus)}`,
-        variant
-      );
-      refreshData(true);
-    } catch (error) {
-      console.error("Fehler beim Aktualisieren des Status:", error);
-      addToast("Fehler beim Aktualisieren des Status", "error");
-    } finally {
-      setUpdatingStatus(null);
     }
-  }, [restaurant, addToast, refreshData, getStatusLabel]);
 
-  const STATUS_ICON_MAP: Record<Reservation["status"], { Icon: typeof Clock; tone: string }> = useMemo(() => ({
-    pending: { Icon: Clock, tone: "bg-blue-900/40 border-blue-600 text-blue-100" },
-    confirmed: { Icon: ShieldCheck, tone: "bg-indigo-900/40 border-indigo-600 text-indigo-100" },
-    seated: { Icon: Users, tone: "bg-emerald-900/40 border-emerald-600 text-emerald-100" },
-    completed: { Icon: CheckCircle, tone: "bg-amber-900/30 border-amber-600 text-amber-100" },
-    canceled: { Icon: XCircle, tone: "bg-red-900/30 border-red-600 text-red-100" },
-    no_show: { Icon: XCircle, tone: "bg-orange-900/30 border-orange-600 text-orange-100" },
-  }), []);
+    return overview.revenueByDay.map((entry) => ({
+      key: entry.date,
+      shortLabel: formatGermanDate(entry.date),
+      tooltipLabel: formatGermanDate(entry.date, true),
+      revenue: entry.revenue,
+    }));
+  }, [overview, rangePreset]);
 
-  const getObstacleLabel = useCallback((type: string) => {
-    switch (type) {
-      case "door": return "Tür";
-      case "stairs": return "Treppe";
-      case "kitchen": return "Küche";
-      case "bar": return "Bar";
-      case "wall": return "Wand";
-      case "other": return "Sonstiges";
-      default: return type;
+  const revenueChangeIndicator = useMemo(() => {
+    if (!overview || !overviewQuery.analytics.data) return null;
+
+    const deltaPercent = calculateDeltaPercent(overview.kpis.revenueTotal, overview.kpis.revenuePreviousRange);
+    return {
+      label: comparisonLabel,
+      deltaPercent,
+      direction: resolveTrendDirection(deltaPercent),
+    } satisfies RevenueChangeIndicator;
+  }, [comparisonLabel, overview, overviewQuery.analytics.data]);
+
+  const ordersChangeIndicator = useMemo(() => {
+    if (!overview || !overviewQuery.analytics.data) return null;
+    const deltaPercent = calculateDeltaPercent(overview.kpis.ordersTotal, overview.kpis.ordersPreviousRange);
+    return {
+      label: comparisonLabel,
+      deltaPercent,
+      direction: resolveTrendDirection(deltaPercent),
+    } satisfies RevenueChangeIndicator;
+  }, [comparisonLabel, overview, overviewQuery.analytics.data]);
+
+  const reservationsChangeIndicator = useMemo(() => {
+    if (!overview || !overviewQuery.analytics.data) return null;
+    const deltaPercent = calculateDeltaPercent(
+      overview.kpis.reservationsInRange,
+      overview.kpis.reservationsPreviousRange
+    );
+    return {
+      label: comparisonLabel,
+      deltaPercent,
+      direction: resolveTrendDirection(deltaPercent),
+    } satisfies RevenueChangeIndicator;
+  }, [comparisonLabel, overview, overviewQuery.analytics.data]);
+
+  const ordersDistributionData = useMemo(() => {
+    if (!overview) return [] as Array<{ key: string; shortLabel: string; tooltipLabel: string; count: number }>;
+
+    if (rangePreset === "today") {
+      return (overview.ordersByHour ?? []).map((entry) => {
+        const hour = entry.hour.padStart(2, "0");
+        return {
+          key: hour,
+          shortLabel: hour,
+          tooltipLabel: `${hour}:00`,
+          count: entry.count,
+        };
+      });
     }
-  }, []);
 
-  // ============================================
-  // RENDER
-  // ============================================
+    return overview.ordersByDay.map((entry) => ({
+      key: entry.date,
+      shortLabel: formatGermanDate(entry.date),
+      tooltipLabel: formatGermanDate(entry.date, true),
+      count: entry.count,
+    }));
+  }, [overview, rangePreset]);
 
-  // Warte bis die Restaurant-Liste geladen wurde
+  const reservationsDistributionData = useMemo(() => {
+    if (!overview) return [] as Array<{ key: string; shortLabel: string; tooltipLabel: string; count: number }>;
+
+    if (rangePreset === "today") {
+      return (overview.reservationsByHour ?? []).map((entry) => {
+        const hour = entry.hour.padStart(2, "0");
+        return {
+          key: hour,
+          shortLabel: hour,
+          tooltipLabel: `${hour}:00`,
+          count: entry.count,
+        };
+      });
+    }
+
+    return overview.reservationsByDay.map((entry) => ({
+      key: entry.date,
+      shortLabel: formatGermanDate(entry.date),
+      tooltipLabel: formatGermanDate(entry.date, true),
+      count: entry.count,
+    }));
+  }, [overview, rangePreset]);
+
+  const getCardNavigationProps = (href: string) => ({
+    role: "link" as const,
+    tabIndex: 0,
+    onClick: () => router.push(href),
+    onKeyDown: (event: KeyboardEvent<HTMLDivElement>) => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        router.push(href);
+      }
+    },
+  });
+
+  const operationsReady = Boolean(overviewQuery.operations.data);
+  const analyticsReady = Boolean(overviewQuery.analytics.data);
+  const operationsInitialLoading = overviewQuery.operations.isLoading && !operationsReady;
+  const analyticsInitialLoading = overviewQuery.analytics.isLoading && !analyticsReady;
+
   if (!restaurantsLoaded) {
     return <LoadingOverlay />;
   }
 
-  // Kein Restaurant gefunden
   if (!restaurantId) {
     const isGrundstatus = currentUser?.role === "platform_admin";
+
     return (
       <div className="p-6 bg-background h-full flex items-center justify-center">
-        <div className="text-center max-w-md">
-          {isGrundstatus ? (
-            <>
-              <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
-                <ShieldCheck className="w-7 h-7 text-muted-foreground" />
-              </div>
-              <h2 className="text-xl font-semibold text-foreground mb-2">Kein Tenant ausgewählt</h2>
-              <p className="text-muted-foreground mb-6 text-sm">
-                Du befindest dich im Grundstatus als Plattform-Admin. Wähle einen Tenant aus, um das Dashboard zu nutzen.
-              </p>
-              <Link
-                href="/dashboard/restaurants"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-              >
-                Zur Tenant-Verwaltung
-              </Link>
-            </>
-          ) : (
-            <>
-              <h2 className="text-xl font-semibold text-foreground mb-4">Kein Restaurant gefunden</h2>
-              <p className="text-muted-foreground mb-6">
-                Bitte erstelle zuerst ein Restaurant, um das Dashboard nutzen zu können.
-              </p>
-              <Link
-                href="/dashboard/restaurants/create"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-                Restaurant erstellen
-              </Link>
-            </>
-          )}
-        </div>
+        <Card className="w-full max-w-xl border-border bg-card/80">
+          <CardHeader>
+            <CardTitle className="text-xl text-foreground">Kein Tenant-Kontext verfügbar</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 text-sm text-muted-foreground">
+            {isGrundstatus ? (
+              <>
+                <p>
+                  Du bist aktuell im Plattform-Admin-Grundstatus. Bitte wähle zuerst einen Tenant,
+                  um echte Dashboard-Daten zu sehen.
+                </p>
+                <Link
+                  href="/dashboard/restaurants"
+                  className="inline-flex items-center gap-2 rounded-lg border border-primary/80 bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+                >
+                  Zur Tenant-Verwaltung
+                </Link>
+              </>
+            ) : (
+              <>
+                <p>
+                  Es wurde kein Restaurant gefunden. Lege zuerst ein Restaurant an, damit wir
+                  Dashboard-Daten laden können.
+                </p>
+                <Link
+                  href="/dashboard/restaurants/create"
+                  className="inline-flex items-center gap-2 rounded-lg border border-primary/80 bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+                >
+                  Restaurant anlegen
+                </Link>
+              </>
+            )}
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
-  // Restaurant-Daten werden geladen
-  if (isInitialLoading) {
+  if (overviewQuery.isLoading && !overview) {
+    return <LoadingOverlay message="Lade Dashboard-Übersicht..." />;
+  }
+
+  if (overviewQuery.error && !overview) {
     return (
-      <div className="h-full flex flex-col bg-background overflow-hidden">
-        {/* Header Skeleton */}
-        <div className="bg-card border-b border-border shadow-sm shrink-0">
-          <div className="px-4 py-3 h-20" />
-        </div>
-
-        {/* Content with Skeleton */}
-        <div className="flex-1 overflow-hidden min-h-0">
-          <div className="h-full relative overflow-hidden bg-background flex">
-            {/* Sidebar Skeleton */}
-            <div className="w-80 bg-card border-r border-border" />
-
-            {/* Table Plan Skeleton */}
-            <div className="flex-1 relative p-8">
-              <div
-                className="grid gap-6 justify-items-center"
-                style={{
-                  gridTemplateColumns: "repeat(auto-fill, 120px)",
-                  gridAutoRows: "120px"
-                }}
-              >
-                <SkeletonTableCard count={16} />
-              </div>
-            </div>
-          </div>
-        </div>
+      <div className="p-6 bg-background h-full">
+        <Card className="max-w-2xl border-border bg-card/80">
+          <CardHeader>
+            <CardTitle className="text-xl text-foreground">Dashboard konnte nicht geladen werden</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 text-sm text-muted-foreground">
+            <p>{overviewQuery.error.message}</p>
+            <Button type="button" onClick={() => void overviewQuery.refetch()}>
+              Erneut versuchen
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
-  // Fallback falls restaurant Daten nicht geladen werden konnten
-  if (!restaurant) {
-    return (
-      <div className="p-6 bg-background min-h-screen">
-        <p className="text-muted-foreground">Fehler beim Laden des Restaurants. Bitte versuche es erneut.</p>
-      </div>
-    );
-  }
+  const analyticsUnavailable = !analyticsReady;
+  const operationsUnavailable = !operationsReady;
+
+  const analyticsValue = (value: string): string => {
+    if (analyticsReady) return value;
+    if (analyticsInitialLoading) return "...";
+    return "-";
+  };
+
+  const operationsValue = (value: string): string => {
+    if (operationsReady) return value;
+    if (operationsInitialLoading) return "...";
+    return "-";
+  };
 
   return (
-    <div className="h-full flex flex-col bg-background overflow-hidden">
-      {/* Toasts */}
-      {toasts.length > 0 && (
-        <div className="fixed bottom-4 right-4 z-[200] space-y-3">
-          {toasts.map((toast) => (
-            <div
-              key={toast.id}
-              className={`min-w-[260px] rounded-lg border px-4 py-3 shadow-lg text-sm ${
-                toast.variant === "error"
-                  ? "bg-red-900/80 border-red-500 text-red-50"
-                  : toast.variant === "success"
-                  ? "bg-green-900/80 border-green-500 text-green-50"
-                  : "bg-card border-border text-foreground"
-              }`}
-            >
-              {toast.message}
-            </div>
-          ))}
-        </div>
-      )}
+    <div className="h-full overflow-y-auto bg-background text-foreground">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-16 space-y-6">
+        <Card className={`border-border bg-card/70 ${DASHBOARD_CARD_HOVER_CLASS}`}>
+          <CardContent className="pt-6 space-y-4">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-2">
+                  <BarChart3 className="w-7 h-7 text-primary" />
+                  Dashboard-Übersicht
+                </h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Live-Kennzahlen mit echten Werten aus Reservierungen, Bestellungen, Tischen und Umsatzdaten.
+                </p>
+              </div>
 
-      {/* Header */}
-      <div className="bg-card border-b border-border shadow-sm shrink-0">
-        <div className="relative px-3 md:px-4 py-2 md:py-3">
-          <div className="flex items-center justify-between mb-1">
-            <div className="flex items-center gap-2 min-w-0 shrink-0">
-              <div className="inline-flex items-center rounded-lg border border-border bg-card p-0.5 backdrop-blur-sm min-h-[32px] md:min-h-[36px]">
-                <button
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
                   type="button"
-                  aria-current="page"
-                  className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-primary text-primary-foreground text-sm md:text-base font-semibold border border-primary/80 shadow-inner min-h-[32px] md:min-h-[36px]"
+                  variant="outline"
+                  onClick={() => void overviewQuery.refetch()}
+                  disabled={overviewQuery.isFetching}
+                  className="gap-2"
                 >
-                  <LayoutGrid className="w-4 h-4" />
-                  Tischplan
-                </button>
-                <Link
-                  href="/dashboard/timeline"
-                  aria-label="Zeitplan"
-                  title="Zeitplan"
-                  className="inline-flex items-center justify-center px-3 py-1 rounded-md text-foreground border border-transparent hover:bg-accent min-h-[32px] md:min-h-[36px]"
-                >
-                  <Clock className="w-4 h-4" />
-                </Link>
-                <Link
-                  href="/dashboard/reservations"
-                  aria-label="Reservierungen"
-                  title="Reservierungen"
-                  className="inline-flex items-center justify-center px-3 py-1 rounded-md text-foreground border border-transparent hover:bg-accent min-h-[32px] md:min-h-[36px]"
-                >
-                  <Calendar className="w-4 h-4" />
-                </Link>
-              </div>
-              <div className="text-left ml-2 md:ml-4 border-l border-input pl-2 md:pl-4">
-                <div className="text-xs md:text-sm font-semibold text-foreground whitespace-nowrap">
-                  {format(now, "EEEE, d. MMMM yyyy", { locale: de })}
-                </div>
-                <div className="text-base md:text-lg lg:text-xl font-bold text-primary tracking-tight whitespace-nowrap">
-                  {format(now, "HH:mm")}
-                </div>
+                  <RefreshCw className={`w-4 h-4 ${overviewQuery.isFetching ? "animate-spin" : ""}`} />
+                  Aktualisieren
+                </Button>
               </div>
             </div>
-            <div className="flex items-center gap-2 min-w-0 shrink-0 justify-end">
-              <div className="text-right leading-tight">
-                <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Ausgewählter Tag</div>
-                <div className="text-xs font-semibold text-foreground whitespace-nowrap">
-                  {format(selectedDate, "EEE, d.M.yyyy", { locale: de })}
-                </div>
-              </div>
-              <div className="flex items-center gap-1 shrink-0">
-                {selectionMode ? (
-                  <>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleCancelSelection}
-                      className="touch-manipulation min-h-[32px] text-xs px-2 py-1"
-                    >
-                      <XSquare className="w-3.5 h-3.5 mr-1" />
-                      <span className="text-xs">Abbrechen</span>
-                    </Button>
-                    {(currentUser?.role === "platform_admin" || currentUser?.role === "owner" || currentUser?.role === "manager") && (
-                      <>
-                        <Button
-                          variant="default"
-                          size="sm"
-                          onClick={handleJoinTables}
-                          disabled={selectedTableIds.size < 2}
-                          className="touch-manipulation min-h-[32px] text-xs px-2 py-1"
-                          title="Tische zusammenschieben"
-                        >
-                          <LinkIcon className="w-3.5 h-3.5 mr-1" />
-                          <span className="text-xs">Zusammenführen</span>
-                          <span className="ml-1 text-xs">({selectedTableIds.size})</span>
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={handleUnjoinTables}
-                          disabled={selectedTableIds.size === 0}
-                          className="touch-manipulation min-h-[32px] text-xs px-2 py-1"
-                          title="Tische trennen"
-                        >
-                          <Unlink className="w-3.5 h-3.5 mr-1" />
-                          <span className="text-xs">Trennen</span>
-                          <span className="ml-1 text-xs">({selectedTableIds.size})</span>
-                        </Button>
-                      </>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    {(currentUser?.role === "platform_admin" || currentUser?.role === "owner" || currentUser?.role === "manager") && (
-                      <div className="relative" ref={actionsMenuRef}>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setActionsMenuOpen((prev) => !prev)}
-                          className="touch-manipulation min-h-[34px] text-xs px-3 py-1"
-                          title="Tageslayout-Aktionen"
-                        >
-                          <EllipsisVertical className="w-4 h-4 mr-2" />
-                          <span className="text-xs">Tageslayout</span>
-                          <ChevronDown className={`w-3.5 h-3.5 ml-2 transition-transform ${actionsMenuOpen ? "rotate-180" : ""}`} />
-                        </Button>
-                        {actionsMenuOpen && (
-                          <div className="absolute right-0 mt-2 w-64 rounded-lg border border-border bg-card shadow-xl z-40 overflow-hidden">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setActionsMenuOpen(false);
-                                setCreateTempTableOpen(true);
-                              }}
-                              disabled={!selectedAreaId || areas.length === 0}
-                              className={`w-full px-3 py-2 text-left text-sm flex items-center gap-2 transition-colors ${
-                                !selectedAreaId || areas.length === 0
-                                  ? "text-muted-foreground cursor-not-allowed bg-background"
-                                  : "text-foreground hover:bg-accent"
-                              }`}
-                            >
-                              <Plus className="w-4 h-4" />
-                              <span>Temporären Tisch hinzufügen</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setActionsMenuOpen(false);
-                                setSelectionMode(true);
-                              }}
-                              className="w-full px-3 py-2 text-left text-sm flex items-center gap-2 text-foreground hover:bg-accent transition-colors"
-                            >
-                              <Check className="w-4 h-4" />
-                              <span>Tische zusammenführen</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setActionsMenuOpen(false);
-                                handleResetTablesForDate();
-                              }}
-                              className="w-full px-3 py-2 text-left text-sm flex items-center gap-2 text-foreground hover:bg-accent transition-colors"
-                            >
-                              <RotateCcw className="w-4 h-4" />
-                              <span>Zurücksetzen</span>
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigateDate(-1)}
-                      className="touch-manipulation min-h-[32px] px-2 py-1"
-                    >
-                      <ChevronLeft className="w-3.5 h-3.5" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setSelectedDate(new Date())}
-                      className="touch-manipulation min-h-[32px] text-xs px-2 py-1 gap-1.5"
-                      title="Heute springen"
-                    >
-                      <Calendar className="w-3.5 h-3.5" />
-                      Heute
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigateDate(1)}
-                      className="touch-manipulation min-h-[32px] px-2 py-1"
-                      title="Nächster Tag"
-                    >
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </Button>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Content */}
-      <div className="flex-1 overflow-hidden min-h-0">
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-        >
-          <div className="h-full relative overflow-hidden bg-background flex">
-            {/* Warteliste Sidebar */}
-            <div
-              className={`
-                absolute md:relative z-[30] transition-[width] duration-300 ease-in-out
-                ${sidebarOpen ? "w-72 md:w-80" : "w-14"}
-                top-0 left-0
-                h-full
-              `}
-            >
-              <WaitlistSidebar
-                reservations={waitlistReservations}
-                blocks={blockTemplates}
-                activeReservationId={activeReservationId}
-                activeBlockId={activeBlockId}
-                getTableName={getTableName}
-                getReservationTableLabel={getReservationTableLabel}
-                getBlockTableLabels={getBlockTableLabels}
-                searchQuery={waitlistSearchQuery}
-                onSearchChange={setWaitlistSearchQuery}
-                onReservationClick={(reservation) => handleReservationClick(reservation)}
-                onReservationDelete={handleReservationDeleted}
-                onBlockClick={handleBlockTemplateEdit}
-                onNewReservation={() => {
-                  setSelectedReservation(null);
-                  setSelectedTable(null);
-                  setReservationDialogOpen(true);
-                }}
-                collapsed={!sidebarOpen}
-                onToggle={() => setSidebarOpen(!sidebarOpen)}
-              />
-            </div>
-            
-            {/* Overlay für mobile */}
-            {sidebarOpen && (
-              <div
-                className="fixed inset-0 bg-black/50 z-[25] md:hidden"
-                onClick={() => setSidebarOpen(false)}
-              />
-            )}
-
-            {/* Tischplan */}
-            <div 
-              ref={tablePlanRef}
-              className="flex-1 relative overflow-hidden z-10 min-w-0 w-full select-none"
-              style={{ 
-                userSelect: 'none', 
-                WebkitUserSelect: 'none',
-                MozUserSelect: 'none',
-                msUserSelect: 'none',
-                WebkitTouchCallout: 'none',
-              }}
-              onMouseDown={(e) => {
-                if (e.detail > 1) e.preventDefault();
-              }}
-            >
-              {/* Pan-Hintergrund-Layer */}
-              <div
-                className="absolute inset-0 z-0"
-                style={{ 
-                  touchAction: 'none',
-                  cursor: isPanning ? 'grabbing' : 'grab'
-                }}
-                onTouchStart={(e) => {
-                  if (activeId || activeReservationId || activeBlockId) {
-                    panRef.current.isPanning = false;
-                    setIsPanning(false);
-                    return;
-                  }
-                  
-                  const target = e.target as HTMLElement;
-                  const isInteractive = target.closest('[data-dnd-draggable], [data-dnd-droppable], button, a, input, select, textarea');
-                  
-                  // if (e.touches.length === 1 && !activeId && !activeReservationId && !activeBlockId && !isInteractive) {
-                  if (e.touches.length === 1 && !isInteractive) {
-                    const touch = e.touches[0];
-                    panRef.current.isPanning = true;
-                    panRef.current.startX = touch.clientX - panOffset.x;
-                    panRef.current.startY = touch.clientY - panOffset.y;
-                    setIsPanning(true);
-                  } else if (e.touches.length === 2) {
-                    const touch1 = e.touches[0];
-                    const touch2 = e.touches[1];
-                    const distance = Math.hypot(
-                      touch2.clientX - touch1.clientX,
-                      touch2.clientY - touch1.clientY
-                    );
-                    zoomRef.current.initialDistance = distance;
-                    zoomRef.current.initialZoom = zoomLevel;
-                    setIsZooming(true);
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }
-                }}
-                onTouchMove={(e) => {
-                  if (e.touches.length === 2) {
-                    const touch1 = e.touches[0];
-                    const touch2 = e.touches[1];
-                    const distance = Math.hypot(
-                      touch2.clientX - touch1.clientX,
-                      touch2.clientY - touch1.clientY
-                    );
-                    
-                    if (zoomRef.current.initialDistance > 0) {
-                      const scale = distance / zoomRef.current.initialDistance;
-                      const newZoom = Math.max(0.5, Math.min(3, zoomRef.current.initialZoom * scale));
-                      
-                      const centerX = (touch1.clientX + touch2.clientX) / 2;
-                      const centerY = (touch1.clientY + touch2.clientY) / 2;
-                      const rect = tablePlanRef.current?.getBoundingClientRect();
-                      
-                      if (rect) {
-                        const relativeX = centerX - rect.left;
-                        const relativeY = centerY - rect.top;
-                        const zoomFactor = newZoom / zoomLevel;
-                        
-                        setPanOffset(prev => ({
-                          x: relativeX - (relativeX - prev.x) * zoomFactor,
-                          y: relativeY - (relativeY - prev.y) * zoomFactor,
-                        }));
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <label className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm">
+                  <Calendar className="w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="date"
+                    value={format(selectedDate, "yyyy-MM-dd")}
+                    onChange={(event) => {
+                      const nextDate = parseDateInput(event.target.value);
+                      if (nextDate) {
+                        setSelectedDate(nextDate);
+                        if (rangePreset !== "custom") {
+                          setCustomTo(format(nextDate, "yyyy-MM-dd"));
+                        }
                       }
-                      
-                      setZoomLevel(newZoom);
-                    }
-                    e.preventDefault();
-                    e.stopPropagation();
-                  } else if (panRef.current.isPanning && e.touches.length === 1 && !activeId && !activeReservationId && !activeBlockId) {
-                    const touch = e.touches[0];
-                    const target = document.elementFromPoint(touch.clientX, touch.clientY) as HTMLElement;
-                    const isInteractive = target?.closest('[data-dnd-draggable], [data-dnd-droppable], button, a, input, select, textarea');
-                    
-                    if (!isInteractive) {
-                      setPanOffset({
-                        x: touch.clientX - panRef.current.startX,
-                        y: touch.clientY - panRef.current.startY,
-                      });
-                      e.preventDefault();
-                      e.stopPropagation();
-                    } else {
-                      panRef.current.isPanning = false;
-                      setIsPanning(false);
-                    }
-                  } else if (activeId || activeReservationId || activeBlockId) {
-                    panRef.current.isPanning = false;
-                    setIsPanning(false);
-                  }
-                }}
-                onTouchEnd={(e) => {
-                  if (panRef.current.isPanning || e.touches.length < 2) {
-                    panRef.current.isPanning = false;
-                    setIsPanning(false);
-                    if (zoomRef.current.initialDistance > 0) {
-                      zoomRef.current.initialDistance = 0;
-                      setTimeout(() => setIsZooming(false), 50);
-                    }
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }
-                }}
-                onWheel={(e) => {
-                  if (e.ctrlKey || e.metaKey) {
-                    e.preventDefault();
-                    setIsZooming(true);
-                    const rect = tablePlanRef.current?.getBoundingClientRect();
-                    if (rect) {
-                      const mouseX = e.clientX - rect.left;
-                      const mouseY = e.clientY - rect.top;
-                      const zoomDelta = e.deltaY > 0 ? 0.9 : 1.1;
-                      const newZoom = Math.max(0.5, Math.min(3, zoomLevel * zoomDelta));
-                      const zoomFactor = newZoom / zoomLevel;
-                      setPanOffset(prev => ({
-                        x: mouseX - (mouseX - prev.x) * zoomFactor,
-                        y: mouseY - (mouseY - prev.y) * zoomFactor,
-                      }));
-                      setZoomLevel(newZoom);
-                    }
-                    setTimeout(() => setIsZooming(false), 50);
-                  }
-                }}
-                onMouseDown={(e) => {
-                  if (e.button === 1 && !activeId && !activeReservationId && !activeBlockId) {
-                    panRef.current.isPanning = true;
-                    panRef.current.startX = e.clientX - panOffset.x;
-                    panRef.current.startY = e.clientY - panOffset.y;
-                    setIsPanning(true);
-                    e.preventDefault();
-                    e.stopPropagation();
-                  }
-                }}
-                onMouseMove={(e) => {
-                  if (panRef.current.isPanning && !activeId && !activeReservationId && !activeBlockId) {
-                    pendingPanRef.current = {
-                      x: e.clientX - panRef.current.startX,
-                      y: e.clientY - panRef.current.startY,
-                    };
+                    }}
+                    className="bg-transparent text-foreground outline-none"
+                  />
+                </label>
 
-                    if (panRafRef.current === null) {
-                      panRafRef.current = requestAnimationFrame(() => {
-                        panRafRef.current = null;
-                        const next = pendingPanRef.current;
-                        if (!next) return;
-                        setPanOffset((prev) => (prev.x === next.x && prev.y === next.y ? prev : next));
-                      });
-                    }
-                    e.preventDefault();
-                  }
-                }}
-                onMouseUp={(e) => {
-                  if (panRef.current.isPanning) {
-                    panRef.current.isPanning = false;
-                    setIsPanning(false);
-                    e.preventDefault();
-                  }
-                }}
-                onMouseLeave={() => {
-                  if (panRef.current.isPanning) {
-                    panRef.current.isPanning = false;
-                    setIsPanning(false);
-                  }
-                }}
-              />
+                <div className="inline-flex items-center rounded-lg border border-border bg-background p-1">
+                  {RANGE_PRESETS.map((preset) => (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => setRangePreset(preset.id)}
+                      className={`rounded-md px-3 py-1.5 text-xs font-semibold transition-colors ${
+                        rangePreset === preset.id
+                          ? "bg-primary text-primary-foreground"
+                          : "text-muted-foreground hover:text-foreground hover:bg-accent"
+                      }`}
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
 
-              {/* Area-Switch */}
-              {areas.length > 0 && (
-                <div className="absolute bottom-4 left-4 z-20 pointer-events-auto">
-                  <AreaSelector
-                    areas={areas}
-                    selectedAreaId={selectedAreaId}
-                    onSelect={setSelectedAreaId}
-                    menuPlacement="top"
-                    minWidthClassName="min-w-[180px] h-10"
+                {rangePreset === "custom" ? (
+                  <>
+                    <label className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm">
+                      <span className="text-xs text-muted-foreground">Von</span>
+                      <input
+                        type="date"
+                        value={customFrom}
+                        onChange={(event) => setCustomFrom(event.target.value)}
+                        className="bg-transparent text-foreground outline-none"
+                      />
+                    </label>
+                    <label className="inline-flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm">
+                      <span className="text-xs text-muted-foreground">Bis</span>
+                      <input
+                        type="date"
+                        value={customTo}
+                        onChange={(event) => setCustomTo(event.target.value)}
+                        className="bg-transparent text-foreground outline-none"
+                      />
+                    </label>
+                  </>
+                ) : null}
+              </div>
+
+              <div className="text-xs text-muted-foreground">
+                Zuletzt aktualisiert:{" "}
+                {overview
+                  ? format(new Date(overview.lastUpdatedAt), "dd.MM.yyyy HH:mm:ss", { locale: de })
+                  : "-"}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {overviewQuery.operations.error ? (
+          <Card className="border-amber-500/40 bg-amber-500/10">
+            <CardContent className="pt-5 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-start gap-2 text-sm text-amber-100">
+                <AlertTriangle className="w-4 h-4 mt-0.5 text-amber-300" />
+                <span>Operative Widgets konnten nicht vollständig aktualisiert werden: {overviewQuery.operations.error.message}</span>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => void overviewQuery.operations.refetch()}>
+                Operativ neu laden
+              </Button>
+            </CardContent>
+          </Card>
+        ) : null}
+
+        {overviewQuery.analytics.error ? (
+          <Card className="border-amber-500/40 bg-amber-500/10">
+            <CardContent className="pt-5 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-start gap-2 text-sm text-amber-100">
+                <AlertTriangle className="w-4 h-4 mt-0.5 text-amber-300" />
+                <span>Analytics-Widgets konnten nicht vollständig aktualisiert werden: {overviewQuery.analytics.error.message}</span>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => void overviewQuery.analytics.refetch()}>
+                Analytics neu laden
+              </Button>
+            </CardContent>
+          </Card>
+        ) : null}
+
+        {overview ? (
+          <>
+            <div className="space-y-6">
+              <section className="space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                    Aktuelle Zustände
+                  </h2>
+                  <span className="text-xs text-muted-foreground">Unabhängig vom Zeitraum-Filter</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 items-start">
+                  <KpiCard
+                    label="Operativer Status"
+                    value={operationsValue(`${formatNumber(overview.kpis.ordersOpen)} offen`)}
+                    hint={
+                      operationsUnavailable
+                        ? "Operative Daten laden oder nicht verfügbar"
+                        : `Kitchen-Backlog: ${formatNumber(overview.kpis.kitchenBacklog)}`
+                    }
+                    href="/dashboard/order-history"
+                    icon={<CookingPot className="w-4 h-4" />}
+                  />
+                  <NoShowCancellationDonutCard
+                    noShowRate={overview.kpis.noShowRate}
+                    cancellationRate={overview.kpis.cancellationRate}
+                    unavailable={operationsUnavailable}
+                    loading={operationsInitialLoading}
+                    href="/dashboard/reservations"
+                  />
+                  <OccupancyDonutCard
+                    occupancyRateNow={overview.kpis.occupancyRateNow}
+                    occupiedTablesNow={overview.kpis.occupiedTablesNow}
+                    totalTables={overview.kpis.tablesTotal}
+                    blockedTablesNow={overview.kpis.blockedTablesNow}
+                    totalCapacity={overview.kpis.totalCapacity}
+                    guestsNow={overview.kpis.guestsNow}
+                    capacityOccupancyRateNow={overview.kpis.capacityOccupancyRateNow}
+                    unavailable={operationsUnavailable}
+                    loading={operationsInitialLoading}
+                    href="/dashboard/tischplan"
                   />
                 </div>
-              )}
+              </section>
 
-              {/* Zoom-Controls */}
-              <div className="absolute bottom-4 right-4 z-20 flex flex-col gap-2">
-                <Button
-                  onClick={handleZoomIn}
-                  size="sm"
-                  variant="outline"
-                  className="bg-card/90 backdrop-blur-sm border-input hover:bg-accent min-h-[36px] min-w-[36px] p-0"
-                  title="Heranzoomen"
-                >
-                  <ZoomIn className="w-4 h-4" />
-                </Button>
-                <Button
-                  onClick={handleZoomOut}
-                  size="sm"
-                  variant="outline"
-                  className="bg-card/90 backdrop-blur-sm border-input hover:bg-accent min-h-[36px] min-w-[36px] p-0"
-                  title="Herauszoomen"
-                >
-                  <ZoomOut className="w-4 h-4" />
-                </Button>
-                <Button
-                  onClick={handleZoomReset}
-                  size="sm"
-                  variant="outline"
-                  className="bg-card/90 backdrop-blur-sm border-input hover:bg-accent min-h-[36px] min-w-[36px] p-0"
-                  title="Zoom zurücksetzen"
-                >
-                  <Maximize2 className="w-4 h-4" />
-                </Button>
-                <div className="text-xs text-foreground bg-card/90 backdrop-blur-sm border border-input rounded px-2 py-1 text-center mt-1">
-                  {Math.round(zoomLevel * 100)}%
+              <section className="space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                    Zeitraum-Kennzahlen
+                  </h2>
+                  <span className="text-xs text-muted-foreground">
+                    Filter: {selectedRangeLabel} ({overview.range.from} bis {overview.range.to})
+                  </span>
                 </div>
-              </div>
-
-              {/* Tischplan-Inhalt */}
-              <div 
-                className="absolute inset-0 w-full h-full z-10 pointer-events-none select-none"
-                style={{
-                  transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoomLevel})`,
-                  transformOrigin: '0 0',
-                  transition: (!isPanning && !isZooming) ? 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)' : 'none',
-                  userSelect: 'none',
-                  WebkitUserSelect: 'none',
-                  MozUserSelect: 'none',
-                  msUserSelect: 'none',
-                  WebkitTouchCallout: 'none',
-                }}
-              >
-                {/* Obstacles */}
-                {obstacles.map((obstacle) => (
-                  <div
-                    key={obstacle.id}
-                    className="absolute rounded-md border border-border bg-muted text-foreground text-xs shadow-[0_10px_24px_rgba(0,0,0,0.3)] flex items-center justify-center px-2 pointer-events-auto"
-                    style={{
-                      left: obstacle.x,
-                      top: obstacle.y,
-                      width: obstacle.width,
-                      height: obstacle.height,
-                      transform: `rotate(${obstacle.rotation || 0}deg)`,
-                      backgroundColor: obstacle.color || "rgba(75,85,99,0.8)",
-                    }}
-                    title={obstacle.name || getObstacleLabel(obstacle.type)}
-                  >
-                    <div className="flex items-center gap-1">
-                      <ShieldAlert className="w-4 h-4 opacity-80" />
-                      <span className="truncate">
-                        {obstacle.name || getObstacleLabel(obstacle.type)}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-
-                {/* Tables */}
-                {tables.map((table) => {
-                  const tableReservations = getTableReservations(table.id);
-                  const tableOrders = getTableOrders(table.id);
-                  const isActive = activeId === table.id;
-                  const position = {
-                    x: table.position_x || 50,
-                    y: table.position_y || 50,
-                  };
-
-                  return (
-                    <TableCard
-                      key={table.id}
-                      table={table}
-                      reservations={tableReservations}
-                      orders={tableOrders}
-                      position={position}
-                      onClick={() => handleTableClick(table)}
-                      onReservationClick={(reservation) =>
-                        handleReservationClick(reservation, table)
-                      }
-                      onReservationRemove={async (reservation) => {
-                        if (!restaurant) return;
-                        try {
-                          await reservationsApi.update(restaurant.id, reservation.id, {
-                            table_id: null,
-                            status: "pending",
-                          });
-                          const tempTableId = reservationToTempTableMap.get(reservation.id);
-                          if (tempTableId !== undefined) {
-                            const tableDayConfigId = String(tempTableId).replace('temp-', '');
-                            try {
-                              await reservationTableDayConfigsApi.delete(restaurant.id, reservation.id, tableDayConfigId);
-                            } catch (error) {
-                              console.error("Fehler beim Entfernen der Zuordnung zu temporärem Tisch:", error);
-                            }
-                          }
-                          refreshData(true);
-                        } catch (error) {
-                          console.error("Fehler beim Entfernen des Tisches:", error);
-                          addToast("Fehler beim Entfernen des Tisches", "error");
-                        }
-                      }}
-                      isDragging={isActive}
-                      allowDragging={!selectionMode}
-                      selectionMode={selectionMode}
-                      isSelected={selectedTableIds.has(table.id)}
-                      selectedDate={selectedDate}
-                      blockStatus={getBlockStatus(table.id) || undefined}
-                    />
-                  );
-                })}
-              </div>
-
-              {tables.length === 0 && (
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center">
-                    <p className="text-muted-foreground text-lg mb-4">Noch keine Tische vorhanden</p>
-                    <Link
-                      href="/dashboard/tables"
-                      className="inline-flex items-center gap-2 px-4 py-2 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors touch-manipulation min-h-[48px]"
-                    >
-                      <MoveRight className="w-4 h-4" />
-                      Tische verwalten
-                    </Link>
-                  </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 items-start">
+                  <RevenueTrendKpiCard
+                    label={`Umsatz (${selectedRangeLabel})`}
+                    value={analyticsValue(formatCurrency(overview.kpis.revenueTotal))}
+                    trendData={revenueTrendData}
+                    changeIndicator={revenueChangeIndicator}
+                    unavailable={analyticsUnavailable}
+                    loading={analyticsInitialLoading}
+                    href="/dashboard/order-statistics"
+                    icon={<Euro className="w-4 h-4" />}
+                  />
+                  <DistributionKpiCard
+                    label={`Bestellungen (${selectedRangeLabel})`}
+                    value={analyticsValue(formatNumber(overview.kpis.ordersTotal))}
+                    hint={
+                      analyticsUnavailable
+                        ? "Analytics lädt oder nicht verfügbar"
+                        : `Ø Bestellwert: ${formatCurrency(overview.kpis.avgOrderValue)}`
+                    }
+                    distribution={ordersDistributionData}
+                    changeIndicator={ordersChangeIndicator}
+                    unavailable={analyticsUnavailable}
+                    loading={analyticsInitialLoading}
+                    href="/dashboard/order-history"
+                    icon={<ShoppingCart className="w-4 h-4" />}
+                  />
+                  <DistributionKpiCard
+                    label={`Reservierungen (${selectedRangeLabel})`}
+                    value={analyticsValue(formatNumber(overview.kpis.reservationsInRange))}
+                    hint={
+                      analyticsUnavailable
+                        ? "Analytics lädt oder nicht verfügbar"
+                        : `Gäste im Zeitraum: ${formatNumber(overview.kpis.guestsServedInRange)}`
+                    }
+                    distribution={reservationsDistributionData}
+                    changeIndicator={reservationsChangeIndicator}
+                    unavailable={analyticsUnavailable}
+                    loading={analyticsInitialLoading}
+                    href="/dashboard/reservations"
+                    icon={<Users className="w-4 h-4" />}
+                  />
                 </div>
-              )}
+              </section>
             </div>
-          </div>
 
-          {/* Drag Overlay */}
-          <DragOverlay>
-            {activeId ? (
-              <div className="opacity-50">
-                {(() => {
-                  const table = tables.find((t) => t.id === activeId);
-                  if (!table) return null;
-                  const position = {
-                    x: table.position_x || 50,
-                    y: table.position_y || 50,
-                  };
-                  return (
-                    <TableCard
-                      table={table}
-                      reservations={getTableReservations(table.id)}
-                      position={position}
-                      onClick={() => {}}
-                      isDragging={true}
-                      allowDragging={false}
-                      selectedDate={selectedDate}
-                      blockStatus={getBlockStatus(table.id) || undefined}
-                    />
-                  );
-                })()}
-              </div>
-            ) : activeReservationId ? (
-              <div className="opacity-75">
-                {(() => {
-                  const reservation = reservations.find((r) => r.id === activeReservationId);
-                  if (!reservation) return null;
-                  return <ReservationCard reservation={reservation} isDragging={true} />;
-                })()}
-              </div>
-            ) : activeBlockId ? (
-              <div className="opacity-75">
-                {(() => {
-                  const block = blocks.find((item) => item.id === activeBlockId);
-                  if (!block) return null;
-                  return <BlockCard block={block} isDragging={true} />;
-                })()}
-              </div>
-            ) : null}
-          </DragOverlay>
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 items-start">
+              <Card
+                {...getCardNavigationProps("/dashboard/order-statistics")}
+                className={`relative z-0 xl:col-span-2 border-border bg-card/70 hover:z-40 focus-within:z-40 ${DASHBOARD_CARD_HOVER_CLASS} cursor-pointer hover:bg-card hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+              >
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <BarChart3 className="w-5 h-5 text-primary" />
+                      Umsatzverlauf
+                    </CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {!analyticsReady && analyticsInitialLoading ? (
+                    <div className="grid grid-cols-12 gap-2 items-end min-h-32 animate-pulse">
+                      {Array.from({ length: 12 }).map((_, index) => (
+                        <div key={index} className="h-16 rounded bg-muted" />
+                      ))}
+                    </div>
+                  ) : !analyticsReady && overviewQuery.analytics.error ? (
+                    <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-100">
+                      Umsatzverlauf konnte nicht geladen werden.
+                    </div>
+                  ) : revenueTimeline.length === 0 ? (
+                    <div className="rounded-lg border border-border bg-background/40 p-4 text-sm text-muted-foreground">
+                      Keine Umsatzdaten im ausgewählten Zeitraum.
+                    </div>
+                  ) : (
+                    <div className="relative overflow-x-hidden space-y-2">
+                      {revenueTooltip ? (
+                        <AdaptiveHoverTooltip
+                          anchorX={revenueTooltip.anchorX}
+                          anchorY={revenueTooltip.anchorY}
+                        >
+                          {revenueTooltip.tooltipLabel}:{" "}
+                          {formatCurrency(revenueTooltip.revenue)}
+                        </AdaptiveHoverTooltip>
+                      ) : null}
+                      <div className={`rounded-md border border-border bg-background/40 p-2 ${revenueChartHeightClass}`}>
+                        <div className="grid h-full grid-cols-[44px_minmax(0,1fr)] gap-1">
+                          <div className="pointer-events-none flex h-full flex-col justify-between py-1 text-right text-[9px] text-muted-foreground tabular-nums">
+                            <span className="whitespace-nowrap">{formatCurrencyAxis(revenueYAxisTicks[0])}</span>
+                            <span className="whitespace-nowrap">{formatCurrencyAxis(revenueYAxisTicks[1])}</span>
+                            <span className="whitespace-nowrap">{formatCurrencyAxis(revenueYAxisTicks[2])}</span>
+                          </div>
+                          <div className="relative h-full">
+                            <svg
+                              viewBox="0 0 100 100"
+                              preserveAspectRatio="none"
+                              className="absolute inset-0 h-full w-full"
+                              aria-hidden="true"
+                            >
+                              <defs>
+                                <linearGradient id={revenueAreaGradientId} x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="0%" stopColor="currentColor" stopOpacity="0.24" />
+                                  <stop offset="100%" stopColor="currentColor" stopOpacity="0.05" />
+                                </linearGradient>
+                              </defs>
+                              <line
+                                x1="0"
+                                y1="8"
+                                x2="0"
+                                y2="92"
+                                stroke="currentColor"
+                                className="text-border/80"
+                                strokeWidth={REVENUE_STROKE_WIDTH}
+                                vectorEffect="non-scaling-stroke"
+                              />
+                              <line
+                                x1="0"
+                                y1="92"
+                                x2="100"
+                                y2="92"
+                                stroke="currentColor"
+                                className="text-border"
+                                strokeWidth={REVENUE_STROKE_WIDTH}
+                                vectorEffect="non-scaling-stroke"
+                              />
+                              <line
+                                x1="0"
+                                y1="50"
+                                x2="100"
+                                y2="50"
+                                stroke="currentColor"
+                                className="text-border/60"
+                                strokeWidth={REVENUE_STROKE_WIDTH}
+                                vectorEffect="non-scaling-stroke"
+                              />
+                              {revenueAreaPath ? (
+                                <path d={revenueAreaPath} fill={`url(#${revenueAreaGradientId})`} className="text-primary" />
+                              ) : null}
+                              {revenueSmoothPath ? (
+                                <path
+                                  d={revenueSmoothPath}
+                                  fill="none"
+                                  stroke="currentColor"
+                                  className="text-primary"
+                                  strokeWidth={REVENUE_STROKE_WIDTH}
+                                  strokeLinejoin="round"
+                                  strokeLinecap="round"
+                                  vectorEffect="non-scaling-stroke"
+                                />
+                              ) : null}
+                            </svg>
+                            <div
+                              className="absolute inset-0 grid gap-x-0"
+                              style={{
+                                gridTemplateColumns: `repeat(${Math.max(1, revenueTimeline.length)}, minmax(0, 1fr))`,
+                              }}
+                            >
+                              {revenueTimeline.map((entry) => (
+                                <button
+                                  key={entry.key}
+                                  type="button"
+                                  className={`h-full w-full border-r border-border/40 last:border-r-0 transition-colors ${
+                                    activeRevenueEntry?.key === entry.key
+                                      ? "bg-primary/10"
+                                      : "hover:bg-accent/40"
+                                  }`}
+                                  title={`${entry.tooltipLabel}: ${formatCurrency(entry.revenue)}`}
+                                  aria-label={`Umsatz ${entry.tooltipLabel}: ${formatCurrency(entry.revenue)}`}
+                                  onMouseEnter={(event) => {
+                                    setHoveredRevenueDate(entry.key);
+                                    setRevenueTooltipFromMouse(event, entry);
+                                  }}
+                                  onMouseMove={(event) => {
+                                    setHoveredRevenueDate(entry.key);
+                                    setRevenueTooltipFromMouse(event, entry);
+                                  }}
+                                  onMouseLeave={() => {
+                                    setHoveredRevenueDate(null);
+                                    setRevenueTooltip(null);
+                                  }}
+                                  onFocus={(event) => {
+                                    setHoveredRevenueDate(entry.key);
+                                    setRevenueTooltipFromFocus(event, entry);
+                                  }}
+                                  onBlur={() => {
+                                    setHoveredRevenueDate(null);
+                                    setRevenueTooltip(null);
+                                  }}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-[44px_minmax(0,1fr)] gap-1 px-0.5">
+                        <span aria-hidden="true" />
+                        <div
+                          className="grid gap-x-0"
+                          style={{
+                            gridTemplateColumns: `repeat(${Math.max(1, revenueTimeline.length)}, minmax(0, 1fr))`,
+                          }}
+                        >
+                          {revenueTimeline.map((entry, index) => (
+                            <span key={entry.key} className="text-center text-[10px] text-muted-foreground">
+                              {index % revenueAxisLabelStep === 0 || index === revenueTimeline.length - 1
+                                ? entry.axisLabel
+                                : ""}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
 
-          {/* Dialogs */}
-          <TableDetailsDialog
-            open={tableDetailsOpen}
-            onOpenChange={setTableDetailsOpen}
-            restaurantId={restaurant.id}
-            table={selectedTable}
-            tables={tables}
-            reservations={selectedTable ? getTableReservations(selectedTable.id) : []}
-            orders={selectedTable ? getTableOrders(selectedTable.id) : []}
-            selectedDate={selectedDate}
-            onTableUpdated={() => refreshData(true)}
-            blocks={blocks}
-            blockAssignments={blockAssignments}
-            onReservationClick={(reservation) => {
-              if (selectedTable) {
-                handleReservationClick(reservation, selectedTable);
-              }
-            }}
-            onViewOrder={(orderId) => {
-              setSelectedOrderId(orderId);
-              setOrderDetailDialogOpen(true);
-            }}
-            onCreateOrder={() => {
-              setSelectedTableForOrder(selectedTable);
-              setOrderDialogOpen(true);
-            }}
-            onNewReservation={() => {
-              setSelectedReservation(null);
-              setReservationDialogOpen(true);
-            }}
-            onReservationUpdated={() => refreshData(true)}
-            allowTableManagement={false}
-            allowDaySpecificActions={true}
-            onHideTable={handleHideTable}
-            onNotify={addToast}
-          />
+              <Card
+                {...getCardNavigationProps("/dashboard/order-statistics")}
+                className={`relative z-0 border-border bg-card/70 hover:z-40 focus-within:z-40 ${DASHBOARD_CARD_HOVER_CLASS} cursor-pointer hover:bg-card hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+              >
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <CookingPot className="w-5 h-5 text-primary" />
+                      Top Artikel
+                    </CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                  {!analyticsReady && analyticsInitialLoading ? (
+                    <div className="space-y-2 animate-pulse">
+                      {Array.from({ length: 4 }).map((_, index) => (
+                        <div key={index} className="h-12 rounded bg-muted" />
+                      ))}
+                    </div>
+                  ) : !analyticsReady && overviewQuery.analytics.error ? (
+                    <p className="text-amber-100">Top-Artikel konnten nicht geladen werden.</p>
+                  ) : overview.topItems.length > 0 ? (
+                    overview.topItems.map((item) => (
+                      <div
+                        key={item.name}
+                        className={`relative overflow-hidden flex items-center justify-between rounded-md border border-border bg-background/50 px-3 py-2 ${DASHBOARD_ROW_HOVER_CLASS}`}
+                      >
+                        <span
+                          aria-hidden="true"
+                          className="pointer-events-none absolute inset-y-0 left-0 bg-primary/10"
+                          style={{ width: `${Math.max(0, Math.min(100, (item.revenue / topItemsMaxRevenue) * 100))}%` }}
+                        />
+                        <div className="relative z-10 min-w-0">
+                          <p className="font-medium text-foreground truncate">{item.name}</p>
+                          <p className="text-xs text-muted-foreground">{item.quantity} verkauft</p>
+                        </div>
+                        <p className="relative z-10 font-semibold text-foreground">{formatCurrency(item.revenue)}</p>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-muted-foreground">Keine Verkaufsdaten im Zeitraum.</p>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
 
-          <OrderDetailDialog
-            open={orderDetailDialogOpen}
-            onOpenChange={setOrderDetailDialogOpen}
-            restaurantId={restaurant.id}
-            orderId={selectedOrderId}
-            onOrderUpdated={() => refreshData(true)}
-            onNotify={(message, variant) => addToast(message, variant)}
-          />
+            <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 items-start">
+              <Card
+                {...getCardNavigationProps("/dashboard/order-history")}
+                className={`border-border bg-card/70 ${DASHBOARD_CARD_HOVER_CLASS} cursor-pointer hover:bg-card hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+              >
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <ShieldCheck className="w-5 h-5 text-primary" />
+                      Bestellstatus
+                    </CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                  {!analyticsReady && analyticsInitialLoading ? (
+                    <div className="space-y-2 animate-pulse">
+                      {Array.from({ length: 4 }).map((_, index) => (
+                        <div key={index} className="h-10 rounded bg-muted" />
+                      ))}
+                    </div>
+                  ) : !analyticsReady && overviewQuery.analytics.error ? (
+                    <p className="text-amber-100">Bestellstatus konnte nicht geladen werden.</p>
+                  ) : orderedStatuses.length > 0 ? (
+                    orderedStatuses.map(([status, count]) => (
+                      <div
+                        key={status}
+                        className={`relative overflow-hidden flex items-center justify-between rounded-md border border-border bg-background/50 px-3 py-2 ${DASHBOARD_ROW_HOVER_CLASS}`}
+                      >
+                        <span
+                          aria-hidden="true"
+                          className="pointer-events-none absolute inset-y-0 left-0 bg-primary/10"
+                          style={{ width: `${Math.max(0, Math.min(100, (count / topStatusCount) * 100))}%` }}
+                        />
+                        <div className="relative z-10">
+                          <p className="font-medium text-foreground">{STATUS_LABELS[status] ?? status}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {totalStatusCount > 0
+                              ? `${((count / totalStatusCount) * 100).toFixed(1)}% aller Bestellungen`
+                              : "0% aller Bestellungen"}
+                          </p>
+                        </div>
+                        <span className="relative z-10 font-semibold text-foreground">{count}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-muted-foreground">Keine Statusdaten verfügbar.</p>
+                  )}
+                </CardContent>
+              </Card>
 
-          <OrderDialog
-            open={orderDialogOpen}
-            onOpenChange={setOrderDialogOpen}
-            restaurantId={restaurant.id}
-            table={selectedTableForOrder}
-            availableTables={tables}
-            reservations={
-              selectedTableForOrder ? getOrderEligibleReservations(selectedTableForOrder.id) : []
-            }
-            onOrderCreated={() => {
-              refreshData(true);
-              setOrderDialogOpen(false);
-            }}
-            onOrderUpdated={() => {
-              refreshData(true);
-              setOrderDialogOpen(false);
-            }}
-            onNotify={(message, variant) => addToast(message, variant)}
-          />
+              <Card
+                {...getCardNavigationProps("/dashboard/order-statistics")}
+                className={`border-border bg-card/70 ${DASHBOARD_CARD_HOVER_CLASS} cursor-pointer hover:bg-card hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+              >
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Tag className="w-5 h-5 text-primary" />
+                      Top Kategorien
+                    </CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                  {!analyticsReady && analyticsInitialLoading ? (
+                    <div className="space-y-2 animate-pulse">
+                      {Array.from({ length: 4 }).map((_, index) => (
+                        <div key={index} className="h-10 rounded bg-muted" />
+                      ))}
+                    </div>
+                  ) : !analyticsReady && overviewQuery.analytics.error ? (
+                    <p className="text-amber-100">Kategorien konnten nicht geladen werden.</p>
+                  ) : overview.topCategories.length > 0 ? (
+                    overview.topCategories.map((category) => (
+                      <div
+                        key={category.category}
+                        className={`space-y-1.5 rounded-md border border-border/70 bg-background/30 p-2.5 ${DASHBOARD_ROW_HOVER_CLASS}`}
+                      >
+                        <div className="flex items-center justify-between text-sm gap-2">
+                          <p className="text-foreground truncate">{formatCategoryLabel(category.category)}</p>
+                          <span className="font-medium text-foreground">{formatCurrency(category.revenue)}</span>
+                        </div>
+                        <div className="h-2.5 rounded bg-muted overflow-hidden">
+                          <div
+                            className="h-full bg-primary/80"
+                            style={{
+                              width: `${Math.max(2, (category.revenue / topCategoriesMaxRevenue) * 100)}%`,
+                            }}
+                          />
+                        </div>
+                        <p className="text-[11px] text-muted-foreground">{category.quantity} Artikel</p>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-muted-foreground">Keine Kategoriedaten verfügbar.</p>
+                  )}
+                </CardContent>
+              </Card>
 
-          <CreateTempTableDialog
-            open={createTempTableOpen}
-            onOpenChange={setCreateTempTableOpen}
-            restaurantId={restaurant.id}
-            selectedDate={selectedDate}
-            onTableCreated={() => refreshData(true)}
-            onNotify={addToast}
-            initialPosition={{
-              x: panOffset.x + (tablePlanRef.current?.clientWidth ?? 0) / 2 / zoomLevel - 60,
-              y: panOffset.y + (tablePlanRef.current?.clientHeight ?? 0) / 2 / zoomLevel - 60,
-            }}
-          />
-        </DndContext>
+              <Card
+                {...getCardNavigationProps("/dashboard/order-statistics")}
+                className={`border-border bg-card/70 ${DASHBOARD_CARD_HOVER_CLASS} cursor-pointer hover:bg-card hover:border-primary/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+              >
+                <CardHeader>
+                  <div className="flex items-center gap-2">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Users className="w-5 h-5 text-primary" />
+                      Stundenlast
+                    </CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm">
+                  {!analyticsReady && analyticsInitialLoading ? (
+                    <div className="space-y-2 animate-pulse">
+                      {Array.from({ length: 4 }).map((_, index) => (
+                        <div key={index} className="h-10 rounded bg-muted" />
+                      ))}
+                    </div>
+                  ) : !analyticsReady && overviewQuery.analytics.error ? (
+                    <p className="text-amber-100">Stundenlast konnte nicht geladen werden.</p>
+                  ) : hourlyOrdersSorted.length > 0 ? (
+                    <div className="relative space-y-2 overflow-x-hidden">
+                      {hourlyTooltip ? (
+                        <AdaptiveHoverTooltip
+                          anchorX={hourlyTooltip.anchorX}
+                          anchorY={hourlyTooltip.anchorY}
+                        >
+                          {hourlyTooltip.hour.padStart(2, "0")}:00 • {hourlyTooltip.orderCount} Bestellungen
+                        </AdaptiveHoverTooltip>
+                      ) : null}
+                      <div className="h-32 rounded-md border border-border bg-background/40 p-2">
+                        <div className="grid h-full grid-cols-[44px_minmax(0,1fr)] gap-1">
+                          <div className="pointer-events-none flex h-full flex-col justify-between py-1 text-right text-[9px] text-muted-foreground tabular-nums">
+                            <span className="whitespace-nowrap">{formatOrdersAxis(hourlyYAxisTicks[0])}</span>
+                            <span className="whitespace-nowrap">{formatOrdersAxis(hourlyYAxisTicks[1])}</span>
+                            <span className="whitespace-nowrap">{formatOrdersAxis(hourlyYAxisTicks[2])}</span>
+                          </div>
+                          <div className="relative h-full">
+                            <svg
+                              viewBox="0 0 100 100"
+                              preserveAspectRatio="none"
+                              className="absolute inset-0 h-full w-full"
+                              aria-hidden="true"
+                            >
+                              <defs>
+                                <linearGradient id={hourlyAreaGradientId} x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="0%" stopColor="currentColor" stopOpacity="0.22" />
+                                  <stop offset="100%" stopColor="currentColor" stopOpacity="0.04" />
+                                </linearGradient>
+                              </defs>
+                              <line
+                                x1="0"
+                                y1="8"
+                                x2="0"
+                                y2="92"
+                                stroke="currentColor"
+                                className="text-border/80"
+                                strokeWidth={REVENUE_STROKE_WIDTH}
+                                vectorEffect="non-scaling-stroke"
+                              />
+                              <line
+                                x1="0"
+                                y1="92"
+                                x2="100"
+                                y2="92"
+                                stroke="currentColor"
+                                className="text-border"
+                                strokeWidth={REVENUE_STROKE_WIDTH}
+                                vectorEffect="non-scaling-stroke"
+                              />
+                              <line
+                                x1="0"
+                                y1="50"
+                                x2="100"
+                                y2="50"
+                                stroke="currentColor"
+                                className="text-border/60"
+                                strokeWidth={REVENUE_STROKE_WIDTH}
+                                vectorEffect="non-scaling-stroke"
+                              />
+                              {hourlyAreaPath ? (
+                                <path d={hourlyAreaPath} fill={`url(#${hourlyAreaGradientId})`} className="text-primary" />
+                              ) : null}
+                              {hourlySmoothPath ? (
+                                <path
+                                  d={hourlySmoothPath}
+                                  fill="none"
+                                  stroke="currentColor"
+                                  className="text-primary"
+                                  strokeWidth={REVENUE_STROKE_WIDTH}
+                                  strokeLinejoin="round"
+                                  strokeLinecap="round"
+                                  vectorEffect="non-scaling-stroke"
+                                />
+                              ) : null}
+                            </svg>
+                            <div
+                              className="absolute inset-0 grid gap-x-0"
+                              style={{
+                                gridTemplateColumns: `repeat(${hourlyOrdersSorted.length}, minmax(0, 1fr))`,
+                              }}
+                            >
+                              {hourlyOrdersSorted.map((hour) => (
+                                <button
+                                  key={hour.hour}
+                                  type="button"
+                                  className={`h-full w-full border-r border-border/40 last:border-r-0 transition-colors ${
+                                    activeHourlyPoint?.hour === hour.hour
+                                      ? "bg-primary/10"
+                                      : "hover:bg-accent/40"
+                                  }`}
+                                  title={`${hour.hour.padStart(2, "0")}:00 • ${hour.orderCount} Bestellungen`}
+                                  aria-label={`Stundenlast ${hour.hour.padStart(2, "0")}:00: ${hour.orderCount} Bestellungen`}
+                                  onMouseEnter={(event) => {
+                                    setHoveredHourlyHour(hour.hour);
+                                    setHourlyTooltipFromMouse(event, hour);
+                                  }}
+                                  onMouseMove={(event) => {
+                                    setHoveredHourlyHour(hour.hour);
+                                    setHourlyTooltipFromMouse(event, hour);
+                                  }}
+                                  onMouseLeave={() => {
+                                    setHoveredHourlyHour(null);
+                                    setHourlyTooltip(null);
+                                  }}
+                                  onFocus={(event) => {
+                                    setHoveredHourlyHour(hour.hour);
+                                    setHourlyTooltipFromFocus(event, hour);
+                                  }}
+                                  onBlur={() => {
+                                    setHoveredHourlyHour(null);
+                                    setHourlyTooltip(null);
+                                  }}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-[44px_minmax(0,1fr)] gap-1 px-0.5">
+                        <span aria-hidden="true" />
+                        <div
+                          className="grid gap-x-0"
+                          style={{
+                            gridTemplateColumns: `repeat(${hourlyOrdersSorted.length}, minmax(0, 1fr))`,
+                          }}
+                        >
+                          {hourlyOrdersSorted.map((hour, index) => (
+                            <span key={hour.hour} className="text-center text-[10px] text-muted-foreground">
+                              {index % 2 === 0 ? hour.hour.padStart(2, "0") : ""}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground">Keine Stundenwerte verfügbar.</p>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </>
+        ) : null}
       </div>
-
-      {/* Dialoge außerhalb DndContext */}
-      <ReservationDialog
-        open={reservationDialogOpen}
-        onOpenChange={setReservationDialogOpen}
-        restaurantId={restaurant.id}
-        table={selectedTable}
-        selectedDate={selectedReservation ? parseISO(selectedReservation.start_at) : selectedDate}
-        reservation={selectedReservation}
-        onReservationCreated={() => refreshData(true)}
-        onBlockCreated={() => refreshData(true)}
-        onReservationUpdated={() => refreshData(true)}
-        availableTables={tables}
-        onNotify={addToast}
-      />
-
-      <BlockTableDialog
-        open={blockEditOpen}
-        onOpenChange={(open) => {
-          setBlockEditOpen(open);
-          if (!open) {
-            setEditingBlock(null);
-          }
-        }}
-        restaurantId={restaurant.id}
-        tables={tables}
-        block={editingBlock}
-        blocks={blocks}
-        blockAssignments={blockAssignments}
-        selectedDate={selectedDate}
-        onBlockCreated={() => refreshData(true)}
-        onNotify={addToast}
-      />
     </div>
   );
 }

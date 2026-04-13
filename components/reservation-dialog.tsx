@@ -35,6 +35,7 @@ interface ReservationDialogProps {
   availableTables?: Table[];
   onNotify?: (message: string, variant?: "info" | "success" | "error") => void;
   defaultStatus?: Reservation["status"];
+  readOnly?: boolean;
 }
 
 export function ReservationDialog({
@@ -49,6 +50,7 @@ export function ReservationDialog({
   onReservationUpdated,
   availableTables = [],
   onNotify,
+  readOnly = false,
 }: ReservationDialogProps) {
   const [guestName, setGuestName] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
@@ -84,6 +86,7 @@ export function ReservationDialog({
   const [tagsOpen, setTagsOpen] = useState(false);
   const tagsDropdownRef = useRef<HTMLDivElement | null>(null);
   const isBlockMode = !reservation && formMode === "block";
+  const fieldsDisabled = loading || readOnly || isMitarbeiterLocked;
   const [loadedReservation, setLoadedReservation] = useState<Reservation | null>(null);
 
   const STATUS_ICON_MAP: Record<
@@ -238,6 +241,7 @@ export function ReservationDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (readOnly) return;
     setError("");
     setLoading(true);
 
@@ -364,6 +368,7 @@ export function ReservationDialog({
   };
 
   const handleCancel = async () => {
+    if (readOnly) return;
     const currentReservation = loadedReservation || reservation;
     if (!currentReservation) return;
 
@@ -394,6 +399,7 @@ export function ReservationDialog({
   };
 
   const handleDelete = async () => {
+    if (readOnly) return;
     const currentReservation = loadedReservation || reservation;
     if (!currentReservation) return;
 
@@ -435,7 +441,7 @@ export function ReservationDialog({
               ? "Bearbeite die Reservierungsdetails"
               : `Erstelle eine neue Reservierung für ${format(selectedDate, "d. MMMM yyyy", { locale: de })}`}
           </DialogDescription>
-          {!reservation && (
+          {!reservation && !readOnly && (
             <div className="mt-3 inline-flex items-center rounded-lg border border-border bg-card/90 p-0.5 backdrop-blur-sm min-h-[32px] md:min-h-[36px]">
               <button
                 type="button"
@@ -488,7 +494,7 @@ export function ReservationDialog({
                     value={blockReason}
                     onChange={(e) => setBlockReason(e.target.value)}
                     placeholder="z.B. Event, Wartung"
-                    disabled={loading}
+                    disabled={loading || readOnly}
                   />
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
@@ -502,7 +508,7 @@ export function ReservationDialog({
                       value={reservationDate}
                       onChange={(e) => setReservationDate(e.target.value)}
                       required
-                      disabled={loading}
+                      disabled={loading || readOnly}
                     />
                   </div>
                   <div>
@@ -515,7 +521,7 @@ export function ReservationDialog({
                       value={startTime}
                       onChange={(e) => setStartTime(e.target.value)}
                       required
-                      disabled={loading}
+                      disabled={loading || readOnly}
                     />
                   </div>
                   <div>
@@ -528,7 +534,7 @@ export function ReservationDialog({
                       value={endTime}
                       onChange={(e) => setEndTime(e.target.value)}
                       required
-                      disabled={loading}
+                      disabled={loading || readOnly}
                     />
                   </div>
                 </div>
@@ -547,7 +553,7 @@ export function ReservationDialog({
                           value={guestName}
                           onChange={(e) => setGuestName(e.target.value)}
                           placeholder="Leer lassen für Standard 'Gast'"
-                          disabled={isMitarbeiterLocked}
+                          disabled={fieldsDisabled}
                         />
                       </div>
                       <div>
@@ -562,7 +568,7 @@ export function ReservationDialog({
                           value={partySize}
                           onChange={(e) => setPartySize(parseInt(e.target.value) || 1)}
                           required
-                          disabled={isMitarbeiterLocked}
+                          disabled={fieldsDisabled}
                         />
                         {table && (
                           <p className="text-xs md:text-sm text-muted-foreground mt-1 md:mt-2">
@@ -583,7 +589,7 @@ export function ReservationDialog({
                           value={guestEmail}
                           onChange={(e) => setGuestEmail(e.target.value)}
                           placeholder="max@example.com"
-                          disabled={isMitarbeiterLocked}
+                          disabled={fieldsDisabled}
                         />
                       </div>
                       <div>
@@ -596,7 +602,7 @@ export function ReservationDialog({
                           value={guestPhone}
                           onChange={(e) => setGuestPhone(e.target.value)}
                           placeholder="+49 123 456789"
-                          disabled={isMitarbeiterLocked}
+                          disabled={fieldsDisabled}
                         />
                       </div>
                     </div>
@@ -612,7 +618,7 @@ export function ReservationDialog({
                           value={reservationDate}
                           onChange={(e) => setReservationDate(e.target.value)}
                           required
-                          disabled={isMitarbeiterLocked}
+                          disabled={fieldsDisabled}
                         />
                       </div>
                       <div>
@@ -625,7 +631,7 @@ export function ReservationDialog({
                           value={startTime}
                           onChange={(e) => setStartTime(e.target.value)}
                           required
-                          disabled={isMitarbeiterLocked}
+                          disabled={fieldsDisabled}
                         />
                       </div>
                       <div>
@@ -638,7 +644,7 @@ export function ReservationDialog({
                           value={endTime}
                           onChange={(e) => setEndTime(e.target.value)}
                           required
-                          disabled={isMitarbeiterLocked}
+                          disabled={fieldsDisabled}
                         />
                       </div>
                     </div>
@@ -650,8 +656,12 @@ export function ReservationDialog({
                     <label className="block text-sm font-medium mb-1.5 md:mb-2 text-foreground">Status</label>
                     <button
                       type="button"
-                      onClick={() => setStatusOpen((prev) => !prev)}
+                      onClick={() => {
+                        if (readOnly) return;
+                        setStatusOpen((prev) => !prev);
+                      }}
                       className="w-full rounded-lg border border-input bg-card text-foreground px-3 py-2 text-sm flex items-center justify-between gap-2 focus:outline-none focus:ring-2 focus:ring-ring touch-manipulation min-h-[40px]"
+                      disabled={readOnly}
                     >
                       <div className="flex items-center gap-2 min-w-0">
                         {(() => {
@@ -722,8 +732,12 @@ export function ReservationDialog({
                   <label className="block text-sm font-medium mb-1.5 md:mb-2 text-foreground">Tags</label>
                   <button
                     type="button"
-                    onClick={() => setTagsOpen((prev) => !prev)}
+                    onClick={() => {
+                      if (readOnly) return;
+                      setTagsOpen((prev) => !prev);
+                    }}
                     className="w-full rounded-lg border border-input bg-card text-foreground px-3 py-2 text-sm flex items-center justify-between gap-2 focus:outline-none focus:ring-2 focus:ring-ring touch-manipulation min-h-[40px]"
+                    disabled={readOnly}
                   >
                     <span className="flex-1 min-w-0">
                       {tags.length > 0 ? (
@@ -804,7 +818,7 @@ export function ReservationDialog({
                       className="w-full px-3 py-2 border border-input bg-card text-foreground rounded-md focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground text-sm touch-manipulation min-h-[100px]"
                       rows={3}
                       placeholder="Besondere Wünsche oder Anmerkungen..."
-                      disabled={isMitarbeiterLocked}
+                      disabled={fieldsDisabled}
                     />
                   </div>
                 )}
@@ -813,7 +827,7 @@ export function ReservationDialog({
             )}
           </div>
           <DialogFooter>
-            {(loadedReservation || reservation) && (loadedReservation || reservation)!.status !== "canceled" && (
+            {!readOnly && (loadedReservation || reservation) && (loadedReservation || reservation)!.status !== "canceled" && (
               currentUser?.role === "manager" || 
               currentUser?.role === "owner" || 
               currentUser?.role === "platform_admin"
@@ -829,7 +843,7 @@ export function ReservationDialog({
                 Stornieren
               </Button>
             )}
-            {(loadedReservation || reservation) && (currentUser?.role === "platform_admin" || currentUser?.role === "owner") && (
+            {!readOnly && (loadedReservation || reservation) && (currentUser?.role === "platform_admin" || currentUser?.role === "owner") && (
               <Button
                 type="button"
                 variant="destructive"
@@ -851,29 +865,31 @@ export function ReservationDialog({
               <X className="w-4 h-4" />
               Abbrechen
             </Button>
-            <Button type="submit" disabled={loading} className="gap-2">
-              {loading ? (
-                <>
-                  <Save className="w-4 h-4 animate-spin" />
-                  <span>{reservation ? "Wird gespeichert..." : "Wird erstellt..."}</span>
-                </>
-              ) : reservation ? (
-                <>
-                  <Save className="w-4 h-4" />
-                  <span>Speichern</span>
-                </>
-              ) : isBlockMode ? (
-                <>
-                  <Save className="w-4 h-4" />
-                  <span>Block erstellen</span>
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  <span>Reservierung erstellen</span>
-                </>
-              )}
-            </Button>
+            {!readOnly && (
+              <Button type="submit" disabled={loading} className="gap-2">
+                {loading ? (
+                  <>
+                    <Save className="w-4 h-4 animate-spin" />
+                    <span>{reservation ? "Wird gespeichert..." : "Wird erstellt..."}</span>
+                  </>
+                ) : reservation ? (
+                  <>
+                    <Save className="w-4 h-4" />
+                    <span>Speichern</span>
+                  </>
+                ) : isBlockMode ? (
+                  <>
+                    <Save className="w-4 h-4" />
+                    <span>Block erstellen</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    <span>Reservierung erstellen</span>
+                  </>
+                )}
+              </Button>
+            )}
           </DialogFooter>
         </form>
       </DialogContent>

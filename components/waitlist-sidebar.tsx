@@ -18,6 +18,7 @@ interface WaitlistSidebarProps {
   activeBlockId?: string | null;
   getTableName?: (tableId: string | null) => string;
   getReservationTableLabel?: (reservation: Reservation) => string | null;
+  getReservationAreaLabel?: (reservation: Reservation) => string;
   getBlockTableLabels?: (block: Block) => string[];
   searchQuery?: string;
   onSearchChange?: (query: string) => void;
@@ -27,6 +28,7 @@ interface WaitlistSidebarProps {
   onNewReservation?: () => void;
   collapsed?: boolean;
   onToggle?: () => void;
+  readOnly?: boolean;
 }
 
 const STATUS_SETTINGS_KEY = "dashboard_status_filters";
@@ -45,6 +47,7 @@ export function WaitlistSidebar({
   activeBlockId,
   getTableName,
   getReservationTableLabel,
+  getReservationAreaLabel,
   getBlockTableLabels,
   searchQuery: externalSearchQuery,
   onSearchChange: externalOnSearchChange,
@@ -54,6 +57,7 @@ export function WaitlistSidebar({
   onNewReservation,
   collapsed = false,
   onToggle,
+  readOnly = false,
 }: WaitlistSidebarProps) {
   const { setNodeRef, isOver } = useDroppable({
     id: "waitlist",
@@ -272,21 +276,55 @@ export function WaitlistSidebar({
     `}
       style={{ pointerEvents: 'auto' }}
     >
-      <div
-        className={`absolute inset-0 flex items-start justify-center pt-4 transition-opacity duration-300 ${
-          showCollapsed ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
-      >
-        {onToggle && (
-          <button
-            onClick={onToggle}
-            className="bg-muted hover:bg-accent border border-border rounded-lg p-2 text-foreground shadow-lg transition-colors touch-manipulation min-h-[36px] md:min-h-[40px] min-w-[36px] md:min-w-[40px] flex items-center justify-center"
-            aria-label="Sidebar ausklappen"
-          >
+      {onToggle ? (
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-label="Reservierungsliste ausklappen"
+          className={`absolute inset-0 flex flex-col items-center justify-start gap-3 pt-4 transition-all duration-300 touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset hover:bg-accent/20 ${
+            showCollapsed ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
+        >
+          <span className="bg-muted border border-border rounded-lg p-2 text-foreground shadow-lg min-h-[36px] md:min-h-[40px] min-w-[36px] md:min-w-[40px] flex items-center justify-center">
             <PanelLeft className="w-4 h-4 md:w-5 md:h-5" />
-          </button>
-        )}
-      </div>
+          </span>
+          <span className="px-1 w-full flex flex-col items-center gap-2">
+            <span className="inline-flex flex-col items-center gap-2 rounded-xl border border-border/70 bg-muted/60 px-1.5 py-2 shadow-sm">
+              <Users className="w-4 h-4 text-foreground/80" />
+              <span
+                className="[writing-mode:vertical-rl] rotate-180 text-[10px] font-semibold leading-none text-foreground tracking-[0.08em] uppercase"
+                title="Reservierungen"
+              >
+                Reservierungen
+              </span>
+            </span>
+            <span className="inline-flex items-center justify-center min-w-[26px] h-6 rounded-full border border-border bg-card px-2 text-[11px] font-semibold text-foreground shadow-sm">
+              {activeItemCount}
+            </span>
+          </span>
+        </button>
+      ) : (
+        <div
+          className={`absolute inset-0 flex flex-col items-center justify-start gap-3 pt-4 transition-opacity duration-300 ${
+            showCollapsed ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
+        >
+          <div className="px-1 w-full flex flex-col items-center gap-2 pointer-events-none">
+            <div className="inline-flex flex-col items-center gap-2 rounded-xl border border-border/70 bg-muted/60 px-1.5 py-2 shadow-sm">
+              <Users className="w-4 h-4 text-foreground/80" />
+              <span
+                className="[writing-mode:vertical-rl] rotate-180 text-[10px] font-semibold leading-none text-foreground tracking-[0.08em] uppercase"
+                title="Reservierungen"
+              >
+                Reservierungen
+              </span>
+            </div>
+            <span className="inline-flex items-center justify-center min-w-[26px] h-6 rounded-full border border-border bg-card px-2 text-[11px] font-semibold text-foreground shadow-sm">
+              {activeItemCount}
+            </span>
+          </div>
+        </div>
+      )}
       <div
         className={`h-full flex flex-col transition-opacity duration-300 ${
           showCollapsed ? "opacity-0 pointer-events-none" : "opacity-100"
@@ -475,6 +513,7 @@ export function WaitlistSidebar({
                 key={block.id}
                 block={block}
                 isDragging={activeBlockId === block.id}
+                draggable={!readOnly}
                 tableLabels={getBlockTableLabels?.(block)}
                 onClick={onBlockClick}
               />
@@ -484,8 +523,10 @@ export function WaitlistSidebar({
                 key={reservation.id}
                 reservation={reservation}
                 isDragging={activeReservationId === reservation.id}
+                draggable={!readOnly}
                 getTableName={getTableName}
                 getTableLabel={getReservationTableLabel}
+                getAreaLabel={getReservationAreaLabel}
                 onClick={onReservationClick}
                 onDelete={onReservationDelete}
               />
@@ -498,7 +539,7 @@ export function WaitlistSidebar({
           </div>
         )}
       </div>
-      {onNewReservation && (
+      {onNewReservation && !readOnly && (
         <div className="p-3 md:p-4 border-t border-border bg-card shrink-0">
           <Button
             onClick={onNewReservation}

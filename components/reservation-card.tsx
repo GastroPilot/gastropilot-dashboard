@@ -3,13 +3,15 @@
 import { useDraggable } from "@dnd-kit/core";
 import { Reservation } from "@/lib/api/reservations";
 import { format } from "date-fns";
-import { Clock, Users, CheckCircle, XCircle, AlertTriangle, Armchair, ShieldCheck } from "lucide-react";
+import { Clock, Users, CheckCircle, XCircle, AlertTriangle, Armchair, ShieldCheck, MapPin } from "lucide-react";
 
 interface ReservationCardProps {
   reservation: Reservation;
   isDragging?: boolean;
+  draggable?: boolean;
   getTableName?: (tableId: string | null) => string;
   getTableLabel?: (reservation: Reservation) => string | null;
+  getAreaLabel?: (reservation: Reservation) => string;
   onClick?: (reservation: Reservation) => void;
   onDelete?: (reservation: Reservation) => void;
 }
@@ -17,14 +19,17 @@ interface ReservationCardProps {
 export function ReservationCard({
   reservation,
   isDragging,
+  draggable = true,
   getTableName,
   getTableLabel,
+  getAreaLabel,
   onClick,
   onDelete,
 }: ReservationCardProps) {
   const { attributes, listeners, setNodeRef, transform } = useDraggable({
     id: `reservation-${reservation.id}`,
     data: { type: "reservation", reservationId: reservation.id },
+    disabled: !draggable,
   });
 
   const style = transform
@@ -58,6 +63,7 @@ export function ReservationCard({
   };
 
   const statusIcon = getStatusIcon(reservation.status);
+  const areaLabel = getAreaLabel?.(reservation);
 
   return (
     <div
@@ -72,8 +78,8 @@ export function ReservationCard({
         touchAction: 'none',
         WebkitTouchCallout: 'none',
       }}
-      {...listeners}
-      {...attributes}
+      {...(draggable ? listeners : {})}
+      {...(draggable ? attributes : {})}
       onMouseDown={(e) => {
         // Verhindere Text-Selektion beim Maus-Down (Doppelklick)
         if (e.detail > 1) e.preventDefault();
@@ -81,7 +87,7 @@ export function ReservationCard({
       onClick={() => onClick?.(reservation)}
       className={`
         bg-card rounded-lg shadow-md border border-border p-2 md:p-3
-        cursor-grab active:cursor-grabbing
+        ${draggable ? "cursor-grab active:cursor-grabbing" : "cursor-default"}
         hover:shadow-lg hover:bg-accent transition-all
         ${isDragging ? "opacity-50" : ""}
         touch-manipulation
@@ -127,6 +133,12 @@ export function ReservationCard({
           );
         })()}
       </div>
+      {areaLabel && (
+        <div className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+          <MapPin className="w-3 h-3" />
+          <span>Bereich: {areaLabel}</span>
+        </div>
+      )}
 
       {reservation.notes && (
         <p className="mt-2 text-xs md:text-sm text-foreground italic line-clamp-2">
@@ -136,4 +148,3 @@ export function ReservationCard({
     </div>
   );
 }
-
