@@ -6,12 +6,13 @@ import { tablesApi, Table } from "@/lib/api/tables";
 import { menuApi, MenuItem, MenuCategory } from "@/lib/api/menu";
 import { restaurantsApi, Restaurant } from "@/lib/api/restaurants";
 import { startPayment, listReaders, getOrderPayments, type SumUpReader, type SumUpPayment } from "@/lib/api/sumup";
+import { terminalsApi, PROVIDER_LABELS, type PaymentTerminal, type TerminalPayment } from "@/lib/api/terminals";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, } from "@/components/ui/dialog";
 import { format, parseISO } from "date-fns";
 import { de } from "date-fns/locale";
-import { ShoppingCart, Table as TableIcon, Plus, Trash2, Euro, Users, FileText, X, CheckCircle, Clock, Search, Download, Check, ChevronDown, CreditCard, Banknote, Nfc, Loader2, AlertTriangle, XCircle, } from "lucide-react";
+import { ShoppingCart, Table as TableIcon, Plus, Trash2, Euro, Users, FileText, X, CheckCircle, Clock, Search, Download, Check, ChevronDown, CreditCard, Banknote, Nfc, Loader2, AlertTriangle, XCircle, Printer, Receipt } from "lucide-react";
 import { confirmAction } from "@/lib/utils";
 import { getApiUrlForEndpoint } from "@/lib/api/client";
 import { createReceipt, getTransactionForOrder } from "@/lib/api/fiskaly";
@@ -99,21 +100,19 @@ export function OrderDetailDialog({
   const [splitMethodMenuIndex, setSplitMethodMenuIndex] = useState<number | null>(null);
   const splitMethodMenuRefs = useRef<Array<HTMLDivElement | null>>([]);
   const [paymentView, setPaymentView] = useState<"split" | "total">("total");
-  // SumUp State
+  // Terminal / Payment State
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
-  const [sumupReaders, setSumupReaders] = useState<SumUpReader[]>([]);
-  const [selectedReaderId, setSelectedReaderId] = useState<string | null>(null);
-  const [isStartingSumupPayment, setIsStartingSumupPayment] = useState(false);
-  const [isLoadingReaders, setIsLoadingReaders] = useState(false);
-  const [sumupPayments, setSumupPayments] = useState<SumUpPayment[]>([]);
+  const [availableTerminals, setAvailableTerminals] = useState<PaymentTerminal[]>([]);
+  const [selectedTerminalId, setSelectedTerminalId] = useState<string | null>(null);
+  const [isStartingTerminalPayment, setIsStartingTerminalPayment] = useState(false);
+  const [terminalPayments, setTerminalPayments] = useState<TerminalPayment[]>([]);
   const [isLoadingPayments, setIsLoadingPayments] = useState(false);
-  const sumupPaymentsRef = useRef<SumUpPayment[]>([]);
+  const terminalPaymentsRef = useRef<TerminalPayment[]>([]);
   const canMutate = !readOnly;
-  
-  // Aktualisiere Refs, wenn sich State ändert
+
   useEffect(() => {
-    sumupPaymentsRef.current = sumupPayments;
-  }, [sumupPayments]);
+    terminalPaymentsRef.current = terminalPayments;
+  }, [terminalPayments]);
 
   useEffect(() => {
     if (open && orderId) {
@@ -124,7 +123,9 @@ export function OrderDetailDialog({
       setOrder(null);
       setTable(null);
       setRestaurant(null);
-      setSumupPayments([]);
+      setTerminalPayments([]);
+      setAvailableTerminals([]);
+      setShouldPollPayments(false);
       setPaymentDetailsDirty(false);
       setSplitDetailsDirty(false);
       setStatusMenuOpen(false);
@@ -132,88 +133,54 @@ export function OrderDetailDialog({
     }
   }, [open, orderId, restaurantId]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Load terminal payments when dialog opens
   useEffect(() => {
-    if (
-      open &&
-      orderId &&
-      restaurant?.sumup_enabled &&
-      (order?.status === "served" || order?.status === "paid")
-    ) {
-      loadSumUpPayments();
+    if (open && orderId && (order?.status === "served" || order?.status === "paid")) {
+      loadTerminalPayments();
     }
-  }, [open, orderId, restaurant?.sumup_enabled, order?.status]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open, orderId, order?.status]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Polling für SumUp Payments - aktualisiert automatisch, wenn Zahlungen noch verarbeitet werden
+  // Polling for terminal payments — only after a payment is initiated
+  const [shouldPollPayments, setShouldPollPayments] = useState(false);
+
   useEffect(() => {
-    if (
-      !open ||
-      !orderId ||
-      !restaurant?.sumup_enabled ||
-      (order?.status !== "served" && order?.status !== "paid")
-    ) {
-      return;
-    }
+    if (!shouldPollPayments || !open || !orderId) return;
 
     let intervalId: NodeJS.Timeout | null = null;
-    let shouldContinuePolling = true;
+    let active = true;
 
-    const pollPayments = async () => {
-      if (!shouldContinuePolling) return;
-      
+    const poll = async () => {
+      if (!active) return;
       try {
         setIsLoadingPayments(true);
-        const payments = await getOrderPayments(restaurantId, orderId);
-        
-        // Prüfe, ob es noch aktive Zahlungen gibt
-        const hasActivePayments = payments.some(
+        const payments = await terminalsApi.listOrderPayments(orderId);
+        const prev = terminalPaymentsRef.current;
+        setTerminalPayments(payments);
+        terminalPaymentsRef.current = payments;
+
+        const hasNew = payments.some((p) => p.status === "successful") &&
+          !prev.some((p) => p.status === "successful");
+        if (hasNew) await loadOrder();
+
+        const stillActive = payments.some(
           (p) => p.status === "processing" || p.status === "pending"
         );
-        
-        // Aktualisiere Payments
-        const previousPayments = sumupPaymentsRef.current;
-        setSumupPayments(payments);
-        sumupPaymentsRef.current = payments;
-        
-        // Wenn sich der Order-Status geändert hat (z.B. auf "paid"), aktualisiere die Order
-        const hasSuccessfulPayment = payments.some((p) => p.status === "successful");
-        const hadSuccessfulPayment = previousPayments.some((p) => p.status === "successful");
-        
-        if (hasSuccessfulPayment && !hadSuccessfulPayment) {
-          await loadOrder();
+        if (!stillActive) {
+          active = false;
+          setShouldPollPayments(false);
+          if (intervalId) clearInterval(intervalId);
         }
-        
-        // Wenn keine aktiven Zahlungen mehr, stoppe das Polling nach diesem Durchlauf
-        if (!hasActivePayments && payments.length > 0) {
-          shouldContinuePolling = false;
-          if (intervalId) {
-            clearInterval(intervalId);
-            intervalId = null;
-          }
-        }
-      } catch (err) {
-        console.error("Fehler beim Polling der SumUp-Zahlungen:", err);
+      } catch {
+        // silently retry
       } finally {
         setIsLoadingPayments(false);
       }
     };
 
-    // Starte Polling sofort
-    pollPayments();
-
-    // Setze Intervall für kontinuierliches Polling (alle 2 Sekunden)
-    intervalId = setInterval(() => {
-      if (shouldContinuePolling) {
-        pollPayments();
-      }
-    }, 2000);
-
-    return () => {
-      shouldContinuePolling = false;
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
-    };
-  }, [open, orderId, restaurant?.sumup_enabled, order?.status]); // eslint-disable-line react-hooks/exhaustive-deps
+    poll();
+    intervalId = setInterval(() => { if (active) poll(); }, 2000);
+    return () => { active = false; if (intervalId) clearInterval(intervalId); };
+  }, [shouldPollPayments, open, orderId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!statusMenuOpen) return;
@@ -338,97 +305,100 @@ export function OrderDetailDialog({
       //   console.log("SumUp ist für dieses Restaurant nicht aktiviert");
       // }
       
-      // Für Entwicklungszwecke: Mock Reader-ID setzen, damit Zahlungen getestet werden können
-      if (data.sumup_enabled) {
-        console.log("SumUp ist aktiviert - Reader-Verwaltung deaktiviert für Entwicklungszwecke");
-        // Setze eine Mock Reader-ID für Entwicklungszwecke
-        setSelectedReaderId("dev-mock-reader");
+      // Load available terminals
+      try {
+        const terms = await terminalsApi.list();
+        const active = terms.filter((t) => t.is_active);
+        setAvailableTerminals(active);
+        const def = active.find((t) => t.is_default);
+        setSelectedTerminalId(def?.id ?? active[0]?.id ?? null);
+      } catch {
+        // terminals not configured
       }
     } catch (err) {
       console.error("Fehler beim Laden des Restaurants:", err);
     }
   };
 
-  const loadSumUpPayments = async () => {
-    if (
-      !orderId ||
-      !restaurant?.sumup_enabled ||
-      (order?.status !== "served" && order?.status !== "paid")
-    ) {
-      return;
-    }
-    
+  const loadTerminalPayments = async () => {
+    if (!orderId || (order?.status !== "served" && order?.status !== "paid")) return;
     try {
       setIsLoadingPayments(true);
-      const payments = await getOrderPayments(restaurantId, orderId);
-      const previousPayments = sumupPayments;
-      setSumupPayments(payments);
-      
-      // Wenn sich der Order-Status geändert hat (z.B. auf "paid"), aktualisiere die Order
-      // Prüfe, ob es erfolgreiche Zahlungen gibt, die die Order bezahlt haben könnten
-      const hasSuccessfulPayment = payments.some((p) => p.status === "successful");
-      const hadSuccessfulPayment = previousPayments.some((p) => p.status === "successful");
-      
-      // Nur bei neu erfolgreicher Zahlung einmalig nachladen
-      if (hasSuccessfulPayment && !hadSuccessfulPayment) {
-        // Lade Order neu, um den aktuellen Status zu erhalten
-        await loadOrder();
-      }
-    } catch (err) {
-      console.error("Fehler beim Laden der SumUp-Zahlungen:", err);
+      const payments = await terminalsApi.listOrderPayments(orderId);
+      setTerminalPayments(payments);
+    } catch {
+      // silently fail
     } finally {
       setIsLoadingPayments(false);
     }
   };
 
-  const handleStartSumupPayment = async () => {
-    if (readOnly) return;
-    if (!order) return;
-    
-    const isPaymentReady = order.status === "served" || order.status === "paid";
-    if (!isPaymentReady) {
+  const handleStartTerminalPayment = async () => {
+    if (readOnly || !order || !selectedTerminalId) return;
+
+    if (order.status !== "served" && order.status !== "paid") {
       onNotify?.("Zahlung ist erst verfügbar, wenn der Status auf 'Serviert' steht.", "error");
       return;
     }
 
-    setIsStartingSumupPayment(true);
+    setIsStartingTerminalPayment(true);
     setError("");
-    
+
     try {
       const baseTotal = Math.max(0, computedFinancials.subtotal - (discountAmount || 0));
       const amount = baseTotal + (tipAmount || 0);
-      
       if (amount <= 0) {
         onNotify?.("Betrag muss größer als 0 sein.", "error");
         return;
       }
 
-      const paymentResponse = await startPayment(restaurantId, order.id, {
-        // Keine reader_id mehr erforderlich - Zahlung erfolgt direkt über Merchant-Checkout
-        amount: amount,
+      const resp = await terminalsApi.initiatePayment(order.id, {
+        terminal_id: selectedTerminalId,
+        amount,
         currency: "EUR",
         description: `Bestellung ${order.order_number || order.id}`,
-        tip_rates: tipAmount > 0 ? undefined : [0.05, 0.10, 0.15], // Nur wenn noch kein Trinkgeld gesetzt
       });
 
-      onNotify?.(
-        `Zahlung wurde am Terminal gestartet. Bitte warten Sie auf die Bestätigung.\n\nTransaction ID: ${paymentResponse.client_transaction_id}`,
-        "success"
-      );
+      if (resp.status === "awaiting_confirmation") {
+        onNotify?.("Bitte Zahlung am Terminal durchführen und dann hier bestätigen.", "info");
+      } else {
+        onNotify?.("Zahlung wurde am Terminal gestartet. Bitte warten...", "success");
+        setShouldPollPayments(true);
+      }
 
-      // Lade Bestellung neu nach kurzer Verzögerung (Webhook könnte bereits angekommen sein)
       setTimeout(async () => {
         await loadOrder();
-        await loadSumUpPayments(); // Lade auch Zahlungen neu
+        await loadTerminalPayments();
         onOrderUpdated?.();
-      }, 2000);
+      }, 1500);
     } catch (err: any) {
-      console.error("Fehler beim Starten der SumUp-Zahlung:", err);
-      const errorMessage = err?.message || "Zahlung konnte nicht gestartet werden.";
-      setError(errorMessage);
-      onNotify?.(errorMessage, "error");
+      const msg = err?.message || "Zahlung konnte nicht gestartet werden.";
+      setError(msg);
+      onNotify?.(msg, "error");
     } finally {
-      setIsStartingSumupPayment(false);
+      setIsStartingTerminalPayment(false);
+    }
+  };
+
+  const handleConfirmTerminalPayment = async (paymentId: string) => {
+    try {
+      await terminalsApi.confirmPayment(paymentId);
+      onNotify?.("Zahlung bestätigt.", "success");
+      await loadOrder();
+      await loadTerminalPayments();
+      onOrderUpdated?.();
+    } catch (err: any) {
+      onNotify?.(err?.message || "Bestätigung fehlgeschlagen.", "error");
+    }
+  };
+
+  const handleCancelTerminalPayment = async (paymentId: string) => {
+    try {
+      await terminalsApi.cancelPayment(paymentId);
+      onNotify?.("Zahlung abgebrochen.", "info");
+      await loadTerminalPayments();
+    } catch (err: any) {
+      onNotify?.(err?.message || "Abbruch fehlgeschlagen.", "error");
     }
   };
 
@@ -524,7 +494,7 @@ export function OrderDetailDialog({
         discount_amount: currentDiscountAmount,
         discount_percentage: currentDiscountPercentage,
         tip_amount: currentTipAmount,
-        payment_method: paymentMethod || null,
+        payment_method: paymentMethod === "terminal" ? null : paymentMethod || null,
         split_payments: computedSplitPayments.length > 0 ? buildSplitPayload() : null,
       });
       onNotify?.("Zahlungsdetails gespeichert", "success");
@@ -592,7 +562,7 @@ export function OrderDetailDialog({
         discount_amount: discountAmount,
         discount_percentage: discountPercentage,
         tip_amount: tipAmount,
-        payment_method: paymentMethod || order.payment_method || null,
+        payment_method: paymentMethod === "terminal" ? null : paymentMethod || order.payment_method || null,
         split_payments: splitPaymentsToSend,
       });
       onNotify?.("Bestellung als bezahlt markiert", "success");
@@ -827,9 +797,8 @@ export function OrderDetailDialog({
     }).format(amount);
   };
 
-  const handleDownloadInvoice = async () => {
-    if (!order || !restaurantId) return;
-    
+  const _downloadPdf = async (endpoint: string, filename: string, label: string) => {
+    if (!order) return;
     try {
       const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
       if (!token) {
@@ -837,16 +806,11 @@ export function OrderDetailDialog({
         return;
       }
 
-      const pdfUrl = getApiUrlForEndpoint(`/invoices/${order.id}/pdf`);
-      const response = await fetch(
-        pdfUrl,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          credentials: "include",
-        }
-      );
+      const pdfUrl = getApiUrlForEndpoint(endpoint);
+      const response = await fetch(pdfUrl, {
+        headers: { Authorization: `Bearer ${token}` },
+        credentials: "include",
+      });
 
       if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
@@ -854,8 +818,7 @@ export function OrderDetailDialog({
           return;
         }
         const errorText = await response.text().catch(() => "Unbekannter Fehler");
-        console.error("PDF-Generierungsfehler:", response.status, errorText);
-        onNotify?.(`Fehler beim Generieren der Rechnung: ${response.status} ${errorText}`, "error");
+        onNotify?.(`Fehler: ${response.status} ${errorText}`, "error");
         return;
       }
 
@@ -863,16 +826,87 @@ export function OrderDetailDialog({
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `rechnung_${order.order_number || order.id}.pdf`;
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      
-      onNotify?.("Rechnung heruntergeladen", "success");
-    } catch (error) {
-      console.error("Fehler beim Download der Rechnung:", error);
-      onNotify?.("Fehler beim Download der Rechnung", "error");
+      onNotify?.(`${label} heruntergeladen`, "success");
+    } catch {
+      onNotify?.(`Fehler beim Download: ${label}`, "error");
+    }
+  };
+
+  const handleDownloadInvoice = () =>
+    _downloadPdf(
+      `/invoices/${order?.id}/pdf`,
+      `rechnung_${order?.order_number || order?.id}.pdf`,
+      "Rechnung"
+    );
+
+  const handleDownloadKassenbeleg = () =>
+    _downloadPdf(
+      `/receipts/${order?.id}/kassenbeleg`,
+      `kassenbeleg_${order?.order_number || order?.id}.pdf`,
+      "Kassenbeleg"
+    );
+
+  const handleDownloadBewirtungsbeleg = () =>
+    _downloadPdf(
+      `/receipts/${order?.id}/bewirtungsbeleg`,
+      `bewirtungsbeleg_${order?.order_number || order?.id}.pdf`,
+      "Bewirtungsbeleg"
+    );
+
+  const [showBewirtungsForm, setShowBewirtungsForm] = useState(false);
+  const [bewirtungsData, setBewirtungsData] = useState({
+    anlass: "",
+    teilnehmer: "",
+    empfaenger_name: "",
+    empfaenger_firma: "",
+    empfaenger_strasse: "",
+    empfaenger_plz: "",
+    empfaenger_ort: "",
+  });
+
+  const handleDownloadBewirtungsrechnung = async () => {
+    if (!order) return;
+    try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+      if (!token) {
+        onNotify?.("Nicht angemeldet", "error");
+        return;
+      }
+
+      const pdfUrl = getApiUrlForEndpoint(`/receipts/${order.id}/bewirtungsrechnung`);
+      const response = await fetch(pdfUrl, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(bewirtungsData),
+      });
+
+      if (!response.ok) {
+        onNotify?.("Fehler beim Download der Bewirtungsrechnung", "error");
+        return;
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `bewirtungsrechnung_${order.order_number || order.id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      onNotify?.("Bewirtungsrechnung heruntergeladen", "success");
+      setShowBewirtungsForm(false);
+    } catch {
+      onNotify?.("Fehler beim Download der Bewirtungsrechnung", "error");
     }
   };
 
@@ -916,15 +950,33 @@ export function OrderDetailDialog({
                 Bestelldetails und Abrechnung
               </DialogDescription>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-1.5">
               <Button
                 size="sm"
-                onClick={handleDownloadInvoice}
+                onClick={handleDownloadKassenbeleg}
                 variant="outline"
-                className="bg-muted border-input text-foreground hover:bg-accent min-h-[32px]"
+                className="bg-muted border-input text-foreground hover:bg-accent min-h-[32px] gap-1.5 text-xs"
               >
-                <Download className="w-4 h-4 mr-2" />
-                Rechnung PDF
+                <Printer className="w-3.5 h-3.5" />
+                Kassenbeleg
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleDownloadBewirtungsbeleg}
+                variant="outline"
+                className="bg-muted border-input text-foreground hover:bg-accent min-h-[32px] gap-1.5 text-xs"
+              >
+                <Receipt className="w-3.5 h-3.5" />
+                Bewirtungsbeleg
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => setShowBewirtungsForm(!showBewirtungsForm)}
+                variant="outline"
+                className={`bg-muted border-input text-foreground hover:bg-accent min-h-[32px] gap-1.5 text-xs ${showBewirtungsForm ? "ring-1 ring-primary" : ""}`}
+              >
+                <FileText className="w-3.5 h-3.5" />
+                Bewirtungsrechnung
               </Button>
               {order?.payment_status === "paid" && (
                 <Button
@@ -932,12 +984,12 @@ export function OrderDetailDialog({
                   onClick={handleCreateReceipt}
                   disabled={receiptLoading}
                   variant="outline"
-                  className="bg-muted border-input text-foreground hover:bg-accent min-h-[32px]"
+                  className="bg-muted border-input text-foreground hover:bg-accent min-h-[32px] gap-1.5 text-xs"
                 >
                   {receiptLoading ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   ) : (
-                    <FileText className="w-4 h-4 mr-2" />
+                    <FileText className="w-3.5 h-3.5" />
                   )}
                   eReceipt
                 </Button>
@@ -945,6 +997,91 @@ export function OrderDetailDialog({
             </div>
           </div>
         </DialogHeader>
+
+        {showBewirtungsForm && (
+          <div className="mx-4 md:mx-6 rounded-lg border border-primary/30 bg-card/80 p-4 space-y-3">
+            <p className="text-sm font-medium">Bewirtungsrechnung erstellen</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-muted-foreground">Anlass der Bewirtung</label>
+                <Input
+                  value={bewirtungsData.anlass}
+                  onChange={(e) => setBewirtungsData({ ...bewirtungsData, anlass: e.target.value })}
+                  placeholder="z.B. Geschäftsessen, Projektbesprechung"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">Bewirtete Personen</label>
+                <Input
+                  value={bewirtungsData.teilnehmer}
+                  onChange={(e) => setBewirtungsData({ ...bewirtungsData, teilnehmer: e.target.value })}
+                  placeholder="Namen der Teilnehmer"
+                  className="mt-1"
+                />
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground font-medium pt-1">Rechnungsempfänger</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-muted-foreground">Firma</label>
+                <Input
+                  value={bewirtungsData.empfaenger_firma}
+                  onChange={(e) => setBewirtungsData({ ...bewirtungsData, empfaenger_firma: e.target.value })}
+                  placeholder="Firmenname"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">Name</label>
+                <Input
+                  value={bewirtungsData.empfaenger_name}
+                  onChange={(e) => setBewirtungsData({ ...bewirtungsData, empfaenger_name: e.target.value })}
+                  placeholder="Vor- und Nachname"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">Straße</label>
+                <Input
+                  value={bewirtungsData.empfaenger_strasse}
+                  onChange={(e) => setBewirtungsData({ ...bewirtungsData, empfaenger_strasse: e.target.value })}
+                  placeholder="Straße und Hausnummer"
+                  className="mt-1"
+                />
+              </div>
+              <div className="grid grid-cols-[100px_1fr] gap-2">
+                <div>
+                  <label className="text-xs text-muted-foreground">PLZ</label>
+                  <Input
+                    value={bewirtungsData.empfaenger_plz}
+                    onChange={(e) => setBewirtungsData({ ...bewirtungsData, empfaenger_plz: e.target.value })}
+                    placeholder="PLZ"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">Ort</label>
+                  <Input
+                    value={bewirtungsData.empfaenger_ort}
+                    onChange={(e) => setBewirtungsData({ ...bewirtungsData, empfaenger_ort: e.target.value })}
+                    placeholder="Ort"
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-1">
+              <Button size="sm" variant="ghost" onClick={() => setShowBewirtungsForm(false)}>
+                Abbrechen
+              </Button>
+              <Button size="sm" onClick={handleDownloadBewirtungsrechnung} className="gap-1.5">
+                <Download className="w-3.5 h-3.5" />
+                PDF erstellen
+              </Button>
+            </div>
+          </div>
+        )}
 
         {loading && !order ? (
           <div className="py-8 text-center text-muted-foreground">Lade Bestellung...</div>
@@ -1336,24 +1473,26 @@ export function OrderDetailDialog({
                   </span>
                 </div>
                 
-                {/* Fehlgeschlagene SumUp-Zahlungen */}
-                {restaurant?.sumup_enabled && sumupPayments.length > 0 && (
+                {/* Kartenzahlungen */}
+                {terminalPayments.length > 0 && (
                   <div className="mt-3 pt-3 border-t border-border">
-                    <div className="text-xs text-muted-foreground mb-2">SumUp Zahlungsverlauf</div>
+                    <div className="text-xs text-muted-foreground mb-2">Kartenzahlungen</div>
                     <div className="space-y-2">
-                      {sumupPayments.map((payment) => {
+                      {terminalPayments.map((payment) => {
                         const isFailed = payment.status === "failed" || payment.status === "canceled";
-                        const isSuccessful = payment.status === "successful";
                         const isProcessing = payment.status === "processing" || payment.status === "pending";
-                        
-                        if (!isFailed && !isProcessing) return null; // Zeige nur fehlgeschlagene oder laufende Zahlungen
-                        
+                        const isAwaiting = payment.status === "awaiting_confirmation";
+
+                        if (!isFailed && !isProcessing && !isAwaiting) return null;
+
                         return (
                           <div
                             key={payment.id}
                             className={`p-2 rounded-md border ${
                               isFailed
                                 ? "bg-red-900/20 border-red-500/50"
+                                : isAwaiting
+                                ? "bg-amber-900/20 border-amber-500/50"
                                 : isProcessing
                                 ? "bg-yellow-900/20 border-yellow-500/50"
                                 : "bg-card/50 border-input"
@@ -1364,42 +1503,43 @@ export function OrderDetailDialog({
                                 <div className="flex items-center gap-2 mb-1">
                                   {isFailed ? (
                                     <XCircle className="w-4 h-4 text-red-400 flex-shrink-0" />
-                                  ) : isProcessing ? (
-                                    <Loader2 className="w-4 h-4 text-yellow-400 animate-spin flex-shrink-0" />
+                                  ) : isAwaiting ? (
+                                    <CreditCard className="w-4 h-4 text-amber-400 flex-shrink-0" />
                                   ) : (
-                                    <CheckCircle className="w-4 h-4 text-green-400 flex-shrink-0" />
+                                    <Loader2 className="w-4 h-4 text-yellow-400 animate-spin flex-shrink-0" />
                                   )}
                                   <span className={`text-xs font-medium ${
-                                    isFailed ? "text-red-300" : isProcessing ? "text-yellow-300" : "text-green-300"
+                                    isFailed ? "text-red-300" : isAwaiting ? "text-amber-300" : "text-yellow-300"
                                   }`}>
-                                    {isFailed
-                                      ? "Fehlgeschlagen"
-                                      : isProcessing
-                                      ? "In Bearbeitung"
-                                      : "Erfolgreich"}
+                                    {isFailed ? "Fehlgeschlagen" : isAwaiting ? "Warte auf Bestätigung" : "In Bearbeitung"}
+                                  </span>
+                                  <span className="text-[10px] text-muted-foreground">
+                                    {PROVIDER_LABELS[payment.provider] || payment.provider}
                                   </span>
                                 </div>
                                 <div className="text-xs text-muted-foreground">
-                                  {format(new Date(payment.initiated_at), "dd.MM.yyyy HH:mm", { locale: de })}
+                                  {payment.initiated_at ? format(new Date(payment.initiated_at), "dd.MM.yyyy HH:mm", { locale: de }) : "-"}
                                 </div>
-                                {payment.checkout_id && (
-                                  <div className="text-xs text-muted-foreground mt-1">
-                                    Checkout: {payment.checkout_id.substring(0, 20)}...
-                                  </div>
-                                )}
-                                {payment.transaction_code && (
-                                  <div className="text-xs text-muted-foreground mt-1">
-                                    Transaction: {payment.transaction_code}
-                                  </div>
-                                )}
                               </div>
-                              <div className="text-right">
+                              <div className="text-right space-y-1">
                                 <div className="text-sm font-semibold text-foreground">
-                                  {new Intl.NumberFormat("de-DE", {
-                                    style: "currency",
-                                    currency: payment.currency || "EUR",
-                                  }).format(payment.amount)}
+                                  {new Intl.NumberFormat("de-DE", { style: "currency", currency: payment.currency || "EUR" }).format(payment.amount)}
                                 </div>
+                                {isAwaiting && (
+                                  <div className="flex gap-1">
+                                    <Button size="sm" className="h-6 text-[10px] px-2 bg-emerald-600 hover:bg-emerald-700" onClick={() => handleConfirmTerminalPayment(payment.id)}>
+                                      Bestätigen
+                                    </Button>
+                                    <Button size="sm" variant="ghost" className="h-6 text-[10px] px-2 text-red-300" onClick={() => handleCancelTerminalPayment(payment.id)}>
+                                      Abbrechen
+                                    </Button>
+                                  </div>
+                                )}
+                                {isProcessing && (
+                                  <Button size="sm" variant="ghost" className="h-6 text-[10px] px-2 text-red-300" onClick={() => handleCancelTerminalPayment(payment.id)}>
+                                    Abbrechen
+                                  </Button>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -1503,49 +1643,68 @@ export function OrderDetailDialog({
                               type="button"
                               onClick={() => {
                                 if (isPaymentLocked) return;
-                                if (!restaurant?.sumup_enabled) {
-                                  onNotify?.("SumUp ist für dieses Restaurant nicht aktiviert.", "error");
+                                if (availableTerminals.length === 0) {
+                                  onNotify?.("Keine Kartenterminals eingerichtet. Bitte unter Finanzen > Kartenlesegeräte einrichten.", "error");
                                   return;
                                 }
-                                setPaymentMethod("sumup_card");
+                                setPaymentMethod("terminal");
                                 setPaymentDetailsDirty(true);
                               }}
-                              disabled={isPaymentLocked || !restaurant?.sumup_enabled || !canMutate}
+                              disabled={isPaymentLocked || availableTerminals.length === 0 || !canMutate}
                               className={`inline-flex items-center gap-2 px-3 py-1 rounded-md text-sm border min-h-[30px] ${
-                                paymentMethod === "sumup_card"
+                                paymentMethod === "terminal"
                                   ? "bg-primary text-white border-primary/80 shadow-inner"
-                                  : restaurant?.sumup_enabled
+                                  : availableTerminals.length > 0
                                   ? "text-foreground border-transparent hover:bg-accent"
                                   : "text-muted-foreground border-transparent opacity-50 cursor-not-allowed"
                               } disabled:opacity-60 disabled:cursor-not-allowed`}
-                              title={!restaurant?.sumup_enabled ? "SumUp ist für dieses Restaurant nicht aktiviert" : ""}
+                              title={availableTerminals.length === 0 ? "Keine Kartenterminals eingerichtet" : ""}
                             >
                               <Nfc className="w-4 h-4" />
-                              SumUp Terminal
+                              Kartenterminal
                             </button>
                           </div>
                         </div>
                         
-                        {/* DEAKTIVIERT FÜR ENTWICKLUNGSZWECKE: Terminal-Auswahl ausgeblendet */}
-                        {paymentMethod === "sumup_card" && restaurant?.sumup_enabled && (
+                        {paymentMethod === "terminal" && availableTerminals.length > 0 && (
                           <div className="space-y-3 p-3 bg-background/50 border border-input rounded-md">
-                            <div className="text-sm text-yellow-400 mb-2">
-                              ⚠️ Entwicklungsmodus: Reader-Verwaltung deaktiviert
-                            </div>
+                            {availableTerminals.length > 1 && (
+                              <div>
+                                <div className="text-xs text-muted-foreground mb-1.5">Terminal auswählen</div>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {availableTerminals.map((t) => (
+                                    <button
+                                      key={t.id}
+                                      type="button"
+                                      onClick={() => setSelectedTerminalId(t.id)}
+                                      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs border ${
+                                        selectedTerminalId === t.id
+                                          ? "bg-primary text-white border-primary"
+                                          : "text-foreground border-input hover:bg-accent"
+                                      }`}
+                                    >
+                                      <CreditCard className="w-3 h-3" />
+                                      {t.name}
+                                      <span className="text-[10px] opacity-70">{PROVIDER_LABELS[t.provider]}</span>
+                                    </button>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
                             <Button
-                              onClick={handleStartSumupPayment}
-                              disabled={!canMutate || isStartingSumupPayment || isPaymentLocked || (order?.status !== "served" && order?.status !== "paid")}
+                              onClick={handleStartTerminalPayment}
+                              disabled={!canMutate || isStartingTerminalPayment || isPaymentLocked || !selectedTerminalId || (order?.status !== "served" && order?.status !== "paid")}
                               className="w-full bg-primary hover:bg-primary/90 text-white"
                             >
-                              {isStartingSumupPayment ? (
+                              {isStartingTerminalPayment ? (
                                 <>
                                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                                   Zahlung wird gestartet...
                                 </>
                               ) : (
                                 <>
-                                  <Nfc className="w-4 h-4 mr-2" />
-                                  Zahlung starten (Testmodus)
+                                  <CreditCard className="w-4 h-4 mr-2" />
+                                  Zahlung starten
                                 </>
                               )}
                             </Button>
@@ -1840,9 +1999,12 @@ export function OrderDetailDialog({
                             ? "Bar"
                             : (paymentMethod || order.payment_method) === "card"
                             ? "Karte"
-                            // TODO: Wieder aktivieren, wenn die Reader-Verwaltung wieder funktioniert und dann Karte durch SumUp oder alternative jeweils nach Einstellung ersetzt
+                            : (paymentMethod || order.payment_method) === "terminal"
+                            ? "Kartenterminal"
                             : (paymentMethod || order.payment_method) === "sumup_card"
-                            ? "SumUp Terminal (Dev-Mode)"
+                            ? "SumUp Terminal"
+                            : (paymentMethod || order.payment_method)?.includes("_card")
+                            ? "Kartenterminal"
                             : (paymentMethod || order.payment_method)}
                         </span>
                       </div>

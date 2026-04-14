@@ -1,508 +1,491 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { Loader2, Plus, RefreshCw } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  CheckCircle2,
+  CreditCard,
+  Loader2,
+  Plus,
+  Power,
+  RefreshCw,
+  Settings,
+  Trash2,
+  Wifi,
+  WifiOff,
+  XCircle,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FinanceModuleLayout } from "@/components/finance/finance-module-layout";
 import { restaurantsApi } from "@/lib/api/restaurants";
 import {
-  createReader,
-  getFailedPayments,
-  getPayments,
-  getReaderStatus,
-  listReaders,
-  type SumUpPayment,
-  type SumUpReader,
-  type SumUpReaderStatus,
-} from "@/lib/api/sumup";
+  terminalsApi,
+  PROVIDER_LABELS,
+  type PaymentTerminal,
+  type TerminalPayment,
+  type TerminalProvider,
+} from "@/lib/api/terminals";
 
-type ReaderState = {
-  reader: SumUpReader;
-  status: SumUpReaderStatus | null;
-  statusError: string | null;
-};
-
-type Feedback = {
-  variant: "success" | "error" | "info";
-  message: string;
-} | null;
-
-const DASHBOARD_CARD_HOVER_CLASS =
-  "transform-gpu shadow-md shadow-black/5 transition-all duration-200 ease-out motion-reduce:transition-none hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/10";
-const DASHBOARD_CARD_SURFACE_CLASS =
+const DASHBOARD_CARD_HOVER =
+  "transform-gpu shadow-md shadow-black/5 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-xl hover:shadow-primary/10";
+const DASHBOARD_CARD_SURFACE =
   "relative z-0 border-border bg-card/70 hover:z-40 focus-within:z-40 hover:bg-card/80 hover:border-primary/30";
-const DASHBOARD_ROW_HOVER_CLASS =
-  "transition-colors duration-200 ease-out motion-reduce:transition-none hover:bg-accent/60";
 
-function formatCurrency(amount: number, currency = "EUR"): string {
-  return new Intl.NumberFormat("de-DE", {
-    style: "currency",
-    currency,
-  }).format(amount);
+function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(amount);
 }
 
-function formatDate(value: string | null | undefined): string {
-  if (!value) return "-";
-  const parsed = new Date(value);
-  if (Number.isNaN(parsed.getTime())) return value;
-  return parsed.toLocaleString("de-DE", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+function statusBadge(status: string): { label: string; className: string } {
+  switch (status) {
+    case "successful":
+      return { label: "Erfolgreich", className: "bg-emerald-500/15 text-emerald-300" };
+    case "failed":
+      return { label: "Fehlgeschlagen", className: "bg-red-500/15 text-red-300" };
+    case "canceled":
+      return { label: "Abgebrochen", className: "bg-muted text-muted-foreground" };
+    case "processing":
+      return { label: "Verarbeitung", className: "bg-blue-500/15 text-blue-300" };
+    case "awaiting_confirmation":
+      return { label: "Warte auf Bestätigung", className: "bg-amber-500/15 text-amber-300" };
+    case "pending":
+      return { label: "Ausstehend", className: "bg-amber-500/15 text-amber-300" };
+    default:
+      return { label: status, className: "bg-muted text-muted-foreground" };
+  }
 }
 
-function mapReaderBadge(status: SumUpReader["status"]): { label: string; className: string } {
-  if (status === "paired") {
-    return { label: "Gekoppelt", className: "bg-emerald-500/15 text-emerald-300" };
-  }
-  if (status === "processing") {
-    return { label: "Verarbeitung", className: "bg-blue-500/15 text-blue-300" };
-  }
-  if (status === "expired") {
-    return { label: "Abgelaufen", className: "bg-amber-500/15 text-amber-300" };
-  }
-  return { label: "Unbekannt", className: "bg-muted text-muted-foreground" };
-}
+export default function KartenlesegeraetePage() {
+  const queryClient = useQueryClient();
 
-function mapConnectionBadge(status: SumUpReaderStatus | null): { label: string; className: string } {
-  if (!status) {
-    return { label: "Nicht verfügbar", className: "bg-muted text-muted-foreground" };
-  }
-  if (status.status === "ONLINE") {
-    return { label: "Online", className: "bg-emerald-500/15 text-emerald-300" };
-  }
-  return { label: "Offline", className: "bg-red-500/15 text-red-300" };
-}
-
-export default function FinanceCardReadersPage() {
-  const [pairingCode, setPairingCode] = useState("");
-  const [readerName, setReaderName] = useState("");
-  const [readerLocation, setReaderLocation] = useState("");
-  const [feedback, setFeedback] = useState<Feedback>(null);
-
+  // Restaurant
   const restaurantQuery = useQuery({
-    queryKey: ["finance", "card-readers", "restaurant"],
-    queryFn: async () => {
-      const restaurants = await restaurantsApi.list();
-      return restaurants[0] ?? null;
-    },
-    staleTime: 60 * 1000,
+    queryKey: ["restaurants"],
+    queryFn: () => restaurantsApi.list(),
+  });
+  const restaurantId = restaurantQuery.data?.[0]?.id ?? null;
+
+  // Terminals
+  const terminalsQuery = useQuery({
+    queryKey: ["terminals"],
+    queryFn: () => terminalsApi.list(),
+    enabled: !!restaurantId,
+    refetchInterval: 30_000,
   });
 
-  const restaurant = restaurantQuery.data;
-  const restaurantId = restaurant?.id ?? null;
-  const sumupEnabled = Boolean(restaurant?.sumup_enabled);
-
-  const readersQuery = useQuery({
-    queryKey: ["finance", "card-readers", "list", restaurantId],
-    enabled: Boolean(restaurantId) && sumupEnabled,
-    queryFn: async (): Promise<SumUpReader[]> => listReaders(restaurantId!),
-    refetchInterval: 30 * 1000,
-  });
-
-  const readerStatesQuery = useQuery({
-    queryKey: [
-      "finance",
-      "card-readers",
-      "status",
-      restaurantId,
-      (readersQuery.data ?? []).map((reader) => reader.id).join(","),
-    ],
-    enabled: Boolean(restaurantId) && sumupEnabled && (readersQuery.data?.length ?? 0) > 0,
-    queryFn: async (): Promise<ReaderState[]> => {
-      const readers = readersQuery.data ?? [];
-      const states = await Promise.all(
-        readers.map(async (reader) => {
-          try {
-            const status = await getReaderStatus(restaurantId!, reader.id);
-            return {
-              reader,
-              status,
-              statusError: null,
-            } satisfies ReaderState;
-          } catch (error) {
-            const message = error instanceof Error ? error.message : "Status konnte nicht geladen werden";
-            return {
-              reader,
-              status: null,
-              statusError: message,
-            } satisfies ReaderState;
-          }
-        })
-      );
-      return states;
-    },
-    refetchInterval: 30 * 1000,
-  });
-
+  // Payments
   const paymentsQuery = useQuery({
-    queryKey: ["finance", "card-readers", "payments", restaurantId],
-    enabled: Boolean(restaurantId) && sumupEnabled,
-    queryFn: async (): Promise<SumUpPayment[]> => getPayments(restaurantId!, undefined, 40),
-    refetchInterval: 30 * 1000,
+    queryKey: ["terminal-payments"],
+    queryFn: () => terminalsApi.listPayments(undefined, 40),
+    enabled: !!restaurantId,
+    refetchInterval: 30_000,
   });
 
-  const failedPaymentsQuery = useQuery({
-    queryKey: ["finance", "card-readers", "failed-payments", restaurantId],
-    enabled: Boolean(restaurantId) && sumupEnabled,
-    queryFn: async (): Promise<SumUpPayment[]> => getFailedPayments(restaurantId!, 20),
-    refetchInterval: 30 * 1000,
-  });
+  const terminals = terminalsQuery.data ?? [];
+  const payments = paymentsQuery.data ?? [];
 
-  const createReaderMutation = useMutation({
-    mutationFn: async () => {
-      if (!restaurantId) {
-        throw new Error("Kein Restaurant ausgewählt.");
-      }
-      const metadata = readerLocation.trim() ? { location: readerLocation.trim() } : undefined;
-      return createReader(restaurantId, pairingCode.trim(), readerName.trim(), metadata);
-    },
-    onSuccess: async () => {
-      setFeedback({ variant: "success", message: "Kartenlesegerät erfolgreich gekoppelt." });
-      setPairingCode("");
-      setReaderName("");
-      setReaderLocation("");
-      await Promise.all([
-        readersQuery.refetch(),
-        readerStatesQuery.refetch(),
-        paymentsQuery.refetch(),
-        failedPaymentsQuery.refetch(),
-      ]);
-    },
-    onError: (error) => {
-      setFeedback({
-        variant: "error",
-        message: error instanceof Error ? error.message : "Koppeln fehlgeschlagen.",
-      });
+  // Add terminal form
+  const [newProvider, setNewProvider] = useState<TerminalProvider>("manual");
+  const [newName, setNewName] = useState("");
+  const [newPairingCode, setNewPairingCode] = useState("");
+  const [newLocation, setNewLocation] = useState("");
+
+  const createMutation = useMutation({
+    mutationFn: () =>
+      terminalsApi.create({
+        provider: newProvider,
+        name: newName.trim(),
+        pairing_code: newProvider === "sumup" ? newPairingCode.trim() : undefined,
+        metadata: newLocation ? { location: newLocation.trim() } : undefined,
+      }),
+    onSuccess: () => {
+      setNewName("");
+      setNewPairingCode("");
+      setNewLocation("");
+      queryClient.invalidateQueries({ queryKey: ["terminals"] });
     },
   });
 
-  const readers = useMemo(() => readersQuery.data ?? [], [readersQuery.data]);
-  const readerStates = useMemo(() => readerStatesQuery.data ?? [], [readerStatesQuery.data]);
-  const displayReaderStates: ReaderState[] =
-    readerStates.length > 0
-      ? readerStates
-      : readers.map((reader) => ({ reader, status: null, statusError: null }));
-  const payments = useMemo(() => paymentsQuery.data ?? [], [paymentsQuery.data]);
-  const failedPayments = useMemo(
-    () => failedPaymentsQuery.data ?? [],
-    [failedPaymentsQuery.data]
-  );
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => terminalsApi.delete(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["terminals"] }),
+  });
 
-  const isLoading =
-    restaurantQuery.isLoading ||
-    readersQuery.isLoading ||
-    paymentsQuery.isLoading ||
-    failedPaymentsQuery.isLoading ||
-    readerStatesQuery.isLoading;
+  const setDefaultMutation = useMutation({
+    mutationFn: (id: string) => terminalsApi.update(id, { is_default: true }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["terminals"] }),
+  });
 
-  const isRefreshing =
-    restaurantQuery.isFetching ||
-    readersQuery.isFetching ||
-    paymentsQuery.isFetching ||
-    failedPaymentsQuery.isFetching ||
-    readerStatesQuery.isFetching;
+  const toggleActiveMutation = useMutation({
+    mutationFn: ({ id, active }: { id: string; active: boolean }) =>
+      terminalsApi.update(id, { is_active: active }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["terminals"] }),
+  });
 
+  // Summary
   const summary = useMemo(() => {
-    const online = displayReaderStates.filter((entry) => entry.status?.status === "ONLINE").length;
-    const paired = readers.filter((reader) => reader.status === "paired").length;
-    const offline = Math.max(0, displayReaderStates.length - online);
+    const activeCount = terminals.filter((t) => t.is_active).length;
+    const onlineCount = terminals.filter(
+      (t) => t.live_status?.status === "ONLINE"
+    ).length;
+    const successPayments = payments.filter((p) => p.status === "successful");
+    const successRevenue = successPayments.reduce((sum, p) => sum + p.amount, 0);
+    const failedCount = payments.filter(
+      (p) => p.status === "failed" || p.status === "canceled"
+    ).length;
+    return { activeCount, onlineCount, successRevenue, failedCount, total: terminals.length };
+  }, [terminals, payments]);
 
-    const paymentCounts = payments.reduce<Record<string, number>>((acc, payment) => {
-      acc[payment.status] = (acc[payment.status] ?? 0) + 1;
-      return acc;
-    }, {});
-
-    const successfulRevenue = payments
-      .filter((payment) => payment.status === "successful")
-      .reduce((sum, payment) => sum + (Number(payment.amount) || 0), 0);
-
-    return {
-      totalReaders: readers.length,
-      pairedReaders: paired,
-      onlineReaders: online,
-      offlineReaders: offline,
-      successfulRevenue,
-      failedPaymentCount: failedPayments.length,
-      pendingPayments: (paymentCounts.pending ?? 0) + (paymentCounts.processing ?? 0),
-    };
-  }, [displayReaderStates, failedPayments.length, payments, readers]);
-
-  const refreshAll = async () => {
-    setFeedback(null);
-    await Promise.all([
-      restaurantQuery.refetch(),
-      readersQuery.refetch(),
-      readerStatesQuery.refetch(),
-      paymentsQuery.refetch(),
-      failedPaymentsQuery.refetch(),
-    ]);
-  };
-
-  const queryError =
-    (restaurantQuery.error as Error | null) ||
-    (readersQuery.error as Error | null) ||
-    (paymentsQuery.error as Error | null) ||
-    (failedPaymentsQuery.error as Error | null) ||
-    null;
+  const canCreate =
+    newName.trim().length >= 2 &&
+    (newProvider !== "sumup" || newPairingCode.trim().length >= 4);
 
   return (
     <FinanceModuleLayout
       title="Kartenlesegeräte"
-      description="Reader-Verwaltung, Live-Status und Zahlungsverlauf aus der SumUp-Integration."
+      description="Terminal-Verwaltung, Live-Status und Zahlungsverlauf."
       actions={
-        <Button type="button" variant="outline" size="sm" onClick={refreshAll} disabled={isRefreshing} className="gap-2">
-          <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            queryClient.invalidateQueries({ queryKey: ["terminals"] });
+            queryClient.invalidateQueries({ queryKey: ["terminal-payments"] });
+          }}
+          className="gap-2"
+        >
+          <RefreshCw className="h-4 w-4" />
           Aktualisieren
         </Button>
       }
     >
       <div className="space-y-6">
-        {feedback ? (
-          <Card
-            className={
-              feedback.variant === "success"
-                ? "border-emerald-500/40 bg-emerald-500/10"
-                : feedback.variant === "error"
-                  ? "border-red-500/40 bg-red-500/10"
-                  : "border-blue-500/40 bg-blue-500/10"
-            }
-          >
-            <CardContent className="pt-4 text-sm">{feedback.message}</CardContent>
-          </Card>
-        ) : null}
-
-        {queryError ? (
-          <Card className="border-red-500/40 bg-red-500/10">
-            <CardContent className="pt-4 text-sm text-red-200">
-              Daten konnten nicht geladen werden: {queryError.message}
-            </CardContent>
-          </Card>
-        ) : null}
-
-        {!sumupEnabled ? (
-          <Card className="border-amber-500/40 bg-amber-500/10">
-            <CardHeader>
-              <CardTitle className="text-base">SumUp ist nicht aktiviert</CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm text-amber-100">
-              Für das aktuelle Restaurant ist die Kartenlesegeräte-Integration deaktiviert.
-            </CardContent>
-          </Card>
-        ) : null}
-
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 items-start">
-          <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
+        {/* Summary */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+          <Card className={`${DASHBOARD_CARD_SURFACE} ${DASHBOARD_CARD_HOVER}`}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Reader gesamt</CardTitle>
+              <CardTitle className="text-sm">Terminals gesamt</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold">{summary.totalReaders}</p>
-              <p className="text-xs text-muted-foreground mt-1">{summary.pairedReaders} gekoppelt</p>
+              <p className="text-2xl font-bold">{summary.total}</p>
+              <p className="text-xs text-muted-foreground">{summary.activeCount} aktiv</p>
             </CardContent>
           </Card>
-
-          <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
+          <Card className={`${DASHBOARD_CARD_SURFACE} ${DASHBOARD_CARD_HOVER}`}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Reader-Status</CardTitle>
+              <CardTitle className="text-sm">Online-Status</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold">{summary.onlineReaders}</p>
-              <p className="text-xs text-muted-foreground mt-1">{summary.offlineReaders} offline / unbekannt</p>
+              <p className="text-2xl font-bold">{summary.onlineCount}</p>
+              <p className="text-xs text-muted-foreground">
+                von {terminals.filter((t) => t.provider === "sumup").length} SumUp-Terminals online
+              </p>
             </CardContent>
           </Card>
-
-          <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
+          <Card className={`${DASHBOARD_CARD_SURFACE} ${DASHBOARD_CARD_HOVER}`}>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm">Erfolgreiche Kartenzahlungen</CardTitle>
+              <CardTitle className="text-sm">Kartenzahlungen</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold">{formatCurrency(summary.successfulRevenue)}</p>
-              <p className="text-xs text-muted-foreground mt-1">aus den letzten {payments.length} Zahlungen</p>
+              <p className="text-2xl font-bold">{formatCurrency(summary.successRevenue)}</p>
+              <p className="text-xs text-muted-foreground">
+                {payments.filter((p) => p.status === "successful").length} erfolgreiche Zahlungen
+              </p>
             </CardContent>
           </Card>
-
-          <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
+          <Card className={`${DASHBOARD_CARD_SURFACE} ${DASHBOARD_CARD_HOVER}`}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">Probleme</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold">{summary.failedPaymentCount}</p>
-              <p className="text-xs text-muted-foreground mt-1">{summary.pendingPayments} Zahlungen in Bearbeitung</p>
+              <p className="text-2xl font-bold">{summary.failedCount}</p>
+              <p className="text-xs text-muted-foreground">fehlgeschlagene Zahlungen</p>
             </CardContent>
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 items-start">
-          <Card className={`xl:col-span-2 ${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
+        {/* Terminals + Add form */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
+          <Card className={`xl:col-span-2 ${DASHBOARD_CARD_SURFACE} ${DASHBOARD_CARD_HOVER}`}>
             <CardHeader>
-              <CardTitle className="text-base">Kartenlesegeräte</CardTitle>
+              <CardTitle className="text-base">Terminals</CardTitle>
             </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="py-10 flex items-center justify-center text-sm text-muted-foreground gap-2">
+            <CardContent className="space-y-3">
+              {terminalsQuery.isLoading ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground py-4">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Lade Reader...
+                  Lade Terminals...
                 </div>
-              ) : readers.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Noch keine Reader vorhanden.</p>
+              ) : terminals.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-4">
+                  Noch keine Terminals eingerichtet.
+                </p>
               ) : (
-                <div className="space-y-3">
-                  {displayReaderStates.map((entry) => {
-                    const readerBadge = mapReaderBadge(entry.reader.status);
-                    const connectionBadge = mapConnectionBadge(entry.status);
-                    return (
-                      <div
-                        key={entry.reader.id}
-                        className={`rounded-md border border-border/70 bg-background/40 p-3 ${DASHBOARD_ROW_HOVER_CLASS}`}
-                      >
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                          <div className="space-y-1">
-                            <p className="text-sm font-semibold text-foreground">{entry.reader.name}</p>
-                            <p className="text-xs text-muted-foreground font-mono">{entry.reader.id}</p>
-                            <p className="text-xs text-muted-foreground">
-                              Modell: {entry.reader.device.model} | Identifier: {entry.reader.device.identifier}
-                            </p>
-                          </div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className={`inline-flex rounded-full px-2 py-1 text-xs ${readerBadge.className}`}>
-                              {readerBadge.label}
+                terminals.map((terminal) => (
+                  <div
+                    key={terminal.id}
+                    className="rounded-lg border border-border/70 bg-background/60 p-4 space-y-2"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <CreditCard className="h-4 w-4 text-primary" />
+                          <span className="font-medium text-foreground">{terminal.name}</span>
+                          {terminal.is_default ? (
+                            <span className="rounded-full bg-primary/15 text-primary px-2 py-0.5 text-[10px] font-medium">
+                              Standard
                             </span>
-                            <span className={`inline-flex rounded-full px-2 py-1 text-xs ${connectionBadge.className}`}>
-                              {connectionBadge.label}
-                            </span>
-                          </div>
+                          ) : null}
                         </div>
-
-                        <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-xs">
-                          <div className="rounded border border-border/60 bg-card/50 px-2 py-1.5">
-                            <p className="text-muted-foreground">Batterie</p>
-                            <p className="text-foreground font-medium">
-                              {entry.status?.battery_level != null ? `${Math.round(entry.status.battery_level)}%` : "-"}
-                            </p>
-                          </div>
-                          <div className="rounded border border-border/60 bg-card/50 px-2 py-1.5">
-                            <p className="text-muted-foreground">Firmware</p>
-                            <p className="text-foreground font-medium">{entry.status?.firmware_version ?? "-"}</p>
-                          </div>
-                          <div className="rounded border border-border/60 bg-card/50 px-2 py-1.5">
-                            <p className="text-muted-foreground">Reader State</p>
-                            <p className="text-foreground font-medium">{entry.status?.state ?? "-"}</p>
-                          </div>
-                          <div className="rounded border border-border/60 bg-card/50 px-2 py-1.5">
-                            <p className="text-muted-foreground">Letzte Aktivität</p>
-                            <p className="text-foreground font-medium">{formatDate(entry.status?.last_activity)}</p>
-                          </div>
+                        <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
+                          <span className="rounded bg-muted px-1.5 py-0.5">{PROVIDER_LABELS[terminal.provider]}</span>
+                          {terminal.provider_terminal_id ? (
+                            <span className="font-mono">{terminal.provider_terminal_id}</span>
+                          ) : null}
+                          {terminal.metadata?.location ? (
+                            <span>{terminal.metadata.location as string}</span>
+                          ) : null}
                         </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {/* Live status for SumUp */}
+                        {terminal.provider === "sumup" && terminal.live_status ? (
+                          <span
+                            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium ${
+                              terminal.live_status.status === "ONLINE"
+                                ? "bg-emerald-500/15 text-emerald-300"
+                                : "bg-red-500/15 text-red-300"
+                            }`}
+                          >
+                            {terminal.live_status.status === "ONLINE" ? (
+                              <Wifi className="h-3 w-3" />
+                            ) : (
+                              <WifiOff className="h-3 w-3" />
+                            )}
+                            {terminal.live_status.status === "ONLINE" ? "Online" : "Offline"}
+                          </span>
+                        ) : null}
+                        {terminal.is_active ? (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 text-emerald-300 px-2 py-0.5 text-[10px] font-medium">
+                            Aktiv
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-muted text-muted-foreground px-2 py-0.5 text-[10px] font-medium">
+                            Inaktiv
+                          </span>
+                        )}
+                      </div>
+                    </div>
 
-                        {entry.statusError ? (
-                          <p className="mt-2 text-xs text-amber-300">Statusfehler: {entry.statusError}</p>
+                    {/* SumUp details */}
+                    {terminal.provider === "sumup" && terminal.live_status ? (
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                        {terminal.live_status.battery_level != null ? (
+                          <div className="rounded border border-border/50 bg-muted/30 px-2 py-1">
+                            <span className="text-muted-foreground">Batterie:</span>{" "}
+                            {terminal.live_status.battery_level}%
+                          </div>
+                        ) : null}
+                        {terminal.live_status.firmware_version ? (
+                          <div className="rounded border border-border/50 bg-muted/30 px-2 py-1">
+                            <span className="text-muted-foreground">Firmware:</span>{" "}
+                            {terminal.live_status.firmware_version}
+                          </div>
+                        ) : null}
+                        {terminal.live_status.state ? (
+                          <div className="rounded border border-border/50 bg-muted/30 px-2 py-1">
+                            <span className="text-muted-foreground">Status:</span>{" "}
+                            {terminal.live_status.state}
+                          </div>
+                        ) : null}
+                        {terminal.live_status.last_activity ? (
+                          <div className="rounded border border-border/50 bg-muted/30 px-2 py-1">
+                            <span className="text-muted-foreground">Letzte Aktivität:</span>{" "}
+                            {new Date(terminal.live_status.last_activity).toLocaleString("de-DE")}
+                          </div>
                         ) : null}
                       </div>
-                    );
-                  })}
-                </div>
+                    ) : null}
+
+                    {/* Actions */}
+                    <div className="flex gap-1.5 pt-1">
+                      {!terminal.is_default ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="gap-1 text-xs"
+                          onClick={() => setDefaultMutation.mutate(terminal.id)}
+                        >
+                          <CheckCircle2 className="h-3 w-3" />
+                          Als Standard
+                        </Button>
+                      ) : null}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="gap-1 text-xs"
+                        onClick={() =>
+                          toggleActiveMutation.mutate({
+                            id: terminal.id,
+                            active: !terminal.is_active,
+                          })
+                        }
+                      >
+                        <Power className="h-3 w-3" />
+                        {terminal.is_active ? "Deaktivieren" : "Aktivieren"}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="gap-1 text-xs text-red-300"
+                        onClick={() => deleteMutation.mutate(terminal.id)}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                        Entfernen
+                      </Button>
+                    </div>
+                  </div>
+                ))
               )}
             </CardContent>
           </Card>
 
-          <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
+          {/* Add terminal form */}
+          <Card className={`${DASHBOARD_CARD_SURFACE} ${DASHBOARD_CARD_HOVER}`}>
             <CardHeader>
-              <CardTitle className="text-base">Reader koppeln</CardTitle>
+              <div className="flex items-center gap-2">
+                <Plus className="h-4 w-4 text-primary" />
+                <CardTitle className="text-base">Terminal hinzufügen</CardTitle>
+              </div>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Pairing Code</label>
+            <CardContent className="space-y-4">
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1">Typ</label>
+                <div className="flex gap-2">
+                  <Button
+                    variant={newProvider === "manual" ? "default" : "outline"}
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => setNewProvider("manual")}
+                  >
+                    Manuelles Terminal
+                  </Button>
+                  <Button
+                    variant={newProvider === "sumup" ? "default" : "outline"}
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => setNewProvider("sumup")}
+                  >
+                    SumUp
+                  </Button>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1">Name</label>
                 <Input
-                  value={pairingCode}
-                  onChange={(event) => setPairingCode(event.target.value)}
-                  placeholder="z. B. 1234-5678"
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  placeholder={newProvider === "sumup" ? "SumUp Solo Tresen" : "Kartenterminal Kasse 1"}
                 />
               </div>
-              <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Reader Name</label>
+
+              {newProvider === "sumup" ? (
+                <div>
+                  <label className="text-xs text-muted-foreground block mb-1">Pairing-Code</label>
+                  <Input
+                    value={newPairingCode}
+                    onChange={(e) => setNewPairingCode(e.target.value)}
+                    placeholder="ABCD1234"
+                  />
+                </div>
+              ) : null}
+
+              <div>
+                <label className="text-xs text-muted-foreground block mb-1">Standort (optional)</label>
                 <Input
-                  value={readerName}
-                  onChange={(event) => setReaderName(event.target.value)}
-                  placeholder="Tresen Terminal"
+                  value={newLocation}
+                  onChange={(e) => setNewLocation(e.target.value)}
+                  placeholder="z.B. Tresen, Terrasse, Bar"
                 />
               </div>
-              <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Standort (optional)</label>
-                <Input
-                  value={readerLocation}
-                  onChange={(event) => setReaderLocation(event.target.value)}
-                  placeholder="Bar / Kasse 1"
-                />
-              </div>
+
+              {newProvider === "manual" ? (
+                <p className="text-xs text-muted-foreground">
+                  Manuelle Terminals haben keine API-Verbindung. Zahlungen werden manuell bestätigt.
+                </p>
+              ) : null}
+
               <Button
-                type="button"
                 className="w-full gap-2"
-                disabled={
-                  !restaurantId ||
-                  !sumupEnabled ||
-                  createReaderMutation.isPending ||
-                  pairingCode.trim().length < 4 ||
-                  readerName.trim().length < 2
-                }
-                onClick={() => createReaderMutation.mutate()}
+                disabled={!canCreate || createMutation.isPending}
+                onClick={() => createMutation.mutate()}
               >
-                {createReaderMutation.isPending ? (
+                {createMutation.isPending ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <Plus className="h-4 w-4" />
                 )}
-                Reader koppeln
+                Terminal hinzufügen
               </Button>
-              <p className="text-xs text-muted-foreground">
-                Nach erfolgreichem Pairing wird der Reader automatisch in der Liste aktualisiert.
-              </p>
+
+              {createMutation.isError ? (
+                <p className="text-xs text-red-300">
+                  Fehler: {(createMutation.error as Error)?.message || "Unbekannt"}
+                </p>
+              ) : null}
             </CardContent>
           </Card>
         </div>
 
-        <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
+        {/* Payment history */}
+        <Card className={`${DASHBOARD_CARD_SURFACE} ${DASHBOARD_CARD_HOVER}`}>
           <CardHeader>
-            <CardTitle className="text-base">Letzte Kartenzahlungen</CardTitle>
+            <CardTitle className="text-base">Zahlungsverlauf</CardTitle>
           </CardHeader>
           <CardContent>
             {payments.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Keine Zahlungen vorhanden.</p>
+              <p className="text-sm text-muted-foreground py-4">Noch keine Kartenzahlungen.</p>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[860px] text-sm">
-                  <thead>
-                    <tr className="text-left border-b border-border text-muted-foreground">
-                      <th className="py-2 pr-3">Zeitpunkt</th>
-                      <th className="py-2 pr-3">Order</th>
-                      <th className="py-2 pr-3">Reader</th>
-                      <th className="py-2 pr-3">Status</th>
-                      <th className="py-2 pr-3">Betrag</th>
-                      <th className="py-2 pr-3">Checkout</th>
+              <div className="overflow-x-auto rounded-lg border border-border">
+                <table className="w-full min-w-[700px] text-sm">
+                  <thead className="bg-muted/40">
+                    <tr className="text-left text-muted-foreground">
+                      <th className="px-4 py-2.5 font-medium">Zeitpunkt</th>
+                      <th className="px-4 py-2.5 font-medium">Provider</th>
+                      <th className="px-4 py-2.5 font-medium">Terminal</th>
+                      <th className="px-4 py-2.5 font-medium">Status</th>
+                      <th className="px-4 py-2.5 font-medium text-right">Betrag</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {payments.map((payment) => {
-                      const statusTone =
-                        payment.status === "successful"
-                          ? "text-emerald-300"
-                          : payment.status === "failed" || payment.status === "canceled"
-                            ? "text-red-300"
-                            : "text-amber-300";
+                  <tbody className="divide-y divide-border bg-card">
+                    {payments.map((p) => {
+                      const badge = statusBadge(p.status);
+                      const terminal = terminals.find((t) => t.id === p.terminal_id);
                       return (
-                        <tr key={payment.id} className={`border-b border-border/60 align-top ${DASHBOARD_ROW_HOVER_CLASS}`}>
-                          <td className="py-2 pr-3 whitespace-nowrap">{formatDate(payment.initiated_at)}</td>
-                          <td className="py-2 pr-3 font-mono text-xs">{payment.order_id.slice(0, 8)}...</td>
-                          <td className="py-2 pr-3 font-mono text-xs">{payment.reader_id ?? "-"}</td>
-                          <td className={`py-2 pr-3 ${statusTone}`}>{payment.status}</td>
-                          <td className="py-2 pr-3 whitespace-nowrap">{formatCurrency(payment.amount, payment.currency)}</td>
-                          <td className="py-2 pr-3 font-mono text-xs">{payment.checkout_id ?? "-"}</td>
+                        <tr key={p.id} className="transition-colors hover:bg-accent/60">
+                          <td className="px-4 py-2.5 text-muted-foreground whitespace-nowrap">
+                            {p.initiated_at
+                              ? new Date(p.initiated_at).toLocaleString("de-DE")
+                              : "-"}
+                          </td>
+                          <td className="px-4 py-2.5">
+                            <span className="rounded bg-muted px-1.5 py-0.5 text-xs">
+                              {PROVIDER_LABELS[p.provider] || p.provider}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2.5">{terminal?.name || "-"}</td>
+                          <td className="px-4 py-2.5">
+                            <span
+                              className={`rounded-full px-2 py-0.5 text-xs font-medium ${badge.className}`}
+                            >
+                              {badge.label}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2.5 text-right font-medium">
+                            {formatCurrency(p.amount)}
+                          </td>
                         </tr>
                       );
                     })}

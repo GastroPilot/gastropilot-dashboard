@@ -160,3 +160,131 @@ export async function createReceipt(
 ): Promise<ReceiptResponse> {
   return api.post<ReceiptResponse>("/fiskaly/receipts/create", data);
 }
+
+// Daily Closing (Tagesabschluss / DSFinV-K)
+
+export interface DailyClosingRequest {
+  business_date: string; // YYYY-MM-DD
+}
+
+export interface DailyClosing {
+  closing_id: string;
+  business_date: string;
+  state: string;
+  total_amount: number | null;
+  total_cash: number | null;
+  total_non_cash: number | null;
+  transaction_count: number | null;
+  error: string | null;
+  is_automatic: boolean;
+  dsfinvk_export_id: string | null;
+  dsfinvk_export_state: string | null;
+  created_at: string | null;
+  updated_at?: string | null;
+}
+
+export async function createDailyClosing(
+  data: DailyClosingRequest
+): Promise<DailyClosing> {
+  return api.post<DailyClosing>("/fiskaly/daily-closing", data);
+}
+
+export async function listDailyClosings(
+  limit: number = 50,
+  offset: number = 0
+): Promise<DailyClosing[]> {
+  return api.get<DailyClosing[]>(
+    `/fiskaly/daily-closings?limit=${limit}&offset=${offset}`
+  );
+}
+
+export async function getDailyClosing(
+  closingId: string
+): Promise<DailyClosing> {
+  return api.get<DailyClosing>(`/fiskaly/daily-closings/${closingId}`);
+}
+
+export async function deleteDailyClosing(
+  closingId: string
+): Promise<{ status: string; closing_id: string }> {
+  return api.delete<{ status: string; closing_id: string }>(
+    `/fiskaly/daily-closings/${closingId}`
+  );
+}
+
+// DSFinV-K Export
+
+export interface DsfinvkExportRequest {
+  business_date_start?: string;
+  business_date_end?: string;
+  closing_id?: string;
+  format?: "ZIP" | "TAR";
+}
+
+export interface DsfinvkExportResponse {
+  export_id: string;
+  state: string;
+}
+
+export interface DsfinvkExportStatus {
+  export_id: string;
+  state: "PENDING" | "WORKING" | "COMPLETED" | "ERROR" | "CANCELLED";
+  time_creation: number | null;
+  time_update: number | null;
+}
+
+export interface DsfinvkExportListItem {
+  export_id: string;
+  state: string;
+  time_creation: number | null;
+  time_update: number | null;
+}
+
+export async function triggerDsfinvkExport(
+  data?: DsfinvkExportRequest
+): Promise<DsfinvkExportResponse> {
+  return api.post<DsfinvkExportResponse>(
+    "/fiskaly/dsfinvk-exports/trigger",
+    data ?? {}
+  );
+}
+
+export async function getDsfinvkExportStatus(
+  exportId: string
+): Promise<DsfinvkExportStatus> {
+  return api.get<DsfinvkExportStatus>(
+    `/fiskaly/dsfinvk-exports/${exportId}/status`
+  );
+}
+
+export async function listDsfinvkExports(): Promise<DsfinvkExportListItem[]> {
+  return api.get<DsfinvkExportListItem[]>("/fiskaly/dsfinvk-exports");
+}
+
+export function getDsfinvkExportDownloadUrl(exportId: string): string {
+  return `/fiskaly/dsfinvk-exports/${exportId}/download`;
+}
+
+export function getDailyClosingPdfUrl(closingId: string): string {
+  return `/fiskaly/daily-closings/${closingId}/pdf`;
+}
+
+// Daily Closing Warnings
+
+export interface DailyClosingWarning {
+  type: string;
+  severity: string;
+  business_date: string;
+  closing_id: string;
+  state: string;
+  total_amount: number | null;
+  message: string;
+}
+
+export async function getDailyClosingWarnings(): Promise<{
+  warnings: DailyClosingWarning[];
+}> {
+  return api.get<{ warnings: DailyClosingWarning[] }>(
+    "/fiskaly/daily-closing-warnings"
+  );
+}
