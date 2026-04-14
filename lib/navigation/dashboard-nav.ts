@@ -90,9 +90,13 @@ export function buildDashboardNavLinks({
     {
       href: "/dashboard/finanzen/tse",
       label: "TSE / KassenSichV",
-      active:
-        currentPath.startsWith("/dashboard/finanzen/tse") ||
-        currentPath.startsWith("/dashboard/finanzen/finanzamt-export"),
+      active: currentPath.startsWith("/dashboard/finanzen/tse"),
+      show: isOwner && !isGrundstatus,
+    },
+    {
+      href: "/dashboard/finanzen/finanzamt-export",
+      label: "Finanzamt-Export",
+      active: currentPath.startsWith("/dashboard/finanzen/finanzamt-export"),
       show: isOwner && !isGrundstatus,
     },
     {
@@ -157,6 +161,7 @@ const GROUP_ORDER: Array<{ title: string; hrefs: string[] }> = [
       "/dashboard/finanzen/tse",
       "/dashboard/finanzen/rechnungs-editor",
       "/dashboard/finanzen/tagesabschluss",
+      "/dashboard/finanzen/finanzamt-export",
     ],
   },
   {
