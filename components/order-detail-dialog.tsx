@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, } from "@/components/ui/dialog";
 import { format, parseISO } from "date-fns";
 import { de } from "date-fns/locale";
-import { ShoppingCart, Table as TableIcon, Plus, Trash2, Euro, Users, FileText, X, CheckCircle, Clock, Search, Download, Check, ChevronDown, CreditCard, Banknote, Nfc, Loader2, AlertTriangle, XCircle, } from "lucide-react";
+import { ShoppingCart, Table as TableIcon, Plus, Trash2, Euro, Users, FileText, X, CheckCircle, Clock, Search, Download, Check, ChevronDown, CreditCard, Banknote, Nfc, Loader2, AlertTriangle, XCircle, Printer, Receipt } from "lucide-react";
 import { confirmAction } from "@/lib/utils";
 import { getApiUrlForEndpoint } from "@/lib/api/client";
 import { createReceipt, getTransactionForOrder } from "@/lib/api/fiskaly";
@@ -827,9 +827,8 @@ export function OrderDetailDialog({
     }).format(amount);
   };
 
-  const handleDownloadInvoice = async () => {
-    if (!order || !restaurantId) return;
-    
+  const _downloadPdf = async (endpoint: string, filename: string, label: string) => {
+    if (!order) return;
     try {
       const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
       if (!token) {
@@ -837,16 +836,11 @@ export function OrderDetailDialog({
         return;
       }
 
-      const pdfUrl = getApiUrlForEndpoint(`/invoices/${order.id}/pdf`);
-      const response = await fetch(
-        pdfUrl,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          credentials: "include",
-        }
-      );
+      const pdfUrl = getApiUrlForEndpoint(endpoint);
+      const response = await fetch(pdfUrl, {
+        headers: { Authorization: `Bearer ${token}` },
+        credentials: "include",
+      });
 
       if (!response.ok) {
         if (response.status === 401 || response.status === 403) {
@@ -854,8 +848,7 @@ export function OrderDetailDialog({
           return;
         }
         const errorText = await response.text().catch(() => "Unbekannter Fehler");
-        console.error("PDF-Generierungsfehler:", response.status, errorText);
-        onNotify?.(`Fehler beim Generieren der Rechnung: ${response.status} ${errorText}`, "error");
+        onNotify?.(`Fehler: ${response.status} ${errorText}`, "error");
         return;
       }
 
@@ -863,16 +856,87 @@ export function OrderDetailDialog({
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `rechnung_${order.order_number || order.id}.pdf`;
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      
-      onNotify?.("Rechnung heruntergeladen", "success");
-    } catch (error) {
-      console.error("Fehler beim Download der Rechnung:", error);
-      onNotify?.("Fehler beim Download der Rechnung", "error");
+      onNotify?.(`${label} heruntergeladen`, "success");
+    } catch {
+      onNotify?.(`Fehler beim Download: ${label}`, "error");
+    }
+  };
+
+  const handleDownloadInvoice = () =>
+    _downloadPdf(
+      `/invoices/${order?.id}/pdf`,
+      `rechnung_${order?.order_number || order?.id}.pdf`,
+      "Rechnung"
+    );
+
+  const handleDownloadKassenbeleg = () =>
+    _downloadPdf(
+      `/receipts/${order?.id}/kassenbeleg`,
+      `kassenbeleg_${order?.order_number || order?.id}.pdf`,
+      "Kassenbeleg"
+    );
+
+  const handleDownloadBewirtungsbeleg = () =>
+    _downloadPdf(
+      `/receipts/${order?.id}/bewirtungsbeleg`,
+      `bewirtungsbeleg_${order?.order_number || order?.id}.pdf`,
+      "Bewirtungsbeleg"
+    );
+
+  const [showBewirtungsForm, setShowBewirtungsForm] = useState(false);
+  const [bewirtungsData, setBewirtungsData] = useState({
+    anlass: "",
+    teilnehmer: "",
+    empfaenger_name: "",
+    empfaenger_firma: "",
+    empfaenger_strasse: "",
+    empfaenger_plz: "",
+    empfaenger_ort: "",
+  });
+
+  const handleDownloadBewirtungsrechnung = async () => {
+    if (!order) return;
+    try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("access_token") : null;
+      if (!token) {
+        onNotify?.("Nicht angemeldet", "error");
+        return;
+      }
+
+      const pdfUrl = getApiUrlForEndpoint(`/receipts/${order.id}/bewirtungsrechnung`);
+      const response = await fetch(pdfUrl, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(bewirtungsData),
+      });
+
+      if (!response.ok) {
+        onNotify?.("Fehler beim Download der Bewirtungsrechnung", "error");
+        return;
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `bewirtungsrechnung_${order.order_number || order.id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      onNotify?.("Bewirtungsrechnung heruntergeladen", "success");
+      setShowBewirtungsForm(false);
+    } catch {
+      onNotify?.("Fehler beim Download der Bewirtungsrechnung", "error");
     }
   };
 
@@ -916,15 +980,33 @@ export function OrderDetailDialog({
                 Bestelldetails und Abrechnung
               </DialogDescription>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-1.5">
               <Button
                 size="sm"
-                onClick={handleDownloadInvoice}
+                onClick={handleDownloadKassenbeleg}
                 variant="outline"
-                className="bg-muted border-input text-foreground hover:bg-accent min-h-[32px]"
+                className="bg-muted border-input text-foreground hover:bg-accent min-h-[32px] gap-1.5 text-xs"
               >
-                <Download className="w-4 h-4 mr-2" />
-                Rechnung PDF
+                <Printer className="w-3.5 h-3.5" />
+                Kassenbeleg
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleDownloadBewirtungsbeleg}
+                variant="outline"
+                className="bg-muted border-input text-foreground hover:bg-accent min-h-[32px] gap-1.5 text-xs"
+              >
+                <Receipt className="w-3.5 h-3.5" />
+                Bewirtungsbeleg
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => setShowBewirtungsForm(!showBewirtungsForm)}
+                variant="outline"
+                className={`bg-muted border-input text-foreground hover:bg-accent min-h-[32px] gap-1.5 text-xs ${showBewirtungsForm ? "ring-1 ring-primary" : ""}`}
+              >
+                <FileText className="w-3.5 h-3.5" />
+                Bewirtungsrechnung
               </Button>
               {order?.payment_status === "paid" && (
                 <Button
@@ -932,12 +1014,12 @@ export function OrderDetailDialog({
                   onClick={handleCreateReceipt}
                   disabled={receiptLoading}
                   variant="outline"
-                  className="bg-muted border-input text-foreground hover:bg-accent min-h-[32px]"
+                  className="bg-muted border-input text-foreground hover:bg-accent min-h-[32px] gap-1.5 text-xs"
                 >
                   {receiptLoading ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
                   ) : (
-                    <FileText className="w-4 h-4 mr-2" />
+                    <FileText className="w-3.5 h-3.5" />
                   )}
                   eReceipt
                 </Button>
@@ -945,6 +1027,91 @@ export function OrderDetailDialog({
             </div>
           </div>
         </DialogHeader>
+
+        {showBewirtungsForm && (
+          <div className="mx-4 md:mx-6 rounded-lg border border-primary/30 bg-card/80 p-4 space-y-3">
+            <p className="text-sm font-medium">Bewirtungsrechnung erstellen</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-muted-foreground">Anlass der Bewirtung</label>
+                <Input
+                  value={bewirtungsData.anlass}
+                  onChange={(e) => setBewirtungsData({ ...bewirtungsData, anlass: e.target.value })}
+                  placeholder="z.B. Geschäftsessen, Projektbesprechung"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">Bewirtete Personen</label>
+                <Input
+                  value={bewirtungsData.teilnehmer}
+                  onChange={(e) => setBewirtungsData({ ...bewirtungsData, teilnehmer: e.target.value })}
+                  placeholder="Namen der Teilnehmer"
+                  className="mt-1"
+                />
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground font-medium pt-1">Rechnungsempfänger</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-muted-foreground">Firma</label>
+                <Input
+                  value={bewirtungsData.empfaenger_firma}
+                  onChange={(e) => setBewirtungsData({ ...bewirtungsData, empfaenger_firma: e.target.value })}
+                  placeholder="Firmenname"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">Name</label>
+                <Input
+                  value={bewirtungsData.empfaenger_name}
+                  onChange={(e) => setBewirtungsData({ ...bewirtungsData, empfaenger_name: e.target.value })}
+                  placeholder="Vor- und Nachname"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-muted-foreground">Straße</label>
+                <Input
+                  value={bewirtungsData.empfaenger_strasse}
+                  onChange={(e) => setBewirtungsData({ ...bewirtungsData, empfaenger_strasse: e.target.value })}
+                  placeholder="Straße und Hausnummer"
+                  className="mt-1"
+                />
+              </div>
+              <div className="grid grid-cols-[100px_1fr] gap-2">
+                <div>
+                  <label className="text-xs text-muted-foreground">PLZ</label>
+                  <Input
+                    value={bewirtungsData.empfaenger_plz}
+                    onChange={(e) => setBewirtungsData({ ...bewirtungsData, empfaenger_plz: e.target.value })}
+                    placeholder="PLZ"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">Ort</label>
+                  <Input
+                    value={bewirtungsData.empfaenger_ort}
+                    onChange={(e) => setBewirtungsData({ ...bewirtungsData, empfaenger_ort: e.target.value })}
+                    placeholder="Ort"
+                    className="mt-1"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-1">
+              <Button size="sm" variant="ghost" onClick={() => setShowBewirtungsForm(false)}>
+                Abbrechen
+              </Button>
+              <Button size="sm" onClick={handleDownloadBewirtungsrechnung} className="gap-1.5">
+                <Download className="w-3.5 h-3.5" />
+                PDF erstellen
+              </Button>
+            </div>
+          </div>
+        )}
 
         {loading && !order ? (
           <div className="py-8 text-center text-muted-foreground">Lade Bestellung...</div>

@@ -36,6 +36,7 @@ import {
 import { authApi, type User } from "@/lib/api/auth";
 import { impersonation } from "@/lib/api/admin";
 import { restaurantsApi } from "@/lib/api/restaurants";
+import { getDailyClosingWarnings, type DailyClosingWarning } from "@/lib/api/fiskaly";
 import { useDashboardOverviewData, type OverviewRangePreset } from "@/lib/hooks/queries";
 import { LoadingOverlay } from "@/components/loading-overlay";
 import { Button } from "@/components/ui/button";
@@ -858,6 +859,7 @@ export default function DashboardLandingPage() {
     tooltipLabel: string;
     revenue: number;
   } | null>(null);
+  const [closingWarnings, setClosingWarnings] = useState<DailyClosingWarning[]>([]);
   const [hoveredHourlyHour, setHoveredHourlyHour] = useState<string | null>(null);
   const [hourlyTooltip, setHourlyTooltip] = useState<{
     anchorX: number;
@@ -892,6 +894,10 @@ export default function DashboardLandingPage() {
     }
 
     loadContext();
+
+    getDailyClosingWarnings()
+      .then((data) => { if (mounted) setClosingWarnings(data.warnings); })
+      .catch(() => {});
 
     return () => {
       mounted = false;
@@ -1469,6 +1475,22 @@ export default function DashboardLandingPage() {
             </CardContent>
           </Card>
         ) : null}
+
+        {closingWarnings.map((warning) => (
+          <Card key={warning.closing_id} className="border-amber-500/40 bg-amber-500/10">
+            <CardContent className="pt-5 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-start gap-2 text-sm text-amber-100">
+                <AlertTriangle className="w-4 h-4 mt-0.5 text-amber-300" />
+                <span>{warning.message}</span>
+              </div>
+              <Link href="/dashboard/finanzen/tagesabschluss">
+                <Button variant="outline" size="sm">
+                  Tagesabschluss prüfen
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        ))}
 
         {overview ? (
           <>
