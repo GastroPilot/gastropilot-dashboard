@@ -28,7 +28,7 @@ function debugLog(...args: unknown[]): void {
 }
 
 const ORDERS_SERVICE_ENDPOINT_PATTERN =
-  /^\/(orders|kitchen|waitlist|order-statistics|invoices|receipts|sumup|fiskaly)(\/|$)/;
+  /^\/(orders|kitchen|waitlist|order-statistics|invoices|receipts|terminals|sumup|fiskaly)(\/|$)/;
 const AI_SERVICE_ENDPOINT_PATTERN = /^\/ai(\/|$)/;
 
 function resolveBaseUrlForEndpoint(endpoint: string): string {
