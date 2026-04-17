@@ -4,11 +4,23 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches:
-      - main
-      - 'feature/**'
-      - 'feat/**'
-      - 'fix/**'
+    branches: [main]
+    paths:
+      - 'app/**'
+      - 'components/**'
+      - 'lib/**'
+      - 'public/**'
+      - 'tests/**'
+      - 'next.config.ts'
+      - 'playwright.config.ts'
+      - 'postcss.config.mjs'
+      - 'tailwind.config.ts'
+      - 'tsconfig.json'
+      - 'vitest.config.ts'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'Dockerfile'
+      - '.github/workflows/ci-cd.yml'
   workflow_dispatch:
     inputs:
       tag:
@@ -19,6 +31,10 @@ on:
           - test
           - staging
           - demo
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: write
@@ -55,7 +71,6 @@ jobs:
   test:
     name: Tests
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
 
@@ -81,7 +96,10 @@ jobs:
   test-e2e:
     name: E2E Tests
     runs-on: ubuntu-latest
-    continue-on-error: true
+    if: |
+      github.event_name == 'pull_request' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      github.event_name == 'workflow_dispatch'
     steps:
       - uses: actions/checkout@v4
 
