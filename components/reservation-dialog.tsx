@@ -6,6 +6,7 @@ import { blocksApi } from "@/lib/api/blocks";
 import { blockAssignmentsApi } from "@/lib/api/block-assignments";
 import { Table } from "@/lib/api/tables";
 import { authApi } from "@/lib/api/auth";
+import { InvitedGuestsList } from "@/components/invited-guests-list";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -822,7 +823,15 @@ export function ReservationDialog({
                     />
                   </div>
                 )}
-                
+
+                {/* Eingeladene Gäste */}
+                {(loadedReservation || reservation)?.id && (loadedReservation || reservation)!.party_size > 1 && (
+                  <InvitedGuestsList
+                    reservationId={(loadedReservation || reservation)!.id}
+                    partySize={(loadedReservation || reservation)!.party_size}
+                  />
+                )}
+
               </>
             )}
           </div>
