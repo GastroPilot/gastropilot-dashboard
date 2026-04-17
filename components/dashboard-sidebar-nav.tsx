@@ -30,7 +30,7 @@ export function SidebarItem({ link, variant = "dropdown", compact = false, onNav
         )}
       >
         <span>{link.label}</span>
-        {link.active && <span className="text-xs text-primary">aktiv</span>}
+        {link.active && <span className="text-xs text-primary-contrast">aktiv</span>}
       </Link>
     );
   }

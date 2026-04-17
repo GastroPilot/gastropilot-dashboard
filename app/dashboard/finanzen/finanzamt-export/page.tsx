@@ -188,7 +188,7 @@ export default function FinanzamtExportPage() {
         <Card className={`${SURFACE} ${HOVER} border-primary/20`}>
           <CardHeader>
             <div className="flex items-center gap-2">
-              <Scale className="h-5 w-5 text-primary" />
+              <Scale className="h-5 w-5 text-primary-contrast" />
               <CardTitle className="text-base">Betriebsprüfung</CardTitle>
             </div>
           </CardHeader>

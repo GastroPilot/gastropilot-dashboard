@@ -626,7 +626,7 @@ export default function FinanceDailyClosePage() {
             <CardHeader>
               <div className="flex items-center justify-between gap-2">
                 <CardTitle className="text-base">DSFinV-K Kassenabschluss</CardTitle>
-                <FileArchive className="h-4 w-4 text-primary" />
+                <FileArchive className="h-4 w-4 text-primary-contrast" />
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -735,7 +735,7 @@ export default function FinanceDailyClosePage() {
                 <AlertTriangle className="h-4 w-4 shrink-0" />
                 <span>
                   TSE ist nicht konfiguriert. Bitte zuerst unter{" "}
-                  <Link href="/dashboard/finanzen/tse" className="text-primary hover:underline">
+                  <Link href="/dashboard/finanzen/tse" className="text-primary-contrast hover:underline">
                     TSE / KassenSichV
                   </Link>{" "}
                   einrichten, um Tagesabschlüsse an DSFinV-K übermitteln zu können.
@@ -880,7 +880,7 @@ export default function FinanceDailyClosePage() {
                 </div>
 
                 <div>
-                  <Link href="/dashboard/finanzen/rechnungs-editor" className="text-primary hover:underline text-sm">
+                  <Link href="/dashboard/finanzen/rechnungs-editor" className="text-primary-contrast hover:underline text-sm">
                     Offene Vorgänge im Rechnungs-Editor bearbeiten
                   </Link>
                 </div>

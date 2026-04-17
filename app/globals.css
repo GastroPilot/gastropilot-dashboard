@@ -11,6 +11,10 @@
   --popover-foreground: 240 10% 3.9%;
   --primary: 24 100% 49%;
   --primary-foreground: 0 0% 100%;
+  /* Brand-colored text/icons on light backgrounds need a darker shade to
+     clear WCAG-AA (4.5:1 for body text). `primary-contrast` maps to
+     brandDeep (#B34520, 5.87:1 on white). Keep `bg-primary` for fills. */
+  --primary-contrast: 15 70% 41%;  /* #B34520 */
   --secondary: 240 4.8% 95.9%;
   --secondary-foreground: 240 5.9% 10%;
   --muted: 240 4.8% 95.9%;
@@ -44,6 +48,8 @@
   --popover-foreground: 210 20% 96%;
   --primary: 24 100% 49%;
   --primary-foreground: 0 0% 100%;
+  /* Dark mode: brandLight (#FF7A45) — 6.99:1 on the 221 29% 15% bg → AAA. */
+  --primary-contrast: 17 100% 64%;
   --secondary: 221 24% 20%;
   --secondary-foreground: 210 20% 96%;
   --muted: 221 22% 22%;
@@ -75,6 +81,7 @@
   --color-popover-foreground: hsl(var(--popover-foreground));
   --color-primary: hsl(var(--primary));
   --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-primary-contrast: hsl(var(--primary-contrast));
   --color-secondary: hsl(var(--secondary));
   --color-secondary-foreground: hsl(var(--secondary-foreground));
   --color-muted: hsl(var(--muted));

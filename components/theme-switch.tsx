@@ -68,7 +68,7 @@ export function ThemeSwitch() {
             >
               <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
               <span className="flex-1">{label}</span>
-              {theme === value && <Check className="h-4 w-4 text-primary shrink-0" />}
+              {theme === value && <Check className="h-4 w-4 text-primary-contrast shrink-0" />}
             </button>
           ))}
         </div>

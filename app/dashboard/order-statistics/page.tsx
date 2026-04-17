@@ -181,7 +181,7 @@ export default function OrderStatisticsPage() {
               <div className="bg-card border border-border rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm text-muted-foreground">Durchschnittlicher Bestellwert</span>
-                  <TrendingUp className="w-5 h-5 text-primary" />
+                  <TrendingUp className="w-5 h-5 text-primary-contrast" />
                 </div>
                 <div className="text-2xl font-bold text-foreground">
                   {formatCurrency(revenueStats.average_order_value)}

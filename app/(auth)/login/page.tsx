@@ -281,7 +281,7 @@ function LoginForm() {
         <Card className="backdrop-blur-sm shadow-2xl">
           <CardHeader className="border-b border-border pb-0">
             <CardTitle className="flex items-center gap-2 text-xl mb-4">
-              <LogIn className="w-5 h-5 text-primary" />
+              <LogIn className="w-5 h-5 text-primary-contrast" />
               Anmelden
             </CardTitle>
 
@@ -333,7 +333,7 @@ function LoginForm() {
                     htmlFor="tenantSlug"
                     className="flex items-center gap-2 text-sm font-medium text-foreground"
                   >
-                    <Building2 className="w-4 h-4 text-primary" />
+                    <Building2 className="w-4 h-4 text-primary-contrast" />
                     Restaurant-Kürzel
                   </label>
                   <Input
@@ -397,7 +397,7 @@ function LoginForm() {
                         htmlFor="operatorNumber"
                         className="flex items-center gap-2 text-sm font-medium text-foreground"
                       >
-                        <User className="w-4 h-4 text-primary" />
+                        <User className="w-4 h-4 text-primary-contrast" />
                         Bedienernummer (4 Ziffern)
                       </label>
                       <Input
@@ -420,7 +420,7 @@ function LoginForm() {
                         htmlFor="pin"
                         className="flex items-center gap-2 text-sm font-medium text-foreground"
                       >
-                        <Key className="w-4 h-4 text-primary" />
+                        <Key className="w-4 h-4 text-primary-contrast" />
                         PIN (6-8 Ziffern)
                       </label>
                       <Input
@@ -444,7 +444,7 @@ function LoginForm() {
                         htmlFor="email"
                         className="flex items-center gap-2 text-sm font-medium text-foreground"
                       >
-                        <Mail className="w-4 h-4 text-primary" />
+                        <Mail className="w-4 h-4 text-primary-contrast" />
                         E-Mail-Adresse
                       </label>
                       <Input
@@ -464,7 +464,7 @@ function LoginForm() {
                         htmlFor="password"
                         className="flex items-center gap-2 text-sm font-medium text-foreground"
                       >
-                        <Lock className="w-4 h-4 text-primary" />
+                        <Lock className="w-4 h-4 text-primary-contrast" />
                         Passwort
                       </label>
                       <Input

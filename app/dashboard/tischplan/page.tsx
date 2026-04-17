@@ -756,7 +756,7 @@ export default function DashboardPage() {
                 <div className="text-xs md:text-sm font-semibold text-foreground whitespace-nowrap">
                   {format(now, "EEEE, d. MMMM yyyy", { locale: de })}
                 </div>
-                <div className="text-base md:text-lg lg:text-xl font-bold text-primary tracking-tight whitespace-nowrap">
+                <div className="text-base md:text-lg lg:text-xl font-bold text-primary-contrast tracking-tight whitespace-nowrap">
                   {format(now, "HH:mm:ss")}
                 </div>
               </div>

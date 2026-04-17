@@ -436,12 +436,12 @@ function RevenueTrendKpiCard({
                   strokeWidth={REVENUE_STROKE_WIDTH}
                   vectorEffect="non-scaling-stroke"
                 />
-                <path d={areaPath} fill={`url(#${gradientId})`} className="text-primary" />
+                <path d={areaPath} fill={`url(#${gradientId})`} className="text-primary-contrast" />
                 <polyline
                   fill="none"
                   points={polyline}
                   stroke="currentColor"
-                  className="text-primary"
+                  className="text-primary-contrast"
                   strokeWidth={REVENUE_STROKE_WIDTH}
                   strokeLinejoin="round"
                   strokeLinecap="round"
@@ -730,7 +730,7 @@ function OccupancyDonutCard({
                   cy="50"
                   r={radius}
                   stroke="currentColor"
-                  className="text-primary transition-all duration-200"
+                  className="text-primary-contrast transition-all duration-200"
                   strokeWidth="10"
                   strokeLinecap="round"
                   fill="none"
@@ -1355,7 +1355,7 @@ export default function DashboardLandingPage() {
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-2">
-                  <BarChart3 className="w-7 h-7 text-primary" />
+                  <BarChart3 className="w-7 h-7 text-primary-contrast" />
                   Dashboard-Übersicht
                 </h1>
                 <p className="text-sm text-muted-foreground mt-1">
@@ -1598,7 +1598,7 @@ export default function DashboardLandingPage() {
                 <CardHeader>
                   <div className="flex items-center gap-2">
                     <CardTitle className="text-lg flex items-center gap-2">
-                      <BarChart3 className="w-5 h-5 text-primary" />
+                      <BarChart3 className="w-5 h-5 text-primary-contrast" />
                       Umsatzverlauf
                     </CardTitle>
                   </div>
@@ -1680,14 +1680,14 @@ export default function DashboardLandingPage() {
                                 vectorEffect="non-scaling-stroke"
                               />
                               {revenueAreaPath ? (
-                                <path d={revenueAreaPath} fill={`url(#${revenueAreaGradientId})`} className="text-primary" />
+                                <path d={revenueAreaPath} fill={`url(#${revenueAreaGradientId})`} className="text-primary-contrast" />
                               ) : null}
                               {revenueSmoothPath ? (
                                 <path
                                   d={revenueSmoothPath}
                                   fill="none"
                                   stroke="currentColor"
-                                  className="text-primary"
+                                  className="text-primary-contrast"
                                   strokeWidth={REVENUE_STROKE_WIDTH}
                                   strokeLinejoin="round"
                                   strokeLinecap="round"
@@ -1767,7 +1767,7 @@ export default function DashboardLandingPage() {
                 <CardHeader>
                   <div className="flex items-center gap-2">
                     <CardTitle className="text-lg flex items-center gap-2">
-                      <CookingPot className="w-5 h-5 text-primary" />
+                      <CookingPot className="w-5 h-5 text-primary-contrast" />
                       Top Artikel
                     </CardTitle>
                   </div>
@@ -1814,7 +1814,7 @@ export default function DashboardLandingPage() {
                 <CardHeader>
                   <div className="flex items-center gap-2">
                     <CardTitle className="text-lg flex items-center gap-2">
-                      <ShieldCheck className="w-5 h-5 text-primary" />
+                      <ShieldCheck className="w-5 h-5 text-primary-contrast" />
                       Bestellstatus
                     </CardTitle>
                   </div>
@@ -1863,7 +1863,7 @@ export default function DashboardLandingPage() {
                 <CardHeader>
                   <div className="flex items-center gap-2">
                     <CardTitle className="text-lg flex items-center gap-2">
-                      <Tag className="w-5 h-5 text-primary" />
+                      <Tag className="w-5 h-5 text-primary-contrast" />
                       Top Kategorien
                     </CardTitle>
                   </div>
@@ -1911,7 +1911,7 @@ export default function DashboardLandingPage() {
                 <CardHeader>
                   <div className="flex items-center gap-2">
                     <CardTitle className="text-lg flex items-center gap-2">
-                      <Users className="w-5 h-5 text-primary" />
+                      <Users className="w-5 h-5 text-primary-contrast" />
                       Stundenlast
                     </CardTitle>
                   </div>
@@ -1986,14 +1986,14 @@ export default function DashboardLandingPage() {
                                 vectorEffect="non-scaling-stroke"
                               />
                               {hourlyAreaPath ? (
-                                <path d={hourlyAreaPath} fill={`url(#${hourlyAreaGradientId})`} className="text-primary" />
+                                <path d={hourlyAreaPath} fill={`url(#${hourlyAreaGradientId})`} className="text-primary-contrast" />
                               ) : null}
                               {hourlySmoothPath ? (
                                 <path
                                   d={hourlySmoothPath}
                                   fill="none"
                                   stroke="currentColor"
-                                  className="text-primary"
+                                  className="text-primary-contrast"
                                   strokeWidth={REVENUE_STROKE_WIDTH}
                                   strokeLinejoin="round"
                                   strokeLinecap="round"

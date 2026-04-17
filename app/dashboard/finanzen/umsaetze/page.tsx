@@ -394,7 +394,7 @@ export default function FinanceRevenuePage() {
         <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <CalendarDays className="h-4 w-4 text-primary" />
+              <CalendarDays className="h-4 w-4 text-primary-contrast" />
               Zeitraum
             </CardTitle>
           </CardHeader>
@@ -521,7 +521,7 @@ export default function FinanceRevenuePage() {
             <CardHeader className="space-y-2">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <CardTitle className="text-base flex items-center gap-2">
-                  <LineChart className="h-4 w-4 text-primary" />
+                  <LineChart className="h-4 w-4 text-primary-contrast" />
                   Umsatzverlauf
                 </CardTitle>
                 <p className="text-xs text-muted-foreground">
@@ -632,12 +632,12 @@ export default function FinanceRevenuePage() {
                             vectorEffect="non-scaling-stroke"
                           />
 
-                          <path d={timelineAreaPath} fill="url(#finance-revenue-gradient)" className="text-primary" />
+                          <path d={timelineAreaPath} fill="url(#finance-revenue-gradient)" className="text-primary-contrast" />
                           <path
                             d={timelineLinePath}
                             fill="none"
                             stroke="currentColor"
-                            className="text-primary"
+                            className="text-primary-contrast"
                             strokeWidth="1.2"
                             strokeLinejoin="round"
                             strokeLinecap="round"
@@ -684,7 +684,7 @@ export default function FinanceRevenuePage() {
           <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <BarChart3 className="h-4 w-4 text-primary" />
+                <BarChart3 className="h-4 w-4 text-primary-contrast" />
                 Wochentagsprofil
               </CardTitle>
               <p className="text-xs text-muted-foreground">
@@ -742,7 +742,7 @@ export default function FinanceRevenuePage() {
           <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Package className="h-4 w-4 text-primary" />
+                <Package className="h-4 w-4 text-primary-contrast" />
                 Top-Artikel
               </CardTitle>
             </CardHeader>
@@ -776,7 +776,7 @@ export default function FinanceRevenuePage() {
           <Card className={`${DASHBOARD_CARD_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
-                <Tag className="h-4 w-4 text-primary" />
+                <Tag className="h-4 w-4 text-primary-contrast" />
                 Kategorien
               </CardTitle>
             </CardHeader>

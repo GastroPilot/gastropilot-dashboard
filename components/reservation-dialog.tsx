@@ -717,7 +717,7 @@ export function ReservationDialog({
                                 <span className="truncate">{entry.label}</span>
                               </span>
                               {isActive && (
-                                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-white/60 bg-white/10 text-primary">
+                                <span className="inline-flex items-center justify-center w-6 h-6 rounded-full border border-white/60 bg-white/10 text-primary-contrast">
                                   ✓
                                 </span>
                               )}
@@ -800,7 +800,7 @@ export function ReservationDialog({
                               )}
                               <span className="truncate">{item.label}</span>
                             </span>
-                            {active && <Check className="w-4 h-4 text-primary" />}
+                            {active && <Check className="w-4 h-4 text-primary-contrast" />}
                           </button>
                         );
                       })}
