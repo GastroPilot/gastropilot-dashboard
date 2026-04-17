@@ -412,7 +412,7 @@ export default function AuditLogsPage() {
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <Link
               href="/dashboard"
-              className="inline-flex items-center gap-2 text-primary-contrast hover:text-primary-contrast/80 mb-6"
+              className="inline-flex items-center gap-2 text-primary-contrast hover:underline mb-6"
             >
               <ArrowLeft className="w-4 h-4" />
               Zurück zum Dashboard
@@ -780,7 +780,7 @@ export default function AuditLogsPage() {
                                 }
                                 return (
                                   <details className="group">
-                                    <summary className="cursor-pointer text-sm text-primary-contrast hover:text-primary-contrast/80 flex items-center gap-2 list-none">
+                                    <summary className="cursor-pointer text-sm text-primary-contrast hover:underline flex items-center gap-2 list-none">
                                       <Info className="w-3.5 h-3.5" />
                                       <span className="group-open:hidden">Mehr anzeigen</span>
                                       <span className="hidden group-open:inline">Weniger anzeigen</span>

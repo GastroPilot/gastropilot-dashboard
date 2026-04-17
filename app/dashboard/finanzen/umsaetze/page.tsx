@@ -632,12 +632,12 @@ export default function FinanceRevenuePage() {
                             vectorEffect="non-scaling-stroke"
                           />
 
-                          <path d={timelineAreaPath} fill="url(#finance-revenue-gradient)" className="text-primary-contrast" />
+                          <path d={timelineAreaPath} fill="url(#finance-revenue-gradient)" className="text-primary" />
                           <path
                             d={timelineLinePath}
                             fill="none"
                             stroke="currentColor"
-                            className="text-primary-contrast"
+                            className="text-primary"
                             strokeWidth="1.2"
                             strokeLinejoin="round"
                             strokeLinecap="round"
