@@ -138,7 +138,7 @@ export function DropdownSelector<T extends string = string>({
                   ) : (
                     <>
                       <span className="truncate">{option.label}</span>
-                      {showCheckIcon && active && <Check className="w-4 h-4 shrink-0 text-primary" />}
+                      {showCheckIcon && active && <Check className="w-4 h-4 shrink-0 text-primary-contrast" />}
                     </>
                   )}
                 </button>

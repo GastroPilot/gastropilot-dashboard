@@ -120,14 +120,14 @@ export function ReservationCard({
           const label = getTableLabel?.(reservation);
           if (label) {
             return (
-              <span className="text-xs text-primary font-medium">
+              <span className="text-xs text-primary-contrast font-medium">
                 {label}
               </span>
             );
           }
           if (!reservation.table_id) return null;
           return (
-            <span className="text-xs text-primary font-medium">
+            <span className="text-xs text-primary-contrast font-medium">
               {getTableName ? getTableName(reservation.table_id) : reservation.table_id}
             </span>
           );

@@ -1355,7 +1355,7 @@ export default function DashboardLandingPage() {
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <h1 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-2">
-                  <BarChart3 className="w-7 h-7 text-primary" />
+                  <BarChart3 className="w-7 h-7 text-primary-contrast" />
                   Dashboard-Übersicht
                 </h1>
                 <p className="text-sm text-muted-foreground mt-1">
@@ -1598,7 +1598,7 @@ export default function DashboardLandingPage() {
                 <CardHeader>
                   <div className="flex items-center gap-2">
                     <CardTitle className="text-lg flex items-center gap-2">
-                      <BarChart3 className="w-5 h-5 text-primary" />
+                      <BarChart3 className="w-5 h-5 text-primary-contrast" />
                       Umsatzverlauf
                     </CardTitle>
                   </div>
@@ -1767,7 +1767,7 @@ export default function DashboardLandingPage() {
                 <CardHeader>
                   <div className="flex items-center gap-2">
                     <CardTitle className="text-lg flex items-center gap-2">
-                      <CookingPot className="w-5 h-5 text-primary" />
+                      <CookingPot className="w-5 h-5 text-primary-contrast" />
                       Top Artikel
                     </CardTitle>
                   </div>
@@ -1814,7 +1814,7 @@ export default function DashboardLandingPage() {
                 <CardHeader>
                   <div className="flex items-center gap-2">
                     <CardTitle className="text-lg flex items-center gap-2">
-                      <ShieldCheck className="w-5 h-5 text-primary" />
+                      <ShieldCheck className="w-5 h-5 text-primary-contrast" />
                       Bestellstatus
                     </CardTitle>
                   </div>
@@ -1863,7 +1863,7 @@ export default function DashboardLandingPage() {
                 <CardHeader>
                   <div className="flex items-center gap-2">
                     <CardTitle className="text-lg flex items-center gap-2">
-                      <Tag className="w-5 h-5 text-primary" />
+                      <Tag className="w-5 h-5 text-primary-contrast" />
                       Top Kategorien
                     </CardTitle>
                   </div>
@@ -1911,7 +1911,7 @@ export default function DashboardLandingPage() {
                 <CardHeader>
                   <div className="flex items-center gap-2">
                     <CardTitle className="text-lg flex items-center gap-2">
-                      <Users className="w-5 h-5 text-primary" />
+                      <Users className="w-5 h-5 text-primary-contrast" />
                       Stundenlast
                     </CardTitle>
                   </div>

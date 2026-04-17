@@ -185,7 +185,7 @@ export default function AuditLogsPage() {
       case "platform_admin":
         return "text-purple-300 border-purple-500/60 bg-purple-900/40";
       case "owner":
-        return "text-primary border-primary/60 bg-primary/20";
+        return "text-primary-contrast border-primary/60 bg-primary/20";
       case "manager":
         return "text-amber-300 border-amber-500/60 bg-amber-900/40";
       default:
@@ -412,7 +412,7 @@ export default function AuditLogsPage() {
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <Link
               href="/dashboard"
-              className="inline-flex items-center gap-2 text-primary hover:text-primary/80 mb-6"
+              className="inline-flex items-center gap-2 text-primary-contrast hover:underline mb-6"
             >
               <ArrowLeft className="w-4 h-4" />
               Zurück zum Dashboard
@@ -496,7 +496,7 @@ export default function AuditLogsPage() {
           <Card className="relative z-30 border-border bg-card/50 backdrop-blur-sm overflow-visible">
             <CardHeader className="border-b border-border">
               <CardTitle className="flex items-center gap-2 text-foreground">
-                <Filter className="w-5 h-5 text-primary" />
+                <Filter className="w-5 h-5 text-primary-contrast" />
                 Filter
               </CardTitle>
             </CardHeader>
@@ -515,7 +515,7 @@ export default function AuditLogsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div className="space-y-2">
                     <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                      <Activity className="w-4 h-4 text-primary" />
+                      <Activity className="w-4 h-4 text-primary-contrast" />
                       Aktion
                     </label>
                     <div className="relative z-[60]">
@@ -548,7 +548,7 @@ export default function AuditLogsPage() {
                                 </span>
                                 <span className="truncate">{option.label}</span>
                               </span>
-                              {selected && <Check className="w-4 h-4 text-primary" />}
+                              {selected && <Check className="w-4 h-4 text-primary-contrast" />}
                             </>
                           );
                         }}
@@ -558,7 +558,7 @@ export default function AuditLogsPage() {
 
                   <div className="space-y-2">
                     <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                      <UserIcon className="w-4 h-4 text-primary" />
+                      <UserIcon className="w-4 h-4 text-primary-contrast" />
                       Benutzer
                     </label>
                     <div className="relative z-[60]">
@@ -588,7 +588,7 @@ export default function AuditLogsPage() {
                             return (
                               <>
                                 <span className="truncate">Alle Benutzer</span>
-                                {selected && <Check className="w-4 h-4 text-primary flex-shrink-0" />}
+                                {selected && <Check className="w-4 h-4 text-primary-contrast flex-shrink-0" />}
                               </>
                             );
                           }
@@ -601,7 +601,7 @@ export default function AuditLogsPage() {
                                 </span>
                                 <span className="truncate">{option.label}</span>
                               </span>
-                              {selected && <Check className="w-4 h-4 text-primary flex-shrink-0" />}
+                              {selected && <Check className="w-4 h-4 text-primary-contrast flex-shrink-0" />}
                             </>
                           );
                         }}
@@ -611,7 +611,7 @@ export default function AuditLogsPage() {
 
                   <div className="space-y-2">
                     <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                      <Calendar className="w-4 h-4 text-primary" />
+                      <Calendar className="w-4 h-4 text-primary-contrast" />
                       Datum von
                     </label>
                     <Input
@@ -624,7 +624,7 @@ export default function AuditLogsPage() {
 
                   <div className="space-y-2">
                     <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                      <Calendar className="w-4 h-4 text-primary" />
+                      <Calendar className="w-4 h-4 text-primary-contrast" />
                       Datum bis
                     </label>
                     <Input
@@ -638,7 +638,7 @@ export default function AuditLogsPage() {
 
                 <div className="space-y-2">
                   <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                    <Search className="w-4 h-4 text-primary" />
+                    <Search className="w-4 h-4 text-primary-contrast" />
                     Freitext-Suche
                   </label>
                   <Input
@@ -676,7 +676,7 @@ export default function AuditLogsPage() {
           <Card className="border-border bg-card/50 backdrop-blur-sm">
             <CardHeader className="border-b border-border">
               <CardTitle className="flex items-center gap-2 text-foreground">
-                <FileText className="w-5 h-5 text-primary" />
+                <FileText className="w-5 h-5 text-primary-contrast" />
                 Log-Einträge
               </CardTitle>
             </CardHeader>
@@ -780,7 +780,7 @@ export default function AuditLogsPage() {
                                 }
                                 return (
                                   <details className="group">
-                                    <summary className="cursor-pointer text-sm text-primary hover:text-primary/80 flex items-center gap-2 list-none">
+                                    <summary className="cursor-pointer text-sm text-primary-contrast hover:underline flex items-center gap-2 list-none">
                                       <Info className="w-3.5 h-3.5" />
                                       <span className="group-open:hidden">Mehr anzeigen</span>
                                       <span className="hidden group-open:inline">Weniger anzeigen</span>

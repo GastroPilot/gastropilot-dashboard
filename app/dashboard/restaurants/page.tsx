@@ -102,7 +102,7 @@ export default function RestaurantsPage() {
             <div className="flex items-center gap-3 min-w-0">
               <div className={`h-8 w-8 rounded-md flex items-center justify-center shrink-0 ${
                 !isImpersonating
-                  ? "bg-primary/15 text-primary"
+                  ? "bg-primary/15 text-primary-contrast"
                   : "bg-muted text-muted-foreground"
               }`}>
                 <ShieldCheck className="w-4 h-4" />
@@ -111,7 +111,7 @@ export default function RestaurantsPage() {
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold text-foreground">Grundstatus</span>
                   {!isImpersonating && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-medium text-primary">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-medium text-primary-contrast">
                       <CheckCircle2 className="w-3 h-3" />
                       Aktiv
                     </span>
@@ -127,7 +127,7 @@ export default function RestaurantsPage() {
                 size="sm"
                 variant="outline"
                 onClick={handleReturnToBase}
-                className="shrink-0 gap-2 hover:border-primary hover:text-primary"
+                className="shrink-0 gap-2 hover:border-primary hover:text-primary-contrast"
               >
                 <ShieldCheck className="w-3.5 h-3.5" />
                 Wechseln
@@ -176,7 +176,7 @@ export default function RestaurantsPage() {
                             <div className="flex items-center gap-2">
                               <span className="font-semibold">{tenant.name}</span>
                               {isActive && (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-medium text-primary">
+                                <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2 py-0.5 text-[11px] font-medium text-primary-contrast">
                                   <CheckCircle2 className="w-3 h-3" />
                                   Aktiv
                                 </span>
@@ -210,7 +210,7 @@ export default function RestaurantsPage() {
                                 variant="outline"
                                 onClick={() => handleImpersonate(tenant)}
                                 disabled={impersonating === tenant.id}
-                                className="gap-2 hover:border-primary hover:text-primary"
+                                className="gap-2 hover:border-primary hover:text-primary-contrast"
                               >
                                 {impersonating === tenant.id ? (
                                   <RefreshCw className="w-3.5 h-3.5 animate-spin" />

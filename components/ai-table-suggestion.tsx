@@ -104,7 +104,7 @@ export function AITableSuggestion({
         disabled={disabled}
       >
         <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-primary" />
+          <Sparkles className="w-4 h-4 text-primary-contrast" />
           <span className="text-sm font-medium text-foreground">
             KI-Vorschläge für Tischzuordnung
           </span>
@@ -169,7 +169,7 @@ export function AITableSuggestion({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           {isTopSuggestion && (
-                            <span className="text-primary text-xs">TOP</span>
+                            <span className="text-primary-contrast text-xs">TOP</span>
                           )}
                           <span className="font-medium text-foreground">
                             Tisch {suggestion.table_number}
@@ -180,7 +180,7 @@ export function AITableSuggestion({
                             </span>
                           )}
                           {isSelected && (
-                            <Check className="w-4 h-4 text-primary flex-shrink-0" />
+                            <Check className="w-4 h-4 text-primary-contrast flex-shrink-0" />
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground mt-1 line-clamp-2">

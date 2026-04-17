@@ -1164,7 +1164,7 @@ export function OrderDetailDialog({
                               </span>
                               {meta.label}
                             </span>
-                            {active && <Check className="w-4 h-4 text-primary" />}
+                            {active && <Check className="w-4 h-4 text-primary-contrast" />}
                           </button>
                         );
                       })}
@@ -1429,7 +1429,7 @@ export function OrderDetailDialog({
                   </div>
                 )}
                 <div className="flex justify-between text-muted-foreground">
-                  <span className="text-primary">MwSt. (inkl.):</span>
+                  <span className="text-primary-contrast">MwSt. (inkl.):</span>
                   <span className="text-foreground">{formatCurrency(computedFinancials.taxAmount)}</span>
                 </div>
                 {(paymentView === "split" ? totalSplitTip : tipAmount) > 0 && (
@@ -1849,7 +1849,7 @@ export function OrderDetailDialog({
                                                   Bezahlt
                                                 </span>
                                                 {active && (
-                                                  <Check className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                                                  <Check className="w-3.5 h-3.5 text-primary-contrast flex-shrink-0" />
                                                 )}
                                               </button>
                                             );
@@ -1905,7 +1905,7 @@ export function OrderDetailDialog({
                                                     Bar
                                                   </span>
                                                   {payment.method === "cash" && (
-                                                    <Check className="w-4 h-4 text-primary" />
+                                                    <Check className="w-4 h-4 text-primary-contrast" />
                                                   )}
                                                 </button>
                                                 <button
@@ -1925,7 +1925,7 @@ export function OrderDetailDialog({
                                                     Karte
                                                   </span>
                                                   {payment.method === "card" && (
-                                                    <Check className="w-4 h-4 text-primary" />
+                                                    <Check className="w-4 h-4 text-primary-contrast" />
                                                   )}
                                                 </button>
                                               </div>
@@ -1963,7 +1963,7 @@ export function OrderDetailDialog({
                                               </div>
                                             )}
                                             <div className="flex justify-between">
-                                              <span className="text-primary">MwSt. (inkl.):</span>
+                                              <span className="text-primary-contrast">MwSt. (inkl.):</span>
                                               <span className="text-foreground">{formatCurrency(taxShare)}</span>
                                             </div>
                                             <div className="flex justify-between">

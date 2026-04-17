@@ -437,7 +437,7 @@ export default function FiskalyPage() {
   if (loading) {
     return (
       <div className="h-full flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <Loader2 className="w-8 h-8 animate-spin text-primary-contrast" />
       </div>
     );
   }
@@ -459,7 +459,7 @@ export default function FiskalyPage() {
         <div className="px-4 py-3 flex items-center justify-between">
           <div className="flex items-start gap-3">
             <div className="p-2 rounded-lg bg-primary/10">
-              <ShieldCheck className="w-5 h-5 text-primary" />
+              <ShieldCheck className="w-5 h-5 text-primary-contrast" />
             </div>
             <div>
               <h1 className="text-lg font-bold text-foreground">
@@ -488,7 +488,7 @@ export default function FiskalyPage() {
         <div className={`rounded-lg overflow-hidden ${DASHBOARD_PANEL_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
           <div className="flex items-start justify-between px-4 py-3 border-b border-border bg-background/70">
             <div className="flex items-start gap-2">
-              <ShieldCheck className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+              <ShieldCheck className="w-4 h-4 text-primary-contrast mt-0.5 flex-shrink-0" />
               <div>
                 <h2 className="text-sm font-semibold text-foreground">
                   TSS-Status
@@ -606,7 +606,7 @@ export default function FiskalyPage() {
           <div className={`rounded-lg overflow-hidden ${DASHBOARD_PANEL_SURFACE_CLASS} ${DASHBOARD_CARD_HOVER_CLASS}`}>
             <div className="flex items-start justify-between px-4 py-3 border-b border-border bg-background/70">
               <div className="flex items-start gap-2">
-                <FileText className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
+                <FileText className="w-4 h-4 text-primary-contrast mt-0.5 flex-shrink-0" />
                 <div>
                   <h2 className="text-sm font-semibold text-foreground">
                     TSE-Transaktionen
