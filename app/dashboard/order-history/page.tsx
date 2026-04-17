@@ -368,7 +368,7 @@ export default function OrderHistoryPage() {
           <Card className="relative z-30 border-border bg-card/50 backdrop-blur-sm overflow-visible">
             <CardHeader className="border-b border-border">
               <CardTitle className="flex items-center gap-2 text-foreground">
-                <Filter className="w-5 h-5 text-primary" />
+                <Filter className="w-5 h-5 text-primary-contrast" />
                 Filter
               </CardTitle>
             </CardHeader>
@@ -376,7 +376,7 @@ export default function OrderHistoryPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="space-y-2">
                   <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                    <Calendar className="w-4 h-4 text-primary" />
+                    <Calendar className="w-4 h-4 text-primary-contrast" />
                     Datum von
                   </label>
                   <Input
@@ -388,7 +388,7 @@ export default function OrderHistoryPage() {
                 </div>
                 <div className="space-y-2">
                   <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                    <Calendar className="w-4 h-4 text-primary" />
+                    <Calendar className="w-4 h-4 text-primary-contrast" />
                     Datum bis
                   </label>
                   <Input
@@ -400,7 +400,7 @@ export default function OrderHistoryPage() {
                 </div>
                 <div className="space-y-2 relative z-[60]">
                   <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                    <TableIcon className="w-4 h-4 text-primary" />
+                    <TableIcon className="w-4 h-4 text-primary-contrast" />
                     Tischnummer
                   </label>
                   <DropdownSelector
@@ -417,7 +417,7 @@ export default function OrderHistoryPage() {
                 </div>
                 <div className="space-y-2 relative z-[60]" ref={statusMenuRef}>
                   <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                    <Filter className="w-4 h-4 text-primary" />
+                    <Filter className="w-4 h-4 text-primary-contrast" />
                     Status
                   </label>
                   <button
@@ -471,7 +471,7 @@ export default function OrderHistoryPage() {
                             }`}
                           >
                             {(selectedStatuses.length === ALL_STATUSES.length || selectedStatuses.length === 0) && (
-                              <Check className="w-4 h-4 text-primary" />
+                              <Check className="w-4 h-4 text-primary-contrast" />
                             )}
                           </span>
                         </div>
@@ -518,7 +518,7 @@ export default function OrderHistoryPage() {
                                   active ? "border-white/60 bg-white/10" : "border-border bg-card"
                                 }`}
                               >
-                                {active && <Check className="w-4 h-4 text-primary" />}
+                                {active && <Check className="w-4 h-4 text-primary-contrast" />}
                               </span>
                             </span>
                           </button>
@@ -529,7 +529,7 @@ export default function OrderHistoryPage() {
                 </div>
                 <div className="space-y-2 lg:col-span-4">
                   <label className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-                    <Search className="w-4 h-4 text-primary" />
+                    <Search className="w-4 h-4 text-primary-contrast" />
                     Suche
                   </label>
                   <div className="relative">
@@ -550,7 +550,7 @@ export default function OrderHistoryPage() {
           <Card className="border-border bg-card/50 backdrop-blur-sm">
             <CardHeader className="border-b border-border">
               <CardTitle className="flex items-center gap-2 text-foreground">
-                <ShoppingCart className="w-5 h-5 text-primary" />
+                <ShoppingCart className="w-5 h-5 text-primary-contrast" />
                 Bestellungen
               </CardTitle>
             </CardHeader>

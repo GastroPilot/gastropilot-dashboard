@@ -259,7 +259,7 @@ export default function HilfecenterPage() {
           <Card className="border-border bg-card/50 backdrop-blur-sm">
             <CardHeader className="border-b border-border">
               <CardTitle className="flex items-center gap-2 text-foreground">
-                <CircleHelp className="w-5 h-5 text-primary" />
+                <CircleHelp className="w-5 h-5 text-primary-contrast" />
                 Was ist neu im Hilfecenter?
               </CardTitle>
             </CardHeader>
@@ -277,7 +277,7 @@ export default function HilfecenterPage() {
 
           <div>
             <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
-              <CheckCircle2 className="w-5 h-5 text-primary" />
+              <CheckCircle2 className="w-5 h-5 text-primary-contrast" />
               Schnellstart
             </h2>
             <div className="grid md:grid-cols-3 gap-4">
@@ -288,7 +288,7 @@ export default function HilfecenterPage() {
                     <CardHeader className="border-b border-border">
                       <CardTitle className="text-base text-foreground flex items-center gap-2">
                         <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-muted">
-                          <Icon className="w-4 h-4 text-primary" />
+                          <Icon className="w-4 h-4 text-primary-contrast" />
                         </span>
                         {step.title}
                       </CardTitle>
@@ -300,7 +300,7 @@ export default function HilfecenterPage() {
                           <Link
                             key={`${step.title}-${link.href}`}
                             href={link.href}
-                            className="inline-flex items-center gap-1 rounded-md border border-border bg-background/70 px-2 py-1 text-xs text-foreground hover:border-primary hover:text-primary transition-colors"
+                            className="inline-flex items-center gap-1 rounded-md border border-border bg-background/70 px-2 py-1 text-xs text-foreground hover:border-primary hover:text-primary-contrast transition-colors"
                           >
                             {link.label}
                             <ArrowRight className="w-3 h-3" />
@@ -318,9 +318,9 @@ export default function HilfecenterPage() {
             <div key={group.title}>
               <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
                 {group.title === "Tagesgeschäft" ? (
-                  <LayoutGrid className="w-5 h-5 text-primary" />
+                  <LayoutGrid className="w-5 h-5 text-primary-contrast" />
                 ) : (
-                  <Wrench className="w-5 h-5 text-primary" />
+                  <Wrench className="w-5 h-5 text-primary-contrast" />
                 )}
                 {group.title}
               </h2>
@@ -333,9 +333,9 @@ export default function HilfecenterPage() {
                         <CardTitle className="text-base text-foreground flex items-center justify-between gap-2">
                           <span className="inline-flex items-center gap-2 min-w-0">
                             <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-muted shrink-0">
-                              <Icon className="w-4 h-4 text-primary" />
+                              <Icon className="w-4 h-4 text-primary-contrast" />
                             </span>
-                            <Link href={item.href} className="truncate hover:text-primary transition-colors">
+                            <Link href={item.href} className="truncate hover:text-primary-contrast transition-colors">
                               {item.title}
                             </Link>
                           </span>
@@ -363,7 +363,7 @@ export default function HilfecenterPage() {
             <Card className="border-border bg-card/50 backdrop-blur-sm">
               <CardHeader className="border-b border-border">
                 <CardTitle className="text-base text-foreground flex items-center gap-2">
-                  <Users className="w-5 h-5 text-primary" />
+                  <Users className="w-5 h-5 text-primary-contrast" />
                   Reservierungsstatus
                 </CardTitle>
               </CardHeader>
@@ -384,7 +384,7 @@ export default function HilfecenterPage() {
             <Card className="border-border bg-card/50 backdrop-blur-sm">
               <CardHeader className="border-b border-border">
                 <CardTitle className="text-base text-foreground flex items-center gap-2">
-                  <Receipt className="w-5 h-5 text-primary" />
+                  <Receipt className="w-5 h-5 text-primary-contrast" />
                   Bestellstatus
                 </CardTitle>
               </CardHeader>
@@ -406,7 +406,7 @@ export default function HilfecenterPage() {
           <Card className="border-border bg-card/50 backdrop-blur-sm">
             <CardHeader className="border-b border-border">
               <CardTitle className="text-base text-foreground flex items-center gap-2">
-                <Shield className="w-5 h-5 text-primary" />
+                <Shield className="w-5 h-5 text-primary-contrast" />
                 Rollenüberblick
               </CardTitle>
             </CardHeader>
@@ -423,7 +423,7 @@ export default function HilfecenterPage() {
           <Card className="border-border bg-card/50 backdrop-blur-sm">
             <CardHeader className="border-b border-border">
               <CardTitle className="text-base text-foreground flex items-center gap-2">
-                <Filter className="w-5 h-5 text-primary" />
+                <Filter className="w-5 h-5 text-primary-contrast" />
                 Häufige Fragen
               </CardTitle>
             </CardHeader>

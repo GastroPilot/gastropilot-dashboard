@@ -451,7 +451,7 @@ export default function ReservationsPage() {
               <div className="text-xs md:text-sm font-semibold text-foreground whitespace-nowrap">
                 {format(now, "EEEE, d. MMMM yyyy", { locale: de })}
               </div>
-              <div className="text-base md:text-lg lg:text-xl font-bold text-primary tracking-tight whitespace-nowrap">
+              <div className="text-base md:text-lg lg:text-xl font-bold text-primary-contrast tracking-tight whitespace-nowrap">
                 {format(now, "HH:mm:ss")}
               </div>
             </div>
@@ -574,7 +574,7 @@ export default function ReservationsPage() {
                       }`}
                     >
                       {(selectedStatuses.length === ALL_FILTERS.length || selectedStatuses.length === 0) && (
-                        <Check className="w-4 h-4 text-primary" />
+                        <Check className="w-4 h-4 text-primary-contrast" />
                       )}
                     </span>
                   </div>
@@ -624,7 +624,7 @@ export default function ReservationsPage() {
                             active ? "border-white/60 bg-white/10" : "border-border bg-card"
                           }`}
                         >
-                          {active && <Check className="w-4 h-4 text-primary" />}
+                          {active && <Check className="w-4 h-4 text-primary-contrast" />}
                         </span>
                       </div>
                     </button>

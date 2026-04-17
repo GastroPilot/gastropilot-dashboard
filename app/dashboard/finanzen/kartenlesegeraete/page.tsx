@@ -230,10 +230,10 @@ export default function KartenlesegeraetePage() {
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <div className="flex items-center gap-2">
-                          <CreditCard className="h-4 w-4 text-primary" />
+                          <CreditCard className="h-4 w-4 text-primary-contrast" />
                           <span className="font-medium text-foreground">{terminal.name}</span>
                           {terminal.is_default ? (
-                            <span className="rounded-full bg-primary/15 text-primary px-2 py-0.5 text-[10px] font-medium">
+                            <span className="rounded-full bg-primary/15 text-primary-contrast px-2 py-0.5 text-[10px] font-medium">
                               Standard
                             </span>
                           ) : null}
@@ -355,7 +355,7 @@ export default function KartenlesegeraetePage() {
           <Card className={`${DASHBOARD_CARD_SURFACE} ${DASHBOARD_CARD_HOVER}`}>
             <CardHeader>
               <div className="flex items-center gap-2">
-                <Plus className="h-4 w-4 text-primary" />
+                <Plus className="h-4 w-4 text-primary-contrast" />
                 <CardTitle className="text-base">Terminal hinzufügen</CardTitle>
               </div>
             </CardHeader>
