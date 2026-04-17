@@ -436,12 +436,12 @@ function RevenueTrendKpiCard({
                   strokeWidth={REVENUE_STROKE_WIDTH}
                   vectorEffect="non-scaling-stroke"
                 />
-                <path d={areaPath} fill={`url(#${gradientId})`} className="text-primary-contrast" />
+                <path d={areaPath} fill={`url(#${gradientId})`} className="text-primary" />
                 <polyline
                   fill="none"
                   points={polyline}
                   stroke="currentColor"
-                  className="text-primary-contrast"
+                  className="text-primary"
                   strokeWidth={REVENUE_STROKE_WIDTH}
                   strokeLinejoin="round"
                   strokeLinecap="round"
@@ -730,7 +730,7 @@ function OccupancyDonutCard({
                   cy="50"
                   r={radius}
                   stroke="currentColor"
-                  className="text-primary-contrast transition-all duration-200"
+                  className="text-primary transition-all duration-200"
                   strokeWidth="10"
                   strokeLinecap="round"
                   fill="none"
@@ -1680,14 +1680,14 @@ export default function DashboardLandingPage() {
                                 vectorEffect="non-scaling-stroke"
                               />
                               {revenueAreaPath ? (
-                                <path d={revenueAreaPath} fill={`url(#${revenueAreaGradientId})`} className="text-primary-contrast" />
+                                <path d={revenueAreaPath} fill={`url(#${revenueAreaGradientId})`} className="text-primary" />
                               ) : null}
                               {revenueSmoothPath ? (
                                 <path
                                   d={revenueSmoothPath}
                                   fill="none"
                                   stroke="currentColor"
-                                  className="text-primary-contrast"
+                                  className="text-primary"
                                   strokeWidth={REVENUE_STROKE_WIDTH}
                                   strokeLinejoin="round"
                                   strokeLinecap="round"
@@ -1986,14 +1986,14 @@ export default function DashboardLandingPage() {
                                 vectorEffect="non-scaling-stroke"
                               />
                               {hourlyAreaPath ? (
-                                <path d={hourlyAreaPath} fill={`url(#${hourlyAreaGradientId})`} className="text-primary-contrast" />
+                                <path d={hourlyAreaPath} fill={`url(#${hourlyAreaGradientId})`} className="text-primary" />
                               ) : null}
                               {hourlySmoothPath ? (
                                 <path
                                   d={hourlySmoothPath}
                                   fill="none"
                                   stroke="currentColor"
-                                  className="text-primary-contrast"
+                                  className="text-primary"
                                   strokeWidth={REVENUE_STROKE_WIDTH}
                                   strokeLinejoin="round"
                                   strokeLinecap="round"
