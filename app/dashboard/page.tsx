@@ -877,6 +877,23 @@ export default function DashboardLandingPage() {
         if (!mounted) return;
         setCurrentUser(user);
 
+        const canLoadDailyClosingWarnings =
+          user.role === "owner" ||
+          (user.role === "platform_admin" && impersonation.isActive());
+
+        if (canLoadDailyClosingWarnings) {
+          try {
+            const data = await getDailyClosingWarnings();
+            if (!mounted) return;
+            setClosingWarnings(data.warnings);
+          } catch {
+            if (!mounted) return;
+            setClosingWarnings([]);
+          }
+        } else {
+          setClosingWarnings([]);
+        }
+
         if (user.role === "platform_admin" && !impersonation.isActive()) {
           setRestaurantId(null);
           return;
@@ -894,10 +911,6 @@ export default function DashboardLandingPage() {
     }
 
     loadContext();
-
-    getDailyClosingWarnings()
-      .then((data) => { if (mounted) setClosingWarnings(data.warnings); })
-      .catch(() => {});
 
     return () => {
       mounted = false;

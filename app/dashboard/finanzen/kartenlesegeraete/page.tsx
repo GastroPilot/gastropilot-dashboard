@@ -448,49 +448,88 @@ export default function KartenlesegeraetePage() {
             {payments.length === 0 ? (
               <p className="text-sm text-muted-foreground py-4">Noch keine Kartenzahlungen.</p>
             ) : (
-              <div className="overflow-x-auto rounded-lg border border-border">
-                <table className="w-full min-w-[700px] text-sm">
-                  <thead className="bg-muted/40">
-                    <tr className="text-left text-muted-foreground">
-                      <th className="px-4 py-2.5 font-medium">Zeitpunkt</th>
-                      <th className="px-4 py-2.5 font-medium">Provider</th>
-                      <th className="px-4 py-2.5 font-medium">Terminal</th>
-                      <th className="px-4 py-2.5 font-medium">Status</th>
-                      <th className="px-4 py-2.5 font-medium text-right">Betrag</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border bg-card">
-                    {payments.map((p) => {
-                      const badge = statusBadge(p.status);
-                      const terminal = terminals.find((t) => t.id === p.terminal_id);
-                      return (
-                        <tr key={p.id} className="transition-colors hover:bg-accent/60">
-                          <td className="px-4 py-2.5 text-muted-foreground whitespace-nowrap">
+              <div className="space-y-3">
+                <div className="md:hidden space-y-3">
+                  {payments.map((p) => {
+                    const badge = statusBadge(p.status);
+                    const terminal = terminals.find((t) => t.id === p.terminal_id);
+                    return (
+                      <div key={p.id} className="rounded-lg border border-border bg-card p-3 space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs text-muted-foreground">
                             {p.initiated_at
                               ? new Date(p.initiated_at).toLocaleString("de-DE")
                               : "-"}
-                          </td>
-                          <td className="px-4 py-2.5">
-                            <span className="rounded bg-muted px-1.5 py-0.5 text-xs">
+                          </span>
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-xs font-medium ${badge.className}`}
+                          >
+                            {badge.label}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-1 gap-1 text-xs">
+                          <div className="text-muted-foreground">
+                            Provider:{" "}
+                            <span className="text-foreground">
                               {PROVIDER_LABELS[p.provider] || p.provider}
                             </span>
-                          </td>
-                          <td className="px-4 py-2.5">{terminal?.name || "-"}</td>
-                          <td className="px-4 py-2.5">
-                            <span
-                              className={`rounded-full px-2 py-0.5 text-xs font-medium ${badge.className}`}
-                            >
-                              {badge.label}
-                            </span>
-                          </td>
-                          <td className="px-4 py-2.5 text-right font-medium">
-                            {formatCurrency(p.amount)}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                          </div>
+                          <div className="text-muted-foreground">
+                            Terminal: <span className="text-foreground">{terminal?.name || "-"}</span>
+                          </div>
+                        </div>
+                        <div className="text-right font-semibold text-foreground">
+                          {formatCurrency(p.amount)}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="hidden md:block overflow-x-auto rounded-lg border border-border">
+                  <table className="w-full min-w-[700px] text-sm">
+                    <thead className="bg-muted/40">
+                      <tr className="text-left text-muted-foreground">
+                        <th className="px-4 py-2.5 font-medium">Zeitpunkt</th>
+                        <th className="px-4 py-2.5 font-medium">Provider</th>
+                        <th className="px-4 py-2.5 font-medium">Terminal</th>
+                        <th className="px-4 py-2.5 font-medium">Status</th>
+                        <th className="px-4 py-2.5 font-medium text-right">Betrag</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border bg-card">
+                      {payments.map((p) => {
+                        const badge = statusBadge(p.status);
+                        const terminal = terminals.find((t) => t.id === p.terminal_id);
+                        return (
+                          <tr key={p.id} className="transition-colors hover:bg-accent/60">
+                            <td className="px-4 py-2.5 text-muted-foreground whitespace-nowrap">
+                              {p.initiated_at
+                                ? new Date(p.initiated_at).toLocaleString("de-DE")
+                                : "-"}
+                            </td>
+                            <td className="px-4 py-2.5">
+                              <span className="rounded bg-muted px-1.5 py-0.5 text-xs">
+                                {PROVIDER_LABELS[p.provider] || p.provider}
+                              </span>
+                            </td>
+                            <td className="px-4 py-2.5">{terminal?.name || "-"}</td>
+                            <td className="px-4 py-2.5">
+                              <span
+                                className={`rounded-full px-2 py-0.5 text-xs font-medium ${badge.className}`}
+                              >
+                                {badge.label}
+                              </span>
+                            </td>
+                            <td className="px-4 py-2.5 text-right font-medium">
+                              {formatCurrency(p.amount)}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </CardContent>

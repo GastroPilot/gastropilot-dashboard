@@ -719,7 +719,7 @@ export default function DashboardPage() {
   // Fallback falls restaurant Daten nicht geladen werden konnten
   if (!restaurant) {
     return (
-      <div className="p-6 bg-background min-h-screen">
+      <div className="h-full min-h-0 p-6 bg-background">
         <p className="text-muted-foreground">Fehler beim Laden des Restaurants. Bitte versuche es erneut.</p>
       </div>
     );
@@ -750,25 +750,25 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="bg-card border-b border-border shadow-sm shrink-0">
         <div className="relative px-3 md:px-4 py-2 md:py-3">
-          <div className="flex items-center justify-between mb-1">
-            <div className="flex items-center gap-2 min-w-0 shrink-0">
-              <div className="text-left">
-                <div className="text-xs md:text-sm font-semibold text-foreground whitespace-nowrap">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="text-left min-w-0">
+                <div className="text-xs md:text-sm font-semibold text-foreground md:whitespace-nowrap">
                   {format(now, "EEEE, d. MMMM yyyy", { locale: de })}
                 </div>
-                <div className="text-base md:text-lg lg:text-xl font-bold text-primary-contrast tracking-tight whitespace-nowrap">
+                <div className="text-base md:text-lg lg:text-xl font-bold text-primary-contrast tracking-tight md:whitespace-nowrap">
                   {format(now, "HH:mm:ss")}
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2 min-w-0 shrink-0 justify-end">
-              <div className="text-right leading-tight">
+            <div className="w-full md:w-auto flex flex-col sm:flex-row sm:items-center gap-2 md:justify-end">
+              <div className="text-left sm:text-right leading-tight">
                 <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Ausgewählter Tag</div>
-                <div className="text-xs font-semibold text-foreground whitespace-nowrap">
+                <div className="text-xs font-semibold text-foreground md:whitespace-nowrap">
                   {format(selectedDate, "EEE, d.M.yyyy", { locale: de })}
                 </div>
               </div>
-              <div className="flex items-center gap-1 shrink-0">
+              <div className="flex items-center gap-1">
                 <Button
                   variant="outline"
                   size="sm"

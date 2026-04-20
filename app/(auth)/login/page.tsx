@@ -237,7 +237,7 @@ function LoginForm() {
   const showTenantStep = mode === "pin" && !activeTenantSlug;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted to-background p-4">
+    <div className="min-h-[100dvh] flex items-center justify-center bg-gradient-to-br from-background via-muted to-background p-4">
       {toasts.length > 0 && (
         <div className="fixed top-4 right-4 z-[200] space-y-3">
           {toasts.map((toast) => (
