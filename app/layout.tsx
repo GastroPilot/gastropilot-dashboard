@@ -43,10 +43,10 @@ export default function RootLayout({
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
-      <body className={`${manrope.className} min-h-screen flex flex-col antialiased`}>
+      <body className={`${manrope.className} min-h-[100dvh] flex flex-col antialiased`}>
         <ThemeProvider>
           <QueryProvider>
-            <div className="flex-1 flex flex-col">{children}</div>
+            <div className="flex-1 min-h-0 flex flex-col">{children}</div>
             <SiteFooter />
           </QueryProvider>
         </ThemeProvider>

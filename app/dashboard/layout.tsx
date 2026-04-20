@@ -209,27 +209,26 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="h-screen flex flex-col bg-background overflow-hidden">
+    <div className="h-full min-h-0 flex flex-col bg-background overflow-hidden">
       <nav className="relative bg-card border-b border-border shrink-0">
-        <div className="relative w-full px-3 sm:px-4 md:px-5">
-          <div className="h-14 md:h-16 flex items-center justify-center">
-            <div className="absolute inset-y-0 left-3 sm:left-4 md:left-6 flex items-center">
-              <Link
-                href="/dashboard"
-                className="flex-shrink-0 flex items-center space-x-3 md:space-x-4"
-              >
-                <Logo size="md" />
-                <div className="leading-tight">
-                  <div className="text-sm md:text-base font-semibold text-foreground">
-                    {restaurantName}
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    Restaurantmanagement
-                  </div>
+        <div className="w-full px-3 sm:px-4 md:px-5">
+          <div className="min-h-14 md:h-16 py-2 md:py-0 flex flex-wrap items-center justify-between gap-x-2 gap-y-2">
+            <Link
+              href="/dashboard"
+              className="min-w-0 flex flex-1 items-center gap-2 sm:gap-3 md:gap-4"
+            >
+              <Logo size="md" />
+              <div className="min-w-0 leading-tight">
+                <div className="text-sm md:text-base font-semibold text-foreground truncate">
+                  {restaurantName}
                 </div>
-              </Link>
-            </div>
-            <div className="absolute inset-y-0 right-3 sm:right-4 md:right-6 flex items-center space-x-3 md:space-x-4">
+                <div className="text-xs text-muted-foreground truncate">
+                  Restaurantmanagement
+                </div>
+              </div>
+            </Link>
+            <div className="flex items-center gap-2 sm:gap-3 md:gap-4 shrink-0">
+              <ThemeSwitch />
               <button
                 type="button"
                 className="sm:hidden inline-flex items-center justify-center rounded-md border border-border bg-card h-10 w-10 min-h-[40px] min-w-[40px] text-foreground hover:bg-accent focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
@@ -239,12 +238,11 @@ export default function DashboardLayout({
               >
                 {isNavOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
               </button>
-              <ThemeSwitch />
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleLogout}
-                className="touch-manipulation min-h-[40px] gap-2"
+                className="hidden sm:inline-flex touch-manipulation min-h-[40px] gap-2"
               >
                 <LogOut className="w-4 h-4" />
                 Abmelden
@@ -313,7 +311,7 @@ export default function DashboardLayout({
               aria-modal="true"
               aria-label="Dashboard Navigation"
             >
-              <div className="px-4 py-3 space-y-1">
+              <div className="px-4 py-3 space-y-1 max-h-[calc(100dvh-3.75rem)] overflow-y-auto overscroll-contain">
                 <DashboardMobileGroupedNav
                   groups={groupedNav}
                   onNavigate={() => setIsNavOpen(false)}

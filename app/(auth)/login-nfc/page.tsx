@@ -74,7 +74,7 @@ function NFCLoginContent() {
   }, [searchParams, router]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="min-h-[100dvh] flex items-center justify-center bg-background">
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>NFC-Login</CardTitle>
@@ -141,4 +141,3 @@ export default function NFCLoginPage() {
     </Suspense>
   );
 }
-

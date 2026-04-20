@@ -565,7 +565,79 @@ export default function OrderHistoryPage() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <div className="overflow-x-auto rounded-lg border border-border">
+                  <div className="md:hidden space-y-3">
+                    {pagedOrders.map((order) => {
+                      const table = tables.find((t) => t.id === order.table_id);
+                      const guest = guests.find((g) => g.id === order.guest_id);
+                      const statusMeta = STATUS_META[order.status];
+                      const StatusIcon = statusMeta.Icon;
+
+                      return (
+                        <button
+                          key={order.id}
+                          type="button"
+                          onClick={() => {
+                            void handleOrderClick(order);
+                          }}
+                          className="w-full text-left rounded-lg border border-border bg-card p-3 space-y-2 transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-semibold text-foreground">
+                              {order.order_number || `#${order.id}`}
+                            </span>
+                            <span className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs ${statusMeta.tone}`}>
+                              <StatusIcon className="h-3.5 w-3.5" />
+                              {statusMeta.label}
+                            </span>
+                          </div>
+                          <div className="grid grid-cols-1 gap-1 text-xs">
+                            <div className="text-muted-foreground">
+                              Datum: <span className="text-foreground">{format(parseISO(order.opened_at), "dd.MM.yyyy HH:mm", { locale: de })}</span>
+                            </div>
+                            <div className="text-muted-foreground">
+                              Tisch: <span className="text-foreground">{table ? table.number : "-"}</span>
+                            </div>
+                            <div className="text-muted-foreground">
+                              Gast: <span className="text-foreground">{guest ? `${guest.first_name} ${guest.last_name}` : "-"}</span>
+                            </div>
+                            <div className="text-muted-foreground">
+                              Zahlung:{" "}
+                              <span
+                                className={
+                                  order.payment_status === "paid"
+                                    ? "text-green-400"
+                                    : order.payment_status === "partial"
+                                      ? "text-yellow-400"
+                                      : "text-red-400"
+                                }
+                              >
+                                {getPaymentStatusLabel(order.payment_status)}
+                              </span>
+                            </div>
+                            <div className="text-muted-foreground">
+                              Personen: <span className="text-foreground">{order.party_size ?? "-"}</span>
+                            </div>
+                          </div>
+                          <div className="pt-1 text-right">
+                            <div className="font-semibold text-foreground">{formatCurrency(order.total)}</div>
+                            {(order.discount_amount > 0 || order.tip_amount > 0) && (
+                              <div className="mt-0.5 text-xs">
+                                {order.discount_amount > 0 && (
+                                  <span className="text-red-400">Rabatt: {formatCurrency(order.discount_amount)}</span>
+                                )}
+                                {order.discount_amount > 0 && order.tip_amount > 0 && <span className="text-muted-foreground"> · </span>}
+                                {order.tip_amount > 0 && (
+                                  <span className="text-green-400">Trinkgeld: {formatCurrency(order.tip_amount)}</span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="hidden md:block overflow-x-auto rounded-lg border border-border">
                     <table className="w-full min-w-[980px] text-sm">
                       <thead className="bg-muted/40">
                         <tr className="text-left text-muted-foreground">
@@ -626,8 +698,8 @@ export default function OrderHistoryPage() {
                                     order.payment_status === "paid"
                                       ? "text-green-400"
                                       : order.payment_status === "partial"
-                                      ? "text-yellow-400"
-                                      : "text-red-400"
+                                        ? "text-yellow-400"
+                                        : "text-red-400"
                                   }
                                 >
                                   {getPaymentStatusLabel(order.payment_status)}
@@ -708,4 +780,3 @@ export default function OrderHistoryPage() {
     </div>
   );
 }
-

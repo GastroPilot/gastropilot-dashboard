@@ -239,7 +239,7 @@ const faqItems = [
 
 export default function HilfecenterPage() {
   return (
-    <div className="h-full min-h-screen flex flex-col bg-background text-foreground overflow-auto">
+    <div className="h-full min-h-0 flex flex-col bg-background text-foreground overflow-hidden">
       <div className="bg-card border-b border-border shadow-sm shrink-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex items-center gap-3">

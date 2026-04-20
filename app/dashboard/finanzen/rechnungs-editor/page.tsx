@@ -364,74 +364,132 @@ export default function FinanceInvoiceEditorPage() {
             ) : filteredOrders.length === 0 ? (
               <p className="text-sm text-muted-foreground">Keine Rechnungen für die aktuellen Filter gefunden.</p>
             ) : (
-              <div className="overflow-x-auto rounded-lg border border-border">
-                <table className="w-full min-w-[980px] text-sm">
-                  <thead className="bg-muted/40">
-                    <tr className="text-left text-muted-foreground">
-                      <th className="px-4 py-3 font-medium">Rechnung</th>
-                      <th className="px-4 py-3 font-medium">Datum</th>
-                      <th className="px-4 py-3 font-medium">Status</th>
-                      <th className="px-4 py-3 font-medium">Zahlungsart</th>
-                      <th className="px-4 py-3 font-medium text-right">Betrag</th>
-                      <th className="px-4 py-3 font-medium text-right">PDF</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border bg-card">
-                    {pagedOrders.map((order) => (
-                      <tr
-                        key={order.id}
-                        className={`cursor-pointer ${DASHBOARD_ROW_HOVER_CLASS}`}
-                        onClick={() => openEditor(order.id)}
-                        onKeyDown={(event) => {
-                          if (event.target !== event.currentTarget) return;
-                          if (event.key !== "Enter" && event.key !== " ") return;
-                          event.preventDefault();
-                          openEditor(order.id);
-                        }}
-                        tabIndex={0}
-                        role="button"
-                        aria-label={`Rechnung ${order.order_number || `#${order.id.slice(0, 8)}`} bearbeiten`}
-                      >
-                        <td className="px-4 py-3">
+              <div className="space-y-3">
+                <div className="md:hidden space-y-3">
+                  {pagedOrders.map((order) => (
+                    <div
+                      key={order.id}
+                      onClick={() => openEditor(order.id)}
+                      className={`w-full text-left rounded-lg border border-border bg-card p-3 space-y-2 ${DASHBOARD_ROW_HOVER_CLASS}`}
+                      onKeyDown={(event) => {
+                        if (event.target !== event.currentTarget) return;
+                        if (event.key !== "Enter" && event.key !== " ") return;
+                        event.preventDefault();
+                        openEditor(order.id);
+                      }}
+                      tabIndex={0}
+                      role="button"
+                      aria-label={`Rechnung ${order.order_number || `#${order.id.slice(0, 8)}`} bearbeiten`}
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
                           <p className="font-semibold text-foreground">{order.order_number || `#${order.id.slice(0, 8)}`}</p>
-                          <p className="text-xs text-muted-foreground font-mono">{order.id}</p>
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
-                          {formatOrderDate(order.opened_at)}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className={paymentStatusTone(order.payment_status)}>
-                            {paymentStatusLabel(order.payment_status)}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground">{order.payment_method || "-"}</td>
-                        <td className="px-4 py-3 text-right font-semibold text-foreground">
-                          {formatCurrency(order.total)}
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center justify-end">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="gap-1"
-                              onClick={(event) => {
-                                event.preventDefault();
-                                event.stopPropagation();
-                                void handleDownloadInvoice(order.id, order.order_number);
-                              }}
-                              onKeyDown={(event) => {
-                                event.stopPropagation();
-                              }}
-                            >
-                              <Download className="h-3.5 w-3.5" />
-                              PDF
-                            </Button>
-                          </div>
-                        </td>
+                          <p className="text-[11px] text-muted-foreground font-mono break-all">{order.id}</p>
+                        </div>
+                        <span className={paymentStatusTone(order.payment_status)}>
+                          {paymentStatusLabel(order.payment_status)}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-1 gap-1 text-xs">
+                        <div className="text-muted-foreground">
+                          Datum: <span className="text-foreground">{formatOrderDate(order.opened_at)}</span>
+                        </div>
+                        <div className="text-muted-foreground">
+                          Zahlungsart: <span className="text-foreground">{order.payment_method || "-"}</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between gap-2 pt-1">
+                        <div className="font-semibold text-foreground">{formatCurrency(order.total)}</div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1"
+                          onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            void handleDownloadInvoice(order.id, order.order_number);
+                          }}
+                          onKeyDown={(event) => {
+                            event.stopPropagation();
+                          }}
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                          PDF
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="hidden md:block overflow-x-auto rounded-lg border border-border">
+                  <table className="w-full min-w-[980px] text-sm">
+                    <thead className="bg-muted/40">
+                      <tr className="text-left text-muted-foreground">
+                        <th className="px-4 py-3 font-medium">Rechnung</th>
+                        <th className="px-4 py-3 font-medium">Datum</th>
+                        <th className="px-4 py-3 font-medium">Status</th>
+                        <th className="px-4 py-3 font-medium">Zahlungsart</th>
+                        <th className="px-4 py-3 font-medium text-right">Betrag</th>
+                        <th className="px-4 py-3 font-medium text-right">PDF</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-border bg-card">
+                      {pagedOrders.map((order) => (
+                        <tr
+                          key={order.id}
+                          className={`cursor-pointer ${DASHBOARD_ROW_HOVER_CLASS}`}
+                          onClick={() => openEditor(order.id)}
+                          onKeyDown={(event) => {
+                            if (event.target !== event.currentTarget) return;
+                            if (event.key !== "Enter" && event.key !== " ") return;
+                            event.preventDefault();
+                            openEditor(order.id);
+                          }}
+                          tabIndex={0}
+                          role="button"
+                          aria-label={`Rechnung ${order.order_number || `#${order.id.slice(0, 8)}`} bearbeiten`}
+                        >
+                          <td className="px-4 py-3">
+                            <p className="font-semibold text-foreground">{order.order_number || `#${order.id.slice(0, 8)}`}</p>
+                            <p className="text-xs text-muted-foreground font-mono">{order.id}</p>
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                            {formatOrderDate(order.opened_at)}
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className={paymentStatusTone(order.payment_status)}>
+                              {paymentStatusLabel(order.payment_status)}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground">{order.payment_method || "-"}</td>
+                          <td className="px-4 py-3 text-right font-semibold text-foreground">
+                            {formatCurrency(order.total)}
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center justify-end">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="gap-1"
+                                onClick={(event) => {
+                                  event.preventDefault();
+                                  event.stopPropagation();
+                                  void handleDownloadInvoice(order.id, order.order_number);
+                                }}
+                                onKeyDown={(event) => {
+                                  event.stopPropagation();
+                                }}
+                              >
+                                <Download className="h-3.5 w-3.5" />
+                                PDF
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-t border-border bg-card px-4 py-3 text-xs text-muted-foreground">
                   <div>
                     Zeigt {Math.min(pageStart + 1, filteredOrders.length)}-

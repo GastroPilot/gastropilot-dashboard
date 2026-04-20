@@ -437,7 +437,7 @@ export default function TimelinePage() {
 
   if (!restaurant) {
     return (
-      <div className="p-6 bg-background min-h-screen text-foreground">
+      <div className="h-full min-h-0 p-6 bg-background text-foreground">
         Kein Restaurant gefunden. Bitte zuerst ein Restaurant anlegen.
       </div>
     );
@@ -464,30 +464,30 @@ export default function TimelinePage() {
         </div>
       )}
       <div className="bg-card border-b border-border px-4 py-3 shadow-sm shrink-0">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2 min-w-0 shrink-0">
-            <div className="text-left">
-              <div className="text-xs md:text-sm font-semibold text-foreground whitespace-nowrap">
+        <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="text-left min-w-0">
+              <div className="text-xs md:text-sm font-semibold text-foreground md:whitespace-nowrap">
                 {format(now, "EEEE, d. MMMM yyyy", { locale: de })}
               </div>
-              <div className="text-base md:text-lg lg:text-xl font-bold text-primary-contrast tracking-tight whitespace-nowrap">
+              <div className="text-base md:text-lg lg:text-xl font-bold text-primary-contrast tracking-tight md:whitespace-nowrap">
                 {format(now, "HH:mm:ss")}
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2 min-w-0 shrink-0 justify-end">
-            <div className="text-right leading-tight">
+          <div className="w-full md:w-auto flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2 md:justify-end">
+            <div className="text-left sm:text-right leading-tight">
               <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Ausgewählter Tag</div>
-              <div className="text-xs font-semibold text-foreground whitespace-nowrap">
+              <div className="text-xs font-semibold text-foreground md:whitespace-nowrap">
                 {format(selectedDate, "EEE, d.M.yyyy", { locale: de })}
               </div>
             </div>
-            <div className="flex items-center gap-1 shrink-0">
-              <div className="relative" ref={statusMenuRef}>
+            <div className="w-full sm:w-auto flex flex-wrap items-center gap-2">
+              <div className="relative w-full sm:w-auto" ref={statusMenuRef}>
                 <button
                   type="button"
                   onClick={() => setStatusMenuOpen((prev) => !prev)}
-                  className="inline-flex items-center justify-between gap-2 min-w-[140px] rounded-lg border border-border bg-card text-foreground px-3 py-2 text-sm shadow-inner hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring"
+                  className="inline-flex w-full sm:w-auto items-center justify-between gap-2 sm:min-w-[140px] rounded-lg border border-border bg-card text-foreground px-3 py-2 text-sm shadow-inner hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring"
                 >
                   <span className="flex items-center gap-2 truncate">
                     <Filter className="w-4 h-4 text-muted-foreground" />
@@ -593,7 +593,7 @@ export default function TimelinePage() {
                   void persistSlotMinutes(minutes);
                 }}
                 placeholder="Intervall"
-                triggerClassName="inline-flex items-center justify-between gap-2 min-w-[120px] rounded-lg border border-border bg-card text-foreground px-3 py-2 text-sm shadow-inner hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring"
+                triggerClassName="inline-flex w-full sm:w-auto items-center justify-between gap-2 sm:min-w-[120px] rounded-lg border border-border bg-card text-foreground px-3 py-2 text-sm shadow-inner hover:border-primary focus:outline-none focus:ring-2 focus:ring-ring"
                 menuAlign="right"
                 menuWidthClassName="w-44"
                 zIndexClassName="z-[60]"

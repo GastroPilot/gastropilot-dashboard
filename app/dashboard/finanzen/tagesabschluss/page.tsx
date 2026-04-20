@@ -845,7 +845,34 @@ export default function FinanceDailyClosePage() {
               <p className="text-sm text-emerald-300">Keine offenen Vorgänge. Tagesabschluss ist möglich.</p>
             ) : (
               <div className="space-y-3">
-                <div className="overflow-x-auto rounded-lg border border-border">
+                <div className="md:hidden space-y-3">
+                  {openOrders.map((order) => (
+                    <div key={order.id} className={`rounded-lg border border-border bg-card p-3 space-y-2 ${DASHBOARD_ROW_HOVER_CLASS}`}>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="font-semibold text-foreground">
+                            {order.order_number || `#${order.id.slice(0, 8)}`}
+                          </div>
+                          <div className="text-[11px] text-muted-foreground font-mono break-all">{order.id}</div>
+                        </div>
+                        <div className="text-right font-semibold text-foreground">{formatCurrency(order.total)}</div>
+                      </div>
+                      <div className="grid grid-cols-1 gap-1 text-xs">
+                        <div className="text-muted-foreground">
+                          Zeit: <span className="text-foreground">{format(parseISO(order.opened_at), "dd.MM.yyyy HH:mm", { locale: de })}</span>
+                        </div>
+                        <div className="text-muted-foreground">
+                          Status: <span className="text-amber-300">{orderStatusLabel(order.status)}</span>
+                        </div>
+                        <div className="text-muted-foreground">
+                          Zahlung: <span className="text-red-300">{paymentLabel(order.payment_status)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="hidden md:block overflow-x-auto rounded-lg border border-border">
                   <table className="w-full min-w-[760px] text-sm">
                     <thead className="bg-muted/40">
                       <tr className="text-left text-muted-foreground">
@@ -896,78 +923,150 @@ export default function FinanceDailyClosePage() {
               <CardTitle className="text-base">Bisherige Tagesabschlüsse</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="overflow-x-auto rounded-lg border border-border">
-                <table className="w-full min-w-[700px] text-sm">
-                  <thead className="bg-muted/40">
-                    <tr className="text-left text-muted-foreground">
-                      <th className="px-4 py-2.5 font-medium">Datum</th>
-                      <th className="px-4 py-2.5 font-medium">Status</th>
-                      <th className="px-4 py-2.5 font-medium text-right">Umsatz</th>
-                      <th className="px-4 py-2.5 font-medium text-right">Bar</th>
-                      <th className="px-4 py-2.5 font-medium text-right">Unbar</th>
-                      <th className="px-4 py-2.5 font-medium text-right">TX</th>
-                      <th className="px-4 py-2.5 font-medium">Aktionen</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border bg-card">
-                    {dailyClosings.filter((c) => c.state !== "DELETED").map((closing) => {
-                      const badge = closingStateBadge(closing.state);
-                      return (
-                        <tr key={closing.closing_id} className={DASHBOARD_ROW_HOVER_CLASS}>
-                          <td className="px-4 py-2.5 font-medium text-foreground">{closing.business_date}</td>
-                          <td className="px-4 py-2.5">
-                            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${badge.className}`}>
+              <div className="space-y-3">
+                <div className="md:hidden space-y-3">
+                  {dailyClosings.filter((c) => c.state !== "DELETED").map((closing) => {
+                    const badge = closingStateBadge(closing.state);
+                    return (
+                      <div key={closing.closing_id} className={`rounded-lg border border-border bg-card p-3 space-y-2 ${DASHBOARD_ROW_HOVER_CLASS}`}>
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <div className="font-semibold text-foreground">{closing.business_date}</div>
+                            <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${badge.className}`}>
                               {badge.label}
                             </span>
-                          </td>
-                          <td className="px-4 py-2.5 text-right">{formatCurrency(closing.total_amount ?? 0)}</td>
-                          <td className="px-4 py-2.5 text-right">{formatCurrency(closing.total_cash ?? 0)}</td>
-                          <td className="px-4 py-2.5 text-right">{formatCurrency(closing.total_non_cash ?? 0)}</td>
-                          <td className="px-4 py-2.5 text-right">{closing.transaction_count ?? 0}</td>
-                          <td className="px-4 py-2.5">
-                            <div className="flex gap-1">
-                              {closing.state !== "ERROR" ? (
-                                <>
+                          </div>
+                          <div className="text-right text-xs text-muted-foreground">
+                            TX: <span className="text-foreground">{closing.transaction_count ?? 0}</span>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-xs">
+                          <div className="text-muted-foreground">
+                            Umsatz
+                            <div className="text-foreground font-medium">{formatCurrency(closing.total_amount ?? 0)}</div>
+                          </div>
+                          <div className="text-muted-foreground">
+                            Bar
+                            <div className="text-foreground font-medium">{formatCurrency(closing.total_cash ?? 0)}</div>
+                          </div>
+                          <div className="text-muted-foreground">
+                            Unbar
+                            <div className="text-foreground font-medium">{formatCurrency(closing.total_non_cash ?? 0)}</div>
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {closing.state !== "ERROR" ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="gap-1.5 text-xs"
+                              onClick={() => handleDownloadPdf(closing.closing_id, closing.business_date)}
+                            >
+                              <FileText className="h-3.5 w-3.5" />
+                              Drucken
+                            </Button>
+                          ) : null}
+                          {closing.dsfinvk_export_id && closing.dsfinvk_export_state === "COMPLETED" ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="gap-1.5 text-xs"
+                              onClick={() => handleDownloadExport(closing.dsfinvk_export_id!)}
+                            >
+                              <FileArchive className="h-3.5 w-3.5" />
+                              Export
+                            </Button>
+                          ) : null}
+                          {closing.state === "ERROR" ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="gap-1.5 text-xs text-red-300"
+                              onClick={() => handleDeleteClosing(closing.closing_id)}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                              Löschen
+                            </Button>
+                          ) : null}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="hidden md:block overflow-x-auto rounded-lg border border-border">
+                  <table className="w-full min-w-[700px] text-sm">
+                    <thead className="bg-muted/40">
+                      <tr className="text-left text-muted-foreground">
+                        <th className="px-4 py-2.5 font-medium">Datum</th>
+                        <th className="px-4 py-2.5 font-medium">Status</th>
+                        <th className="px-4 py-2.5 font-medium text-right">Umsatz</th>
+                        <th className="px-4 py-2.5 font-medium text-right">Bar</th>
+                        <th className="px-4 py-2.5 font-medium text-right">Unbar</th>
+                        <th className="px-4 py-2.5 font-medium text-right">TX</th>
+                        <th className="px-4 py-2.5 font-medium">Aktionen</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border bg-card">
+                      {dailyClosings.filter((c) => c.state !== "DELETED").map((closing) => {
+                        const badge = closingStateBadge(closing.state);
+                        return (
+                          <tr key={closing.closing_id} className={DASHBOARD_ROW_HOVER_CLASS}>
+                            <td className="px-4 py-2.5 font-medium text-foreground">{closing.business_date}</td>
+                            <td className="px-4 py-2.5">
+                              <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${badge.className}`}>
+                                {badge.label}
+                              </span>
+                            </td>
+                            <td className="px-4 py-2.5 text-right">{formatCurrency(closing.total_amount ?? 0)}</td>
+                            <td className="px-4 py-2.5 text-right">{formatCurrency(closing.total_cash ?? 0)}</td>
+                            <td className="px-4 py-2.5 text-right">{formatCurrency(closing.total_non_cash ?? 0)}</td>
+                            <td className="px-4 py-2.5 text-right">{closing.transaction_count ?? 0}</td>
+                            <td className="px-4 py-2.5">
+                              <div className="flex gap-1">
+                                {closing.state !== "ERROR" ? (
+                                  <>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="gap-1.5 text-xs"
+                                      onClick={() => handleDownloadPdf(closing.closing_id, closing.business_date)}
+                                    >
+                                      <FileText className="h-3.5 w-3.5" />
+                                      Drucken
+                                    </Button>
+                                  </>
+                                ) : null}
+                                {closing.dsfinvk_export_id && closing.dsfinvk_export_state === "COMPLETED" ? (
                                   <Button
                                     variant="ghost"
                                     size="sm"
                                     className="gap-1.5 text-xs"
-                                    onClick={() => handleDownloadPdf(closing.closing_id, closing.business_date)}
+                                    onClick={() => handleDownloadExport(closing.dsfinvk_export_id!)}
                                   >
-                                    <FileText className="h-3.5 w-3.5" />
-                                    Drucken
+                                    <FileArchive className="h-3.5 w-3.5" />
+                                    Finanzamt-Export herunterladen
                                   </Button>
-                                </>
-                              ) : null}
-                              {closing.dsfinvk_export_id && closing.dsfinvk_export_state === "COMPLETED" ? (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="gap-1.5 text-xs"
-                                  onClick={() => handleDownloadExport(closing.dsfinvk_export_id!)}
-                                >
-                                  <FileArchive className="h-3.5 w-3.5" />
-                                  Finanzamt-Export herunterladen
-                                </Button>
-                              ) : null}
-                              {closing.state === "ERROR" ? (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="gap-1.5 text-xs text-red-300"
-                                  onClick={() => handleDeleteClosing(closing.closing_id)}
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" />
-                                  Löschen
-                                </Button>
-                              ) : null}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                                ) : null}
+                                {closing.state === "ERROR" ? (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="gap-1.5 text-xs text-red-300"
+                                    onClick={() => handleDeleteClosing(closing.closing_id)}
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                    Löschen
+                                  </Button>
+                                ) : null}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </CardContent>
           </Card>

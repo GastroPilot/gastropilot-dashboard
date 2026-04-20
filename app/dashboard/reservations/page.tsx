@@ -400,7 +400,7 @@ export default function ReservationsPage() {
 
   if (isInitialLoading) {
     return (
-      <div className="h-screen flex flex-col bg-background text-foreground">
+      <div className="h-full min-h-0 flex flex-col bg-background text-foreground">
         {/* Header Skeleton */}
         <div className="bg-card border-b border-border px-4 py-3 shadow-sm">
           <div className="h-24" />
@@ -425,7 +425,7 @@ export default function ReservationsPage() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-background text-foreground">
+    <div className="h-full min-h-0 flex flex-col bg-background text-foreground">
       {toasts.length > 0 && (
         <div className="fixed bottom-4 right-4 z-[200] space-y-3">
           {toasts.map((toast) => (
@@ -445,53 +445,52 @@ export default function ReservationsPage() {
         </div>
       )}
       <div className="bg-card border-b border-border px-4 py-3 shadow-sm">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2 min-w-0 shrink-0">
-            <div className="text-left">
-              <div className="text-xs md:text-sm font-semibold text-foreground whitespace-nowrap">
+        <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="text-left min-w-0">
+              <div className="text-xs md:text-sm font-semibold text-foreground md:whitespace-nowrap">
                 {format(now, "EEEE, d. MMMM yyyy", { locale: de })}
               </div>
-              <div className="text-base md:text-lg lg:text-xl font-bold text-primary-contrast tracking-tight whitespace-nowrap">
+              <div className="text-base md:text-lg lg:text-xl font-bold text-primary-contrast tracking-tight md:whitespace-nowrap">
                 {format(now, "HH:mm:ss")}
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2 min-w-0 shrink-0 justify-end">
-            <div className="text-right leading-tight">
-            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Ausgewählter Tag</div>
-              <div className="text-xs font-semibold text-foreground whitespace-nowrap">
+          <div className="w-full md:w-auto flex flex-col sm:flex-row sm:items-center gap-2 md:justify-end">
+            <div className="text-left sm:text-right leading-tight">
+              <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Ausgewählter Tag</div>
+              <div className="text-xs font-semibold text-foreground md:whitespace-nowrap">
                 {format(selectedDate, "EEE, d.M.yyyy", { locale: de })}
               </div>
             </div>
-            <div className="flex items-center gap-1 shrink-0">
-                
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigateDate(-1)}
-                    className="touch-manipulation min-h-[32px] px-2 py-1"
-                >
-                    <ChevronLeft className="w-3.5 h-3.5" />
-                </Button>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setSelectedDate(new Date())}
-                    className="touch-manipulation min-h-[32px] text-xs px-2 py-1 gap-1.5"
-                    title="Heute springen"
-                >
-                    <Calendar className="w-3.5 h-3.5" />
-                    Heute
-                </Button>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigateDate(1)}
-                    className="touch-manipulation min-h-[32px] px-2 py-1"
-                    title="Nächster Tag"
-                >
-                    <ChevronRight className="w-3.5 h-3.5" />
-                </Button>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigateDate(-1)}
+                className="touch-manipulation min-h-[32px] px-2 py-1"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setSelectedDate(new Date())}
+                className="touch-manipulation min-h-[32px] text-xs px-2 py-1 gap-1.5"
+                title="Heute springen"
+              >
+                <Calendar className="w-3.5 h-3.5" />
+                Heute
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigateDate(1)}
+                className="touch-manipulation min-h-[32px] px-2 py-1"
+                title="Nächster Tag"
+              >
+                <ChevronRight className="w-3.5 h-3.5" />
+              </Button>
             </div>
           </div>
         </div>
@@ -646,96 +645,79 @@ export default function ReservationsPage() {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-border bg-card">
-              <table className="w-full min-w-[1120px] text-sm">
-                <thead className="bg-muted/40">
-                  <tr className="text-left text-muted-foreground">
-                    <th className="px-4 py-3 font-medium">Zeit</th>
-                    <th className="px-4 py-3 font-medium">Typ</th>
-                    <th className="px-4 py-3 font-medium">Name / Grund</th>
-                    <th className="px-4 py-3 font-medium">Tisch</th>
-                    <th className="px-4 py-3 font-medium text-right">Personen</th>
-                    <th className="px-4 py-3 font-medium">Kontakt</th>
-                    <th className="px-4 py-3 font-medium">Status</th>
-                    <th className="px-4 py-3 font-medium">Notizen</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border bg-card">
-                  {combinedItems.map((entry) => {
-                    if (entry.type === "block") {
-                      const block = entry.block;
-                      const startDate = parseISO(block.start_at);
-                      const endDate = parseISO(block.end_at);
-                      const blockMeta = STATUS_ICON_MAP.block;
-                      const BlockIcon = blockMeta.Icon;
-                      return (
-                        <tr key={entry.id} className="bg-rose-900/10 text-foreground">
-                          <td className="px-4 py-3 whitespace-nowrap">
+            <div className="space-y-3">
+              <div className="md:hidden space-y-3">
+                {combinedItems.map((entry) => {
+                  if (entry.type === "block") {
+                    const block = entry.block;
+                    const startDate = parseISO(block.start_at);
+                    const endDate = parseISO(block.end_at);
+                    const blockMeta = STATUS_ICON_MAP.block;
+                    const BlockIcon = blockMeta.Icon;
+                    return (
+                      <div
+                        key={entry.id}
+                        className="rounded-lg border border-rose-600/40 bg-rose-900/10 p-3 space-y-2"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-semibold text-foreground">
                             {format(startDate, "HH:mm")}–{format(endDate, "HH:mm")}
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className="inline-flex items-center rounded-md border border-rose-600/60 bg-rose-900/20 px-2 py-1 text-xs font-medium">
-                              Block
-                            </span>
-                          </td>
-                          <td className="px-4 py-3 font-medium">
-                            {block.reason || "Blockiert"}
-                          </td>
-                          <td className="px-4 py-3 text-muted-foreground">{getBlockTableLabel(block.id)}</td>
-                          <td className="px-4 py-3 text-right text-muted-foreground">-</td>
-                          <td className="px-4 py-3 text-muted-foreground">-</td>
-                          <td className="px-4 py-3">
+                          </span>
+                          <span className="inline-flex items-center rounded-md border border-rose-600/60 bg-rose-900/20 px-2 py-1 text-xs font-medium">
+                            Block
+                          </span>
+                        </div>
+                        <p className="text-sm font-semibold text-foreground">{block.reason || "Blockiert"}</p>
+                        <div className="grid grid-cols-1 gap-1 text-xs">
+                          <div className="text-muted-foreground">
+                            Tisch: <span className="text-foreground">{getBlockTableLabel(block.id)}</span>
+                          </div>
+                          <div>
                             <span className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs ${blockMeta.tone}`}>
                               <BlockIcon className="w-3.5 h-3.5" />
                               Blockiert
                             </span>
-                          </td>
-                          <td className="px-4 py-3 text-muted-foreground">-</td>
-                        </tr>
-                      );
-                    }
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
 
-                    const reservation = entry.reservation;
-                    const startDate = parseISO(reservation.start_at);
-                    const endDate = parseISO(reservation.end_at);
-                    const status = getStatusIcon(reservation.status);
-                    const contact = [reservation.guest_phone, reservation.guest_email]
-                      .filter(Boolean)
-                      .join(" · ");
+                  const reservation = entry.reservation;
+                  const startDate = parseISO(reservation.start_at);
+                  const endDate = parseISO(reservation.end_at);
+                  const status = getStatusIcon(reservation.status);
+                  const contact = [reservation.guest_phone, reservation.guest_email]
+                    .filter(Boolean)
+                    .join(" · ");
 
-                    return (
-                      <tr
-                        key={entry.id}
-                        onClick={() => handleReservationClick(reservation)}
-                        onKeyDown={(event) => {
-                          if (event.key === "Enter" || event.key === " ") {
-                            event.preventDefault();
-                            handleReservationClick(reservation);
-                          }
-                        }}
-                        role="button"
-                        tabIndex={0}
-                        className="cursor-pointer transition-colors hover:bg-accent/40 focus-visible:bg-accent/40 focus-visible:outline-none"
-                      >
-                        <td className="px-4 py-3 whitespace-nowrap">
+                  return (
+                    <button
+                      key={entry.id}
+                      type="button"
+                      onClick={() => handleReservationClick(reservation)}
+                      className="w-full text-left rounded-lg border border-border bg-card p-3 space-y-2 transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-semibold text-foreground">
                           {format(startDate, "HH:mm")}–{format(endDate, "HH:mm")}
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className="inline-flex items-center rounded-md border border-border bg-background/50 px-2 py-1 text-xs font-medium">
-                            Reservierung
-                          </span>
-                        </td>
-                        <td className="px-4 py-3">
-                          <span className="font-semibold text-foreground">
-                            {reservation.guest_name || "Unbekannt"}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground">{getTableName(reservation.table_id)}</td>
-                        <td className="px-4 py-3 text-right text-muted-foreground">
-                          {reservation.party_size}
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground">{contact || "-"}</td>
-                        <td className="px-4 py-3">
+                        </span>
+                        <span className="inline-flex items-center rounded-md border border-border bg-background/50 px-2 py-1 text-xs font-medium">
+                          Reservierung
+                        </span>
+                      </div>
+                      <p className="font-semibold text-foreground">{reservation.guest_name || "Unbekannt"}</p>
+                      <div className="grid grid-cols-1 gap-1 text-xs">
+                        <div className="text-muted-foreground">
+                          Tisch: <span className="text-foreground">{getTableName(reservation.table_id)}</span>
+                        </div>
+                        <div className="text-muted-foreground">
+                          Personen: <span className="text-foreground">{reservation.party_size}</span>
+                        </div>
+                        <div className="text-muted-foreground">
+                          Kontakt: <span className="text-foreground">{contact || "-"}</span>
+                        </div>
+                        <div>
                           <span
                             className={`${status.className} inline-flex w-auto px-2 py-1 gap-1.5`}
                             title={status.label}
@@ -744,17 +726,126 @@ export default function ReservationsPage() {
                             {status.icon}
                             <span className="text-xs font-medium">{status.label}</span>
                           </span>
-                        </td>
-                        <td className="px-4 py-3 text-muted-foreground">
-                          <span className="block max-w-[280px] truncate">
-                            {reservation.notes || "-"}
-                          </span>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                        </div>
+                        <div className="text-muted-foreground">
+                          Notiz: <span className="text-foreground">{reservation.notes || "-"}</span>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="hidden md:block overflow-x-auto rounded-lg border border-border bg-card">
+                <table className="w-full min-w-[1120px] text-sm">
+                  <thead className="bg-muted/40">
+                    <tr className="text-left text-muted-foreground">
+                      <th className="px-4 py-3 font-medium">Zeit</th>
+                      <th className="px-4 py-3 font-medium">Typ</th>
+                      <th className="px-4 py-3 font-medium">Name / Grund</th>
+                      <th className="px-4 py-3 font-medium">Tisch</th>
+                      <th className="px-4 py-3 font-medium text-right">Personen</th>
+                      <th className="px-4 py-3 font-medium">Kontakt</th>
+                      <th className="px-4 py-3 font-medium">Status</th>
+                      <th className="px-4 py-3 font-medium">Notizen</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border bg-card">
+                    {combinedItems.map((entry) => {
+                      if (entry.type === "block") {
+                        const block = entry.block;
+                        const startDate = parseISO(block.start_at);
+                        const endDate = parseISO(block.end_at);
+                        const blockMeta = STATUS_ICON_MAP.block;
+                        const BlockIcon = blockMeta.Icon;
+                        return (
+                          <tr key={entry.id} className="bg-rose-900/10 text-foreground">
+                            <td className="px-4 py-3 whitespace-nowrap">
+                              {format(startDate, "HH:mm")}–{format(endDate, "HH:mm")}
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className="inline-flex items-center rounded-md border border-rose-600/60 bg-rose-900/20 px-2 py-1 text-xs font-medium">
+                                Block
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 font-medium">
+                              {block.reason || "Blockiert"}
+                            </td>
+                            <td className="px-4 py-3 text-muted-foreground">{getBlockTableLabel(block.id)}</td>
+                            <td className="px-4 py-3 text-right text-muted-foreground">-</td>
+                            <td className="px-4 py-3 text-muted-foreground">-</td>
+                            <td className="px-4 py-3">
+                              <span className={`inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs ${blockMeta.tone}`}>
+                                <BlockIcon className="w-3.5 h-3.5" />
+                                Blockiert
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-muted-foreground">-</td>
+                          </tr>
+                        );
+                      }
+
+                      const reservation = entry.reservation;
+                      const startDate = parseISO(reservation.start_at);
+                      const endDate = parseISO(reservation.end_at);
+                      const status = getStatusIcon(reservation.status);
+                      const contact = [reservation.guest_phone, reservation.guest_email]
+                        .filter(Boolean)
+                        .join(" · ");
+
+                      return (
+                        <tr
+                          key={entry.id}
+                          onClick={() => handleReservationClick(reservation)}
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter" || event.key === " ") {
+                              event.preventDefault();
+                              handleReservationClick(reservation);
+                            }
+                          }}
+                          role="button"
+                          tabIndex={0}
+                          className="cursor-pointer transition-colors hover:bg-accent/40 focus-visible:bg-accent/40 focus-visible:outline-none"
+                        >
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            {format(startDate, "HH:mm")}–{format(endDate, "HH:mm")}
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="inline-flex items-center rounded-md border border-border bg-background/50 px-2 py-1 text-xs font-medium">
+                              Reservierung
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <span className="font-semibold text-foreground">
+                              {reservation.guest_name || "Unbekannt"}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground">{getTableName(reservation.table_id)}</td>
+                          <td className="px-4 py-3 text-right text-muted-foreground">
+                            {reservation.party_size}
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground">{contact || "-"}</td>
+                          <td className="px-4 py-3">
+                            <span
+                              className={`${status.className} inline-flex w-auto px-2 py-1 gap-1.5`}
+                              title={status.label}
+                              aria-label={status.label}
+                            >
+                              {status.icon}
+                              <span className="text-xs font-medium">{status.label}</span>
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-muted-foreground">
+                            <span className="block max-w-[280px] truncate">
+                              {reservation.notes || "-"}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </div>
