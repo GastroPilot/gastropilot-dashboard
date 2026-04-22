@@ -3,8 +3,6 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { type ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { dashboardApi } from "@/lib/api/dashboard";
-import { orderStatisticsApi } from "@/lib/api/order-statistics";
-import { reservationsApi } from "@/lib/api/reservations";
 import { useDashboardOverviewData } from "@/lib/hooks/queries/use-dashboard-overview-data";
 
 vi.mock("@/lib/api/dashboard", () => ({
@@ -14,24 +12,7 @@ vi.mock("@/lib/api/dashboard", () => ({
   },
 }));
 
-vi.mock("@/lib/api/order-statistics", () => ({
-  orderStatisticsApi: {
-    getRevenue: vi.fn(),
-    getTopItems: vi.fn(),
-    getCategoryStatistics: vi.fn(),
-    getHourlyStatistics: vi.fn(),
-  },
-}));
-
-vi.mock("@/lib/api/reservations", () => ({
-  reservationsApi: {
-    list: vi.fn(),
-  },
-}));
-
 const mockedDashboardApi = vi.mocked(dashboardApi);
-const mockedOrderStatisticsApi = vi.mocked(orderStatisticsApi);
-const mockedReservationsApi = vi.mocked(reservationsApi);
 
 function createWrapper() {
   const queryClient = new QueryClient({
@@ -99,166 +80,102 @@ function setupSuccessfulApiMocks() {
   } as any);
 
   mockedDashboardApi.getInsightsData.mockImplementation(async (_restaurantId, options) => {
-    const day = options?.fromDate ? options.fromDate.toISOString().slice(0, 10) : null;
-    const dayTo = options?.toDate ? options.toDate.toISOString().slice(0, 10) : null;
+    const from = options?.fromDate ? options.fromDate.toISOString().slice(0, 10) : "";
+    const to = options?.toDate ? options.toDate.toISOString().slice(0, 10) : "";
 
-    if (day && dayTo && day === dayTo) {
-      const dailyMap: Record<string, { orders_count: number; reservations_count: number }> = {
-        "2026-04-07": { orders_count: 0, reservations_count: 1 },
-        "2026-04-08": { orders_count: 1, reservations_count: 0 },
-        "2026-04-09": { orders_count: 2, reservations_count: 2 },
-      };
-      const daily = dailyMap[day] ?? { orders_count: 0, reservations_count: 0 };
+    if (from === "2026-04-02" && to === "2026-04-09") {
       return {
-        total_revenue: 0,
-        orders_count: daily.orders_count,
-        avg_order_value: 0,
-        reservations_count: daily.reservations_count,
+        total_revenue: 320,
+        orders_count: 12,
+        avg_order_value: 26.67,
+        reservations_count: 7,
+        guests_served: 18,
+        popular_items: [{ name: "Pasta", quantity: 10, revenue: 150 }],
+        category_statistics: {
+          Hauptspeisen: { quantity: 10, revenue: 150 },
+        },
+        hourly_statistics: {
+          "12": { order_count: 3, revenue: 90 },
+          "18": { order_count: 5, revenue: 180 },
+        },
+        revenue_by_day: [
+          { date: "2026-04-08", revenue: 120 },
+          { date: "2026-04-09", revenue: 200 },
+        ],
+        orders_by_day: [
+          { date: "2026-04-08", count: 1 },
+          { date: "2026-04-09", count: 2 },
+        ],
+        reservations_by_day: [
+          { date: "2026-04-07", count: 1 },
+          { date: "2026-04-09", count: 2 },
+        ],
+        reservations_by_hour: [
+          { hour: "18", count: 1 },
+          { hour: "19", count: 1 },
+          { hour: "20", count: 1 },
+        ],
+        orders_by_status: {
+          open: 3,
+          in_preparation: 2,
+          paid: 7,
+        },
+      };
+    }
+
+    if (from === "2026-03-25" && to === "2026-04-01") {
+      return {
+        total_revenue: 280,
+        orders_count: 12,
+        avg_order_value: 28,
+        reservations_count: 7,
         guests_served: 0,
         popular_items: [],
+        category_statistics: {},
+        hourly_statistics: {},
         revenue_by_day: [],
+        orders_by_day: [],
+        reservations_by_day: [],
+        reservations_by_hour: [],
         orders_by_status: {},
       };
     }
 
     return {
-      total_revenue: 0,
-      orders_count: 12,
-      avg_order_value: 20,
-      reservations_count: 7,
-      guests_served: 18,
+      total_revenue: 1400,
+      orders_count: 52,
+      avg_order_value: 26.92,
+      reservations_count: 18,
+      guests_served: 42,
       popular_items: [],
-      revenue_by_day: [],
-      orders_by_status: {
-        open: 3,
-        in_preparation: 2,
-        paid: 7,
-      },
+      category_statistics: {},
+      hourly_statistics: {},
+      revenue_by_day: [
+        { date: "2026-03-11", revenue: 20 },
+        { date: "2026-03-18", revenue: 35 },
+        { date: "2026-03-25", revenue: 35 },
+        { date: "2026-03-26", revenue: 40 },
+        { date: "2026-03-27", revenue: 58 },
+        { date: "2026-03-28", revenue: 62 },
+        { date: "2026-03-29", revenue: 66 },
+        { date: "2026-03-30", revenue: 60 },
+        { date: "2026-03-31", revenue: 61 },
+        { date: "2026-04-01", revenue: 63 },
+        { date: "2026-04-02", revenue: 60 },
+        { date: "2026-04-03", revenue: 45 },
+        { date: "2026-04-04", revenue: 56 },
+        { date: "2026-04-05", revenue: 62 },
+        { date: "2026-04-06", revenue: 74 },
+        { date: "2026-04-07", revenue: 81 },
+        { date: "2026-04-08", revenue: 120 },
+        { date: "2026-04-09", revenue: 200 },
+      ],
+      orders_by_day: [],
+      reservations_by_day: [],
+      reservations_by_hour: [],
+      orders_by_status: {},
     };
   });
-
-  mockedOrderStatisticsApi.getRevenue
-    .mockResolvedValueOnce({
-      total_revenue: 320,
-      total_orders: 12,
-      average_order_value: 26.67,
-      total_tips: 0,
-      total_discounts: 0,
-      daily_revenue: {
-        "2026-04-08": 120,
-        "2026-04-09": 200,
-      },
-    })
-    .mockResolvedValueOnce({
-      total_revenue: 200,
-      total_orders: 4,
-      average_order_value: 50,
-      total_tips: 0,
-      total_discounts: 0,
-      daily_revenue: { "2026-04-09": 200 },
-    })
-    .mockResolvedValueOnce({
-      total_revenue: 500,
-      total_orders: 18,
-      average_order_value: 27.78,
-      total_tips: 0,
-      total_discounts: 0,
-      daily_revenue: {
-        "2026-04-03": 45,
-        "2026-04-04": 56,
-        "2026-04-05": 62,
-        "2026-04-06": 74,
-        "2026-04-07": 81,
-        "2026-04-08": 90,
-        "2026-04-09": 92,
-      },
-    })
-    .mockResolvedValueOnce({
-      total_revenue: 1400,
-      total_orders: 52,
-      average_order_value: 26.92,
-      total_tips: 0,
-      total_discounts: 0,
-      daily_revenue: {
-        "2026-03-11": 20,
-        "2026-03-18": 35,
-        "2026-03-25": 41,
-        "2026-04-02": 52,
-        "2026-04-09": 67,
-      },
-    })
-    .mockResolvedValueOnce({
-      total_revenue: 280,
-      total_orders: 10,
-      average_order_value: 28,
-      total_tips: 0,
-      total_discounts: 0,
-      daily_revenue: {
-        "2026-03-25": 35,
-        "2026-03-26": 40,
-        "2026-03-27": 28,
-        "2026-03-28": 30,
-        "2026-03-29": 42,
-        "2026-03-30": 50,
-        "2026-03-31": 25,
-        "2026-04-01": 30,
-      },
-    })
-    .mockResolvedValueOnce({
-      total_revenue: 160,
-      total_orders: 5,
-      average_order_value: 32,
-      total_tips: 0,
-      total_discounts: 0,
-      daily_revenue: { "2026-04-08": 160 },
-    })
-    .mockResolvedValueOnce({
-      total_revenue: 430,
-      total_orders: 16,
-      average_order_value: 26.88,
-      total_tips: 0,
-      total_discounts: 0,
-      daily_revenue: {
-        "2026-03-27": 58,
-        "2026-03-28": 62,
-        "2026-03-29": 66,
-        "2026-03-30": 60,
-        "2026-03-31": 61,
-        "2026-04-01": 63,
-        "2026-04-02": 60,
-      },
-    })
-    .mockResolvedValueOnce({
-      total_revenue: 1320,
-      total_orders: 48,
-      average_order_value: 27.5,
-      total_tips: 0,
-      total_discounts: 0,
-      daily_revenue: {
-        "2026-02-10": 18,
-        "2026-02-17": 27,
-        "2026-02-24": 31,
-        "2026-03-03": 44,
-        "2026-03-10": 53,
-      },
-    });
-
-  mockedOrderStatisticsApi.getTopItems.mockResolvedValue([
-    { item_name: "Pasta", quantity_sold: 10, revenue: 150 },
-  ]);
-  mockedOrderStatisticsApi.getCategoryStatistics.mockResolvedValue({
-    Hauptspeisen: { quantity: 10, revenue: 150 },
-  });
-  mockedOrderStatisticsApi.getHourlyStatistics.mockResolvedValue({
-    "12": { order_count: 3, revenue: 90 },
-    "18": { order_count: 5, revenue: 180 },
-  });
-
-  mockedReservationsApi.list.mockResolvedValue([
-    { id: "res-range-1", start_at: "2026-04-07T18:00:00Z" },
-    { id: "res-range-2", start_at: "2026-04-09T19:00:00Z" },
-    { id: "res-range-3", start_at: "2026-04-09T20:00:00Z" },
-  ] as any);
 }
 
 describe("useDashboardOverviewData", () => {
@@ -304,8 +221,7 @@ describe("useDashboardOverviewData", () => {
 
     expect(result.current.operations.lastUpdatedAt).toBeTruthy();
     expect(result.current.analytics.lastUpdatedAt).toBeTruthy();
-    expect(mockedOrderStatisticsApi.getRevenue).toHaveBeenCalledTimes(8);
-    expect(mockedReservationsApi.list).toHaveBeenCalledTimes(1);
+    expect(mockedDashboardApi.getInsightsData).toHaveBeenCalledTimes(3);
   });
 
   it("normalizes custom ranges when from-date is after to-date", async () => {
@@ -321,13 +237,11 @@ describe("useDashboardOverviewData", () => {
       { wrapper: createWrapper() }
     );
 
-    await waitFor(() => expect(mockedOrderStatisticsApi.getRevenue).toHaveBeenCalled());
+    await waitFor(() => expect(mockedDashboardApi.getInsightsData).toHaveBeenCalled());
 
-    const firstRangeCall = mockedOrderStatisticsApi.getRevenue.mock.calls[0]?.[1];
-    expect(firstRangeCall).toMatchObject({
-      start_date: "2026-04-05T00:00:00Z",
-      end_date: "2026-04-10T23:59:59Z",
-    });
+    const firstRangeCall = mockedDashboardApi.getInsightsData.mock.calls[0]?.[1];
+    expect(firstRangeCall?.fromDate?.toISOString().slice(0, 10)).toBe("2026-04-05");
+    expect(firstRangeCall?.toDate?.toISOString().slice(0, 10)).toBe("2026-04-10");
   });
 
   it("refetches analytics when selected day changes in custom range mode", async () => {
@@ -344,13 +258,13 @@ describe("useDashboardOverviewData", () => {
       wrapper: createWrapper(),
     });
 
-    await waitFor(() => expect(mockedDashboardApi.getInsightsData).toHaveBeenCalledTimes(9));
+    await waitFor(() => expect(mockedDashboardApi.getInsightsData).toHaveBeenCalledTimes(3));
 
     rerender({
       ...props,
       selectedDate: new Date("2026-04-10T11:00:00Z"),
     });
 
-    await waitFor(() => expect(mockedDashboardApi.getInsightsData).toHaveBeenCalledTimes(18));
+    await waitFor(() => expect(mockedDashboardApi.getInsightsData).toHaveBeenCalledTimes(6));
   });
 });

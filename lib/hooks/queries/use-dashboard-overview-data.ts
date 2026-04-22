@@ -2,8 +2,6 @@ import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { addDays, differenceInCalendarDays, endOfDay, format, startOfDay, subDays } from 'date-fns';
 import { dashboardApi } from '@/lib/api/dashboard';
-import { orderStatisticsApi } from '@/lib/api/order-statistics';
-import { reservationsApi } from '@/lib/api/reservations';
 
 export type OverviewRangePreset = 'today' | '7d' | '30d' | 'custom';
 
@@ -37,11 +35,28 @@ function toError(error: unknown, fallback: string): Error {
   return new Error(fallback);
 }
 
-function buildRangeParams(from: Date, to: Date): { start_date: string; end_date: string } {
-  return {
-    start_date: `${format(from, 'yyyy-MM-dd')}T00:00:00Z`,
-    end_date: `${format(to, 'yyyy-MM-dd')}T23:59:59Z`,
-  };
+function buildRevenueMap(
+  entries: Array<{ date: string; revenue: number }> | undefined
+): Map<string, number> {
+  const map = new Map<string, number>();
+  for (const entry of entries ?? []) {
+    map.set(entry.date, Number(entry.revenue ?? 0));
+  }
+  return map;
+}
+
+function sumRevenueForDays(
+  map: Map<string, number>,
+  start: Date,
+  end: Date,
+): number {
+  const days = Math.max(1, differenceInCalendarDays(end, start) + 1);
+  let total = 0;
+  for (let index = 0; index < days; index += 1) {
+    const day = format(addDays(start, index), 'yyyy-MM-dd');
+    total += Number(map.get(day) ?? 0);
+  }
+  return roundTo(total);
 }
 
 function resolveRangeWindow(
@@ -261,6 +276,7 @@ export function useDashboardOverviewData({
     queryKey: dashboardOverviewKeys.operations(restaurantId ?? 'unknown', selectedDay),
     enabled: Boolean(restaurantId) && enabled,
     staleTime: 10 * 1000,
+    refetchOnWindowFocus: false,
     refetchInterval: () => {
       if (typeof document !== 'undefined' && document.hidden) return false;
       return 15 * 1000;
@@ -398,6 +414,7 @@ export function useDashboardOverviewData({
     ),
     enabled: Boolean(restaurantId) && enabled,
     staleTime: 60 * 1000,
+    refetchOnWindowFocus: false,
     refetchInterval: () => {
       if (typeof document !== 'undefined' && document.hidden) return false;
       return 60 * 1000;
@@ -419,37 +436,12 @@ export function useDashboardOverviewData({
       const previousSevenDaysEnd = endOfDay(subDays(selectedDate, 7));
       const previousThirtyDaysStart = startOfDay(subDays(selectedDate, 59));
       const previousThirtyDaysEnd = endOfDay(subDays(selectedDate, 30));
-      const rangeStartIso = `${resolvedRange.fromStr}T00:00:00Z`;
-      const rangeEndIso = `${resolvedRange.toStr}T23:59:59Z`;
       const rangeDays = Array.from({ length: resolvedRange.rangeDays }, (_, index) =>
         format(addDays(resolvedRange.from, index), 'yyyy-MM-dd')
       );
-      const dailyInsightsPromise = Promise.all(
-        rangeDays.map((day) =>
-          dashboardApi.getInsightsData(restaurantId, {
-            fromDate: new Date(`${day}T12:00:00Z`),
-            toDate: new Date(`${day}T12:00:00Z`),
-          })
-        )
-      );
+      const allHours = Array.from({ length: 24 }, (_, hour) => String(hour).padStart(2, '0'));
 
-      const [
-        insights,
-        previousRangeInsights,
-        revenueStats,
-        revenueTodayStats,
-        revenue7Stats,
-        revenue30Stats,
-        revenuePreviousRangeStats,
-        revenuePreviousDayStats,
-        revenuePrevious7Stats,
-        revenuePrevious30Stats,
-        topItemsRaw,
-        categoryStats,
-        hourlyStats,
-        dailyInsightsRaw,
-        reservationsInRangeRaw,
-      ] = await Promise.all([
+      const [insights, previousRangeInsights, kpiInsights] = await Promise.all([
         dashboardApi.getInsightsData(restaurantId, {
           fromDate: resolvedRange.from,
           toDate: resolvedRange.to,
@@ -458,44 +450,23 @@ export function useDashboardOverviewData({
           fromDate: previousRangeStart,
           toDate: previousRangeEnd,
         }),
-        orderStatisticsApi.getRevenue(restaurantId, buildRangeParams(resolvedRange.from, resolvedRange.to)),
-        orderStatisticsApi.getRevenue(restaurantId, buildRangeParams(todayStart, todayEnd)),
-        orderStatisticsApi.getRevenue(restaurantId, buildRangeParams(sevenDaysStart, todayEnd)),
-        orderStatisticsApi.getRevenue(restaurantId, buildRangeParams(thirtyDaysStart, todayEnd)),
-        orderStatisticsApi.getRevenue(restaurantId, buildRangeParams(previousRangeStart, previousRangeEnd)),
-        orderStatisticsApi.getRevenue(restaurantId, buildRangeParams(previousDayStart, previousDayEnd)),
-        orderStatisticsApi.getRevenue(restaurantId, buildRangeParams(previousSevenDaysStart, previousSevenDaysEnd)),
-        orderStatisticsApi.getRevenue(restaurantId, buildRangeParams(previousThirtyDaysStart, previousThirtyDaysEnd)),
-        orderStatisticsApi.getTopItems(restaurantId, {
-          start_date: `${resolvedRange.fromStr}T00:00:00Z`,
-          end_date: `${resolvedRange.toStr}T23:59:59Z`,
-          limit: 5,
-        }),
-        orderStatisticsApi.getCategoryStatistics(restaurantId, {
-          start_date: `${resolvedRange.fromStr}T00:00:00Z`,
-          end_date: `${resolvedRange.toStr}T23:59:59Z`,
-        }),
-        orderStatisticsApi.getHourlyStatistics(restaurantId, {
-          start_date: `${resolvedRange.fromStr}T00:00:00Z`,
-          end_date: `${resolvedRange.toStr}T23:59:59Z`,
-        }),
-        dailyInsightsPromise,
-        reservationsApi.list(restaurantId, {
-          from: rangeStartIso,
-          to: rangeEndIso,
+        dashboardApi.getInsightsData(restaurantId, {
+          fromDate: previousThirtyDaysStart,
+          toDate: todayEnd,
         }),
       ]);
 
+      const rangeRevenueMap = buildRevenueMap(insights.revenue_by_day);
+      const kpiRevenueMap = buildRevenueMap(kpiInsights.revenue_by_day);
       const revenueByDay = rangeDays.map((day) => ({
         date: day,
-        revenue: Number(revenueStats.daily_revenue?.[day] ?? 0),
+        revenue: Number(rangeRevenueMap.get(day) ?? 0),
       }));
       const hourlyStatsByHour = new Map<string, { order_count?: number; revenue?: number }>();
-      for (const [hourRaw, values] of Object.entries(hourlyStats)) {
+      for (const [hourRaw, values] of Object.entries(insights.hourly_statistics ?? {})) {
         const normalizedHour = String(hourRaw).padStart(2, '0');
         hourlyStatsByHour.set(normalizedHour, values);
       }
-      const allHours = Array.from({ length: 24 }, (_, hour) => String(hour).padStart(2, '0'));
       const revenueByHour = allHours.map((hour) => ({
         hour,
         revenue: Number(hourlyStatsByHour.get(hour)?.revenue ?? 0),
@@ -504,41 +475,38 @@ export function useDashboardOverviewData({
         const day = format(addDays(sevenDaysStart, index), 'yyyy-MM-dd');
         return {
           date: day,
-          revenue: Number(revenue7Stats.daily_revenue?.[day] ?? 0),
+          revenue: Number(kpiRevenueMap.get(day) ?? 0),
         };
       });
       const revenueLast30ByDay = Array.from({ length: 30 }, (_, index) => {
         const day = format(addDays(thirtyDaysStart, index), 'yyyy-MM-dd');
         return {
           date: day,
-          revenue: Number(revenue30Stats.daily_revenue?.[day] ?? 0),
+          revenue: Number(kpiRevenueMap.get(day) ?? 0),
         };
       });
 
-      const ordersByDay = rangeDays.map((day, index) => ({
+      const ordersByDayMap = new Map(
+        (insights.orders_by_day ?? []).map((entry) => [entry.date, Number(entry.count ?? 0)])
+      );
+      const ordersByDay = rangeDays.map((day) => ({
         date: day,
-        count: Number(dailyInsightsRaw[index]?.orders_count ?? 0),
+        count: Number(ordersByDayMap.get(day) ?? 0),
       }));
       const ordersByHour = allHours.map((hour) => ({
         hour,
         count: Number(hourlyStatsByHour.get(hour)?.order_count ?? 0),
       }));
 
-      const reservationsByDayMap = new Map(rangeDays.map((day) => [day, 0]));
-      const reservationsByHourMap = new Map(allHours.map((hour) => [hour, 0]));
-      for (const reservation of reservationsInRangeRaw) {
-        const reservationDateRaw = (reservation as { start_at?: string }).start_at;
-        if (!reservationDateRaw) continue;
-        const parsed = new Date(reservationDateRaw);
-        if (Number.isNaN(parsed.getTime())) continue;
-        const day = format(parsed, 'yyyy-MM-dd');
-        if (!reservationsByDayMap.has(day)) continue;
-        reservationsByDayMap.set(day, (reservationsByDayMap.get(day) ?? 0) + 1);
-
-        const hour = String(parsed.getUTCHours()).padStart(2, '0');
-        if (!reservationsByHourMap.has(hour)) continue;
-        reservationsByHourMap.set(hour, (reservationsByHourMap.get(hour) ?? 0) + 1);
-      }
+      const reservationsByDayMap = new Map(
+        (insights.reservations_by_day ?? []).map((entry) => [entry.date, Number(entry.count ?? 0)])
+      );
+      const reservationsByHourMap = new Map(
+        (insights.reservations_by_hour ?? []).map((entry) => [
+          String(entry.hour).padStart(2, '0'),
+          Number(entry.count ?? 0),
+        ])
+      );
       const reservationsByDay = rangeDays.map((day) => ({
         date: day,
         count: reservationsByDayMap.get(day) ?? 0,
@@ -554,7 +522,7 @@ export function useDashboardOverviewData({
         return acc;
       }, {});
 
-      const topCategories = Object.entries(categoryStats)
+      const topCategories = Object.entries(insights.category_statistics ?? {})
         .map(([category, values]) => ({
           category,
           quantity: Number(values.quantity ?? 0),
@@ -563,11 +531,11 @@ export function useDashboardOverviewData({
         .sort((a, b) => b.revenue - a.revenue)
         .slice(0, 5);
 
-      const hourlyOrders = Object.entries(hourlyStats)
-        .map(([hour, values]) => ({
+      const hourlyOrders = allHours
+        .map((hour) => ({
           hour,
-          orderCount: Number(values.order_count ?? 0),
-          revenue: Number(values.revenue ?? 0),
+          orderCount: Number(hourlyStatsByHour.get(hour)?.order_count ?? 0),
+          revenue: Number(hourlyStatsByHour.get(hour)?.revenue ?? 0),
         }))
         .sort((a, b) => Number(a.hour) - Number(b.hour));
 
@@ -579,17 +547,25 @@ export function useDashboardOverviewData({
           to: resolvedRange.toStr,
         },
         kpis: {
-          revenueTotal: roundTo(Number(revenueStats.total_revenue ?? 0)),
-          revenueToday: roundTo(Number(revenueTodayStats.total_revenue ?? 0)),
-          revenueLast7Days: roundTo(Number(revenue7Stats.total_revenue ?? 0)),
-          revenueLast30Days: roundTo(Number(revenue30Stats.total_revenue ?? 0)),
-          revenuePreviousRange: roundTo(Number(revenuePreviousRangeStats.total_revenue ?? 0)),
-          revenuePreviousDay: roundTo(Number(revenuePreviousDayStats.total_revenue ?? 0)),
-          revenuePrevious7Days: roundTo(Number(revenuePrevious7Stats.total_revenue ?? 0)),
-          revenuePrevious30Days: roundTo(Number(revenuePrevious30Stats.total_revenue ?? 0)),
-          ordersTotal: Number(revenueStats.total_orders ?? insights.orders_count ?? 0),
+          revenueTotal: roundTo(Number(insights.total_revenue ?? 0)),
+          revenueToday: sumRevenueForDays(kpiRevenueMap, todayStart, todayEnd),
+          revenueLast7Days: sumRevenueForDays(kpiRevenueMap, sevenDaysStart, todayEnd),
+          revenueLast30Days: sumRevenueForDays(kpiRevenueMap, thirtyDaysStart, todayEnd),
+          revenuePreviousRange: roundTo(Number(previousRangeInsights.total_revenue ?? 0)),
+          revenuePreviousDay: sumRevenueForDays(kpiRevenueMap, previousDayStart, previousDayEnd),
+          revenuePrevious7Days: sumRevenueForDays(
+            kpiRevenueMap,
+            previousSevenDaysStart,
+            previousSevenDaysEnd
+          ),
+          revenuePrevious30Days: sumRevenueForDays(
+            kpiRevenueMap,
+            previousThirtyDaysStart,
+            previousThirtyDaysEnd
+          ),
+          ordersTotal: Number(insights.orders_count ?? 0),
           ordersPreviousRange: Number(previousRangeInsights.orders_count ?? 0),
-          avgOrderValue: roundTo(Number(revenueStats.average_order_value ?? insights.avg_order_value ?? 0)),
+          avgOrderValue: roundTo(Number(insights.avg_order_value ?? 0)),
           reservationsInRange: Number(insights.reservations_count ?? 0),
           reservationsPreviousRange: Number(previousRangeInsights.reservations_count ?? 0),
           guestsServedInRange: Number(insights.guests_served ?? 0),
@@ -603,9 +579,9 @@ export function useDashboardOverviewData({
         reservationsByDay,
         reservationsByHour,
         ordersByStatus,
-        topItems: topItemsRaw.map((item) => ({
-          name: item.item_name,
-          quantity: Number(item.quantity_sold ?? 0),
+        topItems: (insights.popular_items ?? []).slice(0, 5).map((item) => ({
+          name: item.name,
+          quantity: Number(item.quantity ?? 0),
           revenue: Number(item.revenue ?? 0),
         })),
         topCategories,

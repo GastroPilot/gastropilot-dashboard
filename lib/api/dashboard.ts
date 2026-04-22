@@ -43,9 +43,35 @@ export interface InsightsData {
     quantity: number;
     revenue: number;
   }>;
+  category_statistics: Record<
+    string,
+    {
+      quantity: number;
+      revenue: number;
+    }
+  >;
+  hourly_statistics: Record<
+    string,
+    {
+      order_count: number;
+      revenue: number;
+    }
+  >;
   revenue_by_day: Array<{
     date: string;
     revenue: number;
+  }>;
+  orders_by_day: Array<{
+    date: string;
+    count: number;
+  }>;
+  reservations_by_day: Array<{
+    date: string;
+    count: number;
+  }>;
+  reservations_by_hour: Array<{
+    hour: string;
+    count: number;
   }>;
   orders_by_status: Record<string, number>;
 }
