@@ -45,6 +45,16 @@ function buildRevenueMap(
   return map;
 }
 
+function buildCountMap(
+  entries: Array<{ date: string; count: number }> | undefined
+): Map<string, number> {
+  const map = new Map<string, number>();
+  for (const entry of entries ?? []) {
+    map.set(entry.date, Number(entry.count ?? 0));
+  }
+  return map;
+}
+
 function sumRevenueForDays(
   map: Map<string, number>,
   start: Date,
@@ -57,6 +67,20 @@ function sumRevenueForDays(
     total += Number(map.get(day) ?? 0);
   }
   return roundTo(total);
+}
+
+function sumCountForDays(
+  map: Map<string, number>,
+  start: Date,
+  end: Date,
+): number {
+  const days = Math.max(1, differenceInCalendarDays(end, start) + 1);
+  let total = 0;
+  for (let index = 0; index < days; index += 1) {
+    const day = format(addDays(start, index), 'yyyy-MM-dd');
+    total += Number(map.get(day) ?? 0);
+  }
+  return total;
 }
 
 function resolveRangeWindow(
@@ -436,28 +460,28 @@ export function useDashboardOverviewData({
       const previousSevenDaysEnd = endOfDay(subDays(selectedDate, 7));
       const previousThirtyDaysStart = startOfDay(subDays(selectedDate, 59));
       const previousThirtyDaysEnd = endOfDay(subDays(selectedDate, 30));
+      const historicalInsightsStart =
+        previousRangeStart < previousThirtyDaysStart ? previousRangeStart : previousThirtyDaysStart;
       const rangeDays = Array.from({ length: resolvedRange.rangeDays }, (_, index) =>
         format(addDays(resolvedRange.from, index), 'yyyy-MM-dd')
       );
       const allHours = Array.from({ length: 24 }, (_, hour) => String(hour).padStart(2, '0'));
 
-      const [insights, previousRangeInsights, kpiInsights] = await Promise.all([
+      const [insights, kpiInsights] = await Promise.all([
         dashboardApi.getInsightsData(restaurantId, {
           fromDate: resolvedRange.from,
           toDate: resolvedRange.to,
         }),
         dashboardApi.getInsightsData(restaurantId, {
-          fromDate: previousRangeStart,
-          toDate: previousRangeEnd,
-        }),
-        dashboardApi.getInsightsData(restaurantId, {
-          fromDate: previousThirtyDaysStart,
+          fromDate: historicalInsightsStart,
           toDate: todayEnd,
         }),
       ]);
 
       const rangeRevenueMap = buildRevenueMap(insights.revenue_by_day);
       const kpiRevenueMap = buildRevenueMap(kpiInsights.revenue_by_day);
+      const kpiOrdersByDayMap = buildCountMap(kpiInsights.orders_by_day);
+      const kpiReservationsByDayMap = buildCountMap(kpiInsights.reservations_by_day);
       const revenueByDay = rangeDays.map((day) => ({
         date: day,
         revenue: Number(rangeRevenueMap.get(day) ?? 0),
@@ -551,7 +575,7 @@ export function useDashboardOverviewData({
           revenueToday: sumRevenueForDays(kpiRevenueMap, todayStart, todayEnd),
           revenueLast7Days: sumRevenueForDays(kpiRevenueMap, sevenDaysStart, todayEnd),
           revenueLast30Days: sumRevenueForDays(kpiRevenueMap, thirtyDaysStart, todayEnd),
-          revenuePreviousRange: roundTo(Number(previousRangeInsights.total_revenue ?? 0)),
+          revenuePreviousRange: sumRevenueForDays(kpiRevenueMap, previousRangeStart, previousRangeEnd),
           revenuePreviousDay: sumRevenueForDays(kpiRevenueMap, previousDayStart, previousDayEnd),
           revenuePrevious7Days: sumRevenueForDays(
             kpiRevenueMap,
@@ -564,10 +588,18 @@ export function useDashboardOverviewData({
             previousThirtyDaysEnd
           ),
           ordersTotal: Number(insights.orders_count ?? 0),
-          ordersPreviousRange: Number(previousRangeInsights.orders_count ?? 0),
+          ordersPreviousRange: sumCountForDays(
+            kpiOrdersByDayMap,
+            previousRangeStart,
+            previousRangeEnd
+          ),
           avgOrderValue: roundTo(Number(insights.avg_order_value ?? 0)),
           reservationsInRange: Number(insights.reservations_count ?? 0),
-          reservationsPreviousRange: Number(previousRangeInsights.reservations_count ?? 0),
+          reservationsPreviousRange: sumCountForDays(
+            kpiReservationsByDayMap,
+            previousRangeStart,
+            previousRangeEnd
+          ),
           guestsServedInRange: Number(insights.guests_served ?? 0),
         },
         revenueByDay,

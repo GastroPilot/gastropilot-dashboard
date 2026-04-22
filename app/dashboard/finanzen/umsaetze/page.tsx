@@ -129,20 +129,33 @@ function buildSmoothCurvePath(points: Array<{ x: number; y: number }>): string {
 }
 
 export default function FinanceRevenuePage() {
-  const [preset, setPreset] = useState<FinanceRangePreset>("30d");
-  const [customStartDate, setCustomStartDate] = useState("");
-  const [customEndDate, setCustomEndDate] = useState("");
+  const [appliedPreset, setAppliedPreset] = useState<FinanceRangePreset>("30d");
+  const [appliedCustomStartDate, setAppliedCustomStartDate] = useState("");
+  const [appliedCustomEndDate, setAppliedCustomEndDate] = useState("");
+  const [draftPreset, setDraftPreset] = useState<FinanceRangePreset>("30d");
+  const [draftCustomStartDate, setDraftCustomStartDate] = useState("");
+  const [draftCustomEndDate, setDraftCustomEndDate] = useState("");
   const [hoveredTimelineDate, setHoveredTimelineDate] = useState<string | null>(null);
   const [hoveredWeekday, setHoveredWeekday] = useState<number | null>(null);
+
+  const draftResolvedRange = useMemo(
+    () =>
+      resolveFinanceRange({
+        preset: draftPreset,
+        customStartDate: draftCustomStartDate,
+        customEndDate: draftCustomEndDate,
+      }),
+    [draftCustomEndDate, draftCustomStartDate, draftPreset]
+  );
 
   const resolvedRange = useMemo(
     () =>
       resolveFinanceRange({
-        preset,
-        customStartDate,
-        customEndDate,
+        preset: appliedPreset,
+        customStartDate: appliedCustomStartDate,
+        customEndDate: appliedCustomEndDate,
       }),
-    [preset, customEndDate, customStartDate]
+    [appliedCustomEndDate, appliedCustomStartDate, appliedPreset]
   );
 
   const previousRange = useMemo(
@@ -363,7 +376,19 @@ export default function FinanceRevenuePage() {
     (previousRevenueQuery.error as Error | null) ||
     null;
 
+  const hasPendingRangeChanges =
+    draftPreset !== appliedPreset ||
+    draftCustomStartDate !== appliedCustomStartDate ||
+    draftCustomEndDate !== appliedCustomEndDate;
+
   const handleRefresh = async () => {
+    if (hasPendingRangeChanges) {
+      setAppliedPreset(draftPreset);
+      setAppliedCustomStartDate(draftCustomStartDate);
+      setAppliedCustomEndDate(draftCustomEndDate);
+      return;
+    }
+
     await Promise.all([
       refetch(),
       previousRevenueQuery.refetch(),
@@ -386,7 +411,7 @@ export default function FinanceRevenuePage() {
           className="gap-2"
         >
           <RefreshCw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
-          Aktualisieren
+          {hasPendingRangeChanges ? "Anwenden" : "Aktualisieren"}
         </Button>
       }
     >
@@ -400,24 +425,24 @@ export default function FinanceRevenuePage() {
           </CardHeader>
           <CardContent>
             <FinanceRangeControls
-              preset={preset}
-              startDate={resolvedRange.fromDate}
-              endDate={resolvedRange.toDate}
+              preset={draftPreset}
+              startDate={draftResolvedRange.fromDate}
+              endDate={draftResolvedRange.toDate}
               disabled={isLoading}
               onPresetChange={(nextPreset) => {
-                setPreset(nextPreset);
+                setDraftPreset(nextPreset);
                 if (nextPreset !== "custom") {
-                  setCustomStartDate("");
-                  setCustomEndDate("");
+                  setDraftCustomStartDate("");
+                  setDraftCustomEndDate("");
                 }
               }}
               onStartDateChange={(date) => {
-                setPreset("custom");
-                setCustomStartDate(date);
+                setDraftPreset("custom");
+                setDraftCustomStartDate(date);
               }}
               onEndDateChange={(date) => {
-                setPreset("custom");
-                setCustomEndDate(date);
+                setDraftPreset("custom");
+                setDraftCustomEndDate(date);
               }}
             />
           </CardContent>

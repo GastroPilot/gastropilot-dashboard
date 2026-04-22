@@ -8,13 +8,10 @@ import { format, subDays, startOfDay, endOfDay } from "date-fns";
 import { de } from "date-fns/locale";
 import {
   TrendingUp,
-  ShoppingCart,
   Euro,
   Award,
   BarChart3,
-  Calendar,
   DollarSign,
-  TrendingDown,
   Percent,
   Clock,
   Package,
@@ -30,49 +27,41 @@ export default function OrderStatisticsPage() {
   const [categoryStats, setCategoryStats] = useState<CategoryStatistics>({});
   const [hourlyStats, setHourlyStats] = useState<HourlyStatistics>({});
 
-  const [dateRange, setDateRange] = useState<{
-    start: string;
-    end: string;
-  }>({
+  const initialDateRange = {
     start: format(startOfDay(subDays(new Date(), 7)), "yyyy-MM-dd"),
     end: format(endOfDay(new Date()), "yyyy-MM-dd"),
-  });
+  };
+
+  const [appliedDateRange, setAppliedDateRange] = useState<{
+    start: string;
+    end: string;
+  }>(initialDateRange);
+  const [draftDateRange, setDraftDateRange] = useState<{
+    start: string;
+    end: string;
+  }>(initialDateRange);
 
   const loadData = useCallback(async () => {
     if (!restaurant) return;
 
     setIsLoading(true);
     try {
-      const [revenue, items, categories, hourly] = await Promise.all([
-        orderStatisticsApi.getRevenue(restaurant.id, {
-          start_date: `${dateRange.start}T00:00:00Z`,
-          end_date: `${dateRange.end}T23:59:59Z`,
-        }),
-        orderStatisticsApi.getTopItems(restaurant.id, {
-          start_date: `${dateRange.start}T00:00:00Z`,
-          end_date: `${dateRange.end}T23:59:59Z`,
-          limit: 10,
-        }),
-        orderStatisticsApi.getCategoryStatistics(restaurant.id, {
-          start_date: `${dateRange.start}T00:00:00Z`,
-          end_date: `${dateRange.end}T23:59:59Z`,
-        }),
-        orderStatisticsApi.getHourlyStatistics(restaurant.id, {
-          start_date: `${dateRange.start}T00:00:00Z`,
-          end_date: `${dateRange.end}T23:59:59Z`,
-        }),
-      ]);
+      const overview = await orderStatisticsApi.getOverview(restaurant.id, {
+        start_date: `${appliedDateRange.start}T00:00:00Z`,
+        end_date: `${appliedDateRange.end}T23:59:59Z`,
+        limit: 10,
+      });
 
-      setRevenueStats(revenue);
-      setTopItems(items);
-      setCategoryStats(categories);
-      setHourlyStats(hourly);
+      setRevenueStats(overview.revenue);
+      setTopItems(overview.top_items);
+      setCategoryStats(overview.category_statistics);
+      setHourlyStats(overview.hourly_statistics);
     } catch (error) {
       console.error("Fehler beim Laden der Statistiken:", error);
     } finally {
       setIsLoading(false);
     }
-  }, [restaurant, dateRange]);
+  }, [restaurant, appliedDateRange]);
 
   useEffect(() => {
     const loadRestaurant = async () => {
@@ -94,6 +83,32 @@ export default function OrderStatisticsPage() {
       loadData();
     }
   }, [restaurant, loadData]);
+
+  const isDraftRangeValid =
+    draftDateRange.start.length > 0 &&
+    draftDateRange.end.length > 0 &&
+    draftDateRange.start <= draftDateRange.end;
+  const hasPendingRangeChanges =
+    draftDateRange.start !== appliedDateRange.start ||
+    draftDateRange.end !== appliedDateRange.end;
+
+  const handleRefresh = useCallback(() => {
+    if (!restaurant || isLoading || !isDraftRangeValid) return;
+
+    if (hasPendingRangeChanges) {
+      setAppliedDateRange({ ...draftDateRange });
+      return;
+    }
+
+    void loadData();
+  }, [
+    restaurant,
+    isLoading,
+    isDraftRangeValid,
+    hasPendingRangeChanges,
+    draftDateRange,
+    loadData,
+  ]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("de-DE", {
@@ -137,23 +152,27 @@ export default function OrderStatisticsPage() {
           <div className="flex items-center gap-3">
             <Input
               type="date"
-              value={dateRange.start}
-              onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+              value={draftDateRange.start}
+              onChange={(e) =>
+                setDraftDateRange((prev) => ({ ...prev, start: e.target.value }))
+              }
               className="bg-muted border-input text-foreground"
             />
             <span className="text-muted-foreground">bis</span>
             <Input
               type="date"
-              value={dateRange.end}
-              onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+              value={draftDateRange.end}
+              onChange={(e) =>
+                setDraftDateRange((prev) => ({ ...prev, end: e.target.value }))
+              }
               className="bg-muted border-input text-foreground"
             />
             <Button
-              onClick={loadData}
-              disabled={isLoading}
+              onClick={handleRefresh}
+              disabled={isLoading || !isDraftRangeValid}
               className="bg-primary hover:bg-primary/90"
             >
-              Aktualisieren
+              {hasPendingRangeChanges ? "Anwenden" : "Aktualisieren"}
             </Button>
           </div>
         </div>

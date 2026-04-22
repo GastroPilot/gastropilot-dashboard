@@ -170,8 +170,25 @@ function setupSuccessfulApiMocks() {
         { date: "2026-04-08", revenue: 120 },
         { date: "2026-04-09", revenue: 200 },
       ],
-      orders_by_day: [],
-      reservations_by_day: [],
+      orders_by_day: [
+        { date: "2026-03-25", count: 1 },
+        { date: "2026-03-26", count: 1 },
+        { date: "2026-03-27", count: 2 },
+        { date: "2026-03-28", count: 2 },
+        { date: "2026-03-29", count: 2 },
+        { date: "2026-03-30", count: 2 },
+        { date: "2026-03-31", count: 1 },
+        { date: "2026-04-01", count: 1 },
+      ],
+      reservations_by_day: [
+        { date: "2026-03-25", count: 1 },
+        { date: "2026-03-26", count: 1 },
+        { date: "2026-03-27", count: 1 },
+        { date: "2026-03-28", count: 1 },
+        { date: "2026-03-29", count: 1 },
+        { date: "2026-03-30", count: 1 },
+        { date: "2026-03-31", count: 1 },
+      ],
       reservations_by_hour: [],
       orders_by_status: {},
     };
@@ -221,7 +238,7 @@ describe("useDashboardOverviewData", () => {
 
     expect(result.current.operations.lastUpdatedAt).toBeTruthy();
     expect(result.current.analytics.lastUpdatedAt).toBeTruthy();
-    expect(mockedDashboardApi.getInsightsData).toHaveBeenCalledTimes(3);
+    expect(mockedDashboardApi.getInsightsData).toHaveBeenCalledTimes(2);
   });
 
   it("normalizes custom ranges when from-date is after to-date", async () => {
@@ -258,13 +275,13 @@ describe("useDashboardOverviewData", () => {
       wrapper: createWrapper(),
     });
 
-    await waitFor(() => expect(mockedDashboardApi.getInsightsData).toHaveBeenCalledTimes(3));
+    await waitFor(() => expect(mockedDashboardApi.getInsightsData).toHaveBeenCalledTimes(2));
 
     rerender({
       ...props,
       selectedDate: new Date("2026-04-10T11:00:00Z"),
     });
 
-    await waitFor(() => expect(mockedDashboardApi.getInsightsData).toHaveBeenCalledTimes(6));
+    await waitFor(() => expect(mockedDashboardApi.getInsightsData).toHaveBeenCalledTimes(4));
   });
 });
