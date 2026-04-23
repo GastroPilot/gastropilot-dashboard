@@ -8,6 +8,15 @@ import { ThemeProvider } from "@/components/theme-provider";
 export const metadata: Metadata = {
   title: "Reservierungsmanagement",
   description: "Verwaltung von Tischen und Reservierungen",
+  icons: {
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icons/icon-192.png", type: "image/png", sizes: "192x192" },
+      { url: "/icons/icon-512.png", type: "image/png", sizes: "512x512" },
+    ],
+    shortcut: ["/favicon.ico"],
+    apple: [{ url: "/icons/icon-192.png", sizes: "192x192" }],
+  },
 };
 
 const manrope = Manrope({
