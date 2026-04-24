@@ -209,7 +209,7 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="h-full min-h-0 flex flex-col bg-background overflow-hidden">
+    <div className="flex-1 min-h-0 flex flex-col bg-background overflow-hidden">
       <nav className="relative bg-card border-b border-border shrink-0">
         <div className="w-full px-3 sm:px-4 md:px-5">
           <div className="min-h-14 md:h-16 py-2 md:py-0 flex flex-wrap items-center justify-between gap-x-2 gap-y-2">

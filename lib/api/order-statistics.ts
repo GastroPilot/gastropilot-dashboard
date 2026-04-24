@@ -29,6 +29,13 @@ export interface HourlyStatistics {
   };
 }
 
+export interface OrderStatisticsOverview {
+  revenue: RevenueStatistics;
+  top_items: TopItem[];
+  category_statistics: CategoryStatistics;
+  hourly_statistics: HourlyStatistics;
+}
+
 export const orderStatisticsApi = {
   getRevenue: async (
     _restaurantId: string,
@@ -84,6 +91,21 @@ export const orderStatisticsApi = {
     const query = queryParams.toString();
     return api.get<HourlyStatistics>(
       `/order-statistics/hourly-statistics${query ? `?${query}` : ""}`
+    );
+  },
+
+  getOverview: async (
+    _restaurantId: string,
+    params?: { start_date?: string; end_date?: string; limit?: number }
+  ): Promise<OrderStatisticsOverview> => {
+    const queryParams = new URLSearchParams();
+    if (params?.start_date) queryParams.append("start_date", params.start_date);
+    if (params?.end_date) queryParams.append("end_date", params.end_date);
+    if (params?.limit) queryParams.append("limit", params.limit.toString());
+
+    const query = queryParams.toString();
+    return api.get<OrderStatisticsOverview>(
+      `/order-statistics/overview${query ? `?${query}` : ""}`
     );
   },
 };

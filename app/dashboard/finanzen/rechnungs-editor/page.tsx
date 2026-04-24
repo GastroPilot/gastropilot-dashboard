@@ -88,23 +88,38 @@ export default function FinanceInvoiceEditorPage() {
   const [invoiceFilter, setInvoiceFilter] = useState<InvoiceFilter>("all");
   const [currentPage, setCurrentPage] = useState(1);
 
-  const [preset, setPreset] = useState<FinanceRangePreset>("30d");
-  const [customStartDate, setCustomStartDate] = useState(
+  const [appliedPreset, setAppliedPreset] = useState<FinanceRangePreset>("30d");
+  const [appliedCustomStartDate, setAppliedCustomStartDate] = useState(
     format(startOfDay(subDays(new Date(), 29)), "yyyy-MM-dd")
   );
-  const [customEndDate, setCustomEndDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [appliedCustomEndDate, setAppliedCustomEndDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [draftPreset, setDraftPreset] = useState<FinanceRangePreset>("30d");
+  const [draftCustomStartDate, setDraftCustomStartDate] = useState(
+    format(startOfDay(subDays(new Date(), 29)), "yyyy-MM-dd")
+  );
+  const [draftCustomEndDate, setDraftCustomEndDate] = useState(format(new Date(), "yyyy-MM-dd"));
 
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
+  const draftResolvedRange = useMemo(
+    () =>
+      resolveFinanceRange({
+        preset: draftPreset,
+        customStartDate: draftCustomStartDate,
+        customEndDate: draftCustomEndDate,
+      }),
+    [draftCustomEndDate, draftCustomStartDate, draftPreset]
+  );
+
   const resolvedRange = useMemo(
     () =>
       resolveFinanceRange({
-        preset,
-        customStartDate,
-        customEndDate,
+        preset: appliedPreset,
+        customStartDate: appliedCustomStartDate,
+        customEndDate: appliedCustomEndDate,
       }),
-    [preset, customStartDate, customEndDate]
+    [appliedCustomEndDate, appliedCustomStartDate, appliedPreset]
   );
 
   const loadData = useCallback(
@@ -190,6 +205,24 @@ export default function FinanceInvoiceEditorPage() {
     setCurrentPage(1);
   }, [invoiceFilter, searchQuery, resolvedRange.fromIso, resolvedRange.toIso]);
 
+  const hasPendingRangeChanges =
+    draftPreset !== appliedPreset ||
+    draftCustomStartDate !== appliedCustomStartDate ||
+    draftCustomEndDate !== appliedCustomEndDate;
+
+  const handleApplyOrRefresh = useCallback(() => {
+    if (isRefreshing) return;
+
+    if (hasPendingRangeChanges) {
+      setAppliedPreset(draftPreset);
+      setAppliedCustomStartDate(draftCustomStartDate);
+      setAppliedCustomEndDate(draftCustomEndDate);
+      return;
+    }
+
+    void loadData(true);
+  }, [draftCustomEndDate, draftCustomStartDate, draftPreset, hasPendingRangeChanges, isRefreshing, loadData]);
+
   const openEditor = (orderId: string) => {
     setSelectedOrderId(orderId);
     setDialogOpen(true);
@@ -246,12 +279,12 @@ export default function FinanceInvoiceEditorPage() {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => loadData(true)}
+          onClick={handleApplyOrRefresh}
           disabled={isRefreshing}
           className="gap-2"
         >
           <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
-          Aktualisieren
+          {hasPendingRangeChanges ? "Anwenden" : "Aktualisieren"}
         </Button>
       }
     >
@@ -262,24 +295,24 @@ export default function FinanceInvoiceEditorPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <FinanceRangeControls
-              preset={preset}
-              startDate={resolvedRange.fromDate}
-              endDate={resolvedRange.toDate}
+              preset={draftPreset}
+              startDate={draftResolvedRange.fromDate}
+              endDate={draftResolvedRange.toDate}
               disabled={isLoading}
               onPresetChange={(nextPreset) => {
-                setPreset(nextPreset);
+                setDraftPreset(nextPreset);
                 if (nextPreset !== "custom") {
-                  setCustomStartDate("");
-                  setCustomEndDate("");
+                  setDraftCustomStartDate("");
+                  setDraftCustomEndDate("");
                 }
               }}
               onStartDateChange={(value) => {
-                setPreset("custom");
-                setCustomStartDate(value);
+                setDraftPreset("custom");
+                setDraftCustomStartDate(value);
               }}
               onEndDateChange={(value) => {
-                setPreset("custom");
-                setCustomEndDate(value);
+                setDraftPreset("custom");
+                setDraftCustomEndDate(value);
               }}
             />
 

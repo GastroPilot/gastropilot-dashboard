@@ -130,7 +130,8 @@ function closingStateBadge(state: string): { label: string; className: string } 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function FinanceDailyClosePage() {
-  const [selectedDate, setSelectedDate] = useState<string>(todayIsoDate());
+  const [appliedDate, setAppliedDate] = useState<string>(todayIsoDate());
+  const [draftDate, setDraftDate] = useState<string>(todayIsoDate());
   const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
   const [orders, setOrders] = useState<Order[]>([]);
   const [revenueStats, setRevenueStats] = useState<RevenueStatistics | null>(null);
@@ -166,7 +167,7 @@ export default function FinanceDailyClosePage() {
           return;
         }
 
-        const { startIso, endIso } = dayRange(selectedDate);
+        const { startIso, endIso } = dayRange(appliedDate);
         const [orderData, revData, tssData, closingsData] = await Promise.all([
           ordersApi.list(currentRestaurant.id, {
             start_date: startIso,
@@ -192,7 +193,7 @@ export default function FinanceDailyClosePage() {
         if (showRefreshing) setIsRefreshing(false);
       }
     },
-    [restaurant, selectedDate]
+    [restaurant, appliedDate]
   );
 
   useEffect(() => {
@@ -311,15 +312,15 @@ export default function FinanceDailyClosePage() {
 
   // Check if a closing already exists for the selected date
   const existingClosing = useMemo(
-    () => dailyClosings.find((c) => c.business_date === selectedDate && c.state !== "DELETED"),
-    [dailyClosings, selectedDate]
+    () => dailyClosings.find((c) => c.business_date === appliedDate && c.state !== "DELETED"),
+    [dailyClosings, appliedDate]
   );
 
   const isTseConfigured = tssStatus?.configured && tssStatus?.state === "INITIALIZED";
 
   const handleExportCsv = () => {
     const rows: string[][] = [
-      ["Tagesabschluss", selectedDate],
+      ["Tagesabschluss", appliedDate],
       ["Restaurant", restaurant?.name ?? "-"],
       ["Bestellungen gesamt", String(orders.length)],
       ["Bezahlt", String(paidOrders.length)],
@@ -341,7 +342,7 @@ export default function FinanceDailyClosePage() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `tagesabschluss_${selectedDate}.csv`;
+    link.download = `tagesabschluss_${appliedDate}.csv`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -360,7 +361,7 @@ export default function FinanceDailyClosePage() {
 
     setIsSubmitting(true);
     try {
-      const result = await createDailyClosing({ business_date: selectedDate });
+      const result = await createDailyClosing({ business_date: appliedDate });
       if (result.state === "ERROR") {
         toast.add(`Tagesabschluss fehlgeschlagen: ${result.error}`, "error");
         return;
@@ -378,7 +379,7 @@ export default function FinanceDailyClosePage() {
       }
 
       // Download PDF automatically
-      handleDownloadPdf(result.closing_id, selectedDate);
+      handleDownloadPdf(result.closing_id, appliedDate);
 
       await loadData();
     } catch (err) {
@@ -406,7 +407,7 @@ export default function FinanceDailyClosePage() {
       const result = await triggerDsfinvkExport(
         closingId
           ? { closing_id: closingId }
-          : { business_date_start: selectedDate, business_date_end: selectedDate }
+          : { business_date_start: appliedDate, business_date_end: appliedDate }
       );
       setActiveExportId(result.export_id);
       toast.add("DSFinV-K Export gestartet. Bitte warten...", "info");
@@ -479,6 +480,20 @@ export default function FinanceDailyClosePage() {
     }
   };
 
+  const isDraftDateValid = draftDate.length > 0;
+  const hasPendingDateChange = draftDate !== appliedDate;
+
+  const handleApplyOrRefresh = useCallback(() => {
+    if (isRefreshing || !isDraftDateValid) return;
+
+    if (hasPendingDateChange) {
+      setAppliedDate(draftDate);
+      return;
+    }
+
+    void loadData(true);
+  }, [draftDate, hasPendingDateChange, isDraftDateValid, isRefreshing, loadData]);
+
   return (
     <FinanceModuleLayout
       title="Tagesabschluss"
@@ -492,12 +507,12 @@ export default function FinanceDailyClosePage() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => loadData(true)}
-            disabled={isRefreshing}
+            onClick={handleApplyOrRefresh}
+            disabled={isRefreshing || !isDraftDateValid}
             className="gap-2"
           >
             <RefreshCw className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
-            Aktualisieren
+            {hasPendingDateChange ? "Anwenden" : "Aktualisieren"}
           </Button>
         </div>
       }
@@ -531,8 +546,8 @@ export default function FinanceDailyClosePage() {
               <label className="text-xs text-muted-foreground block mb-1">Datum</label>
               <Input
                 type="date"
-                value={selectedDate}
-                onChange={(event) => setSelectedDate(event.target.value)}
+                value={draftDate}
+                onChange={(event) => setDraftDate(event.target.value)}
                 className="w-full sm:w-52"
               />
             </div>
@@ -698,7 +713,7 @@ export default function FinanceDailyClosePage() {
               ) : (
                 <div className="space-y-3">
                   <p className="text-sm text-muted-foreground">
-                    Tagesabschluss für den {selectedDate} an die DSFinV-K Schnittstelle übermitteln.
+                    Tagesabschluss für den {appliedDate} an die DSFinV-K Schnittstelle übermitteln.
                     Alle bezahlten Bestellungen und ihre TSE-Signaturen werden als Kassenabschluss gemeldet.
                   </p>
                   <Button
