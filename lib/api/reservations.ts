@@ -21,7 +21,6 @@ export interface Reservation {
   guest_name: string | null;
   guest_email: string | null;
   guest_phone: string | null;
-  special_requests: string | null;
   notes: string | null;
   tags: string[];
   confirmed_at: string | null;
@@ -43,7 +42,6 @@ export interface ReservationCreate {
   guest_name?: string | null;
   guest_email?: string | null;
   guest_phone?: string | null;
-  special_requests?: string | null;
   notes?: string | null;
   tags?: string[];
 }
@@ -58,7 +56,6 @@ export interface ReservationUpdate {
   guest_name?: string | null;
   guest_email?: string | null;
   guest_phone?: string | null;
-  special_requests?: string | null;
   notes?: string | null;
   tags?: string[];
 }
