@@ -3,6 +3,7 @@ export * from './use-restaurants';
 export * from './use-reservations';
 export * from './use-orders';
 export * from './use-tables';
+export * from './use-menu-items';
 export * from './use-dashboard-data';
 export * from './use-dashboard-overview-data';
 export * from './use-finance-overview';
