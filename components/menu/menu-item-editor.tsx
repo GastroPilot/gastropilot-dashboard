@@ -52,11 +52,50 @@ const EMPTY_STATE: FormState = {
   allergens: [],
 };
 
-const sanitizeAllergens = (raw: string[] | null | undefined): AllergenCode[] => {
+// DE-Codes aus Bestandsdaten -> EU-14-EN-Singular. Spiegelt das Backend-Mapping
+// in services/core/app/services/allergen_service.ALLERGEN_ALIASES, damit Items,
+// die noch nicht durch das Backend normalisiert wurden, im Editor korrekt
+// vorausgewaehlt erscheinen.
+const ALLERGEN_LEGACY_ALIASES: Record<string, AllergenCode> = {
+  milch: 'milk',
+  laktose: 'milk',
+  lactose: 'milk',
+  eier: 'eggs',
+  ei: 'eggs',
+  nuesse: 'nuts',
+  nüsse: 'nuts',
+  schalenfruechte: 'nuts',
+  schalenfrüchte: 'nuts',
+  erdnuesse: 'peanuts',
+  erdnüsse: 'peanuts',
+  sojabohnen: 'soy',
+  weichtiere: 'molluscs',
+  krebstiere: 'crustaceans',
+  schwefeldioxid: 'sulfites',
+  sulphites: 'sulfites',
+  sulfit: 'sulfites',
+  sellerie: 'celery',
+  senf: 'mustard',
+  sesam: 'sesame',
+  lupinen: 'lupin',
+  lupins: 'lupin',
+};
+
+const sanitizeAllergens = (
+  raw: string[] | { contains?: unknown[] } | null | undefined,
+): AllergenCode[] => {
   if (!raw) return [];
-  const set = new Set<AllergenCode>(
-    raw.filter((code): code is AllergenCode => (ALLERGEN_CODES as readonly string[]).includes(code))
-  );
+  // Legacy-Object-Format aus Seed-Daten: {"contains": [...], "may_contain": [...]}
+  const list = Array.isArray(raw) ? raw : Array.isArray(raw.contains) ? raw.contains : [];
+  const set = new Set<AllergenCode>();
+  for (const code of list) {
+    if (typeof code !== 'string') continue;
+    const normalized = code.trim().toLowerCase();
+    const mapped = (ALLERGEN_CODES as readonly string[]).includes(normalized)
+      ? (normalized as AllergenCode)
+      : ALLERGEN_LEGACY_ALIASES[normalized];
+    if (mapped) set.add(mapped);
+  }
   return ALLERGEN_CODES.filter((c) => set.has(c));
 };
 
